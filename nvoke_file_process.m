@@ -1,18 +1,19 @@
 function [ output_args ] = nvoke_file_process( input_args )
-%Process raw data file recorded by nVoke system and save output files in a
-%new location. Copy GPIO files to the same location.
-%IMPORTANT: Please change "data_dir" (parent directory of data folders) and "output_dir"
+% Process raw data file recorded by nVoke system and save output files in a
+% new location. Copy GPIO files to the same location.
+% IMPORTANT: Change "data_dir" (parent directory of data folders) and "output_dir" 
+% 			to make it easier to use on your computer.
 %   suffix: 
 %       - PP: preprocess
 %       - PP-BP: spatial bandpass
 %       - PP-BP-MC: motion correction 
 %       - PP-BP-DFF: dF/F
-% !!! This code reads the files in subfolders of chosen folder !!!
-% When asked to chose data dir, chose something like "ventral-approach (which contains /2019xxxx/*.isxd)"
+% !!! This code only reads the files in subfolders (1 level) of chosen folder !!!
+% When asked to chose data dir, chose something like "recording_yyyymmdd (which contains recordings in subfolders)"
 
 % path to data location
 % data_dir = 'D:\guoda\Documents\Workspace_Analysis\OIST\Inscopix\Demo\S1prism_AAV1_demo_with_LR\S1prism_AAV1_demo_v2_data'; % folder for testing
-data_dir = 'G:\Workspace\Inscopix Seagate\Recordings'; % default folder of nVoke recordings.
+data_dir = 'G:\Workspace\Inscopix_Seagate\recordings'; % default folder of nVoke recordings.
 
 % % output_dir local PC
 % output_dir = 'D:\guoda\Documents\Inscopix_Projects\IO_GCaMP\IO_GCaMP_data'; % processed files will be saved here
@@ -20,7 +21,7 @@ data_dir = 'G:\Workspace\Inscopix Seagate\Recordings'; % default folder of nVoke
 % % output_dir ventral approach
 % output_dir = 'F:\Workspace\inscopix\Projects\Ventral _IO_GCaMP_CN_Chrimson\Ventral_IO_GCaMP_CN_Chrimson_data';
 % output_dir dorsal implant
-output_dir = 'G:\Workspace\Inscopix Seagate\Projects'; % default folder of processed files
+output_dir = 'G:\Workspace\Inscopix_Seagate\Projects'; % default folder of processed files
 
 data_dir_chosen = uigetdir(data_dir, 'Choose a folder including recordings collected in 1 single day'); % choos the project folder
 dirinfo_data_dir_chosen = dir(data_dir_chosen); % get info of this folder
