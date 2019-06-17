@@ -15,7 +15,7 @@ function varargout = plot_roi_gpio(varargin)
 %      unrecognized property name or invalid value makes property application
 %      stop.  All inputs are passed to plot_roi_gpio_OpeningFcn via varargin.
 %
-%      Notes: function "ROI_calc_plot" is needed
+%      Notes: function "ROI_calc_plot" and "GPIO_data_extract.m" are needed
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
