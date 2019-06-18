@@ -28,11 +28,11 @@ dirinfo_data_dir_chosen = dir(data_dir_chosen); % get info of this folder
 dirinfo_data_dir_chosen = dirinfo_data_dir_chosen(3:end,:); % get rid of '.' and '..' from list
 
 output_dir_chosen = uigetdir(output_dir, 'Choose a folder to save processed recording files'); % in subfolders of "projects"
-output_dir_chosen = dir(output_dir_chosen); % get info of this folder
-output_dir_chosen = output_dir_chosen(3:end,:); % get rid of '.' and '..' from list
+dirinfo_output_dir_chosen = dir(output_dir_chosen); % get info of this folder
+dirinfo_output_dir_chosen = dirinfo_output_dir_chosen(3:end,:); % get rid of '.' and '..' from list
 
 disp(['Data dir: ', data_dir_chosen])
-disp(['Output dir: ', output_dir])
+disp(['Output dir: ', output_dir_chosen])
 
 
 % process data file one by one. Start from pre-processed cells
@@ -53,35 +53,35 @@ for n = 1:length(dirinfo_data_dir_chosen)
 		disp(['Processing raw data (', num2str(n), '/', num2str(length(dirinfo_data_dir_chosen)), '): ', raw_file_info(m).name])
 
 		% process files with preprocess
-		pp_file = fullfile(output_dir, [raw_file_no_ext, '-PP.isxd']); % location and name of pre-processed files
+		pp_file = fullfile(output_dir_chosen, [raw_file_no_ext, '-PP.isxd']); % location and name of pre-processed files
 		if ~exist(pp_file, 'file')
 			isx.preprocess(raw_file, pp_file, 'spatial_downsample_factor', 2);
 			disp([' - Output: ', raw_file_no_ext, '-PP.isxd'])
 		end
 
 		% process files with bandpass filter
-		bp_file = fullfile(output_dir, [raw_file_no_ext, '-PP-BP.isxd']); % location of bandpass-filtered files
+		bp_file = fullfile(output_dir_chosen, [raw_file_no_ext, '-PP-BP.isxd']); % location of bandpass-filtered files
 		if ~exist(bp_file, 'file')
 			isx.spatial_filter(pp_file, bp_file, 'low_cutoff', 0.005, 'high_cutoff', 0.500); % use the default cutoff number
 			disp([' - Output: ', raw_file_no_ext, '-PP-BP.isxd'])
 		end
 
 		% Motion correct the movies using the mean projection as a reference frame
-		mean_proj_file = fullfile(output_dir, [raw_file_no_ext, '-mean_image.isxd']); % Location of mean image used for motion correction
+		mean_proj_file = fullfile(output_dir_chosen, [raw_file_no_ext, '-mean_image.isxd']); % Location of mean image used for motion correction
 		if ~exist(mean_proj_file, 'file')
 			isx.project_movie(bp_file, mean_proj_file, 'stat_type', 'mean'); % generate mean image
 			disp([' - Output: ', raw_file_no_ext, '-mean_image.isxd'])
 		end
-		mc_file = isx.make_output_file_path(bp_file, output_dir, 'MC'); % location of motion corrected files
-		translation_files = isx.make_output_file_path(mc_file, output_dir, 'translations','ext', 'csv'); % location of translation files
-		crop_rect_file  = fullfile(output_dir, [raw_file_no_ext, '-crop_rect.csv']); % location of files containing crop rectangle info
+		mc_file = isx.make_output_file_path(bp_file, output_dir_chosen, 'MC'); % location of motion corrected files
+		translation_files = isx.make_output_file_path(mc_file, output_dir_chosen, 'translations','ext', 'csv'); % location of translation files
+		crop_rect_file  = fullfile(output_dir_chosen, [raw_file_no_ext, '-crop_rect.csv']); % location of files containing crop rectangle info
 		if ~exist(mc_file, 'file')
 			isx.motion_correct(bp_file, mc_file, 'max_translation', 20, 'reference_file_name', mean_proj_file, 'low_bandpass_cutoff', 0.004, 'high_bandpass_cutoff', 0.016, 'output_translation_files', 'translation_files', 'output_crop_rect_file', 'crop_rect_file');
 			disp([' - Output: ', raw_file_no_ext, '-PP-BP-MC.isxd'])
 		end
 
 		% Run dF/F on the motion corrected movies.
-		dff_file = isx.make_output_file_path(mc_file, output_dir, 'DFF');
+		dff_file = isx.make_output_file_path(mc_file, output_dir_chosen, 'DFF');
 		if ~exist(dff_file, 'file')
 			isx.dff(mc_file, dff_file, 'f0_type', 'mean');
 			disp([' - Output: ', raw_file_no_ext, '-PP-BP-MC-DFF.isxd'])
@@ -91,7 +91,7 @@ for n = 1:length(dirinfo_data_dir_chosen)
 		gpio_file_info = dir([data_dir_raw_files, '\gpio*']);
 		if length(gpio_file_info) ~= 0
 			gpio_file = fullfile(gpio_file_info.folder, gpio_file_info.name);
-			gpio_file_rename = fullfile(output_dir, [raw_file_no_ext, '-GPIO.raw']);
+			gpio_file_rename = fullfile(output_dir_chosen, [raw_file_no_ext, '-GPIO.raw']);
 			copyfile(gpio_file, gpio_file_rename);
 			disp([' - Output: ', raw_file_no_ext, '-GPIO.raw'])
 		end
