@@ -64,7 +64,7 @@ guidata(hObject, handles);
 % uiwait(handles.figure1);
 
 % setup default input and output folders
-folder.csv_file = 'G:\Workspace\Inscopix Seagate\Analysis';
+folder.csv_file = 'G:\Workspace\Inscopix_Seagate\Projects';
 setappdata(0, 'folder',folder);
 
 
@@ -138,14 +138,15 @@ else
   roi_readout_file = fullfile(folder.csv_file, roi_readout_file_name); % file name with full path
   set(handles.edit_roi_readout_file, 'String', roi_readout_file);
   disp(['User selected ', roi_readout_file])
-  gpio_file = [gpio_file(1:28), 'GPIO.raw']; % companied GPIO file full path, if the file existed
-  if isfile(gpio_file)
-    set(handles.edit_gpio_file, 'String', gpio_file);
-  else
-    set(handles.edit_gpio_file, 'String', 'No stimulation applied');
-  end
-end
+  % gpio_file = [gpio_file(1:28), 'GPIO.raw']; % companied GPIO file full path, if the file existed
+  % if isfile(gpio_file)
+  %   set(handles.edit_gpio_file, 'String', gpio_file);
+  % else
+  %   set(handles.edit_gpio_file, 'String', 'No stimulation applied');
+  % end
   setappdata(0, 'folder', folder)
+end
+  
 
 
 
@@ -162,8 +163,9 @@ else
   gpio_file = fullfile(folder.csv_file, gpio_file_name); % file name with full path
   set(handles.edit_gpio_file, 'String', gpio_file);
   disp(['User selected ', gpio_file])
-end
   setappdata(0, 'folder', folder)
+end
+  
 
 
 % --- Executes on button press in plot.
@@ -180,7 +182,7 @@ opts = detectImportOptions(roi_readout_file); % creat import options based on fi
 opts.DataLine = 3; % set data line from the third row of csv file. First 2 rows are 'char'
 opts.VariableDescriptionsLine = 2; % set 2nd row as variable description
 ROI_table = readtable(roi_readout_file, opts); % import file using modified opts, so data will be number arrays
-[ROI_table recording_time ROI_num] = ROI_calc_plot(ROI_table);
+[ROI_table, recording_time, ROI_num] = ROI_calc_plot(ROI_table);
 
 % get GPIO info
 if strcmp(gpio_file, "No stimulation applied") || strcmp(gpio_file, '')
@@ -188,30 +190,31 @@ if strcmp(gpio_file, "No stimulation applied") || strcmp(gpio_file, '')
 else
   gpio_plot = 1; % GPIO info will be plotted
   GPIO_table = readtable(gpio_file);
-  [ channel EX_LED_power GPIO_duration stimulation ] = GPIO_data_extract(GPIO_table);
+  [ channel, EX_LED_power, GPIO_duration, stimulation ] = GPIO_data_extract(GPIO_table);
 end
 
 % organize data for plot. Each figure has 11x2 subplots. top 5 rows are for ROI traces. last row is for GPIO info
 x_roi = table2array(ROI_table(:, 1));
-roi_group = ceil(ROI_num/10); % number of 'roi_trace x 10' columns
-fig_group = ceil(roi_group/2); % number of figures containing 2 roi_group columns
+roi_group = ceil(ROI_num/5); % number of 'roi_trace x 5' columns
+fig_group = ceil(roi_group/4); % number of figures containing 4 roi_group columns
 
 roi_group_count = 1; % counting the number of roi_group in the following loop
 for nf = 1 : fig_group % figure num
   figure(nf);
-  for ng = 1 : 2 % column num
-    subplot(11, 2, ng:2:(ng+2*9));
-    roi_trace_first = (nf-1)*20+(ng-1)*10+1+1;
-    if ROI_num < (nf-1)*20+ng*10
-      roi_trace_last = ROI_num+1; % when last column of roi number is less than 10
+  set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.1, 0.15, 0.8, 0.85 ]);
+  for ng = 1 : (roi_group-(fig_group-1)*4) % column num
+    subplot(6, 4, ng:4:(ng+4*4));
+    roi_trace_first = (nf-1)*20+(ng-1)*5+1+1;
+    if ROI_num < (nf-1)*20+ng*5
+      roi_trace_last = ROI_num+1; % when last column of roi number is less than 5
     else
-      roi_trace_last = (nf-1)*20+ng*10+1;
+      roi_trace_last = (nf-1)*20+ng*5+1;
     end
     stackedplot(ROI_table(:, [1 roi_trace_first:roi_trace_last]), 'XVariable', 'Time');
     roi_group_count = roi_group_count+1;
     if gpio_plot == 1
       if length(channel)-2 >= 1 % 1st and 2nd channels are SYNC and EX_LED, 3rd is the first stimulation channel
-        subplot(11, 2, 20+ng);
+        subplot(6, 4, 20+ng);
         for nc = 1 : length(channel)-2
           gpio_offset = 6;
           x = channel(nc+2).time_value(:, 1); % time info
@@ -221,7 +224,7 @@ for nf = 1 : fig_group % figure num
         end
         axis([0 recording_time 0 max(y{1})*1.1]);
         hold off
-        legend(stimulation); 
+        legend(stimulation, 'Location', "SouthOutside"); 
       end
     else
       % no GPIO info will be plotted

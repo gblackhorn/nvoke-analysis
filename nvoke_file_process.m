@@ -88,7 +88,7 @@ for n = 1:length(dirinfo_data_dir_chosen)
 		end
 
 		% copy and rename the GPIO file to output folder if it exists
-		gpio_file_info = dir([data_dir_raw_files, '\gpio*']);
+		gpio_file_info = dir([data_dir_raw_files, '\*gpio*']);
 		if length(gpio_file_info) ~= 0
 			gpio_file = fullfile(gpio_file_info.folder, gpio_file_info.name);
 			gpio_file_rename = fullfile(output_dir_chosen, [raw_file_no_ext, '-GPIO.raw']);
