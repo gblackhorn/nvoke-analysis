@@ -8,6 +8,9 @@ function [modified_ROIdata] = nvoke_correct_peakdata(ROIdata,plot_traces,pause_s
 % 
 % 
 %   Detailed explanation goes here
+%
+%[modified_ROIdata] = nvoke_correct_peakdata(ROIdata,plot_traces,pause_step)
+3
 
 if nargin < 2
 	plot_traces = 0;

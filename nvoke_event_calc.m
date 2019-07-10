@@ -4,7 +4,7 @@ function [peak_info_sheet, varargout] = nvoke_event_calc(ROIdata, plot_analysis)
 % varargout{1} = total_cell_num;
 % varargout{2} = total_peak_num;
 %
-%
+% [peak_info_sheet, total_cell_num, total_peak_num] = nvoke_event_calc(ROIdata, 1)
 
 if plot_analysis == 2
 	figfolder = uigetdir('G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\ROI_data\peaks',...
@@ -128,4 +128,5 @@ varargout{1} = total_cell_num;
 varargout{2} = total_peak_num;
 
 end
+
 

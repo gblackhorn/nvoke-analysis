@@ -6,6 +6,9 @@ function [varargout] = nvoke_event_detection(ROIdata,plot_traces, pause_step)
 % 		- plot_traces: 1-plot, 2-plot and save
 % 		- pause_step: 1-pause after ploting every figure, 0-no pause
 %   Detailed explanation goes here
+%
+% nvoke_event_detection(ROIdata,1, 1)
+
 lowpass_fpass = 0.1;
 
 if nargin < 2
@@ -164,7 +167,7 @@ for rn = 1:recording_num
 				peak_plot_handle(p) = figure (p);
 				set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.05, 0.05, 0.95, 0.95 ]); % [x y width height]
 				for q = 1:2 % column num
-					if (plot_col_num-(p-1)*2-q) > 0
+					if (plot_col_num-(p-1)*2-q) >= 0
 
 						% roi_trace_first = (p-1)*10+(q-1)*5+1+1; % fist +1 to get the real count of ROI, second +1 to get ROI column in table
 						% roi_trace_last = (p-1)*10+q*5+1;
