@@ -9,7 +9,8 @@ function [ROIdata_peakevent] = nvoke_event_detection(ROIdata,plot_traces, pause_
 %
 % nvoke_event_detection(ROIdata,1, 1)
 
-lowpass_fpass = 0.1;
+figfolder_default = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\ROI_data\peaks';
+lowpass_fpass = 1;
 
 if nargin < 2
 	plot_traces = 0;
@@ -25,7 +26,7 @@ end
 
 recording_num = size(ROIdata, 1);
 if plot_traces == 2
-	figfolder = uigetdir('G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\ROI_data\peaks',...
+	figfolder = uigetdir(figfolder_default,...
 		'Select a folder to save figures');
 end
 for rn = 1:recording_num
@@ -39,12 +40,12 @@ for rn = 1:recording_num
 	% single_recording_smooth = single_recording;
 	single_recording_smooth = zeros(size(single_recording{:, :}));
 	single_recording_highpassed = zeros(size(single_recording{:, :}));
-    single_recording_thresh = zeros(size(single_recording{:, :}));
+    single_recording_min_height = zeros(size(single_recording{:, :}));
 	single_recording_lowpassed = zeros(size(single_recording{:, :}));
 
 	single_recording_smooth(:, 1) = time_info; 
 	single_recording_highpassed(:, 1) = time_info;
-	single_recording_thresh(:, 1) = time_info;
+	single_recording_min_height(:, 1) = time_info;
 	single_recording_lowpassed(:, 1) = time_info;
 	% single_recording_smooth = zeros(size(single_recording));
 	peak_loc_mag_table_variable = cell(1, roi_num); % column name for output, peak_loc_mag_table
@@ -59,23 +60,33 @@ for rn = 1:recording_num
 		single_recording_highpassed(:, n+1) = roi_highpassed;
 		single_recording_lowpassed(:, n+1) = roi_lowpassed;
 
-		% peakfinder criteria
-		sel = (max(roi_readout)-min(roi_readout))/4; % default value: max(roi_readout)-min(roi_readout)/4
-		sel_smooth = (max(roi_readout_smooth)-min(roi_readout_smooth))/4;
-		sel_lowpassed = (max(roi_lowpassed)-min(roi_lowpassed))/4;
-		thresh = mean(roi_highpassed)+5*std(roi_highpassed);
-		single_recording_thresh(:, n+1) = ones(size(time_info))*thresh;
+		% % peakfinder criteria
+		% sel = (max(roi_readout)-min(roi_readout))/4; % default value: max(roi_readout)-min(roi_readout)/4
+		% sel_smooth = (max(roi_readout_smooth)-min(roi_readout_smooth))/4;
+		% sel_lowpassed = (max(roi_lowpassed)-min(roi_lowpassed))/4;
+		% thresh = mean(roi_highpassed)+5*std(roi_highpassed);
+		% single_recording_thresh(:, n+1) = ones(size(time_info))*thresh;
 
-		% use pickfinder to find peaks
-		[peakloc, peakmag] = peakfinder(roi_readout, sel, thresh);
-		[peakloc_smooth, peakmag_smooth] = peakfinder(roi_readout_smooth, sel_smooth);
-		[peakloc_lowpassed, peakmag_lowpassed] = peakfinder(roi_lowpassed, sel_lowpassed);
-
+		% % use pickfinder to find peaks
 		% [peakloc, peakmag] = peakfinder(roi_readout, sel, thresh);
-		% [peakloc_smooth, peakmag_smooth] = peakfinder(roi_readout_smooth, sel_smooth, thresh);
+		% [peakloc_smooth, peakmag_smooth] = peakfinder(roi_readout_smooth, sel_smooth);
+		% [peakloc_lowpassed, peakmag_lowpassed] = peakfinder(roi_lowpassed, sel_lowpassed);
 
-		% [peakloc, peakmag] = peakfinder(roi_readout);
-		% [peakloc_smooth, peakmag_smooth] = peakfinder(roi_readout_smooth);
+
+		% use findpeaks instead of pickfinder function
+		% findpeaks criteria
+		prominences = (max(roi_readout)-min(roi_readout))/4; % default value: max(roi_readout)-min(roi_readout)/4
+		prominences_smooth = (max(roi_readout_smooth)-min(roi_readout_smooth))/4;
+		prominences_lowpassed = (max(roi_lowpassed)-min(roi_lowpassed))/4;
+		min_height = mean(roi_highpassed)+5*std(roi_highpassed);
+		single_recording_min_height(:, n+1) = ones(size(time_info))*min_height;
+
+		% find peaks
+		[peakmag, peakloc] = findpeaks(roi_readout, 'MinPeakProminence', prominences, 'MinPeakHeight', min_height);
+		[peakmag_smooth, peakloc_smooth] = findpeaks(roi_readout_smooth, 'MinPeakProminence', prominences_smooth);
+		[peakmag_lowpassed, peakloc_lowpassed] = findpeaks(roi_lowpassed, 'MinPeakProminence', prominences_lowpassed);
+
+
 
 		turning_loc = zeros(size(peakloc_lowpassed, 1), 3);
 		speed_chang_loc = zeros(size(peakloc_lowpassed, 1), 2);
@@ -211,16 +222,16 @@ for rn = 1:recording_num
 
 
 							roi_col_data_highpassed = single_recording_highpassed(:, roi_col_loc);
-							thresh_data = single_recording_thresh(:, roi_col_loc);
+							thresh_data = single_recording_min_height(:, roi_col_loc);
 
 							sub_handle(roi_plot) = subplot(5, 2, q+(m-1)*2);
 							% plot(time_info, roi_col_data, 'k', peak_time_loc, peak_value, 'ro', 'linewidth', 2,...
 							% 	time_info, roi_col_data_smooth, 'g', peak_time_loc_smooth, peak_value_smooth, 'yo', 'linewidth', 2)
 							plot(time_info, roi_col_data, 'k') % plot original data
 							hold on
-							plot(peak_time_loc, peak_value, 'ro', 'linewidth', 2) % plot peak marks
+							% plot(peak_time_loc, peak_value, 'ro', 'linewidth', 2) % plot peak marks
 							% plot(time_info, roi_col_data_highpassed, 'b') % plot highpass filtered data
-							plot(time_info, thresh_data, '--k'); % plot thresh hold line
+							% plot(time_info, thresh_data, '--k'); % plot thresh hold line
 							plot(time_info, roi_col_data_lowpassed, 'm'); % plot lowpass filtered data
 							plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'yo', 'linewidth', 2) %plot lowpassed data peak marks
 							plot(peak_rise_turning_loc, peak_rise_turning_value, '>b', peak_decay_turning_loc, peak_decay_turning_value, '<b', 'linewidth', 2) % plot start and end of transient, turning point
@@ -242,6 +253,9 @@ for rn = 1:recording_num
 					jpgfile_name = [figfile(1:(end-3)), 'jpg'];
 					jpgfile_fullpath = fullfile(figfolder, jpgfile_name);
 					saveas(gcf, jpgfile_fullpath);
+					svgfile_name = [figfile(1:(end-3)), 'svg'];
+					svgfile_fullpath = fullfile(figfolder, svgfile_name);
+					saveas(gcf, svgfile_fullpath);
 				end	
 				if pause_step == 1
 					disp('Press any key to continue')

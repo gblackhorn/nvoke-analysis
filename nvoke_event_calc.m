@@ -1,5 +1,5 @@
 function [peak_info_sheet, varargout] = nvoke_event_calc(ROIdata, plot_analysis)
-%UNTITLED4 Summary of this function goes here
+% Analyse calcium transient events: amplitude, rise and decay duration, whole event duration
 %   Detailed explanation goes here
 % varargout{1} = total_cell_num;
 % varargout{2} = total_peak_num;
@@ -84,17 +84,17 @@ if nargin == 2
 		set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.05, 0.05, 0.95, 0.95 ]);
 		subplot(2, 2, 1);
 		
-		histogram(peak_info_sheet(:, 5), 80); % plot rise duration
+		histogram(peak_info_sheet(:, 5), 10); % plot rise duration
 		title('peak rise duration');
 		subplot(2, 2, 2);
 
-		histogram(peak_info_sheet(:, 6), 80); % plot decary duration
+		histogram(peak_info_sheet(:, 6), 10); % plot decary duration
 		title('Peak decay duration');
 		subplot(2, 2, 3);
-		histogram(peak_info_sheet(:, 7), 80); % plot transient duration
+		histogram(peak_info_sheet(:, 7), 10); % plot transient duration
 		title('Calcium transient duration'); 
 		subplot(2, 2, 4);
-		histogram(peak_info_sheet(:, 8), 80); % peak_mag
+		histogram(peak_info_sheet(:, 8), 10); % peak_mag
 		title('Peak amp');
 		sgtitle('nVoke event analysis - Histograms ', 'Interpreter', 'none');
 
