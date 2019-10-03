@@ -143,9 +143,6 @@ for rn = 1:recording_num
 					jpgfile_name = [figfile(1:(end-3)), 'jpg'];
 					jpgfile_fullpath = fullfile(figfolder, jpgfile_name);
 					saveas(gcf, jpgfile_fullpath);
-					svgfile_name = [figfile(1:(end-3)), 'svg'];
-					svgfile_fullpath = fullfile(figfolder, svgfile_name);
-					saveas(gcf, svgfile_fullpath);
 				end	
 				if pause_step == 1
 					disp('Press any key to continue')
