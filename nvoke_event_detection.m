@@ -31,8 +31,9 @@ if plot_traces == 2
 end
 for rn = 1:recording_num
 	single_recording = ROIdata{rn,2};
+	[single_recording, recording_time, roi_num] = ROI_calc_plot(single_recording);
 
-	roi_num = size(single_recording, 2)-1;
+	% roi_num = size(single_recording, 2)-1;
 	time_info = table2array(single_recording(:, 1));
 	recording_fr = 1/(time_info(2)-time_info(1));
 	peak_loc_mag = cell([3 roi_num]); % first row for non-smoothed data, second row for smoothed data, 3rd row for lowpassed data
@@ -163,6 +164,13 @@ for rn = 1:recording_num
 
 	if nargin >= 2
 		if plot_traces == 1 || 2 % 1: only plot. 2: plot and save
+			if isempty(ROIdata{rn, 3}) 
+				GPIO_trace = 0; % no stimulation used during recording, don't show GPIO trace
+			else
+				GPIO_trace = 1; % show GPIO trace representing stimulation
+				stimulation = ROIdata{rn, 3}{1, 1};
+				channel = ROIdata{rn, 4}; % GPIO channels
+			end
 
 			% ROI_residual = roi_num-floor(roi_num/5)*5; % number of ROIs in the last column of plot (5x4 of ROI)
 	  %           if ROI_residual ~= 0
@@ -224,7 +232,7 @@ for rn = 1:recording_num
 							roi_col_data_highpassed = single_recording_highpassed(:, roi_col_loc);
 							thresh_data = single_recording_min_height(:, roi_col_loc);
 
-							sub_handle(roi_plot) = subplot(5, 2, q+(m-1)*2);
+							sub_handle(roi_plot) = subplot(6, 2, q+(m-1)*2);
 							% plot(time_info, roi_col_data, 'k', peak_time_loc, peak_value, 'ro', 'linewidth', 2,...
 							% 	time_info, roi_col_data_smooth, 'g', peak_time_loc_smooth, peak_value_smooth, 'yo', 'linewidth', 2)
 							plot(time_info, roi_col_data, 'k') % plot original data
@@ -233,16 +241,35 @@ for rn = 1:recording_num
 							% plot(time_info, roi_col_data_highpassed, 'b') % plot highpass filtered data
 							% plot(time_info, thresh_data, '--k'); % plot thresh hold line
 							plot(time_info, roi_col_data_lowpassed, 'm'); % plot lowpass filtered data
-							plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'yo', 'linewidth', 2) %plot lowpassed data peak marks
-							plot(peak_rise_turning_loc, peak_rise_turning_value, '>b', peak_decay_turning_loc, peak_decay_turning_value, '<b', 'linewidth', 2) % plot start and end of transient, turning point
+
+							% % plot detected peaks and their starting and ending points
+							% plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'yo', 'linewidth', 2) %plot lowpassed data peak marks
+							% plot(peak_rise_turning_loc, peak_rise_turning_value, '>b', peak_decay_turning_loc, peak_decay_turning_value, '<b', 'linewidth', 2) % plot start and end of transient, turning point
+
 							% plot(peak_rise_speedup_loc, peak_rise_speedup_value, '>g', peak_rise_slowdown_loc, peak_rise_slowdown_value, '<g', 'linewidth', 2) % start and end of transient, speed change
 							% plot(time_info, roi_col_data_smooth, 'g'); % plot smoothed data
 							% plot(peak_time_loc_smooth, peak_value_smooth, 'yo', 'linewidth', 2); % plot smoothed data peak marks
 							% plot(peak_time_loc, peak_value, 'ro', peak_time_loc_smooth, peak_value_smooth, 'yo', 'linewidth', 2) % plot smoothed data
 							set(get(sub_handle(roi_plot), 'YLabel'), 'String', ['C', num2str(roi_plot-1)]);
+							ylim_roi_max = max(roi_col_data)*1.1; % max value of ROI trace y axis
+							ylim_roi_min = min(roi_col_data) - abs(min(roi_col_data)*0.1);
+							axis([0 recording_time ylim_roi_min ylim_roi_max]); 
 							hold off
 
 						end
+					end
+					if GPIO_trace == 1
+						subplot(6, 2, 10+q);
+						for nc = 1:length(channel)-2
+							gpio_offset = 6; % in case there are multiple stimuli, GPIO traces will be stacked, seperated by offset 6
+							x = channel(nc+2).time_value(:, 1);
+							y{nc} = channel(nc+2).time_value(:, 2)+(length(channel)-2-nc)*gpio_offset;
+							stairs(x, y{nc});
+							hold on
+						end
+						axis([0 recording_time 0 max(y{1})+1])
+						hold off
+						legend(stimulation, 'Location', "SouthOutside");
 					end
 				end
 				sgtitle(ROIdata{rn, 1}, 'Interpreter', 'none');
@@ -264,7 +291,7 @@ for rn = 1:recording_num
 			end
 		end
 	end
-	ROIdata{rn,3} = peak_loc_mag_table;
+	ROIdata{rn,5} = peak_loc_mag_table;
 
 	clearvars peak_table 
 	clearvars peak_loc_mag_table

@@ -14,7 +14,7 @@ end
 recording_num = size(ROIdata, 1);
 total_peak_num = 0;
 for rn = 1:recording_num
-	roi_num = size(ROIdata{rn, 3}, 2);
+	roi_num = size(ROIdata{rn, 5}, 2);
 	for roi_n = 1:roi_num
 		peak_num = length(ROIdata{rn,3}{3, roi_n}{1, 1}{:, 1}); % number of peaks in 1 roi in 1 recording
 		total_peak_num = total_peak_num+peak_num;
@@ -27,7 +27,7 @@ cell_num_count = 0;
 for rn = 1:recording_num
 	recording_name = ROIdata{rn, 1};
 	recording_code = rn;
-	roi_num = size(ROIdata{rn, 3}, 2);
+	roi_num = size(ROIdata{rn, 5}, 2);
 	for roi_n = 1:roi_num
 		roi_name = ROIdata{rn,3}.Properties.VariableNames{roi_n};
 		roi_code = roi_n-1;
