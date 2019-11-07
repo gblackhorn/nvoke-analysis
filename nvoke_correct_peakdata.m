@@ -214,8 +214,11 @@ for rn = 1:recording_num
 					% Plot stimuli triggered response. No criteria yet
 					if GPIO_trace == 1
 						subplot(6, 8, (q*4+(m-1)*8-1)) % plot stimulation triggered responses. All sweeps
-						pre_stimuli_time = gpio_train_start_time{1}-3; % plot from 3s before stimuli start. The "first GPIO stimuli"
-						post_stimuli_time = gpio_train_end_time{1}+6; % plot until 6s after stimuli end
+						pre_stimuli_duration = 3; % duration before stimulation onset
+						post_stimuli_duration = 6; % duration after stimulation end
+						baseline_duration = 1; % time duration before stimulation used to calculate baseline for y-axis aligment 
+						pre_stimuli_time = gpio_train_start_time{1}-pre_stimuli_duration; % plot from 3s before stimuli start. The "first GPIO stimuli"
+						post_stimuli_time = gpio_train_end_time{1}+post_stimuli_duration; % plot until 6s after stimuli end
 						plot_duration = post_stimuli_time-pre_stimuli_time; % duration of plot
 
 						first_gpio_train_start_loc = find(gpio_x{1}(:, 1)==gpio_train_start_time{1}(1), 1); % location of first train starts
@@ -229,7 +232,12 @@ for rn = 1:recording_num
 							[val_min, idx_min] = min(abs(recording_timeinfo-pre_stimuli_time(tn)));
 							[val_max, idx_max] = min(abs(recording_timeinfo-post_stimuli_time(tn)));
 							recording_timeinfo_trig_plot{tn} = recording_timeinfo(idx_min:idx_max)-gpio_train_start_time{1}(tn);
-							roi_col_data_trig_plot{tn} = roi_col_data(idx_min:idx_max);
+
+							idx_min_base = idx_min+recording_fr*(pre_stimuli_duration-baseline_duration); % loc of first data point of "baseline_duration" before stimulation
+							[val_max_base, idx_max_base] = find((recording_timeinfo-gpio_train_start_time{1}(tn))<0, 1, 'last'); % loc of last data point of "baseline_duration" before stimulation
+							roi_col_data_base = mean(roi_col_data(idx_min_base:idx_max_base)); % baseline before 'tn' stimulation
+
+							roi_col_data_trig_plot{tn} = roi_col_data(idx_min:idx_max)-roi_col_data_base;
 							% roi_col_data_lowpassed_trig_plot = roi_col_data_lowpassed(idx_min:idx_max);
 							data_point_num(tn) = length(recording_timeinfo_trig_plot{tn}); % data points of each triggered plot
 
@@ -289,7 +297,7 @@ for rn = 1:recording_num
 
 				end
 				if GPIO_trace == 1
-					subplot(6, 6, [30+(q-1)*3+1,30+(q-1)*3+2]);
+					subplot(6, 8, [40+(q-1)*4+1,40+(q-1)*4+2]);
 					for nc = 1:length(channel)-2
 						gpio_offset = 6; % in case there are multiple stimuli, GPIO traces will be stacked, seperated by offset 6
 						x = channel(nc+2).time_value(:, 1);
