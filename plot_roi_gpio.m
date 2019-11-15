@@ -216,7 +216,7 @@ for nf = 1 : fig_group % figure num
       if length(channel)-2 >= 1 % 1st and 2nd channels are SYNC and EX_LED, 3rd is the first stimulation channel
         subplot(6, 4, 20+ng);
         for nc = 1 : length(channel)-2
-          gpio_offset = 6;
+          gpio_offset = 6; % in case there are multiple stimuli, GPIO traces will be stacked, seperated by offset 6
           x = channel(nc+2).time_value(:, 1); % time info
           y{nc} = channel(nc+2).time_value(:, 2)+(length(channel)-2-nc)*gpio_offset;
           stairs(x, y{nc});

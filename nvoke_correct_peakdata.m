@@ -229,12 +229,12 @@ for rn = 1:recording_num
 						patch(gpio_x_trig_plot, gpio_y_trig_plot, 'cyan', 'EdgeColor', 'none', 'FaceAlpha', 0.7)
 						hold on
 						for tn = 1:length(pre_stimuli_time) % number of stimulation trains
-							[val_min, idx_min] = min(abs(recording_timeinfo-pre_stimuli_time(tn)));
-							[val_max, idx_max] = min(abs(recording_timeinfo-post_stimuli_time(tn)));
+							[val_min, idx_min] = min(abs(recording_timeinfo-pre_stimuli_time(tn))); % value and start point idx for ploting triggered response
+							[val_max, idx_max] = min(abs(recording_timeinfo-post_stimuli_time(tn))); % value and end point idx for ploting triggered response
 							recording_timeinfo_trig_plot{tn} = recording_timeinfo(idx_min:idx_max)-gpio_train_start_time{1}(tn);
 
 							idx_min_base = idx_min+recording_fr*(pre_stimuli_duration-baseline_duration); % loc of first data point of "baseline_duration" before stimulation
-							[val_max_base, idx_max_base] = find((recording_timeinfo-gpio_train_start_time{1}(tn))<0, 1, 'last'); % loc of last data point of "baseline_duration" before stimulation
+							idx_max_base = find((recording_timeinfo-gpio_train_start_time{1}(tn))<0, 1, 'last'); % loc of last data point of "baseline_duration" before stimulation
 							roi_col_data_base = mean(roi_col_data(idx_min_base:idx_max_base)); % baseline before 'tn' stimulation
 
 							roi_col_data_trig_plot{tn} = roi_col_data(idx_min:idx_max)-roi_col_data_base;
@@ -279,13 +279,13 @@ for rn = 1:recording_num
 						else
 							datapoint_for_average = cat(2, roi_col_data_trig_plot{:});
 							average_data_trig_plot = mean(datapoint_for_average, 2);
-							std_data_trig_plot = std(datapoint_for_average, 0, 2)/sqrt(size(datapoint_for_average, 2));
+							std_data_trig_plot = std(datapoint_for_average, 0, 2);
 						end
 						std_plot_upper_line = average_data_trig_plot+std_data_trig_plot;
 						std_plot_lower_line = average_data_trig_plot-std_data_trig_plot;
 						std_plot_area_y = [std_plot_upper_line; flip(std_plot_lower_line)];
 						% loc_longest_time_trig_plot = find(sort(data_point_num), 1, 'last');
-						[longest_time_trig_plot,loc_longest_time_trig_plot] = max(data_point_num, [],'linear')
+						[longest_time_trig_plot,loc_longest_time_trig_plot] = max(data_point_num, [],'linear');
 						average_data_trig_plot_x = recording_timeinfo_trig_plot{loc_longest_time_trig_plot};
 						std_plot_area_x = [average_data_trig_plot_x; flip(average_data_trig_plot_x)];
 						subplot(6, 8, (q*4+(m-1)*8)) % plot stimulation triggered responses. Averaged
