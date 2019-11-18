@@ -104,84 +104,92 @@ classdef nvoke_plot_app < matlab.apps.AppBase
                         ROIdata_peakevent(row_idx_GPIO, :) = [];
                         ROIdata = ROIdata_peakevent;
 
-                        % whether group ROIs according to peak
-                        % events
-                        check_no_peak = app.nopeakCheckBox.Value;
-                        check_quick_peak = app.Peak_1afteronsetofstimulationCheckBox.Value;
-                        check_post_peak = app.Peak_2afterendofstimulationCheckBox.Value;
                         
-                        % Peak onset criteria
-                        duration_quick_peak = app.Peak_1afteronsetofstimulationSlider.Value;
-                        duration_after_peak = app.Peak_2afterendofstimulationSlider.Value;
-                        
-                        % Stimulation duration
-                        stimuli_duration = app.StimulationdurationSlider.Value;
-                        recording_num = size(ROIdata, 1);
-                        for rn = 1:recording_num
-                            recording_name = ROIdata{rn, 1};
-                            stimulation = ROIdata{rn, 3}{1, 1};
-                            channel = ROIdata{rn, 4}; % GPIO channels
-                            gpio_signal = cell(1, (length(channel)-2)); % pre-allocate number of stimulation to gpio_signal used to store signal time and value
-                            gpio_x = cell(1, (length(channel)-2)); % pre-allocate gpio_x
-                            gpio_y = cell(1, (length(channel)-2)); % pre-allocate gpio_y
-                            for nc = 1:(length(channel)-2) % number of GPIOs used for stimulation
-                                gpio_offset = 6; % in case there are multiple stimuli, GPIO traces will be stacked, seperated by offset 6
-                                gpio_signal{nc}(:, 1) = channel(nc+2).time_value(:, 1); % time value of GPIO signal
-                                gpio_signal{nc}(:, 2) = channel(nc+2).time_value(:, 2); % voltage value of GPIO signal
-                                gpio_rise_loc = find(gpio_signal{nc}(:, 2)); % locations of GPIO voltage not 0, ie stimuli start
-                                gpio_rise_num = length(gpio_rise_loc); % number of GPIO voltage rise
-                                
-                                % Looking for stimulation groups. Many stimuli are train signal. Ditinguish trains by finding rise time interval >=5s
-                                % Next line calculate time interval between to gpio_rise. (Second:End stimuli_time)-(first:Second_last stimuli_time)
-                                gpio_rise_interval{nc} = gpio_signal{nc}(gpio_rise_loc(2:end), 1)-gpio_signal{nc}(gpio_rise_loc(1:(end-1)), 1);
-                                train_interval_loc{nc} = find(gpio_rise_interval{1, nc} >= 5); % If time interval >=5s, this is between end of a train and start of another train
-                                train_end_loc{rn, nc} = [gpio_rise_loc(train_interval_loc{nc}); gpio_rise_loc(end)]; % time of the train_end rises start
-                                train_start_loc{rn, nc} = [gpio_rise_loc(1); gpio_rise_loc(train_interval_loc{nc}+1)]; % time of the train_start rises start
-                                
-                                gpio_train_start_time{rn, nc} = gpio_signal{nc}(train_start_loc{rn, nc}, 1); % time point when GPIO trains start
-                                gpio_train_end_time{rn, nc} = gpio_signal{nc}(train_end_loc{rn, nc}+1, 1); % time point when GPIO trains end
-                                gpio_train_interval_time(rn, nc) = gpio_train_start_time{rn, nc}(2, 1)-gpio_train_start_time{rn, nc}(1, 1); % between the first train to second train start
-                                gpio_train_interval_time(rn, nc) = round(gpio_train_interval_time(rn, nc)); % round the interval to closest integer
-                                gpio_train_duration(rn, nc) = gpio_train_end_time{rn, nc}(1, 1)-gpio_train_start_time{rn, nc}(1, 1); % duration of 1 train stimulation
-                                gpio_train_duration(rn, nc) = round(gpio_train_duration(rn, nc));
-                                
-                                % gpio_x = zeros(gpio_rise_num*4, length(channel)-2); % pre-allocate gpio_x used to plot GPIO with "patch" function
-                                % gpio_y = zeros(gpio_rise_num*4, length(channel)-2); % pre-allocate gpio_y used to plot GPIO with "patch" function
-                                for ng = 1:gpio_rise_num % number of GPIO voltage rise, ie stimuli
-                                    gpio_x{nc}(1+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng), 1);
-                                    gpio_x{nc}(2+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng), 1);
-                                    gpio_x{nc}(3+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng)+1, 1);
-                                    gpio_x{nc}(4+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng)+1, 1);
-
-                                    gpio_y{nc}(1+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng)+1, 2);
-                                    gpio_y{nc}(2+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng), 2);
-                                    gpio_y{nc}(3+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng), 2);
-                                    gpio_y{nc}(4+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng)+1, 2);
-                                end
-                                ROIdata{rn, 4}(nc+2).time_value_plot(:, 1) = gpio_x; % store continuous gpio_x info in ROIdata channel table. This is for patch plot function
-                                ROIdata{rn, 4}(nc+2).time_value_plot(:, 2) = gpio_y; % store continuous gpio_y info in ROIdata channel table.
-                                gpio_lim_loc{nc, 1} = find(gpio_y{nc}(:, 1) == 0); % location of gpio voltage ==0 in gpio_y
-                                gpio_lim_loc{nc, 2} = find(gpio_y{nc}(:, 1)); % location of gpio voltage ~=0 in gpio_y
-                            end
-                        end
-                        if stimuli_duration ~= 0
-                           idx_chosen_stimuli_duration = find(gpio_train_duration(:, 1)==stimuli_duration);
-                           ROIdata = ROIdata(idx_chosen_stimuli_duration, :);
-                        end
-
-                        % settings for plot and save
-                        if app.PloteverysinglerecordingsCheckBox.Value == 1
-                            if app.SavesinglerecordingplotsCheckBox.Value == 0
-                                plot_traces = 1;
-                            else
-                                plot_traces = 2;
-                            end
-                        else
-                            plot_traces = 0;
-                        end
-                        pause_step = app.PauseaftereachsinglerecordingplotCheckBox.Value;
                     case 'Airpuff to one eye (GPIO1)'
+                        mat_stimuli_type = cellfun(@(x) strcmp('OG_LED', x),ROIdata_peakevent,'UniformOutput',false);
+                        idx_ogled = double(cell2mat(mat_stimuli_type));
+                        row_idx_ogled = find(idx_ogled(:,3));
+                        ROIdata_peakevent(row_idx_ogled, :) = [];
+                        ROIdata = ROIdata_peakevent;
                     end
+
+                    % whether group ROIs according to peak
+                    % events
+                    check_no_peak = app.nopeakCheckBox.Value;
+                    check_quick_peak = app.Peak_1afteronsetofstimulationCheckBox.Value;
+                    check_post_peak = app.Peak_2afterendofstimulationCheckBox.Value;
+                    
+                    % Peak onset criteria
+                    duration_quick_peak = app.Peak_1afteronsetofstimulationSlider.Value;
+                    duration_after_peak = app.Peak_2afterendofstimulationSlider.Value;
+                    
+                    % Stimulation duration
+                    stimuli_duration = app.StimulationdurationSlider.Value;
+                    recording_num = size(ROIdata, 1);
+                    for rn = 1:recording_num
+                        recording_name = ROIdata{rn, 1};
+                        stimulation = ROIdata{rn, 3}{1, 1};
+                        channel = ROIdata{rn, 4}; % GPIO channels
+                        gpio_signal = cell(1, (length(channel)-2)); % pre-allocate number of stimulation to gpio_signal used to store signal time and value
+                        gpio_x = cell(1, (length(channel)-2)); % pre-allocate gpio_x
+                        gpio_y = cell(1, (length(channel)-2)); % pre-allocate gpio_y
+                        for nc = 1:(length(channel)-2) % number of GPIOs used for stimulation
+                            gpio_offset = 6; % in case there are multiple stimuli, GPIO traces will be stacked, seperated by offset 6
+                            gpio_signal{nc}(:, 1) = channel(nc+2).time_value(:, 1); % time value of GPIO signal
+                            gpio_signal{nc}(:, 2) = channel(nc+2).time_value(:, 2); % voltage value of GPIO signal
+                            gpio_rise_loc = find(gpio_signal{nc}(:, 2)); % locations of GPIO voltage not 0, ie stimuli start
+                            gpio_rise_num = length(gpio_rise_loc); % number of GPIO voltage rise
+                            
+                            % Looking for stimulation groups. Many stimuli are train signal. Ditinguish trains by finding rise time interval >=5s
+                            % Next line calculate time interval between to gpio_rise. (Second:End stimuli_time)-(first:Second_last stimuli_time)
+                            gpio_rise_interval{nc} = gpio_signal{nc}(gpio_rise_loc(2:end), 1)-gpio_signal{nc}(gpio_rise_loc(1:(end-1)), 1);
+                            train_interval_loc{nc} = find(gpio_rise_interval{1, nc} >= 5); % If time interval >=5s, this is between end of a train and start of another train
+                            train_end_loc{rn, nc} = [gpio_rise_loc(train_interval_loc{nc}); gpio_rise_loc(end)]; % time of the train_end rises start
+                            train_start_loc{rn, nc} = [gpio_rise_loc(1); gpio_rise_loc(train_interval_loc{nc}+1)]; % time of the train_start rises start
+                            
+                            gpio_train_start_time{rn, nc} = gpio_signal{nc}(train_start_loc{rn, nc}, 1); % time point when GPIO trains start
+                            gpio_train_end_time{rn, nc} = gpio_signal{nc}(train_end_loc{rn, nc}+1, 1); % time point when GPIO trains end
+                            gpio_train_interval_time(rn, nc) = gpio_train_start_time{rn, nc}(2, 1)-gpio_train_start_time{rn, nc}(1, 1); % between the first train to second train start
+                            gpio_train_interval_time(rn, nc) = round(gpio_train_interval_time(rn, nc)); % round the interval to closest integer
+                            gpio_train_duration(rn, nc) = gpio_train_end_time{rn, nc}(1, 1)-gpio_train_start_time{rn, nc}(1, 1); % duration of 1 train stimulation
+                            gpio_train_duration(rn, nc) = round(gpio_train_duration(rn, nc));
+                            
+                            % gpio_x = zeros(gpio_rise_num*4, length(channel)-2); % pre-allocate gpio_x used to plot GPIO with "patch" function
+                            % gpio_y = zeros(gpio_rise_num*4, length(channel)-2); % pre-allocate gpio_y used to plot GPIO with "patch" function
+                            for ng = 1:gpio_rise_num % number of GPIO voltage rise, ie stimuli
+                                gpio_x{nc}(1+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng), 1);
+                                gpio_x{nc}(2+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng), 1);
+                                gpio_x{nc}(3+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng)+1, 1);
+                                gpio_x{nc}(4+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng)+1, 1);
+
+                                gpio_y{nc}(1+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng)+1, 2);
+                                gpio_y{nc}(2+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng), 2);
+                                gpio_y{nc}(3+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng), 2);
+                                gpio_y{nc}(4+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng)+1, 2);
+                            end
+                            ROIdata{rn, 4}(nc+2).time_value_plot(:, 1) = gpio_x; % store continuous gpio_x info in ROIdata channel table. This is for patch plot function
+                            ROIdata{rn, 4}(nc+2).time_value_plot(:, 2) = gpio_y; % store continuous gpio_y info in ROIdata channel table.
+                            gpio_lim_loc{nc, 1} = find(gpio_y{nc}(:, 1) == 0); % location of gpio voltage ==0 in gpio_y
+                            gpio_lim_loc{nc, 2} = find(gpio_y{nc}(:, 1)); % location of gpio voltage ~=0 in gpio_y
+                        end
+                    end
+                    if stimuli_duration ~= 0
+                       idx_chosen_stimuli_duration = find(gpio_train_duration(:, 1)==stimuli_duration);
+                       ROIdata = ROIdata(idx_chosen_stimuli_duration, :);
+                    end
+
+                    % settings for plot and save
+                    if app.PloteverysinglerecordingsCheckBox.Value == 1
+                        if app.SavesinglerecordingplotsCheckBox.Value == 0
+                            plot_traces = 1;
+                        else
+                            plot_traces = 2;
+                        end
+                    else
+                        plot_traces = 0;
+                    end
+                    pause_step = app.PauseaftereachsinglerecordingplotCheckBox.Value;
+
                     % Calculation of ROI data and plot.
                     % Modified from fun 'nvoke_correct_peakdata'
                     if plot_traces == 2
@@ -564,91 +572,91 @@ classdef nvoke_plot_app < matlab.apps.AppBase
                             end
                         end
 
-                        end
-                        % Calculate mean value of all ROIs from all recordings
-                        cla(app.UIAxes_all_traces, 'reset')
-                        cla(app.UIAxes_all_traces_mean, 'reset')
-                        fr_num = unique(recording_fr, 'sorted'); 
-                        recording_fr_min = min(fr_num); % find the lowest recording frequency. Downgrade recordings to this number and calculate the mean value
-                        trace_count = 1; % count all trace number
-                        patch(app.UIAxes_all_traces, gpio_x_trig_plot, gpio_y_trig_plot, 'cyan', 'EdgeColor', 'none', 'FaceAlpha', 0.7);
-                        hold(app.UIAxes_all_traces, 'on')
-                        for fn = 1:length(fr_num) % fn - freqency number
-                            log_idx_fr = recording_fr==fr_num(fn); % logical index of recordings with (fn)th low frequency 
-                            idx_fr = find(log_idx_fr);
-                            fr_num(fn)=round(fr_num(fn));
-                            fr_multiplier = fr_num(fn)/fr_num(1); % how many times this frequency is compare to lowest frequency
-                            if ~isinteger(int8(fr_multiplier)) %MATLAB® stores a real number as a double type by default. Convert the number to a signed 8-bit integer type using the int8 function
-                                % warning('Higher recording frequency is not an interger multiple of the lowest one')
-                            else
-                                for frn = 1:length(idx_fr) % number of recordings with frequency fr_num(fn)
-                                    [rs, rois, ts] = size(recording_timeinfo_trig_plot(frn, :, :)); % rs: recording size (1). rois: roi size. ts: trace size
-                                    for rn = 1:rois
-                                        for tn = 1:ts
-                                            if ~isempty(recording_timeinfo_trig_plot{frn, rn, tn})
-                                                if fn == 1
-                                                    timeinfo_all_trace{trace_count, 1} = recording_timeinfo_trig_plot{frn, rn, tn};
-                                                    dff_all_trace{trace_count, 1} = roi_col_data_trig_plot{frn, rn, tn};
-                                                    data_point_num_all_trace(trace_count, 1) = length(dff_all_trace{trace_count, 1}); % count data points for calculating average
-                                                else % if frequency is higher, use fr_multiplier to downgrade data
-                                                    timeinfo_all_trace{trace_count, 1} = recording_timeinfo_trig_plot{frn, rn, tn}(1:fr_multiplier:end);
-                                                    dff_all_trace{trace_count, 1} = roi_col_data_trig_plot{frn, rn, tn}(1:fr_multiplier:end);
-                                                    data_point_num_all_trace(trace_count, 1) = length(dff_all_trace{trace_count, 1});
-                                                end
-                                                plot(app.UIAxes_all_traces, timeinfo_all_trace{trace_count, 1} , dff_all_trace{trace_count, 1}, 'k');
-                                                trace_count = trace_count+1;
+                    end
+                    % Calculate mean value of all ROIs from all recordings
+                    cla(app.UIAxes_all_traces, 'reset')
+                    cla(app.UIAxes_all_traces_mean, 'reset')
+                    fr_num = unique(recording_fr, 'sorted'); 
+                    recording_fr_min = min(fr_num); % find the lowest recording frequency. Downgrade recordings to this number and calculate the mean value
+                    trace_count = 1; % count all trace number
+                    patch(app.UIAxes_all_traces, gpio_x_trig_plot, gpio_y_trig_plot, 'cyan', 'EdgeColor', 'none', 'FaceAlpha', 0.7);
+                    hold(app.UIAxes_all_traces, 'on')
+                    for fn = 1:length(fr_num) % fn - freqency number
+                        log_idx_fr = recording_fr==fr_num(fn); % logical index of recordings with (fn)th low frequency 
+                        idx_fr = find(log_idx_fr);
+                        fr_num(fn)=round(fr_num(fn));
+                        fr_multiplier = fr_num(fn)/fr_num(1); % how many times this frequency is compare to lowest frequency
+                        if ~isinteger(int8(fr_multiplier)) %MATLAB® stores a real number as a double type by default. Convert the number to a signed 8-bit integer type using the int8 function
+                            % warning('Higher recording frequency is not an interger multiple of the lowest one')
+                        else
+                            for frn = 1:length(idx_fr) % number of recordings with frequency fr_num(fn)
+                                [rs, rois, ts] = size(recording_timeinfo_trig_plot(frn, :, :)); % rs: recording size (1). rois: roi size. ts: trace size
+                                for rn = 1:rois
+                                    for tn = 1:ts
+                                        if ~isempty(recording_timeinfo_trig_plot{frn, rn, tn})
+                                            if fn == 1
+                                                timeinfo_all_trace{trace_count, 1} = recording_timeinfo_trig_plot{frn, rn, tn};
+                                                dff_all_trace{trace_count, 1} = roi_col_data_trig_plot{frn, rn, tn};
+                                                data_point_num_all_trace(trace_count, 1) = length(dff_all_trace{trace_count, 1}); % count data points for calculating average
+                                            else % if frequency is higher, use fr_multiplier to downgrade data
+                                                timeinfo_all_trace{trace_count, 1} = recording_timeinfo_trig_plot{frn, rn, tn}(1:fr_multiplier:end);
+                                                dff_all_trace{trace_count, 1} = roi_col_data_trig_plot{frn, rn, tn}(1:fr_multiplier:end);
+                                                data_point_num_all_trace(trace_count, 1) = length(dff_all_trace{trace_count, 1});
                                             end
+                                            plot(app.UIAxes_all_traces, timeinfo_all_trace{trace_count, 1} , dff_all_trace{trace_count, 1}, 'k');
+                                            trace_count = trace_count+1;
                                         end
                                     end
                                 end
+                            end
 
+                        end
+                    end
+                    hold(app.UIAxes_all_traces, 'off')
+                    datapoint_num_all_unique = unique(data_point_num_all_trace, 'sorted');
+                    datapoint_num_all_for_average = cell(1, length(datapoint_num_all_unique));
+                    average_datapoint_all = cell(1, length(datapoint_num_all_unique));
+                    std_datapoint_all = cell(1, length(datapoint_num_all_unique));
+                    for dsn = 1:length(datapoint_num_all_unique) % datapoint_segment_num. calculate mean value in different segment of datapoint length
+                        if dsn == 1
+                            data_segment_start = 1;
+                        else
+                            data_segment_start = datapoint_num_all_unique(dsn-1)+1;
+                        end
+                        data_segment_end = datapoint_num_all_unique(dsn);
+                        available_traces = find(data_point_num_all_trace >= data_segment_end);
+                        for atn = 1:length(available_traces) % all trace number
+                            if atn == 1
+                                datapoint_num_all_for_average{dsn} = dff_all_trace{available_traces(atn)}(data_segment_start:data_segment_end);
+                            else
+                                datapoint_num_all_for_average{dsn} = [datapoint_num_all_for_average{dsn} dff_all_trace{available_traces(atn)}(data_segment_start:data_segment_end)];
                             end
                         end
-                        hold(app.UIAxes_all_traces, 'off')
-                        datapoint_num_all_unique = unique(data_point_num_all_trace, 'sorted');
-                        datapoint_num_all_for_average = cell(1, length(datapoint_num_all_unique));
-                        average_datapoint_all = cell(1, length(datapoint_num_all_unique));
-                        std_datapoint_all = cell(1, length(datapoint_num_all_unique));
-                        for dsn = 1:length(datapoint_num_all_unique) % datapoint_segment_num. calculate mean value in different segment of datapoint length
-                            if dsn == 1
-                                data_segment_start = 1;
-                            else
-                                data_segment_start = datapoint_num_all_unique(dsn-1)+1;
-                            end
-                            data_segment_end = datapoint_num_all_unique(dsn);
-                            available_traces = find(data_point_num_all_trace >= data_segment_end);
-                            for atn = 1:length(available_traces) % all trace number
-                                if atn == 1
-                                    datapoint_num_all_for_average{dsn} = dff_all_trace{available_traces(atn)}(data_segment_start:data_segment_end);
-                                else
-                                    datapoint_num_all_for_average{dsn} = [datapoint_num_all_for_average{dsn} dff_all_trace{available_traces(atn)}(data_segment_start:data_segment_end)];
-                                end
-                            end
-                            average_datapoint_all{dsn} = mean(datapoint_num_all_for_average{dsn}, 2);
-                            std_datapoint_all{dsn} = std(datapoint_num_all_for_average{dsn}, 0, 2);
-                            if dsn == 1
-                                average_datapoint_all_plot = average_datapoint_all{dsn};
-                                std_datapoint_all_plot = std_datapoint_all{dsn};
-                            else
-                                average_datapoint_all_plot = [average_datapoint_all_plot; average_datapoint_all{dsn}];
-                                std_datapoint_all_plot = [std_datapoint_all_plot; std_datapoint_all{dsn}];
-                            end
+                        average_datapoint_all{dsn} = mean(datapoint_num_all_for_average{dsn}, 2);
+                        std_datapoint_all{dsn} = std(datapoint_num_all_for_average{dsn}, 0, 2);
+                        if dsn == 1
+                            average_datapoint_all_plot = average_datapoint_all{dsn};
+                            std_datapoint_all_plot = std_datapoint_all{dsn};
+                        else
+                            average_datapoint_all_plot = [average_datapoint_all_plot; average_datapoint_all{dsn}];
+                            std_datapoint_all_plot = [std_datapoint_all_plot; std_datapoint_all{dsn}];
                         end
-                        % datapoint_num_all_for_average = cat(2, dff_all_trace{:});
-                        % average_datapoint_all_plot = mean(datapoint_num_all_for_average, 2);
-                        % std_datapoint_all_plot = std(datapoint_num_all_for_average, 0, 2);
-                        std_all_plot_upper_line = average_datapoint_all_plot+std_datapoint_all_plot;
-                        std_all_plot_lower_line = average_datapoint_all_plot-std_datapoint_all_plot;
-                        std_all_plot_area_y = [std_all_plot_upper_line; flip(std_all_plot_lower_line)]; % prepare a close path for patch fun to plot std shade
+                    end
+                    % datapoint_num_all_for_average = cat(2, dff_all_trace{:});
+                    % average_datapoint_all_plot = mean(datapoint_num_all_for_average, 2);
+                    % std_datapoint_all_plot = std(datapoint_num_all_for_average, 0, 2);
+                    std_all_plot_upper_line = average_datapoint_all_plot+std_datapoint_all_plot;
+                    std_all_plot_lower_line = average_datapoint_all_plot-std_datapoint_all_plot;
+                    std_all_plot_area_y = [std_all_plot_upper_line; flip(std_all_plot_lower_line)]; % prepare a close path for patch fun to plot std shade
 
-                        [longest_timeinfo_all_trace, loc_longest_timeinfo_all_trace] = max(data_point_num_all_trace, [], 'linear');
-                        average_datapoint_all_plot_time = timeinfo_all_trace{loc_longest_timeinfo_all_trace};
-                        std_datapoint_all_plot_time = [average_datapoint_all_plot_time; flip(average_datapoint_all_plot_time)];
-                        patch(app.UIAxes_all_traces_mean, gpio_x_trig_plot, gpio_y_trig_plot, 'cyan', 'EdgeColor', 'none', 'FaceAlpha', 0.7);
-                        hold(app.UIAxes_all_traces_mean, 'on')
-                        plot(app.UIAxes_all_traces_mean, average_datapoint_all_plot_time, average_datapoint_all_plot, 'k');
-                        patch(app.UIAxes_all_traces_mean, std_datapoint_all_plot_time, std_all_plot_area_y, 'yellow', 'EdgeColor', 'none', 'FaceAlpha', 0.3)
-                        hold(app.UIAxes_all_traces_mean, 'off')
+                    [longest_timeinfo_all_trace, loc_longest_timeinfo_all_trace] = max(data_point_num_all_trace, [], 'linear');
+                    average_datapoint_all_plot_time = timeinfo_all_trace{loc_longest_timeinfo_all_trace};
+                    std_datapoint_all_plot_time = [average_datapoint_all_plot_time; flip(average_datapoint_all_plot_time)];
+                    patch(app.UIAxes_all_traces_mean, gpio_x_trig_plot, gpio_y_trig_plot, 'cyan', 'EdgeColor', 'none', 'FaceAlpha', 0.7);
+                    hold(app.UIAxes_all_traces_mean, 'on')
+                    plot(app.UIAxes_all_traces_mean, average_datapoint_all_plot_time, average_datapoint_all_plot, 'k');
+                    patch(app.UIAxes_all_traces_mean, std_datapoint_all_plot_time, std_all_plot_area_y, 'yellow', 'EdgeColor', 'none', 'FaceAlpha', 0.3)
+                    hold(app.UIAxes_all_traces_mean, 'off')
                     
                 end
             end
