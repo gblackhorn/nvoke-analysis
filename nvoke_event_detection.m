@@ -10,7 +10,7 @@ function [ROIdata_peakevent] = nvoke_event_detection(ROIdata,plot_traces, pause_
 % nvoke_event_detection(ROIdata,1, 1)
 
 figfolder_default = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\ROI_data\peaks';
-lowpass_fpass = 1;
+lowpass_fpass = 0.1;
 
 if nargin < 2
 	plot_traces = 0;

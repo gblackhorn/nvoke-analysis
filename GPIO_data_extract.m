@@ -47,7 +47,7 @@ if time_stamp_start ~= 0
 end
 
 % find out active channels. SYNC is always active
-channel_list = {'SYNC'; 'ExLED'; 'GPIO1'; 'GPIO2'; 'GPIO3'; 'GPIO4'; 'OgLED'};
+channel_list = {'SYNC'; 'EX_LED'; 'GPIO1'; 'GPIO2'; 'GPIO3'; 'GPIO4'; 'OG_LED'};
 active_channels = []; % location of channel in the list
 
 p = 1; % p is the position of each active channel info in channel structure

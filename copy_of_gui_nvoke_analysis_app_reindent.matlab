@@ -193,7 +193,11 @@ classdef nvoke_plot_app < matlab.apps.AppBase
                     % Calculation of ROI data and plot.
                     % Modified from fun 'nvoke_correct_peakdata'
                     if plot_traces == 2
-                        app.folder_plots = uigetdir(app.folder_plots, 'Select a folder to save figures');
+                        if app.folder_plots ~= 0
+                            app.folder_plots = uigetdir(app.folder_plots, 'Select a folder to save figures');
+                        else
+                            app.folder_plots = uigetdir(app.folder_ROIdata, 'Select a folder to save figures');
+                        end
                     end
                         
                     chosen_recording_num = size(ROIdata, 1);
@@ -201,8 +205,8 @@ classdef nvoke_plot_app < matlab.apps.AppBase
                         recording_name = ROIdata{rn, 1};
                         
                         % next lines are used for debug. show file numer and name
-                        rn 
-                        display(recording_name)
+                        % rn 
+                        % display(recording_name)
                         
                         peakinfo_row = find(strcmp(app.peakinfo_row_name, ROIdata{rn, 5}.Properties.RowNames));
                         recording_rawdata = ROIdata{rn,2};
@@ -323,14 +327,14 @@ classdef nvoke_plot_app < matlab.apps.AppBase
                                         last_row = roi_num-(p-1)*10-(q-1)*5;
                                     end
                                     for m = 1:last_row
-                                        %% next lines are for debug
-                                        %p
-                                        %q
-                                        %m
-                                        %if rn==9 && p==1 && q==1 && m==3
-                                            %pause
-                                        %end
-                                        %% ====================
+                                        % next lines are for debug
+                                        % p
+                                        % q
+                                        % m
+                                        % if rn==6 && p==1 && q==1 && m==2
+                                            % pause
+                                        % end
+                                        % ====================
                                         
                                         roi_plot = (p-1)*10+(q-1)*5+m; % the number of roi to be plot
                                         roi_name = ROIdata{rn,5}.Properties.VariableNames{roi_plot}; % roi name ('C0, C1...')
@@ -361,7 +365,7 @@ classdef nvoke_plot_app < matlab.apps.AppBase
                                         % plot(recording_timeinfo, roi_col_data_highpassed, 'b') % plot highpass filtered data
                                         % plot(recording_timeinfo, thresh_data, '--k'); % plot thresh hold line
                                         plot(recording_timeinfo, roi_col_data_lowpassed, 'm'); % plot lowpass filtered data
-                                        plot(peak_time_loc_lowpassed{rn, roi_plot}, peak_value_lowpassed{rn, roi_plot}, 'yo', 'linewidth', 2) %plot lowpassed data peak marks
+                                        % plot(peak_time_loc_lowpassed{rn, roi_plot}, peak_value_lowpassed{rn, roi_plot}, 'yo', 'linewidth', 2) %plot lowpassed data peak marks
                                         % plot(peak_rise_turning_loc{rn, roi_plot}, peak_rise_turning_value{rn, roi_plot}  '>b', peak_decay_turning_loc{rn, roi_plot}, peak_decay_turning_value{rn, roi_plot}, '<b', 'linewidth', 2) % plot start and end of transient, turning point
                                         ylim_gpio = ylim;
 
@@ -381,6 +385,12 @@ classdef nvoke_plot_app < matlab.apps.AppBase
                                         set(get(sub_handle(roi_plot), 'YLabel'), 'String', roi_name);
                                         hold off
 
+                                        first_gpio_train_start_loc = find(gpio_x{1}(:, 1)==gpio_train_start_time{1}(1), 1); % location of first train starts
+                                        first_gpio_train_end_loc = find(gpio_x{1}(:, 1)==gpio_train_end_time{1}(1), 1, 'last'); % location of first train ends
+                                        gpio_x_trig_plot = gpio_x{1}(first_gpio_train_start_loc:first_gpio_train_end_loc, 1); % gpio_x of the first train
+                                        gpio_x_trig_plot = gpio_x_trig_plot-gpio_x_trig_plot(1, 1); % gpio_x starts from 0
+                                        gpio_y_trig_plot = gpio_y{1}(first_gpio_train_start_loc:first_gpio_train_end_loc); % gpio_y of the first train
+
                                         % Plot stimuli triggered response. 
                                         if GPIO_trace == 1
                                             subplot(6, 8, (q*4+(m-1)*8-1)) % plot stimulation triggered responses. All sweeps
@@ -391,11 +401,6 @@ classdef nvoke_plot_app < matlab.apps.AppBase
                                             post_stimuli_time = gpio_train_end_time{1}+post_stimuli_duration; % plot until 6s after stimuli end
                                             plot_duration = post_stimuli_time-pre_stimuli_time; % duration of plot
  
-                                            first_gpio_train_start_loc = find(gpio_x{1}(:, 1)==gpio_train_start_time{1}(1), 1); % location of first train starts
-                                            first_gpio_train_end_loc = find(gpio_x{1}(:, 1)==gpio_train_end_time{1}(1), 1, 'last'); % location of first train ends
-                                            gpio_x_trig_plot = gpio_x{1}(first_gpio_train_start_loc:first_gpio_train_end_loc, 1); % gpio_x of the first train
-                                            gpio_x_trig_plot = gpio_x_trig_plot-gpio_x_trig_plot(1, 1); % gpio_x starts from 0
-                                            gpio_y_trig_plot = gpio_y{1}(first_gpio_train_start_loc:first_gpio_train_end_loc); % gpio_y of the first train
                                             patch(gpio_x_trig_plot, gpio_y_trig_plot, 'cyan', 'EdgeColor', 'none', 'FaceAlpha', 0.7)
                                             hold on
  
@@ -424,21 +429,23 @@ classdef nvoke_plot_app < matlab.apps.AppBase
                                                             erase_trace = [erase_trace; tn];
                                                             plot_trace = 0;
                                                         else
-                                                            plot_trace =1;
+                                                            plot_trace = 1;
                                                         end
                                                     else
                                                         if check_quick_peak == 1
                                                             if isempty(exist_peak1)
                                                                 erase_trace = [erase_trace; tn];
                                                                 plot_trace = 0;
+                                                            else
+                                                                plot_trace = 1;
                                                             end
                                                         elseif check_post_peak == 1
                                                             if isempty(exist_peak2)
                                                                 erase_trace = [erase_trace; tn];
                                                                 plot_trace = 0;
+                                                            else
+                                                                plot_trace = 1;
                                                             end
-                                                        else
-                                                            plot_trace = 1;
                                                         end
                                                     end
                                                 end
@@ -521,7 +528,9 @@ classdef nvoke_plot_app < matlab.apps.AppBase
                                                 patch(gpio_x_trig_plot, gpio_y_trig_plot, 'cyan', 'EdgeColor', 'none', 'FaceAlpha', 0.7)
                                                 hold on
                                                 plot(average_data_trig_plot_x, average_data_trig_plot, 'k');
-                                                patch(std_plot_area_x, std_plot_area_y, 'yellow', 'EdgeColor', 'none', 'FaceAlpha', 0.3) %'#EDB120'
+                                                if ~isempty(std_plot_area_y)
+                                                    patch(std_plot_area_x, std_plot_area_y, 'yellow', 'EdgeColor', 'none', 'FaceAlpha', 0.3) %'#EDB120'
+                                                end
                                             end
                                         end
 
@@ -554,15 +563,15 @@ classdef nvoke_plot_app < matlab.apps.AppBase
                                     % end
                                 end
                                 sgtitle(ROIdata{rn, 1}, 'Interpreter', 'none');
-                                if plot_traces == 2 && ~isempty(figfolder)
+                                if plot_traces == 2 && ~isempty(app.folder_plots)
                                     figfile = [ROIdata{rn,1}(1:(end-4)), '-handpick-', num2str(p), '.fig'];
-                                    figfullpath = fullfile(figfolder,figfile);
+                                    figfullpath = fullfile(app.folder_plots,figfile);
                                     savefig(gcf, figfullpath);
                                     jpgfile_name = [figfile(1:(end-3)), 'jpg'];
-                                    jpgfile_fullpath = fullfile(figfolder, jpgfile_name);
+                                    jpgfile_fullpath = fullfile(app.folder_plots, jpgfile_name);
                                     saveas(gcf, jpgfile_fullpath);
                                     svgfile_name = [figfile(1:(end-3)), 'svg'];
-                                    svgfile_fullpath = fullfile(figfolder, svgfile_name);
+                                    svgfile_fullpath = fullfile(app.folder_plots, svgfile_name);
                                     saveas(gcf, svgfile_fullpath);
                                 end
                                 if pause_step == 1
@@ -658,8 +667,48 @@ classdef nvoke_plot_app < matlab.apps.AppBase
                     patch(app.UIAxes_all_traces_mean, std_datapoint_all_plot_time, std_all_plot_area_y, 'yellow', 'EdgeColor', 'none', 'FaceAlpha', 0.3)
                     hold(app.UIAxes_all_traces_mean, 'off')
                     
+                    switch app.PlotButtonGroup.SelectedObject.Text 
+                         case 'Stimulation triggered response'
+                             trigger_str = 'stimulation';
+                         case 'Response triggered response'
+                             trigger_str = 'response';
+                     end
+                     switch app.StimulationButtonGroup.SelectedObject.Text
+                         case 'Optogenetics (OgLED)'
+                             stimulation_str = ['LED-', num2str(app.StimulationdurationSlider.Value), 's'];
+                         case 'Airpuff to one eye (GPIO1)'
+                             stimulation_str = ['airpuff-1s']; % GPIO trigger signal doesn't determine airpuff duration. The duration is set to 1s by puff machine
+                     end
+                     if app.nopeakCheckBox.Value == 1
+                         peak_1_check_duration_str = [num2str(app.Peak_1_bin_edit.Value), 's'];
+                         peak_2_check_duration_str = [num2str(app.Peak_2_bin_edit.Value), 's'];
+                         peak_filter_str = ['nopeak', '-', peak_1_check_duration_str, '-', peak_2_check_duration_str];
+                     elseif app.Peak_1afteronsetofstimulationCheckBox.Value == 1 || app.Peak_2afterendofstimulationCheckBox.Value == 1
+                         if app.Peak_1afteronsetofstimulationCheckBox.Value == 1
+                             peak_1_check_duration_str = [num2str(app.Peak_1_bin_edit.Value), 's'];
+                             peak_filter_str_part1 = ['peak1', '-', peak_1_check_duration_str];
+                         else
+                             peak_filter_str_part1 = '';
+                         end
+                         if app.Peak_2afterendofstimulationCheckBox.Value == 1
+                             peak_2_check_duration_str = [num2str(app.Peak_2_bin_edit.Value), 's'];
+                             peak_filter_str_part2 = ['peak2', '-', peak_2_check_duration_str];
+                         else
+                             peak_filter_str_part2 = '';
+                         end
+                         peak_filter_str = [peak_filter_str_part1, '-', peak_filter_str_part2];
+                     else
+                         peak_filter_str = '';
+                     end
+                     plotfilename_stem = [trigger_str, ' ', stimulation_str, ' ', peak_filter_str];
+                     plotfilename_sweeps = [plotfilename_stem, ' ', 'sweeps'];
+                     plotfilename_mean = [plotfilename_stem, ' ', 'mean'];
+
+                     title(app.UIAxes_all_traces, plotfilename_sweeps);
+                     title(app.UIAxes_all_traces_mean, plotfilename_mean);
                 end
             end
+
 
             
 
@@ -744,6 +793,13 @@ classdef nvoke_plot_app < matlab.apps.AppBase
                 app.nopeakCheckBox.Value = 0;
                 app.Peak_1afteronsetofstimulationSlider.Enable = 1;
                 app.Peak_1_bin_edit.Enable = 1;
+                if app.Peak_2afterendofstimulationCheckBox.Value == 0
+                    app.Peak_2afterendofstimulationSlider.Enable = 0;
+                    app.Peak_2_bin_edit.Enable = 0;
+                else
+                    app.Peak_2afterendofstimulationSlider.Enable = 1;
+                    app.Peak_2_bin_edit.Enable = 1;
+                end
             elseif value == 0
                 app.Peak_1afteronsetofstimulationSlider.Enable = 0;
                 app.Peak_1_bin_edit.Enable = 0;
@@ -758,6 +814,13 @@ classdef nvoke_plot_app < matlab.apps.AppBase
                 app.nopeakCheckBox.Value = 0;
                 app.Peak_2afterendofstimulationSlider.Enable = 1;
                 app.Peak_2_bin_edit.Enable = 1;
+                if app.Peak_1afteronsetofstimulationCheckBox == 0
+                    app.Peak_1afteronsetofstimulationSlider.Enable = 0;
+                    app.Peak_1_bin_edit.Enable = 0;
+                else
+                    app.Peak_1afteronsetofstimulationSlider.Enable = 1;
+                    app.Peak_1_bin_edit.Enable = 1;
+                end
             elseif value == 0
                 app.Peak_2afterendofstimulationSlider.Enable = 0;
                 app.Peak_2_bin_edit.Enable = 0;
@@ -774,6 +837,72 @@ classdef nvoke_plot_app < matlab.apps.AppBase
         function Peak_2_bin_editValueChanged2(app, event)
             value = app.Peak_2_bin_edit.Value;
             app.Peak_2afterendofstimulationSlider.Value = value;
+        end
+
+        % Button pushed function: SaveaverageplotButton
+        function SaveaverageplotButtonPushed(app, event)
+            app.folder_plots = uigetdir(app.folder_plots, 'Select a folder to save figures');
+            if app.folder_plots ~= 0
+                app.FoldertosavePlotsEditField.Value = app.folder_plots;
+            end 
+            switch app.PlotButtonGroup.SelectedObject.Text 
+                 case 'Stimulation triggered response'
+                     trigger_str = 'stimulation';
+                 case 'Response triggered response'
+                     trigger_str = 'response';
+             end
+             switch app.StimulationButtonGroup.SelectedObject.Text
+                 case 'Optogenetics (OgLED)'
+                     stimulation_str = ['LED-', num2str(app.StimulationdurationSlider.Value), 's'];
+                 case 'Airpuff to one eye (GPIO1)'
+                     stimulation_str = ['airpuff-1s']; % GPIO trigger signal doesn't determine airpuff duration. The duration is set to 1s by puff machine
+             end
+             if app.nopeakCheckBox.Value == 1
+                 peak_1_check_duration_str = [num2str(app.Peak_1_bin_edit.Value), 's'];
+                 peak_2_check_duration_str = [num2str(app.Peak_2_bin_edit.Value), 's'];
+                 peak_filter_str = ['no_peak', '-', peak_1_check_duration_str, '-', peak_2_check_duration_str];
+             elseif app.Peak_1afteronsetofstimulationCheckBox == 1 || app.Peak_2afterendofstimulationCheckBox == 1
+                 if app.Peak_1afteronsetofstimulationCheckBox == 1
+                     peak_1_check_duration_str = [num2str(app.Peak_1_bin_edit.Value), 's'];
+                     peak_filter_str_part1 = ['peak1', '-', peak_1_check_duration_str];
+                 else
+                     peak_filter_str_part1 = '';
+                 end
+                 if app.Peak_2afterendofstimulationCheckBox == 1
+                     peak_2_check_duration_str = [num2str(app.Peak_2_bin_edit.Value), 's'];
+                     peak_filter_str_part2 = ['peak2', '-', peak_2_check_duration_str];
+                 else
+                     peak_filter_str_part2 = '';
+                 end
+                 peak_filter_str = [peak_filter_str_part1, '_', peak_filter_str_part2];
+             else
+                 peak_filter_str = '';
+             end
+             plotfilename_stem = [trigger_str, '_', stimulation_str, '_', peak_filter_str];
+             plotfilename_sweeps = [plotfilename_stem, '_sweeps'];
+             plotfilename_mean = [plotfilename_stem, '_mean'];
+             
+             plotfilename_sweeps_fig = [plotfilename_sweeps, '.fig'];
+             plotfilename_mean_fig = [plotfilename_stem, '.fig'];
+             plotfilename_sweeps_jpg = [plotfilename_sweeps, '.jpg'];
+             plotfilename_mean_jpg = [plotfilename_stem, '.jpg'];
+             plotfilename_sweeps_svg = [plotfilename_sweeps, '.svg'];
+             plotfilename_mean_svg = [plotfilename_stem, '.svg'];
+             
+             % plotfilename_sweeps_fig_fullpath = fullfile(app.folder_plots, plotfilename_sweeps_fig);
+             % saveas(app.UIAxes_all_traces, plotfilename_sweeps_fig_fullpath);
+             % plotfilename_mean_fig_fullpath = fullfile(app.folder_plots, plotfilename_mean_fig);
+             % saveas(app.UIAxes_all_traces_mean, plotfilename_mean_fig_fullpath);
+             
+             % plotfilename_sweeps_jpg_fullpath = fullfile(app.folder_plots, plotfilename_sweeps_jpg);
+             % saveas(app.UIAxes_all_traces, plotfilename_sweeps_jpg_fullpath);
+             % plotfilename_mean_jpg_fullpath = fullfile(app.folder_plots, plotfilename_mean_jpg);
+             % saveas(app.UIAxes_all_traces_mean, plotfilename_mean_jpg_fullpath);
+
+             % plotfilename_sweeps_svg_fullpath = fullfile(app.folder_plots, plotfilename_sweeps_svg);
+             % saveas(app.UIAxes_all_traces, plotfilename_sweeps_svg_fullpath);
+             % plotfilename_mean_svg_fullpath = fullfile(app.folder_plots, plotfilename_mean_svg);
+             % saveas(app.UIAxes_all_traces_mean, plotfilename_mean_svg_fullpath);
         end
     end
 
@@ -1006,7 +1135,7 @@ classdef nvoke_plot_app < matlab.apps.AppBase
             xlabel(app.UIAxes_all_traces, 'Time (s)')
             ylabel(app.UIAxes_all_traces, 'DF/F')
             app.UIAxes_all_traces.PlotBoxAspectRatio = [1.33931777378815 1 1];
-            app.UIAxes_all_traces.Position = [26 214 545 427];
+            app.UIAxes_all_traces.Position = [56 214 515 403];
 
             % Create UIAxes_all_traces_mean
             app.UIAxes_all_traces_mean = uiaxes(app.PlotTab);
@@ -1014,7 +1143,7 @@ classdef nvoke_plot_app < matlab.apps.AppBase
             xlabel(app.UIAxes_all_traces_mean, 'Time (s)')
             ylabel(app.UIAxes_all_traces_mean, 'DF/F')
             app.UIAxes_all_traces_mean.PlotBoxAspectRatio = [1.33931777378815 1 1];
-            app.UIAxes_all_traces_mean.Position = [611 214 545 427];
+            app.UIAxes_all_traces_mean.Position = [644 214 512 401];
 
             % Create StimulationdurationEdit
             app.StimulationdurationEdit = uieditfield(app.PlotTab, 'numeric');
@@ -1058,6 +1187,7 @@ classdef nvoke_plot_app < matlab.apps.AppBase
 
             % Create SaveaverageplotButton
             app.SaveaverageplotButton = uibutton(app.PlotTab, 'push');
+            app.SaveaverageplotButton.ButtonPushedFcn = createCallbackFcn(app, @SaveaverageplotButtonPushed, true);
             app.SaveaverageplotButton.FontWeight = 'bold';
             app.SaveaverageplotButton.Position = [826 14 138 22];
             app.SaveaverageplotButton.Text = 'Save average plot';

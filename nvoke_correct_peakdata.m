@@ -193,8 +193,8 @@ for rn = 1:recording_num
 					% plot(recording_timeinfo, roi_col_data_highpassed, 'b') % plot highpass filtered data
 					% plot(recording_timeinfo, thresh_data, '--k'); % plot thresh hold line
 					plot(recording_timeinfo, roi_col_data_lowpassed, 'm'); % plot lowpass filtered data
-					% plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'yo', 'linewidth', 2) %plot lowpassed data peak marks
-					% plot(peak_rise_turning_loc, peak_rise_turning_value, '>b', peak_decay_turning_loc, peak_decay_turning_value, '<b', 'linewidth', 2) % plot start and end of transient, turning point
+					plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'yo', 'linewidth', 2) %plot lowpassed data peak marks
+					plot(peak_rise_turning_loc, peak_rise_turning_value, '>b', peak_decay_turning_loc, peak_decay_turning_value, '<b', 'linewidth', 2) % plot start and end of transient, turning point
 					ylim_gpio = ylim;
 
 					if GPIO_trace == 1
