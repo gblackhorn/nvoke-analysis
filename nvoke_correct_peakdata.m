@@ -46,17 +46,28 @@ for rn = 1:recording_num
 	% rn
 	% display(recording_name)
 
+	if isstruct(ROIdata{rn, 2})
+		recording_rawdata = ROIdata{rn,2}.decon;
+		lowpass_for_peak = false; % use lowpassed data for peak detaction off
+		% peakinfo_row = 1; % more detailed peak info for plot and further calculation will be stored in roidata_gpio{x, 5} 1st row (peak row)
+		peakinfo_row_name = 'peak';
+	else
+		recording_rawdata = ROIdata{rn,2};
+		lowpass_for_peak = true; % use lowpassed data for peak detaction on
+		% peakinfo_row = 3; % more detailed peak info for plot and further calculation will be stored in roidata_gpio{x, 5} 3rd row (peak row)
+		peakinfo_row_name = 'Peak_lowpassed';
+	end
+
 	peakinfo_row = find(strcmp(peakinfo_row_name, ROIdata{rn, 5}.Properties.RowNames));
-	recording_rawdata = ROIdata{rn,2};
 	[recording_rawdata, recording_time, roi_num_all] = ROI_calc_plot(recording_rawdata);
 	recording_timeinfo = recording_rawdata{:, 1}; % array not table
 	recording_fr = 1/(recording_timeinfo(2)-recording_timeinfo(1));
     recording_code = rn;
 	roi_num = size(ROIdata{rn, 5}, 2); % total roi numbers after handpick
 
-	recording_highpassed = ROIdata{rn,2};
-    recording_thresh = ROIdata{rn,2};
-	recording_lowpassed = ROIdata{rn,2};
+	recording_highpassed = recording_rawdata;
+    recording_thresh = recording_rawdata;
+	recording_lowpassed = recording_rawdata;
 
 	for roi_n = 1:roi_num
 		roi_name = ROIdata{rn,5}.Properties.VariableNames{roi_n};
@@ -71,6 +82,14 @@ for rn = 1:recording_num
 
 		thresh = mean(roi_highpassed)+5*std(roi_highpassed);
 		recording_thresh{:, roi_rawdata_loc} = ones(size(recording_timeinfo))*thresh;;
+
+		% %debug=======
+		% rn
+		% roi_n
+		% if rn == 1 && roi_n == 1
+		% 	pause
+		% end
+		% %debug=======
 
 		peak_loc_time = ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Peak_loc_s_'); % peaks' time
 		rise_start_time = ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Rise_start_s_');
@@ -132,8 +151,8 @@ for rn = 1:recording_num
 				train_end_loc{nc} = [gpio_rise_loc(train_interval_loc{nc}); gpio_rise_loc(end)]; % time of the train_end rises start
 				train_start_loc{nc} = [gpio_rise_loc(1); gpio_rise_loc(train_interval_loc{nc}+1)]; % time of the train_start rises start
 
-				gpio_train_start_time{nc} = gpio_signal{nc}(train_start_loc{nc}, 1); % time point when GPIO trains start
-				gpio_train_end_time{nc} = gpio_signal{nc}(train_end_loc{nc}+1, 1); % time point when GPIO trains end
+				gpio_train_start_time{nc} = gpio_signal{nc}(train_start_loc{nc}, 1); % time points when GPIO trains start
+				gpio_train_end_time{nc} = gpio_signal{nc}(train_end_loc{nc}+1, 1); % time points when GPIO trains end
 
 				% gpio_x = zeros(gpio_rise_num*4, length(channel)-2); % pre-allocate gpio_x used to plot GPIO with "patch" function
 				% gpio_y = zeros(gpio_rise_num*4, length(channel)-2); % pre-allocate gpio_y used to plot GPIO with "patch" function
@@ -159,9 +178,9 @@ for rn = 1:recording_num
 
 			for q = 1:2 % column group num for ROI. When plot_traces=1||2, subplot column = q, when 3||4 subplot column == q*4
 				if (plot_col_num/subplot_multi_factor-(p-1)*2-q) > 0
-						last_row = 5;
+					last_row = 5;
 				else
-						last_row = roi_num-(p-1)*10-(q-1)*5;
+					last_row = roi_num-(p-1)*10-(q-1)*5;
 				end
 				for m = 1:last_row
 					roi_plot = (p-1)*10+(q-1)*5+m; % the number of roi to be plot
@@ -176,6 +195,17 @@ for rn = 1:recording_num
 					roi_col_data_lowpassed = recording_lowpassed{:, roi_col_loc_data}; % roi data 
 					peak_time_loc_lowpassed = ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Peak_loc_s_'); % peak_loc as time
 					peak_value_lowpassed = ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Peak_mag'); % peak magnitude
+
+					if lowpass_for_peak
+						roi_col_data_select = roi_col_data_lowpassed;
+						peak_time_loc_select = peak_time_loc_lowpassed;
+						peak_value_select = peak_value_lowpassed;
+					else
+						roi_col_data_select = roi_col_data;
+						peak_time_loc_select = peak_time_loc;
+						peak_value_select = peak_value;
+					end
+							
 
 					peak_rise_turning_loc = ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Rise_start_s_');
 					peak_rise_turning_value = roi_col_data_lowpassed(ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Rise_start'));
@@ -192,8 +222,10 @@ for rn = 1:recording_num
 					% plot(peak_time_loc, peak_value, 'ro', 'linewidth', 2) % plot peak marks
 					% plot(recording_timeinfo, roi_col_data_highpassed, 'b') % plot highpass filtered data
 					% plot(recording_timeinfo, thresh_data, '--k'); % plot thresh hold line
-					plot(recording_timeinfo, roi_col_data_lowpassed, 'm'); % plot lowpass filtered data
-					plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'yo', 'linewidth', 2) %plot lowpassed data peak marks
+					if lowpass_for_peak
+						plot(recording_timeinfo, roi_col_data_lowpassed, 'm'); % plot lowpass filtered data
+					end
+					plot(peak_time_loc_select, peak_value_select, 'yo', 'linewidth', 2) %plot lowpassed data peak marks
 					plot(peak_rise_turning_loc, peak_rise_turning_value, '>b', peak_decay_turning_loc, peak_decay_turning_value, '<b', 'linewidth', 2) % plot start and end of transient, turning point
 					ylim_gpio = ylim;
 
@@ -214,11 +246,11 @@ for rn = 1:recording_num
 					% Plot stimuli triggered response. No criteria yet
 					if GPIO_trace == 1
 						subplot(6, 8, (q*4+(m-1)*8-1)) % plot stimulation triggered responses. All sweeps
-						pre_stimuli_duration = 3; % duration before stimulation onset
-						post_stimuli_duration = 6; % duration after stimulation end
-						baseline_duration = 1; % time duration before stimulation used to calculate baseline for y-axis aligment 
-						pre_stimuli_time = gpio_train_start_time{1}-pre_stimuli_duration; % plot from 3s before stimuli start. The "first GPIO stimuli"
-						post_stimuli_time = gpio_train_end_time{1}+post_stimuli_duration; % plot until 6s after stimuli end
+						pre_stimuli_duration = 5; % duration before stimulation onset
+						post_stimuli_duration = 8; % duration after stimulation end
+						baseline_duration = 2; % time duration before stimulation used to calculate baseline for y-axis aligment 
+						pre_stimuli_time = gpio_train_start_time{1}-pre_stimuli_duration; % plot from 'pre_stimuli_duration' before stimuli start. The "first GPIO stimuli"
+						post_stimuli_time = gpio_train_end_time{1}+post_stimuli_duration; % plot until 'post_stimuli_duration' after stimuli end
 						plot_duration = post_stimuli_time-pre_stimuli_time; % duration of plot
 
 						first_gpio_train_start_loc = find(gpio_x{1}(:, 1)==gpio_train_start_time{1}(1), 1); % location of first train starts

@@ -11,6 +11,7 @@ nvoke_file_process;
 % 3. Convert ROI info to matlab file (.m). Copy ROI info (csv files) to analysis folder, and run this
 % function
 [ROIdata, recording_num, cell_num] = ROIinfo2matlab;
+[ROIdata, recording_num, cell_num] = ROI_matinfo2matlab
 
 % 4. Check data with plot function
 [ROIdata_peakevent] = nvoke_event_detection(ROIdata,1, 1); % plot with pause. (ROIdata, 2, 1) plot and save with pause
@@ -22,5 +23,14 @@ nvoke_file_process;
 % 6. Check peaks and their start and end point. Manully correct these numbers and go through step 5 function.
 [modified_ROIdata] = nvoke_correct_peakdata(modified_ROIdata,2,1); % save plots with pauses 
 
-% 7. Calculate peak amplitude, rise and decay duration. Plot correlations
+% 7. Rasterplot
+[rec, peak_table] = ctraster(ROIdata_peakevent);
+[rec, peak_table] = ctraster(ROIdata_peakevent, 5, 1); % ctraster(Input, sort_col, save_plot, stim_duration, pre_stim_duration, post_stim_duration)
+													   % sort_col: 5-peakTotal, 6-prePeak, 7-peakDuringStim, 8-postPeak, 
+													   % 9-prePeakDpeakTotal, 10-peakDuringStimDpeakTotal, 11-postPeakDpeakTotal
+for sortn = 5:11
+    [rec, peaktable]=ctraster(ROIdata_peakevent, sortn, 1);
+end	
+
+% 8. Calculate peak amplitude, rise and decay duration. Plot correlations
 [peak_info_sheet, total_cell_num, total_peak_num] = nvoke_event_calc(modified_ROIdata, 1);
