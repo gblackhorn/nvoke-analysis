@@ -74,14 +74,20 @@ for rn = 1:recording_num
 		roi_rawdata_loc = find(strcmp(roi_name, recording_rawdata.Properties.VariableNames));
 
 		roi_rawdata = recording_rawdata{:, roi_rawdata_loc};
-		roi_lowpasseddata = lowpass(roi_rawdata, lowpass_fpass, recording_fr);
-		roi_highpassed = highpass(roi_rawdata, highpass_fpass, recording_fr);
+		if lowpass_for_peak
+			roi_lowpasseddata = lowpass(roi_rawdata, lowpass_fpass, recording_fr);
+			roi_highpassed = highpass(roi_rawdata, highpass_fpass, recording_fr);
 
-		recording_highpassed{:, roi_rawdata_loc} = roi_highpassed;
-		recording_lowpassed{:, roi_rawdata_loc} = roi_lowpasseddata;
+			recording_highpassed{:, roi_rawdata_loc} = roi_highpassed;
+			recording_lowpassed{:, roi_rawdata_loc} = roi_lowpasseddata;
 
-		thresh = mean(roi_highpassed)+5*std(roi_highpassed);
-		recording_thresh{:, roi_rawdata_loc} = ones(size(recording_timeinfo))*thresh;;
+			thresh = mean(roi_highpassed)+5*std(roi_highpassed);
+			recording_thresh{:, roi_rawdata_loc} = ones(size(recording_timeinfo))*thresh;
+
+			roi_data_peak_calc = roi_lowpasseddata;
+		else
+			roi_data_peak_calc = roi_rawdata;
+		end
 
 		% %debug=======
 		% rn
@@ -105,13 +111,14 @@ for rn = 1:recording_num
 			ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Rise_start')(pn) = closestIndex_rise;
 			ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Decay_stop')(pn) = closestIndex_decay;
 
-			ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Peak_mag')(pn) = roi_lowpasseddata(closestIndex_peak);
+			ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Peak_mag')(pn) = roi_data_peak_calc(closestIndex_peak);
 			ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Rise_duration_s_')(pn) = peak_loc_time(pn)-rise_start_time(pn);
 			ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('decay_duration_s_')(pn) = decay_stop_time(pn)-peak_loc_time(pn);
 
-			peakmag_relative_rise = roi_lowpasseddata(closestIndex_peak)-roi_lowpasseddata(closestIndex_rise);
-			peakmag_relative_decay = roi_lowpasseddata(closestIndex_peak)-roi_lowpasseddata(closestIndex_decay);
-			ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Peak_mag_relative')(pn) = max(peakmag_relative_rise, peakmag_relative_decay);
+			peakmag_relative_rise = roi_data_peak_calc(closestIndex_peak)-roi_data_peak_calc(closestIndex_rise);
+			peakmag_relative_decay = roi_data_peak_calc(closestIndex_peak)-roi_data_peak_calc(closestIndex_decay);
+			% ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Peak_mag_relative')(pn) = max(peakmag_relative_rise, peakmag_relative_decay);
+			ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Peak_mag_relative')(pn) = peakmag_relative_rise;
 		end
 	end
 
@@ -208,9 +215,9 @@ for rn = 1:recording_num
 							
 
 					peak_rise_turning_loc = ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Rise_start_s_');
-					peak_rise_turning_value = roi_col_data_lowpassed(ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Rise_start'));
+					peak_rise_turning_value = roi_col_data_select(ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Rise_start'));
 					peak_decay_turning_loc = ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Decay_stop_s_');
-					peak_decay_turning_value = roi_col_data_lowpassed(ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Decay_stop'));
+					peak_decay_turning_value = roi_col_data_select(ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Decay_stop'));
 
 					roi_col_data_highpassed = recording_highpassed{:, roi_col_loc_data}; % roi data 
 					thresh_data = recording_thresh{:, roi_col_loc_data};
