@@ -1,5 +1,5 @@
 % 1. Process nVoke recorded files in recording folder: PP, BP, MC and DFF. Copy these files and GPIO
-% info to project forlder
+% info to project folder
 nvoke_file_process;
 
 % 2. Draw ROIs with Inscopix Data Processing Software (IDPS)
@@ -50,5 +50,5 @@ end
 
 %%
 % 8. Calculate peak amplitude, rise and decay duration. Plot correlations
-plot_analysis = 1; % 0-no plot. 1-plot. 2-plot and save
+plot_analysis = 2; % 0-no plot. 1-plot. 2-plot and save
 [peak_info_sheet, total_cell_num, total_peak_num] = nvoke_event_calc(modified_ROIdata, plot_analysis);

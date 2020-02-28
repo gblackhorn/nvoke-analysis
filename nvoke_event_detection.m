@@ -155,7 +155,8 @@ for rn = 1:recording_num
 			end
 			turning_loc(pn, 1) = turning_loc_rising;
 			turning_loc(pn, 2) = turning_loc_decay;
-			turning_loc(pn, 3) = max((peakmag_select(pn)-roi_readout_select(turning_loc_rising)), (peakmag_select(pn)-roi_readout_select(turning_loc_decay)));
+			% turning_loc(pn, 3) = max((peakmag_select(pn)-roi_readout_select(turning_loc_rising)), (peakmag_select(pn)-roi_readout_select(turning_loc_decay)));
+			turning_loc(pn, 3) = peakmag_select(pn)-roi_readout_select(turning_loc_rising); % peakmag. always use the rise start for the peak magnitude calculation 
 
 			% tolerance = 1e-4;
 			% accelerate_loc = check_start+find(abs(diff(roi_lowpassed(check_start:peakloc_lowpassed(pn))))<tolerance, 1, 'last');
