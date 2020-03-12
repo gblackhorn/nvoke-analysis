@@ -61,9 +61,16 @@ for rn = 1:recording_num
 	single_recording_lowpassed(:, 1) = time_info;
 	% single_recording_smooth = zeros(size(single_recording));
 	peak_loc_mag_table_variable = cell(1, roi_num); % column name for output, peak_loc_mag_table
-	peak_info_variable = {'Peak_loc', 'Peak_mag', 'Rise_start', 'Decay_stop',...
-	 'Peak_loc_s_', 'Rise_start_s_', 'Decay_stop_s_', 'Rise_duration_s_', 'decay_duration_s_', 'Peak_mag_relative'};
+	peak_info_variable = {'Peak_loc', 'Peak_mag', 'Rise_start', 'Decay_stop','Peak_loc_s_',...
+	'Rise_start_s_', 'Decay_stop_s_', 'Rise_duration_s_', 'decay_duration_s_', 'Peak_mag_relative',...
+	'PeakLoc25percent', 'PeakMag25percent', 'PeakTime25percent', 'PeakLoc75percent', 'PeakMag75percent',...
+	'PeakTime75percent'};
 	for n = 1:roi_num
+		clear peakmag_lowpassed_delta
+		clear peakloc_lowpassed_25per
+		clear peakloc_lowpassed_75per
+		clear turning_loc
+
 		roi_readout = table2array(single_recording(:, (n+1)));
 		roi_readout_raw = table2array(single_rec_raw(:, (n+1)));
 		roi_readout_smooth = smooth(time_info, roi_readout_raw, 0.1, 'loess');
@@ -102,6 +109,8 @@ for rn = 1:recording_num
 
 
 		if cnmfe_process % use CNMF-e processed data for peak detection 
+			clear peakloc_lowpassed
+			clear peakmag_lowpassed
 			roi_readout_select = roi_readout;
 			peakmag_select = peakmag;
 			peakloc_select = peakloc;
@@ -113,96 +122,152 @@ for rn = 1:recording_num
 
 		turning_loc = zeros(size(peakloc_select, 1), 3);
 		speed_chang_loc = zeros(size(peakloc_select, 1), 2);
-		for pn = 1:length(peakloc_select) % counting number of peaks in data
-			if pn ==1 % first peak
-				check_start = 1;
-				if length(peakloc_select) == 1 % there is only 1 peak
-					check_end = length(time_info);
-				else
+		if ~isempty(peakloc_select)
+			for pn = 1:length(peakloc_select) % counting number of peaks in data
+				if pn ==1 % first peak
+					check_start = 1;
+					if length(peakloc_select) == 1 % there is only 1 peak
+						check_end = length(time_info);
+					else
+						check_end = peakloc_select(pn+1); % next peak loc
+					end
+				elseif pn > 1 && pn < length(peakloc_select) % peaks in the middle
+					check_start = peakloc_select(pn-1); % previous peak loc
 					check_end = peakloc_select(pn+1); % next peak loc
+				elseif pn == length(peakloc_select)
+					check_start = peakloc_select(pn-1); % previous peak loc
+					check_end = length(time_info);
+				end		
+
+				turning_loc_rising = check_start+find(diff(roi_readout_select(check_start:peakloc_select(pn)))<=0, 1, 'last');
+				decay_diff_value = diff(roi_readout_select(peakloc_select(pn):check_end)); % diff value from peak to check_end
+				diff_turning_value = min(decay_diff_value); % when the diff of decay is smallest. Decay stop loc will be looked for from here
+				diff_turning_loc = peakloc_select(pn)+find(decay_diff_value==diff_turning_value, 1, 'first');
+				decay_diff_value_after_turning = diff(roi_readout_select(diff_turning_loc:check_end)); % from decay diff_turning_loc to check_end;
+				if find(decay_diff_value_after_turning<=0) % if decay continue after the decay_diff_value_after_turning
+					decay_stop_diff_value = max(decay_diff_value_after_turning(decay_diff_value_after_turning<=0)); % discard 
+					turning_loc_decay = diff_turning_loc+find(diff(roi_readout_select(diff_turning_loc:check_end))==decay_stop_diff_value, 1, 'first');
+				else % most likely another activity jump in before complete recorvery
+					turning_loc_decay = diff_turning_loc;
 				end
-			elseif pn > 1 && pn < length(peakloc_select) % peaks in the middle
-				check_start = peakloc_select(pn-1); % previous peak loc
-				check_end = peakloc_select(pn+1); % next peak loc
-			elseif pn == length(peakloc_select)
-				check_start = peakloc_select(pn-1); % previous peak loc
-				check_end = length(time_info);
-			end		
 
-			turning_loc_rising = check_start+find(diff(roi_readout_select(check_start:peakloc_select(pn)))<=0, 1, 'last');
-			decay_diff_value = diff(roi_readout_select(peakloc_select(pn):check_end)); % diff value from peak to check_end
-			diff_turning_value = min(decay_diff_value); % when the diff of decay is smallest. Decay stop loc will be looked for from here
-			diff_turning_loc = peakloc_select(pn)+find(decay_diff_value==diff_turning_value, 1, 'first');
-			decay_diff_value_after_turning = diff(roi_readout_select(diff_turning_loc:check_end)); % from decay diff_turning_loc to check_end;
-			if find(decay_diff_value_after_turning<=0) % if decay continue after the decay_diff_value_after_turning
-				decay_stop_diff_value = max(decay_diff_value_after_turning(decay_diff_value_after_turning<=0)); % discard 
-				turning_loc_decay = diff_turning_loc+find(diff(roi_readout_select(diff_turning_loc:check_end))==decay_stop_diff_value, 1, 'first');
-			else % most likely another activity jump in before complete recorvery
-				turning_loc_decay = diff_turning_loc;
+				% if isempty(find(diff(roi_readout_select(diff_turning_loc:check_end)))>=0) % if the decay doesn't stop (especially for the last peak), find the smallest value for decay stop
+				% 	decay_stop_diff_value = max(diff(roi_readout_select(diff_turning_loc:check_end))); % the max value of decay diff which is closest to 0
+				% else
+				% 	decay_stop_diff_value = max(diff(roi_readout_select(peakloc_select(pn):check_end))<=0);
+				% end
+				% turning_loc_decay = peakloc_select(pn)+find(diff(roi_readout_select(peakloc_select(pn):check_end))==decay_stop_diff_value, 1, 'first');
+
+				% turning_loc_decay = peakloc_select(pn)+find(diff(roi_readout_select(peakloc_select(pn):check_end))>=0, 1, 'first')-1; % temperal solution. -1 in case CNMFe processed data too smooth
+
+				if isempty(turning_loc_rising)
+					turning_loc_rising = peakloc_select(pn); % when no results, assign peak location to it
+				end
+				if isempty(turning_loc_decay)
+					turning_loc_decay = peakloc_select(pn); % when no results, assign peak location to it
+				end
+
+				if cnmfe_process
+	 				peakmag_lowpassed(pn) = max(roi_lowpassed(turning_loc_rising:turning_loc_decay)); % get peak value using the max value between rising and decay loc (found in CNMFe processed data) 
+					peakloc_lowpassed(pn) = (turning_loc_rising-1)+find(roi_lowpassed(turning_loc_rising:turning_loc_decay) == peakmag_lowpassed(pn), 1);
+				end
+
+				% rn
+				% n 
+				% pn
+				% if rn == 2 && n == 8 && pn == 2
+				% 	pause
+				% end
+
+
+				peakmag_lowpassed_delta(pn, 1) = peakmag_lowpassed(pn)-roi_lowpassed(turning_loc_rising); % delta peakmag: subtract rising point value
+				peakmag_25per_cal = peakmag_lowpassed_delta(pn, 1)*0.25+roi_lowpassed(turning_loc_rising); % 25% peakmag value 
+				peakmag_75per_cal = peakmag_lowpassed_delta(pn, 1)*0.75+roi_lowpassed(turning_loc_rising); % 25% peakmag value
+
+				[peakmag_lowpassed_25per_diff peakloc_lowpassed_25per(pn, 1)] = min(abs(roi_lowpassed(turning_loc_rising:peakloc_lowpassed(pn))-peakmag_25per_cal)); % 25% loc in (rising:peak) range
+				peakloc_lowpassed_25per(pn, 1) = turning_loc_rising-1+peakloc_lowpassed_25per(pn, 1); % location of 25% peak value in data
+
+				[peakmag_lowpassed_75per_diff peakloc_lowpassed_75per(pn, 1)] = min(abs(roi_lowpassed(turning_loc_rising:peakloc_lowpassed(pn))-peakmag_75per_cal)); % 25% loc in (rising:peak) range
+				peakloc_lowpassed_75per(pn, 1) = turning_loc_rising-1+peakloc_lowpassed_75per(pn, 1); % location of 75% peak value in data
+
+
+				turning_loc(pn, 1) = turning_loc_rising;
+				turning_loc(pn, 2) = turning_loc_decay;
+				% turning_loc(pn, 3) = max((peakmag_select(pn)-roi_readout_select(turning_loc_rising)), (peakmag_select(pn)-roi_readout_select(turning_loc_decay)));
+				turning_loc(pn, 3) = peakmag_select(pn)-roi_readout_select(turning_loc_rising); % peakmag. always use the rise start for the peak magnitude calculation 
+
+				% tolerance = 1e-4;
+				% accelerate_loc = check_start+find(abs(diff(roi_lowpassed(check_start:peakloc_lowpassed(pn))))<tolerance, 1, 'last');
+				% decelerate_loc = peakloc_lowpassed(pn)+find(abs(diff(roi_lowpassed(peakloc_lowpassed(pn):check_end)))<tolerance, 1, 'first');
+				% if isempty(accelerate_loc)
+				% 	accelerate_loc = peakloc_lowpassed(pn); % when no results, assign peak location to it
+				% end
+				% if isempty(decelerate_loc)
+				% 	decelerate_loc = peakloc_lowpassed(pn); % when no results, assign peak location to it
+				% end
+				% speed_chang_loc(pn, 1) = accelerate_loc;
+				% speed_chang_loc(pn, 2) = decelerate_loc;
 			end
 
-			% if isempty(find(diff(roi_readout_select(diff_turning_loc:check_end)))>=0) % if the decay doesn't stop (especially for the last peak), find the smallest value for decay stop
-			% 	decay_stop_diff_value = max(diff(roi_readout_select(diff_turning_loc:check_end))); % the max value of decay diff which is closest to 0
-			% else
-			% 	decay_stop_diff_value = max(diff(roi_readout_select(peakloc_select(pn):check_end))<=0);
-			% end
-			% turning_loc_decay = peakloc_select(pn)+find(diff(roi_readout_select(peakloc_select(pn):check_end))==decay_stop_diff_value, 1, 'first');
+			peakmag_lowpassed_25per = roi_lowpassed(peakloc_lowpassed_25per);
+			peaktime_lowpassed_25per = time_info(peakloc_lowpassed_25per); % time stamp of 25% peak value in data
+			peakmag_lowpassed_75per = roi_lowpassed(peakloc_lowpassed_75per);
+			peaktime_lowpassed_75per = time_info(peakloc_lowpassed_75per); % time stamp of 75% peak value in data
 
-			% turning_loc_decay = peakloc_select(pn)+find(diff(roi_readout_select(peakloc_select(pn):check_end))>=0, 1, 'first')-1; % temperal solution. -1 in case CNMFe processed data too smooth
-
-			if isempty(turning_loc_rising)
-				turning_loc_rising = peakloc_select(pn); % when no results, assign peak location to it
-			end
-			if isempty(turning_loc_decay)
-				turning_loc_decay = peakloc_select(pn); % when no results, assign peak location to it
-			end
+			peak_loc_mag{1, n}(:, 1) = peakloc;
+			peak_loc_mag{1, n}(:, 2) = peakmag;
+			peak_loc_mag{2, n}(:, 1) = peakloc_smooth;
+			peak_loc_mag{2, n}(:, 2) = peakmag_smooth;
+			peak_loc_mag{3, n}(:, 1) = peakloc_lowpassed;
+			peak_loc_mag{3, n}(:, 2) = peakmag_lowpassed;
+			peak_loc_mag{peak_table_row, n}(:, 3:4) = turning_loc(:, 1:2);
 
 			if cnmfe_process
-				peakmag_lowpassed(pn) = max(roi_lowpassed(turning_loc_rising:turning_loc_decay)); % get peak value using the max value between rising and decay loc (found in CNMFe processed data) 
-				peakloc_lowpassed(pn) = (turning_loc_rising-1)+find(roi_lowpassed(turning_loc_rising:turning_loc_decay) == peakmag_lowpassed(pn), 1);
+				peak_loc_mag{3, n}(:, 3:4) = turning_loc(:, 1:2); % if cnmfe processed data is used for finding the peaks, used cnmfe Ca transient rise-start and decay-end for lowpassed data
+				peak_loc_mag{3, n}(:, 6) = time_info(turning_loc(:, 1)); % rise time
+				peak_loc_mag{3, n}(:, 7) = time_info(turning_loc(:, 2)); % decay time
+				peak_loc_mag{3, n}(:, 8) = time_info(peakloc_lowpassed)-time_info(turning_loc(:, 1)); % duration of rise time
+				peak_loc_mag{3, n}(:, 9) = time_info(turning_loc(:, 2))-time_info(peakloc_lowpassed); % duration of decay time
+				peak_loc_mag{3, n}(:, 10)= peakmag_lowpassed_delta; % peak value relative to rise point
 			end
 
+			peak_loc_mag{1, n}(:, 5) = time_info(peakloc);
+			peak_loc_mag{2, n}(:, 5) = time_info(peakloc_smooth);
+			peak_loc_mag{3, n}(:, 5) = time_info(peakloc_lowpassed);
+			peak_loc_mag{peak_table_row, n}(:, 6) = time_info(turning_loc(:, 1)); % rise time
+			peak_loc_mag{peak_table_row, n}(:, 7) = time_info(turning_loc(:, 2)); % decay time
+			peak_loc_mag{peak_table_row, n}(:, 8) = time_info(peakloc_select)-time_info(turning_loc(:, 1)); % duration of rise time
+			peak_loc_mag{peak_table_row, n}(:, 9) = time_info(turning_loc(:, 2))-time_info(peakloc_select); % duration of decay time
+			peak_loc_mag{peak_table_row, n}(:, 10)= turning_loc(:, 3); % peak value relative to rise point
 
-			turning_loc(pn, 1) = turning_loc_rising;
-			turning_loc(pn, 2) = turning_loc_decay;
-			% turning_loc(pn, 3) = max((peakmag_select(pn)-roi_readout_select(turning_loc_rising)), (peakmag_select(pn)-roi_readout_select(turning_loc_decay)));
-			turning_loc(pn, 3) = peakmag_select(pn)-roi_readout_select(turning_loc_rising); % peakmag. always use the rise start for the peak magnitude calculation 
+			peak_loc_mag{3, n}(:, 11)= peakloc_lowpassed_25per; % closest loc to 25% peak_value (peak-rise_start)
+			peak_loc_mag{3, n}(:, 12)= peakmag_lowpassed_25per; % closest value to 25% peak_value (peak-rise_start)
+			peak_loc_mag{3, n}(:, 13)= peaktime_lowpassed_25per; % time stamp of peakloc_lowpassed_25per
 
-			% tolerance = 1e-4;
-			% accelerate_loc = check_start+find(abs(diff(roi_lowpassed(check_start:peakloc_lowpassed(pn))))<tolerance, 1, 'last');
-			% decelerate_loc = peakloc_lowpassed(pn)+find(abs(diff(roi_lowpassed(peakloc_lowpassed(pn):check_end)))<tolerance, 1, 'first');
-			% if isempty(accelerate_loc)
-			% 	accelerate_loc = peakloc_lowpassed(pn); % when no results, assign peak location to it
-			% end
-			% if isempty(decelerate_loc)
-			% 	decelerate_loc = peakloc_lowpassed(pn); % when no results, assign peak location to it
-			% end
-			% speed_chang_loc(pn, 1) = accelerate_loc;
-			% speed_chang_loc(pn, 2) = decelerate_loc;
+			peak_loc_mag{3, n}(:, 14)= peakloc_lowpassed_75per; % closest loc to 75% peak_value (peak-rise_start)
+			peak_loc_mag{3, n}(:, 15)= peakmag_lowpassed_75per; % closest loc to 75% peak_value (peak-rise_start)
+			peak_loc_mag{3, n}(:, 16)= peaktime_lowpassed_75per; % time stamp of peakloc_lowpassed_75per
+
+			% peak_rise_fall{1, n}(:, 1:2) = turning_loc;
+			% peak_rise_fall{2, n}(:, 1:2) = speed_chang_loc;
+		else
+			for pt1 = 1:3
+				if pt1 == peak_table_row
+					peak_loc_mag{pt1, n} = double.empty(0, 10);
+				elseif pt1 == 3 && pt1 ~= peak_table_row
+					peak_loc_mag{pt1, n} = double.empty(0, 16);
+				else
+					peak_loc_mag{pt1, n} = double.empty(0, 5);
+				end
+			end
+
 		end
-
-		peak_loc_mag{1, n}(:, 1) = peakloc;
-		peak_loc_mag{1, n}(:, 2) = peakmag;
-		peak_loc_mag{2, n}(:, 1) = peakloc_smooth;
-		peak_loc_mag{2, n}(:, 2) = peakmag_smooth;
-		peak_loc_mag{3, n}(:, 1) = peakloc_lowpassed;
-		peak_loc_mag{3, n}(:, 2) = peakmag_lowpassed;
-		peak_loc_mag{peak_table_row, n}(:, 3:4) = turning_loc(:, 1:2);
-
-		peak_loc_mag{1, n}(:, 5) = time_info(peakloc);
-		peak_loc_mag{2, n}(:, 5) = time_info(peakloc_smooth);
-		peak_loc_mag{3, n}(:, 5) = time_info(peakloc_lowpassed);
-		peak_loc_mag{peak_table_row, n}(:, 6) = time_info(turning_loc(:, 1)); % rise time
-		peak_loc_mag{peak_table_row, n}(:, 7) = time_info(turning_loc(:, 2)); % decay time
-		peak_loc_mag{peak_table_row, n}(:, 8) = time_info(peakloc_select)-time_info(turning_loc(:, 1)); % duration of rise time
-		peak_loc_mag{peak_table_row, n}(:, 9) = time_info(turning_loc(:, 2))-time_info(peakloc_select); % duration of rise time
-		peak_loc_mag{peak_table_row, n}(:, 10)= turning_loc(pn, 3); % peak value relative to rise/decay point (use the bigger one)
-		% peak_rise_fall{1, n}(:, 1:2) = turning_loc;
-		% peak_rise_fall{2, n}(:, 1:2) = speed_chang_loc;
 		peak_loc_mag_table_variable{1, n} = single_recording.Properties.VariableNames{n+1};
 		for pt1 = 1:3
 			if pt1 == peak_table_row
-				peak_table{pt1,n} = array2table(peak_loc_mag{pt1, n}, 'VariableNames', peak_info_variable);
+				peak_table{pt1,n} = array2table(peak_loc_mag{pt1, n}, 'VariableNames', peak_info_variable(1:10));
+			elseif pt1 == 3 && pt1 ~= peak_table_row
+				peak_table{pt1,n} = array2table(peak_loc_mag{pt1, n}, 'VariableNames', peak_info_variable(1:16));
 			else
 				peak_table{pt1,n} = array2table(peak_loc_mag{pt1, n}, 'VariableNames', peak_info_variable(1:5));
 			end
@@ -296,6 +361,7 @@ for rn = 1:recording_num
 							sub_handle(roi_plot) = subplot(6, 2, q+(m-1)*2);
 							plot(time_info, roi_col_data, 'k') % plot original data
 							hold on
+							plot(time_info, roi_col_data_raw, 'b')
 							if ~cnmfe_process
 								plot(time_info, roi_col_data_lowpassed, 'm'); % plot lowpass filtered data
 							else
@@ -307,8 +373,8 @@ for rn = 1:recording_num
 							plot(peak_rise_turning_loc, peak_rise_turning_value, '>b', peak_decay_turning_loc, peak_decay_turning_value, '<b', 'linewidth', 2) % plot start and end of transient, turning point
 
 							set(get(sub_handle(roi_plot), 'YLabel'), 'String', ['C', num2str(roi_plot-1)]);
-							ylim_roi_max = max(roi_col_data)*1.1; % max value of ROI trace y axis
-							ylim_roi_min = min(roi_col_data) - abs(min(roi_col_data)*0.1);
+							ylim_roi_max = max(max(roi_col_data)*1.1, max(roi_col_data_lowpassed)*1.1); % max value of ROI trace y axis
+							ylim_roi_min = min((min(roi_col_data) - abs(min(roi_col_data)*0.1)), (min(roi_col_data_lowpassed) - abs(min(roi_col_data_lowpassed)*0.1)));
 							axis([0 recording_time ylim_roi_min ylim_roi_max]); 
 							hold off
 
