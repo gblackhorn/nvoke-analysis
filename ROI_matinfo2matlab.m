@@ -38,6 +38,10 @@ for n = 1:numel(roi_readout_file_info_processed)
 	opts.DataLine = 3; % set data line from the third row of csv file. First 2 rows are 'char'
 	opts.VariableDescriptionsLine = 2; % set 2nd row as variable description
 	ROI_table = readtable(roi_readout_file, opts); % import file using modified opts, so data will be number arrays
+
+	trim_frames = find(isnan(ROI_table{:, :}(:, 2))); % find frames trimmed off. Look for nan rows in 1st ROI (table from .csv file)
+	ROI_table(trim_frames, :) = []; % delete trimmed frames
+
     [ROI_table, recording_time, ROI_num] = ROI_calc_plot(ROI_table);
 	% cell_num = cell_num + size(ROI_table, 2);
 	ROIdata{n, 1} = roi_readout_file_info(n).name;

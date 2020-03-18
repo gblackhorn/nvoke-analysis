@@ -7,7 +7,7 @@ function [peak_info_sheet, varargout] = nvoke_event_calc(ROIdata, plot_analysis)
 % [peak_info_sheet, total_cell_num, total_peak_num] = nvoke_event_calc(ROIdata, 1)
 
 if plot_analysis == 2
-	figfolder = uigetdir('G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\ROI_data\peaks',...
+	figfolder = uigetdir('G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\peaks',...
 		'Select a folder to save figures');
 end
 
@@ -17,7 +17,7 @@ if isstruct(ROIdata{1, 2})
 	cnmf = 1;
 	lowpass_for_peak = false; % use lowpassed data for peak detaction off
 	% peakinfo_row = 1; % more detailed peak info for plot and further calculation will be stored in roidata_gpio{x, 5} 1st row (peak row)
-	peakinfo_row_name = 'peak';
+	peakinfo_row_name = 'Peak_lowpassed';
 else
 	% recording_rawdata = ROIdata{1,2};
 	% peak_info = table2array(ROIdata{rn,5}(3, :));
@@ -52,6 +52,7 @@ for rn = 1:recording_num
 		rise_duration = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 8};
 		decay_duration = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 9};
 		peak_amp = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 10}; % relative one
+		peak_slope = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 17}; % peak slope
 		transient_duration = rise_duration+decay_duration;
 
 		recording_code_sheet = ones(size(peak_start))*recording_code;
@@ -67,6 +68,7 @@ for rn = 1:recording_num
 		peak_info_sheet(sheet_start:sheet_end, 6) = decay_duration;
 		peak_info_sheet(sheet_start:sheet_end, 7) = transient_duration;
 		peak_info_sheet(sheet_start:sheet_end, 8) = peak_amp;
+		peak_info_sheet(sheet_start:sheet_end, 9) = peak_slope;
 
 
 		sheet_fill_count = sheet_fill_count+length(peak_start);
@@ -101,30 +103,39 @@ if nargin == 2
 		bin_num_peakmag = (max(peak_info_sheet(:, 8))-min(peak_info_sheet(:, 8)))/bin_width_peakmag;
 		bin_num_peakmag = ceil(bin_num_peakmag);
 
+		iqr_peakslope = iqr(peak_info_sheet(:, 9));
+		bin_width_peakslope = 2*iqr_peakslope*total_peak_num^(1/3);
+		bin_num_peakslope = (max(peak_info_sheet(:, 9))-min(peak_info_sheet(:, 9)))/bin_width_peakslope;
+		bin_num_peakslope = ceil(bin_num_peakslope);
+
 		% use the self-decided bin number
 		bin_num_rise = 40;
 		bin_num_decay = 40;
 		bin_num_transient = 40;
 		bin_num_peakmag = 40;
+		bin_num_peakslope = 200;
 
 
 		close all
 		h = figure(1);
 		set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.05, 0.05, 0.95, 0.95 ]);
-		subplot(2, 2, 1);
+		subplot(2, 3, 1);
 		
 		histogram(peak_info_sheet(:, 5), bin_num_rise); % plot rise duration
 		title('peak rise duration');
-		subplot(2, 2, 2);
+		subplot(2, 3, 2);
 
 		histogram(peak_info_sheet(:, 6), bin_num_decay); % plot decay duration
 		title('Peak decay duration');
-		subplot(2, 2, 3);
+		subplot(2, 3, 3);
 		histogram(peak_info_sheet(:, 7), bin_num_transient); % plot transient duration
 		title('Calcium transient duration'); 
-		subplot(2, 2, 4);
+		subplot(2, 3, 4);
 		histogram(peak_info_sheet(:, 8), bin_num_peakmag); % peak_mag
 		title('Peak amp');
+		subplot(2, 3, 5);
+		histogram(peak_info_sheet(:, 9), bin_num_peakslope); % peak_slope
+		title('Peak slope');
 		sgtitle('nVoke event analysis - Histograms ', 'Interpreter', 'none');
 
 		s = figure(2);
@@ -135,7 +146,10 @@ if nargin == 2
 		corrplot(peak_info_sheet(:, [6, 8]), 'varNames', {'DecayT', 'PeakM'});
 		subplot(2, 2, 3);
 		corrplot(peak_info_sheet(:, [7, 8]), 'varNames', {'WholeT', 'PeakM'});
+		subplot(2, 2, 4);
+		corrplot(peak_info_sheet(:, [8, 9]), 'varNames', {'PeakM', 'Slope'});
 		sgtitle('nVoke event analysis - corralations ', 'Interpreter', 'none');
+
 
 		if plot_analysis == 2 && ~isempty(figfolder)
 			figfile_histo = ['nVoke event analysis - Histograms'];

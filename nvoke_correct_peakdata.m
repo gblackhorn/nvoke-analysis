@@ -29,12 +29,12 @@ elseif nargin > 3
 	error('Too many input. Maximum 3. Read document of function "nvoke_correct_peakdata"')
 end
 
-lowpass_fpass = 0.1;
-highpass_fpass = 0.1;
+lowpass_fpass = 1;
+highpass_fpass = 2;
 peakinfo_row_name = 'Peak_lowpassed';
 
 if plot_traces == 2
-	figfolder = uigetdir('G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\ROI_data\peaks',...
+	figfolder = uigetdir('G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\peaks',...
 		'Select a folder to save figures');
 end
 
@@ -47,23 +47,28 @@ for rn = 1:recording_num
 	% display(recording_name)
 
 	if isstruct(ROIdata{rn, 2})
-		recording_rawdata = ROIdata{rn,2}.decon;
+		recording_data = ROIdata{rn,2}.decon;
+		recording_rawdata = ROIdata{rn,2}.raw;
+		cnmfe_process = true; % data was processed by CNMFe
 		lowpass_for_peak = false; % use lowpassed data for peak detaction off
 		% peakinfo_row = 1; % more detailed peak info for plot and further calculation will be stored in roidata_gpio{x, 5} 1st row (peak row)
-		peakinfo_row_name = 'peak';
+		% peakinfo_row_name = 'peak';
+		peakinfo_row_name = 'Peak_lowpassed'; % peaks were found in CNMFe processed data at first. These results were then used in lowpassed data to find peaks more precisly
 	else
 		recording_rawdata = ROIdata{rn,2};
+		cnmfe_process = false; % data was processed by CNMFe
 		lowpass_for_peak = true; % use lowpassed data for peak detaction on
 		% peakinfo_row = 3; % more detailed peak info for plot and further calculation will be stored in roidata_gpio{x, 5} 3rd row (peak row)
 		peakinfo_row_name = 'Peak_lowpassed';
 	end
 
-	peakinfo_row = find(strcmp(peakinfo_row_name, ROIdata{rn, 5}.Properties.RowNames));
+	peak_loc_mag = ROIdata{rn, 5};
+	peakinfo_row = find(strcmp(peakinfo_row_name, peak_loc_mag.Properties.RowNames));
 	[recording_rawdata, recording_time, roi_num_all] = ROI_calc_plot(recording_rawdata);
-	recording_timeinfo = recording_rawdata{:, 1}; % array not table
-	recording_fr = 1/(recording_timeinfo(2)-recording_timeinfo(1));
+	timeinfo = recording_rawdata{:, 1}; % array not table
+	recording_fr = 1/(timeinfo(2)-timeinfo(1));
     recording_code = rn;
-	roi_num = size(ROIdata{rn, 5}, 2); % total roi numbers after handpick
+	roi_num = size(peak_loc_mag, 2); % total roi numbers after handpick
 
 	recording_highpassed = recording_rawdata;
     recording_thresh = recording_rawdata;
@@ -71,22 +76,23 @@ for rn = 1:recording_num
 
 	for roi_n = 1:roi_num
 		roi_name = ROIdata{rn,5}.Properties.VariableNames{roi_n};
-		roi_rawdata_loc = find(strcmp(roi_name, recording_rawdata.Properties.VariableNames));
+		roi_data_loc = find(strcmp(roi_name, recording_rawdata.Properties.VariableNames));
 
-		roi_rawdata = recording_rawdata{:, roi_rawdata_loc};
-		if lowpass_for_peak
-			roi_lowpasseddata = lowpass(roi_rawdata, lowpass_fpass, recording_fr);
-			roi_highpassed = highpass(roi_rawdata, highpass_fpass, recording_fr);
+		roi_data = recording_data{:, roi_data_loc};
+		roi_rawdata = recording_rawdata{:, roi_data_loc};
 
-			recording_highpassed{:, roi_rawdata_loc} = roi_highpassed;
-			recording_lowpassed{:, roi_rawdata_loc} = roi_lowpasseddata;
+		roi_lowpasseddata = lowpass(roi_rawdata, lowpass_fpass, recording_fr);
+		roi_highpassed = highpass(roi_rawdata, highpass_fpass, recording_fr);
 
+		recording_highpassed{:, roi_data_loc} = roi_highpassed;
+		recording_lowpassed{:, roi_data_loc} = roi_lowpasseddata;
+		if ~cnmfe_process
 			thresh = mean(roi_highpassed)+5*std(roi_highpassed);
-			recording_thresh{:, roi_rawdata_loc} = ones(size(recording_timeinfo))*thresh;
+			recording_thresh{:, roi_data_loc} = ones(size(timeinfo))*thresh;
 
 			roi_data_peak_calc = roi_lowpasseddata;
 		else
-			roi_data_peak_calc = roi_rawdata;
+			roi_data_peak_calc = roi_lowpasseddata;
 		end
 
 		% %debug=======
@@ -97,28 +103,53 @@ for rn = 1:recording_num
 		% end
 		% %debug=======
 
-		peak_loc_time = ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Peak_loc_s_'); % peaks' time
-		rise_start_time = ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Rise_start_s_');
-		decay_stop_time = ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Decay_stop_s_');
+		peak_loc_time = peak_loc_mag{peakinfo_row, roi_n}{:, :}.('Peak_loc_s_'); % peaks' time
+		rise_start_time = peak_loc_mag{peakinfo_row, roi_n}{:, :}.('Rise_start_s_');
+		decay_stop_time = peak_loc_mag{peakinfo_row, roi_n}{:, :}.('Decay_stop_s_');
 
 		peak_num = length(peak_loc_time);
 		for pn = 1:peak_num
-			[min_peak closestIndex_peak] = min(abs(recording_timeinfo-peak_loc_time(pn)));
-			[min_rise closestIndex_rise] = min(abs(recording_timeinfo-rise_start_time(pn)));
-			[min_decay closestIndex_decay] = min(abs(recording_timeinfo-decay_stop_time(pn)));
+			[min_peak closestIndex_peak] = min(abs(timeinfo-peak_loc_time(pn)));
+			[min_rise closestIndex_rise] = min(abs(timeinfo-rise_start_time(pn)));
+			[min_decay closestIndex_decay] = min(abs(timeinfo-decay_stop_time(pn)));
 
-			ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Peak_loc')(pn) = closestIndex_peak;
-			ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Rise_start')(pn) = closestIndex_rise;
-			ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Decay_stop')(pn) = closestIndex_decay;
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('Peak_loc')(pn) = closestIndex_peak;
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('Rise_start')(pn) = closestIndex_rise;
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('Decay_stop')(pn) = closestIndex_decay;
 
-			ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Peak_mag')(pn) = roi_data_peak_calc(closestIndex_peak);
-			ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Rise_duration_s_')(pn) = peak_loc_time(pn)-rise_start_time(pn);
-			ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('decay_duration_s_')(pn) = decay_stop_time(pn)-peak_loc_time(pn);
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('Peak_mag')(pn) = roi_data_peak_calc(closestIndex_peak);
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('Rise_duration_s_')(pn) = peak_loc_time(pn)-rise_start_time(pn);
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('decay_duration_s_')(pn) = decay_stop_time(pn)-peak_loc_time(pn);
 
 			peakmag_relative_rise = roi_data_peak_calc(closestIndex_peak)-roi_data_peak_calc(closestIndex_rise);
 			peakmag_relative_decay = roi_data_peak_calc(closestIndex_peak)-roi_data_peak_calc(closestIndex_decay);
-			% ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Peak_mag_relative')(pn) = max(peakmag_relative_rise, peakmag_relative_decay);
-			ROIdata{rn, 5}{peakinfo_row, roi_n}{:, :}.('Peak_mag_relative')(pn) = peakmag_relative_rise;
+			% peak_loc_mag{peakinfo_row, roi_n}{:, :}.('Peak_mag_relative')(pn) = max(peakmag_relative_rise, peakmag_relative_decay);
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('Peak_mag_relative')(pn) = peakmag_relative_rise;
+
+			peakmag_lowpassed_delta = roi_data_peak_calc(closestIndex_peak)-roi_data_peak_calc(closestIndex_rise); % delta peakmag: subtract rising point value
+			peakmag_25per_cal = peakmag_lowpassed_delta*0.25+roi_data_peak_calc(closestIndex_rise); % 25% peakmag value 
+			peakmag_75per_cal = peakmag_lowpassed_delta*0.75+roi_data_peak_calc(closestIndex_rise); % 25% peakmag value
+
+			[peakmag_lowpassed_25per_diff peakloc_lowpassed_25per] = min(abs(roi_data_peak_calc(closestIndex_rise:closestIndex_peak)-peakmag_25per_cal)); % 25% loc in (rising:peak) range
+			peakloc_lowpassed_25per = closestIndex_rise-1+peakloc_lowpassed_25per; % location of 25% peak value in data
+
+			[peakmag_lowpassed_75per_diff peakloc_lowpassed_75per] = min(abs(roi_data_peak_calc(closestIndex_rise:closestIndex_peak)-peakmag_75per_cal)); % 75% loc in (rising:peak) range
+			peakloc_lowpassed_75per = closestIndex_rise-1+peakloc_lowpassed_75per; % location of 75% peak value in data
+
+			peakmag_lowpassed_25per = roi_data_peak_calc(peakloc_lowpassed_25per);
+			peaktime_lowpassed_25per = timeinfo(peakloc_lowpassed_25per); % time stamp of 25% peak value in data
+			peakmag_lowpassed_75per = roi_data_peak_calc(peakloc_lowpassed_75per);
+			peaktime_lowpassed_75per = timeinfo(peakloc_lowpassed_75per); % time stamp of 75% peak value in data
+
+			peakslope = (peakmag_lowpassed_75per-peakmag_lowpassed_25per)/(peaktime_lowpassed_75per-peaktime_lowpassed_25per);
+
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakLoc25percent')(pn) = peakloc_lowpassed_25per;
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakLoc75percent')(pn) = peakloc_lowpassed_75per;
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakMag25percent')(pn) = peakmag_lowpassed_25per;
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakMag75percent')(pn) = peakmag_lowpassed_75per;
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakTime25percent')(pn) = peaktime_lowpassed_25per;
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakTime75percent')(pn) = peaktime_lowpassed_75per;
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakSlope')(pn) = peakslope;
 		end
 	end
 
@@ -192,48 +223,55 @@ for rn = 1:recording_num
 				for m = 1:last_row
 					roi_plot = (p-1)*10+(q-1)*5+m; % the number of roi to be plot
 					roi_name = ROIdata{rn,5}.Properties.VariableNames{roi_plot}; % roi name ('C0, C1...')
-					roi_col_loc_data = find(strcmp(roi_name, recording_rawdata.Properties.VariableNames)); % the column number of this roi in recording_rawdata (ROI_table)
-					roi_col_loc_cal = find(strcmp(roi_name, ROIdata{rn, 5}.Properties.VariableNames)); % the column number of this roi in recording_rawdata (ROI_table)
+					roi_col_loc_data = find(strcmp(roi_name, recording_data.Properties.VariableNames)); % the column number of this roi in recording_data (ROI_table)
+					roi_col_loc_cal = find(strcmp(roi_name, peak_loc_mag.Properties.VariableNames)); % the column number of this roi in recording_data (ROI_table)
 
-					roi_col_data = recording_rawdata{:, roi_col_loc_data}; % roi data 
-					peak_time_loc = ROIdata{rn, 5}{1, (roi_col_loc_cal)}{:, :}.('Peak_loc_s_'); % peak_loc as time
-					peak_value = ROIdata{rn, 5}{1, (roi_col_loc_cal)}{:, :}.('Peak_mag'); % peak magnitude
+					roi_col_data = recording_data{:, roi_col_loc_data}; % roi data 
+					peak_time_loc = peak_loc_mag{1, (roi_col_loc_cal)}{:, :}.('Peak_loc_s_'); % peak_loc as time
+					peak_value = peak_loc_mag{1, (roi_col_loc_cal)}{:, :}.('Peak_mag'); % peak magnitude
 
 					roi_col_data_lowpassed = recording_lowpassed{:, roi_col_loc_data}; % roi data 
-					peak_time_loc_lowpassed = ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Peak_loc_s_'); % peak_loc as time
-					peak_value_lowpassed = ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Peak_mag'); % peak magnitude
+					peak_time_loc_lowpassed = peak_loc_mag{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Peak_loc_s_'); % peak_loc as time
+					peak_value_lowpassed = peak_loc_mag{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Peak_mag'); % peak magnitude
 
-					if lowpass_for_peak
+					if ~cnmfe_process
 						roi_col_data_select = roi_col_data_lowpassed;
+						roi_data_trigplot = recording_rawdata{:, roi_col_loc_data};
 						peak_time_loc_select = peak_time_loc_lowpassed;
 						peak_value_select = peak_value_lowpassed;
 					else
 						roi_col_data_select = roi_col_data;
+						roi_data_trigplot = recording_lowpassed{:, roi_col_loc_data};
 						peak_time_loc_select = peak_time_loc;
 						peak_value_select = peak_value;
+						peak_rise_turning_time_lowpassed = peak_loc_mag{3, roi_col_loc_cal}{:, :}.('Rise_start_s_');
+						peak_rise_turning_value_lowpassed = roi_col_data_lowpassed(peak_loc_mag{3, roi_col_loc_cal}{:, :}.('Rise_start'));
 					end
 							
 
-					peak_rise_turning_loc = ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Rise_start_s_');
-					peak_rise_turning_value = roi_col_data_select(ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Rise_start'));
-					peak_decay_turning_loc = ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Decay_stop_s_');
-					peak_decay_turning_value = roi_col_data_select(ROIdata{rn, 5}{peakinfo_row, (roi_col_loc_cal)}{:, :}.('Decay_stop'));
+					peak_rise_turning_loc = peak_loc_mag{1, (roi_col_loc_cal)}{:, :}.('Rise_start_s_');
+					peak_rise_turning_value = roi_col_data_select(peak_loc_mag{1, (roi_col_loc_cal)}{:, :}.('Rise_start'));
+					peak_decay_turning_loc = peak_loc_mag{1, (roi_col_loc_cal)}{:, :}.('Decay_stop_s_');
+					peak_decay_turning_value = roi_col_data_select(peak_loc_mag{1, (roi_col_loc_cal)}{:, :}.('Decay_stop'));
 
 					roi_col_data_highpassed = recording_highpassed{:, roi_col_loc_data}; % roi data 
 					thresh_data = recording_thresh{:, roi_col_loc_data};
 
 					% sub_handle(roi_plot) = subplot(6, 2, q+(m-1)*2);
 					sub_handle(roi_plot) = subplot(6, 8, [(q*4-3)+(m-1)*8, (q*4-3)+(m-1)*8+1]);
-					plot(recording_timeinfo, roi_col_data, 'k') % plot original data
+					plot(timeinfo, roi_col_data, 'k') % plot original data
 					hold on
-					% plot(peak_time_loc, peak_value, 'ro', 'linewidth', 2) % plot peak marks
-					% plot(recording_timeinfo, roi_col_data_highpassed, 'b') % plot highpass filtered data
-					% plot(recording_timeinfo, thresh_data, '--k'); % plot thresh hold line
-					if lowpass_for_peak
-						plot(recording_timeinfo, roi_col_data_lowpassed, 'm'); % plot lowpass filtered data
-					end
-					plot(peak_time_loc_select, peak_value_select, 'yo', 'linewidth', 2) %plot lowpassed data peak marks
+					plot(timeinfo, roi_col_data_lowpassed, 'm'); % plot lowpass filtered data
+
+					% plot detected peaks and their starting and ending points
+					plot(peak_time_loc_select, peak_value_select, 'ko', 'linewidth', 2) %plot lowpassed data peak marks
 					plot(peak_rise_turning_loc, peak_rise_turning_value, '>b', peak_decay_turning_loc, peak_decay_turning_value, '<b', 'linewidth', 2) % plot start and end of transient, turning point
+
+					if cnmfe_process
+						plot(timeinfo, roi_rawdata, 'b')
+						plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'mo', 'linewidth', 2) % plot peak marks of lowpassed data
+						plot(peak_rise_turning_time_lowpassed, peak_rise_turning_value_lowpassed, 'dm', 'linewidth', 2) % plot start of transient of lowpassed data, turning point
+					end
 					ylim_gpio = ylim;
 
 					if GPIO_trace == 1
@@ -246,7 +284,7 @@ for rn = 1:recording_num
 							patch(gpio_x{ncp}(:, 1), gpio_y{ncp}(:, 1), gpio_color{ncp}, 'EdgeColor', 'none', 'FaceAlpha', 0.7)
 						end
 					end
-					axis([0 recording_timeinfo(end) ylim_gpio(1) ylim_gpio(2)])
+					axis([0 timeinfo(end) ylim_gpio(1) ylim_gpio(2)])
 					set(get(sub_handle(roi_plot), 'YLabel'), 'String', roi_name);
 					hold off
 
@@ -268,20 +306,20 @@ for rn = 1:recording_num
 						patch(gpio_x_trig_plot, gpio_y_trig_plot, 'cyan', 'EdgeColor', 'none', 'FaceAlpha', 0.7)
 						hold on
 						for tn = 1:length(pre_stimuli_time) % number of stimulation trains
-							[val_min, idx_min] = min(abs(recording_timeinfo-pre_stimuli_time(tn))); % value and start point idx for ploting triggered response
-							[val_max, idx_max] = min(abs(recording_timeinfo-post_stimuli_time(tn))); % value and end point idx for ploting triggered response
-							recording_timeinfo_trig_plot{tn} = recording_timeinfo(idx_min:idx_max)-gpio_train_start_time{1}(tn);
+							[val_min, idx_min] = min(abs(timeinfo-pre_stimuli_time(tn))); % value and start point idx for ploting triggered response
+							[val_max, idx_max] = min(abs(timeinfo-post_stimuli_time(tn))); % value and end point idx for ploting triggered response
+							timeinfo_trig_plot{tn} = timeinfo(idx_min:idx_max)-gpio_train_start_time{1}(tn);
 
 							idx_min_base = idx_min+recording_fr*(pre_stimuli_duration-baseline_duration); % loc of first data point of "baseline_duration" before stimulation
-							idx_max_base = find((recording_timeinfo-gpio_train_start_time{1}(tn))<0, 1, 'last'); % loc of last data point of "baseline_duration" before stimulation
-							roi_col_data_base = mean(roi_col_data(idx_min_base:idx_max_base)); % baseline before 'tn' stimulation
+							idx_max_base = find((timeinfo-gpio_train_start_time{1}(tn))<0, 1, 'last'); % loc of last data point of "baseline_duration" before stimulation
+							roi_col_data_base = mean(roi_data_trigplot(idx_min_base:idx_max_base)); % baseline before 'tn' stimulation
 
-							roi_col_data_trig_plot{tn} = roi_col_data(idx_min:idx_max)-roi_col_data_base;
+							roi_col_data_trig_plot{tn} = roi_data_trigplot(idx_min:idx_max)-roi_col_data_base;
 							% roi_col_data_lowpassed_trig_plot = roi_col_data_lowpassed(idx_min:idx_max);
-							data_point_num(tn) = length(recording_timeinfo_trig_plot{tn}); % data points of each triggered plot
+							data_point_num(tn) = length(timeinfo_trig_plot{tn}); % data points of each triggered plot
 
-							plot(recording_timeinfo_trig_plot{tn}, roi_col_data_trig_plot{tn}, 'k'); % plot raw data sweeps
-							% plot(recording_timeinfo_trig_plot, roi_col_data_lowpassed_trig_plot, 'm'); % plot lowpassed data
+							plot(timeinfo_trig_plot{tn}, roi_col_data_trig_plot{tn}, 'k'); % plot raw data sweeps
+							% plot(timeinfo_trig_plot, roi_col_data_lowpassed_trig_plot, 'm'); % plot lowpassed data
 						end
 						hold off
 						data_point_num_unique = unique(data_point_num, 'sorted'); % unique data points length
@@ -325,7 +363,7 @@ for rn = 1:recording_num
 						std_plot_area_y = [std_plot_upper_line; flip(std_plot_lower_line)];
 						% loc_longest_time_trig_plot = find(sort(data_point_num), 1, 'last');
 						[longest_time_trig_plot,loc_longest_time_trig_plot] = max(data_point_num, [],'linear');
-						average_data_trig_plot_x = recording_timeinfo_trig_plot{loc_longest_time_trig_plot};
+						average_data_trig_plot_x = timeinfo_trig_plot{loc_longest_time_trig_plot};
 						std_plot_area_x = [average_data_trig_plot_x; flip(average_data_trig_plot_x)];
 						subplot(6, 8, (q*4+(m-1)*8)) % plot stimulation triggered responses. Averaged
 						patch(gpio_x_trig_plot, gpio_y_trig_plot, 'cyan', 'EdgeColor', 'none', 'FaceAlpha', 0.7)
@@ -344,7 +382,7 @@ for rn = 1:recording_num
 						stairs(x, y{nc});
 						hold on
 					end
-					axis([0 recording_timeinfo(end) 0 max(y{1})+1])
+					axis([0 timeinfo(end) 0 max(y{1})+1])
 					hold off
 					legend(stimulation, 'Location', "SouthOutside");
 				end
@@ -379,10 +417,8 @@ for rn = 1:recording_num
 				pause;
 			end
 		end
-		
 	end
 end
 modified_ROIdata = ROIdata;
-
 end
 
