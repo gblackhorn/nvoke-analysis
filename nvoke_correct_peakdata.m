@@ -56,7 +56,7 @@ for rn = 1:recording_num
 		peakinfo_row_name = 'Peak_lowpassed'; % peaks were found in CNMFe processed data at first. These results were then used in lowpassed data to find peaks more precisly
 	else
 		recording_rawdata = ROIdata{rn,2};
-		cnmfe_process = false; % data was processed by CNMFe
+		cnmfe_process = false; % data was not processed by CNMFe
 		lowpass_for_peak = true; % use lowpassed data for peak detaction on
 		% peakinfo_row = 3; % more detailed peak info for plot and further calculation will be stored in roidata_gpio{x, 5} 3rd row (peak row)
 		peakinfo_row_name = 'Peak_lowpassed';
@@ -224,7 +224,7 @@ for rn = 1:recording_num
 					roi_plot = (p-1)*10+(q-1)*5+m; % the number of roi to be plot
 					roi_name = ROIdata{rn,5}.Properties.VariableNames{roi_plot}; % roi name ('C0, C1...')
 					roi_col_loc_data = find(strcmp(roi_name, recording_data.Properties.VariableNames)); % the column number of this roi in recording_data (ROI_table)
-					roi_col_loc_cal = find(strcmp(roi_name, peak_loc_mag.Properties.VariableNames)); % the column number of this roi in recording_data (ROI_table)
+					roi_col_loc_cal = find(strcmp(roi_name, peak_loc_mag.Properties.VariableNames)); % the column number of this roi in peak data (ROI_table)
 
 					roi_col_data = recording_data{:, roi_col_loc_data}; % roi data 
 					peak_time_loc = peak_loc_mag{1, (roi_col_loc_cal)}{:, :}.('Peak_loc_s_'); % peak_loc as time
@@ -242,6 +242,7 @@ for rn = 1:recording_num
 					else
 						roi_col_data_select = roi_col_data;
 						roi_data_trigplot = recording_lowpassed{:, roi_col_loc_data};
+						roi_rawdata = recording_rawdata{:, roi_col_loc_data};
 						peak_time_loc_select = peak_time_loc;
 						peak_value_select = peak_value;
 						peak_rise_turning_time_lowpassed = peak_loc_mag{3, roi_col_loc_cal}{:, :}.('Rise_start_s_');
@@ -261,16 +262,16 @@ for rn = 1:recording_num
 					sub_handle(roi_plot) = subplot(6, 8, [(q*4-3)+(m-1)*8, (q*4-3)+(m-1)*8+1]);
 					plot(timeinfo, roi_col_data, 'k') % plot original data
 					hold on
-					plot(timeinfo, roi_col_data_lowpassed, 'm'); % plot lowpass filtered data
+					plot(timeinfo, roi_col_data_lowpassed, 'Color', '#0072BD', 'linewidth', 1); % plot lowpass filtered data
 
 					% plot detected peaks and their starting and ending points
-					plot(peak_time_loc_select, peak_value_select, 'ko', 'linewidth', 2) %plot lowpassed data peak marks
-					plot(peak_rise_turning_loc, peak_rise_turning_value, '>b', peak_decay_turning_loc, peak_decay_turning_value, '<b', 'linewidth', 2) % plot start and end of transient, turning point
+					plot(peak_time_loc_select, peak_value_select, 'o', 'Color', '#000000', 'linewidth', 1) %plot lowpassed data peak marks
+					plot(peak_rise_turning_loc, peak_rise_turning_value, '>', peak_decay_turning_loc, peak_decay_turning_value, '<', 'Color', '#000000', 'linewidth', 1) % plot start and end of transient, turning point
 
 					if cnmfe_process
-						plot(timeinfo, roi_rawdata, 'b')
-						plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'mo', 'linewidth', 2) % plot peak marks of lowpassed data
-						plot(peak_rise_turning_time_lowpassed, peak_rise_turning_value_lowpassed, 'dm', 'linewidth', 2) % plot start of transient of lowpassed data, turning point
+						% plot(timeinfo, roi_rawdata, 'Color', '#7E2F8E')
+						plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'o', 'Color', '#D95319', 'linewidth', 1) % plot peak marks of lowpassed data
+						plot(peak_rise_turning_time_lowpassed, peak_rise_turning_value_lowpassed, 'd', 'Color', '#D95319',  'linewidth', 1) % plot start of transient of lowpassed data, turning point
 					end
 					ylim_gpio = ylim;
 
@@ -284,6 +285,7 @@ for rn = 1:recording_num
 							patch(gpio_x{ncp}(:, 1), gpio_y{ncp}(:, 1), gpio_color{ncp}, 'EdgeColor', 'none', 'FaceAlpha', 0.7)
 						end
 					end
+					set(gca,'children',flipud(get(gca,'children')))
 					axis([0 timeinfo(end) ylim_gpio(1) ylim_gpio(2)])
 					set(get(sub_handle(roi_plot), 'YLabel'), 'String', roi_name);
 					hold off

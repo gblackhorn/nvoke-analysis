@@ -27,7 +27,7 @@ for n = 1:numel(roi_readout_file_info_processed)
 	% prepare neuron name for table
 	neuron_name = {};
 	for nn = 1:size(CalSig_decon, 2) % from 1 to number of columns (neurons)
-		neuron_name{nn} = ['neuron_', num2str(nn)];
+		neuron_name{nn} = ['neuron', num2str(nn)];
 	end
     
 	CalSig_decon = array2table(CalSig_decon, 'VariableNames', neuron_name); % convert CalSig_decon to table. Use neuron name as column names

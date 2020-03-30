@@ -408,16 +408,16 @@ for rn = 1:recording_num
 							sub_handle(roi_plot) = subplot(6, 2, q+(m-1)*2);
 							plot(time_info, roi_col_data, 'k') % plot original data
 							hold on
-							plot(time_info, roi_col_data_lowpassed, 'm'); % plot lowpass filtered data
+							plot(time_info, roi_col_data_lowpassed, 'Color', '#0072BD', 'linewidth', 1); % plot lowpass filtered data
 
 							% plot detected peaks and their starting and ending points
-							plot(peak_time_loc_select, peak_value_select, 'ko', 'linewidth', 2) % plot peak marks
-							plot(peak_rise_turning_time, peak_rise_turning_value, '>b', peak_decay_turning_time, peak_decay_turning_value, '<b', 'linewidth', 2) % plot start and end of transient, turning point
+							plot(peak_time_loc_select, peak_value_select, 'o', 'Color', '#000000', 'linewidth', 1) % plot peak marks
+							plot(peak_rise_turning_time, peak_rise_turning_value, '>', peak_decay_turning_time, peak_decay_turning_value, '<', 'Color', '#000000', 'linewidth', 1) % plot start and end of transient, turning point
 
 							if cnmfe_process
-								plot(time_info, roi_col_data_raw, 'b')
-								plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'mo', 'linewidth', 2) % plot peak marks of lowpassed data
-								plot(peak_rise_turning_time_lowpassed, peak_rise_turning_value_lowpassed, 'dm', 'linewidth', 2) % plot start of transient of lowpassed data, turning point
+								plot(time_info, roi_col_data_raw, 'Color', '#7E2F8E')
+								plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'o', 'Color', '#D95319', 'linewidth', 1) % plot peak marks of lowpassed data
+								plot(peak_rise_turning_time_lowpassed, peak_rise_turning_value_lowpassed, 'd', 'Color', '#D95319',  'linewidth', 1) % plot start of transient of lowpassed data, turning point
 							end
 							
 							set(get(sub_handle(roi_plot), 'YLabel'), 'String', ['C', num2str(roi_plot-1)]);

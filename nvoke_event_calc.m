@@ -140,14 +140,21 @@ if nargin == 2
 
 		s = figure(2);
 		set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.05, 0.05, 0.95, 0.95 ]);
-		subplot(2, 2, 1);
+		subplot(2, 3, 1);
 		corrplot(peak_info_sheet(:, [5, 8]), 'varNames', {'RiseT', 'PeakM'});
-		subplot(2, 2, 2);
+		subplot(2, 3, 2);
 		corrplot(peak_info_sheet(:, [6, 8]), 'varNames', {'DecayT', 'PeakM'});
-		subplot(2, 2, 3);
+		subplot(2, 3, 3);
 		corrplot(peak_info_sheet(:, [7, 8]), 'varNames', {'WholeT', 'PeakM'});
-		subplot(2, 2, 4);
+		subplot(2, 3, 4);
 		corrplot(peak_info_sheet(:, [8, 9]), 'varNames', {'PeakM', 'Slope'});
+		subplot(2, 3, 5);
+		corrplot(peak_info_sheet(:, [6, 9]), 'varNames', {'DecayT', 'Slope'});
+		subplot(2, 3, 6);
+		scatter3(peak_info_sheet(:, 6), peak_info_sheet(:, 8), peak_info_sheet(:, 9))
+		xlabel('DecayT')
+		ylabel('PeakM')
+		zlabel('Slope')
 		sgtitle('nVoke event analysis - corralations ', 'Interpreter', 'none');
 
 
