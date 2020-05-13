@@ -19,8 +19,8 @@ end
 Fs = 10;             % frame rate
 ssub = 1;           % spatial downsampling factor
 tsub = 1;           % temporal downsampling factor
-gSig = 8;           % set it to ~ diameter/2. width of the gaussian kernel, which can approximates the average neuron shape
-gSiz = 16;          % default=13. maximum diameter of neurons in the image plane. larger values are preferred.
+gSig = 12;           % set it to ~ diameter/2. width of the gaussian kernel, which can approximates the average neuron shape
+gSiz = 24;          % default=13. maximum diameter of neurons in the image plane. larger values are preferred.
 neuron_full = Sources2D('d1',d1,'d2',d2, ... % dimensions of datasets
     'ssub', ssub, 'tsub', tsub, ...  % downsampleing
     'gSig', gSig,...    % sigma of the 2D gaussian that approximates cell bodies
@@ -72,7 +72,7 @@ patch_par = [1,1]*1; %1;  % default=[1,1]*1. divide the optical field into m X n
 K = []; % maximum number of neurons to search within each patch. you can use [] to search the number automatically
 
 min_corr = 0.8;     % default=0.8. minimum local correlation for a seeding pixel
-min_pnr = 10;       % default=8. minimum peak-to-noise ratio for a seeding pixel
+min_pnr = 7;       % default=8. minimum peak-to-noise ratio for a seeding pixel
 min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
 bd = 1;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 neuron.updateParams('min_corr', min_corr, 'min_pnr', min_pnr, ...
@@ -100,7 +100,7 @@ display_merge = false;          % visually check the merged neurons
 view_neurons = false;           % view all neurons
 
 % parameters, estimate the background
-spatial_ds_factor = 1;      % default=1. spatial downsampling factor. it's for faster estimation
+spatial_ds_factor = 1;      % default=1. spatial downsampling factor. it's  for faster estimation
 thresh = 10;     % default=10. threshold for detecting frames with large cellular activity. (mean of neighbors' activity  + thresh*sn)
 
 bg_neuron_ratio = 1.5;  % spatial range / diameter of neurons
@@ -187,7 +187,7 @@ tic;
 for m=1:2
     %temporal
     neuron.updateTemporal_endoscope(Ysignal);
-    cnmfe_quick_merge;              % run neuron merges
+    cnmfe_quick_merge;              % run neuron merges 
 
     %spatial
     neuron.updateSpatial_endoscope(Ysignal, Nspatial, update_spatial_method);
@@ -228,7 +228,7 @@ neuron.Cn = Cn;
 neuron.runMovie(Ysignal, [0, 150], save_avi, avi_name);
 
 %% save video
-kt = 3;     % default=3. play one frame in every kt frames
+kt = 1;     % default=3. play one frame in every kt frames
 save_avi = true;
 center_ac = median(max(neuron.A,[],1)'.*max(neuron.C,[],2)); % the denoised video are mapped to [0, 2*center_ac] of the colormap 
 cnmfe_save_video;
@@ -236,3 +236,13 @@ cnmfe_save_video;
 %% save results
 results = neuron.obj2struct(); 
 eval(sprintf('save %s%s%s_results.mat results', dir_nm, filesep, file_nm));
+
+%% Maybe save others?
+eval(sprintf('save %s%s%s_neuron.mat neuron', dir_nm, filesep, file_nm));
+eval(sprintf('save %s%s%s_Y.mat Y Yac Ysignal Y_mixed Ybg Ybg_weights', dir_nm, filesep, file_nm));
+
+
+%% save the whole workspace
+workspace_file_nm = [file_nm, 'workspace.m'];
+workspace_file_path = fullfile(dir_nm, workspace_file_nm);
+save(workspace_file_path)
