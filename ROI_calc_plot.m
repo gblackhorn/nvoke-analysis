@@ -23,11 +23,15 @@ function [ ROI_table, varargout ] = ROI_calc_plot( ROI_table, draw )
 narginchk(1,2); % check the number of inputs
 
 % organize ROI data table. The first row containing strings should be deleted.
+<<<<<<< HEAD
 if any(strcmp(ROI_table.Properties.VariableNames, 'Var1'))
 	ROI_table.Properties.VariableNames{'Var1'} = 'Time'; % set first column varible name as Time
 else
 end
 
+=======
+ROI_table.Properties.VariableNames{1} = 'Time'; % set first column varible name as Time
+>>>>>>> origin/development
 
 recording_time = table2array(ROI_table(end,1)); % use the last time point as the recording duration.
 ROI_num = size(ROI_table, 2) - 1; % number of ROIs
