@@ -72,7 +72,7 @@ patch_par = [1,1]*1; %1;  % default=[1,1]*1. divide the optical field into m X n
 K = []; % maximum number of neurons to search within each patch. you can use [] to search the number automatically
 
 min_corr = 0.8;     % default=0.8. minimum local correlation for a seeding pixel
-min_pnr = 7;       % default=8. minimum peak-to-noise ratio for a seeding pixel
+min_pnr = 8;       % default=8. minimum peak-to-noise ratio for a seeding pixel
 min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
 bd = 1;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 neuron.updateParams('min_corr', min_corr, 'min_pnr', min_pnr, ...
@@ -97,13 +97,13 @@ neuron_init = neuron.copy();
 %% iteratively update A, C and B
 % parameters, merge neurons
 display_merge = false;          % visually check the merged neurons
-view_neurons = false;           % view all neurons
-
+view_neurons = false;           % view all neuron
 % parameters, estimate the background
 spatial_ds_factor = 1;      % default=1. spatial downsampling factor. it's  for faster estimation
 thresh = 10;     % default=10. threshold for detecting frames with large cellular activity. (mean of neighbors' activity  + thresh*sn)
 
 bg_neuron_ratio = 1.5;  % spatial range / diameter of neurons
+
 
 % parameters, estimate the spatial components
 update_spatial_method = 'hals';  % the method for updating spatial components {'hals', 'hals_thresh', 'nnls', 'lars'}
@@ -206,12 +206,12 @@ dir_neurons = sprintf('%s%s%s_neurons%s', dir_nm, filesep, file_nm, filesep);
 neuron.save_neurons(dir_neurons); 
 
 %% display contours of the neurons
-figure;
-Cnn = correlation_image(neuron.reshape(Ysignal(:, 1:5:end), 2), 4);
-neuron.show_contours(0.6); 
-colormap gray;
-axis equal; axis off;
-title('contours of estimated neurons');
+% figure;
+% Cnn = correlation_image(neuron.reshape(Ysignal(:, 1:5:end), 2), 4);
+% neuron.show_contours(0.6); 
+% colormap gray;
+% axis equal; axis off;
+% title('contours of estimated neurons');
 
 % plot contours with IDs
 % [Cn, pnr] = neuron.correlation_pnr(Y(:, round(linspace(1, T, min(T, 1000)))));
@@ -220,6 +220,9 @@ Cn = imresize(Cn, [d1, d2]);
 neuron.show_contours(0.6); 
 colormap gray;
 title('contours of estimated neurons');
+contours_filename = [file_nm, '_contours'];
+contours_fullfile = fullfile(dir_nm, contours_filename);
+saveas(gcf, contours_fullfile, 'jpeg');
 
 %% check spatial and temporal components by playing movies
 save_avi = false;
@@ -228,7 +231,7 @@ neuron.Cn = Cn;
 neuron.runMovie(Ysignal, [0, 150], save_avi, avi_name);
 
 %% save video
-kt = 1;     % default=3. play one frame in every kt frames
+kt = 3;     % default=3. play one frame in every kt frames
 save_avi = true;
 center_ac = median(max(neuron.A,[],1)'.*max(neuron.C,[],2)); % the denoised video are mapped to [0, 2*center_ac] of the colormap 
 cnmfe_save_video;

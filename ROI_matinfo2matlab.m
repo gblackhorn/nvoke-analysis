@@ -9,7 +9,7 @@ output_dir = 'G:\Workspace\Inscopix_Seagate\Analysis';
 roi_readout_file_folder = uigetdir(input_dir, 'Select a folder containing CNMF-E processed results');
 
 % roi_readout_file_info = dir([roi_readout_file_folder, '\', '*-ROI.csv']);
-roi_readout_file_info = dir([roi_readout_file_folder, '\*ROI.csv']); % file containing raw ROI data with time info
+roi_readout_file_info = dir([roi_readout_file_folder, '\*ROI*.csv']); % file containing raw ROI data with time info
 roi_readout_file_info_processed = dir([roi_readout_file_folder, '\*results*.mat']); % file containing CNMF-E processed data
 
 
@@ -58,11 +58,11 @@ for n = 1:numel(roi_readout_file_info_processed)
 	filename_stem = roi_readout_file_info(n).name(1:25); % filename like recording_20190910_130653 (25 letters+numbers)
 	gpio_file_info = dir([roi_readout_file_folder, '\', filename_stem, '*gpio*.csv']); % looking for accompnied gpio file
 	if ~isempty(gpio_file_info)
-        n
-        gpio_file_info.name
-        if n == 8
-            pause
-        end
+        % n
+        % gpio_file_info.name
+        % if n == 9
+        %     pause
+        % end
 		gpio_file = fullfile(gpio_file_info.folder, gpio_file_info.name);
 		GPIO_table = readtable(gpio_file);
 		[ channel, EX_LED_power, GPIO_duration, stimulation ] = GPIO_data_extract(GPIO_table);

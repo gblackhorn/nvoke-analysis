@@ -1,4 +1,4 @@
-function [peak_info_sheet, varargout] = nvoke_event_calc(ROIdata, plot_analysis)
+function [peak_info_sheet, varargout] = nvoke_event_calc(ROIdata, plot_analysis, triggeredPeak_filter)
 % Analyse calcium transient events: amplitude, rise and decay duration, whole event duration
 %   Detailed explanation goes here
 % varargout{1} = total_cell_num;
@@ -6,9 +6,21 @@ function [peak_info_sheet, varargout] = nvoke_event_calc(ROIdata, plot_analysis)
 %
 % [peak_info_sheet, total_cell_num, total_peak_num] = nvoke_event_calc(ROIdata, 1)
 
+% triggeredPeak_filter = 2; % 0- no fileter, all peaks. 1- excited peaks. 2- spontaneous or rebound peaks
+
 if plot_analysis == 2
-	figfolder = uigetdir('G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\peaks',...
-		'Select a folder to save figures');
+	global figfolder
+	if figfolder~=0
+	else
+		if ispc
+			figfolder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\peaks\';
+		elseif isunix
+			figfolder = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/peaks/';
+		end
+		
+	end
+	figfolder = uigetdir(figfolder,...
+				['Select a folder to save figures. Trigger_filter-', num2str(triggeredPeak_filter)]);
 end
 
 if isstruct(ROIdata{1, 2})
@@ -47,20 +59,42 @@ for rn = 1:recording_num
 	for roi_n = 1:roi_num
 		roi_name = ROIdata{rn,5}.Properties.VariableNames{roi_n};
 		roi_code = roi_n-1;
-		peak_start = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 6}; % time points of peak start
-		peak_end = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 7};
-		rise_duration = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 8};
-		decay_duration = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 9};
-		peak_amp = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 10}; % relative one
-		peak_slope = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 17}; % peak slope
-		peak_zscore = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 18}; % z-score
-		peak_norm_hp = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 19}; % peak normalized to std of highpassed data
+		% peak_start = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 6}; % time points of peak start
+		% peak_end = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 7};
+		% rise_duration = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 8};
+		% decay_duration = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 9};
+		% peak_amp = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 10}; % relative one
+		% peak_slope = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 17}; % peak slope
+		% peak_zscore = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 18}; % z-score
+		% peak_norm_hp = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}{:, 19}; % peak normalized to std of highpassed data
+		% transient_duration = rise_duration+decay_duration;
+
+		peak_start = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('Rise_start_s_'); % time points of peak start
+		peak_end = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('Decay_stop_s_');
+		rise_duration = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('Rise_duration_s_');
+		decay_duration = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('decay_duration_s_');
+		peak_amp = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('Peak_mag_relative'); % relative one
+		peak_slope = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('PeakSlope'); % peak slope
+		peak_zscore = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('PeakZscore'); % z-score
+		peak_norm_hp = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('PeakNormHP'); % peak normalized to std of highpassed data
+		peak_relative_norm_hp = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('Peak_relative_NormHP'); % peak normalized to std of highpassed data
+
+		Exist_Column = strcmp('triggeredPeak',ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.Properties.VariableNames);
+		val_stim_exist = Exist_Column(Exist_Column==1);
+		if val_stim_exist == 1
+			peak_triggered = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('triggeredPeak'); % 1: rise starts during stimulation
+		else
+			peak_triggered = 0;
+			triggeredPeak_filter = 0;
+		end
+
 		transient_duration = rise_duration+decay_duration;
 
 		recording_code_sheet = ones(size(peak_start))*recording_code;
 		roi_code_sheet = ones(size(peak_start))*roi_code;
 		sheet_start = sheet_fill_count;
 		sheet_end = sheet_fill_count+length(peak_start)-1;
+
 
 		peak_info_sheet(sheet_start:sheet_end, 1) = recording_code_sheet;
 		peak_info_sheet(sheet_start:sheet_end, 2) = roi_code_sheet;
@@ -72,18 +106,32 @@ for rn = 1:recording_num
 		peak_info_sheet(sheet_start:sheet_end, 8) = peak_amp;
 		peak_info_sheet(sheet_start:sheet_end, 9) = peak_slope;
 		peak_info_sheet(sheet_start:sheet_end, 10) = peak_zscore;
-		peak_info_sheet(sheet_start:sheet_end, 11) = peak_norm_hp;
-
+		peak_info_sheet(sheet_start:sheet_end, 11) = peak_relative_norm_hp;
+		peak_info_sheet(sheet_start:sheet_end, 12) = peak_triggered;
 
 		sheet_fill_count = sheet_fill_count+length(peak_start);
 	end
 	cell_num_count = cell_num_count+roi_num;
 end
 
-total_cell_num = cell_num_count;
-total_peak_num = sheet_fill_count-1;
 
-if nargin == 2
+if triggeredPeak_filter == 1
+	discard_peaks = find(peak_info_sheet(:, 12)==0);
+	triggeredPeak_filter_string = 'TriggeredPeaks';
+	peak_info_sheet(discard_peaks, :) = [];
+elseif triggeredPeak_filter == 2
+	discard_peaks = find(peak_info_sheet(:, 12)==1);
+	triggeredPeak_filter_string = 'NotTriggeredPeaks';
+	peak_info_sheet(discard_peaks, :) = [];
+elseif triggeredPeak_filter == 0
+	triggeredPeak_filter_string = 'AllPeaks'; 
+end
+
+total_cell_num = cell_num_count;
+% total_peak_num = sheet_fill_count-1;
+total_peak_num = size(peak_info_sheet, 1);
+
+if nargin >= 2
 	if plot_analysis == 1 || 2 
 		% calculate proper bin number according to The Freedman-Diaconis rule
 		% h=2×IQR×n^(−1/3), bin+number = (max−min)/h
@@ -147,7 +195,7 @@ if nargin == 2
 		subplot(2, 3, 6);
 		histogram(peak_info_sheet(:, 11), bin_num_peak_norm_hp); % peak normalized to std of highpassed data
 		title('Peak norm HighpassStd', 'FontSize', 16);
-		sgtitle('nVoke event analysis - Histograms ', 'Interpreter', 'none');
+		sgtitle(['nVoke event analysis - Histograms ', triggeredPeak_filter_string], 'Interpreter', 'none');
 
 		cor = figure(2);
 		set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.05, 0.05, 0.95, 0.95 ]);
@@ -171,7 +219,7 @@ if nargin == 2
 		% xlabel('RiseT')
 		% ylabel('PeakM')
 		% zlabel('Slope')
-		sgtitle('nVoke event analysis - corralations ', 'Interpreter', 'none');
+		sgtitle(['nVoke event analysis - corralations ', triggeredPeak_filter_string], 'Interpreter', 'none');
 
 		cor2 = figure(3);
 		set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.05, 0.05, 0.95, 0.95 ]);
@@ -195,14 +243,20 @@ if nargin == 2
 		% xlabel('RiseT')
 		% ylabel('PeakM')
 		% zlabel('Slope')
-		sgtitle('nVoke event analysis - corralations PeakMzscore ', 'Interpreter', 'none');
+		sgtitle(['nVoke event analysis - corralations PeakMzscore ', triggeredPeak_filter_string], 'Interpreter', 'none');
+
+		max_riseT = max(peak_info_sheet(:, 5));
+		max_peakAmp = max(peak_info_sheet(:, 8));
+		max_peakSlope = max(peak_info_sheet(:, 9));
+		max_peakAmpzscore = max(peak_info_sheet(:, 10));
+		max_PeakAmpNormHp = max(peak_info_sheet(:, 11));
 
 		s = figure(4);
 		scatter3(peak_info_sheet(:, 5), peak_info_sheet(:, 8), peak_info_sheet(:, 9))
 		% set(gca, 'XLim', [0 150], 'YLim', [0 30], 'ZLim' [0 40])
-		xlim([0 150])
-		ylim([0 30])
-		zlim([0 40])
+		xlim([0 (max_riseT+0.5)])
+		ylim([0 (max_peakAmp+0.1)])
+		zlim([0 (max_peakSlope+0.05)])
 		xlabel('RiseT', 'FontSize', 16)
 		ylabel('PeakAmp', 'FontSize', 16)
 		zlabel('Slope', 'FontSize', 16)
@@ -210,9 +264,9 @@ if nargin == 2
 		s2 = figure(5);
 		scatter3(peak_info_sheet(:, 5), peak_info_sheet(:, 10), peak_info_sheet(:, 9))
 		% set(gca, 'XLim', [0 150], 'YLim', [0 30], 'ZLim' [0 40])
-		xlim([0 150])
-		ylim([0 30])
-		zlim([0 40])
+		xlim([0 (max_riseT+0.5)])
+		ylim([0 (max_peakAmpzscore+1)])
+		zlim([0 (max_peakSlope+0.05)])
 		xlabel('RiseT', 'FontSize', 16)
 		ylabel('PeakAmpzscore', 'FontSize', 16)
 		zlabel('Slope', 'FontSize', 16)
@@ -220,21 +274,21 @@ if nargin == 2
 		s3 = figure(6);
 		scatter3(peak_info_sheet(:, 5), peak_info_sheet(:, 11), peak_info_sheet(:, 9))
 		% set(gca, 'XLim', [0 150], 'YLim', [0 30], 'ZLim' [0 40])
-		xlim([0 150])
-		ylim([0 30])
-		zlim([0 40])
+		xlim([0 (max_riseT+0.5)])
+		ylim([0 (max_PeakAmpNormHp+5)])
+		zlim([0 (max_peakSlope+0.05)])
 		xlabel('RiseT', 'FontSize', 16)
-		ylabel('PeakAmpzscore', 'FontSize', 16)
+		ylabel('PeakAmpNormHp', 'FontSize', 16)
 		zlabel('Slope', 'FontSize', 16)
 
 
 		if plot_analysis == 2 && ~isempty(figfolder)
-			figfile_histo = ['nVoke event analysis - Histograms'];
-			figfile_corr = ['nVoke event analysis - corralations'];
-			figfile_scatter = ['nVoke event analysis - scatter'];
-			figfile_corr2 = ['nVoke event analysis - corralations2'];
-			figfile_scatter2 = ['nVoke event analysis - scatter2'];
-			figfile_scatter3 = ['nVoke event analysis - scatter3'];
+			figfile_histo = [triggeredPeak_filter_string, 'nVoke event analysis - Histograms'];
+			figfile_corr = [triggeredPeak_filter_string, 'nVoke event analysis - corralations'];
+			figfile_scatter = [triggeredPeak_filter_string, 'nVoke event analysis - scatter'];
+			figfile_corr2 = [triggeredPeak_filter_string, 'nVoke event analysis - corralations2'];
+			figfile_scatter2 = [triggeredPeak_filter_string, 'nVoke event analysis - scatter2'];
+			figfile_scatter3 = [triggeredPeak_filter_string, 'nVoke event analysis - scatter3'];
 
 			figfullpath_histo = fullfile(figfolder,figfile_histo);
 			figfullpath_corr = fullfile(figfolder,figfile_corr);
@@ -256,6 +310,20 @@ if nargin == 2
 			saveas(cor2, figfullpath_corr2,'jpg');
 			saveas(s2, figfullpath_scatter2,'jpg');
 			saveas(s3, figfullpath_scatter3,'jpg');
+
+			saveas(h, figfullpath_histo,'svg');
+			saveas(cor, figfullpath_corr,'svg');
+			saveas(s, figfullpath_scatter,'svg');
+			saveas(cor2, figfullpath_corr2,'svg');
+			saveas(s2, figfullpath_scatter2,'svg');
+			saveas(s3, figfullpath_scatter3,'svg');
+
+			saveas(h, figfullpath_histo,'fig');
+			saveas(cor, figfullpath_corr,'fig');
+			saveas(s, figfullpath_scatter,'fig');
+			saveas(cor2, figfullpath_corr2,'fig');
+			saveas(s2, figfullpath_scatter2,'fig');
+			saveas(s3, figfullpath_scatter3,'fig');
 		end
 
 	end

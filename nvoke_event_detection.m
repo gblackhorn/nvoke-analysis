@@ -67,7 +67,7 @@ for rn = 1:recording_num
 
 	% roi_num = size(single_recording, 2)-1;
 	time_info = table2array(single_recording(:, 1));
-	recording_fr = 1/(time_info(2)-time_info(1));
+	recording_fr = 1/(time_info(10)-time_info(9));
 	peak_loc_mag = cell([3 roi_num]); % first row for non-smoothed data, second row for smoothed data, 3rd row for lowpassed data
 	peak_rise_fall = cell([2 roi_num]); % store rise and fall locs of peaks. 1st row for turning, 2nd row for slope changing
 	% single_recording_smooth = single_recording;
