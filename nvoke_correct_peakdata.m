@@ -13,13 +13,26 @@ function [modified_ROIdata] = nvoke_correct_peakdata(ROIdata,plot_traces,subplot
 
 
 lowpass_fpass = 1;
-highpass_fpass = 2;
+highpass_fpass = 4;
 peakinfo_row_name = 'Peak_lowpassed';
 
-criteria_riseT = [0 1.5]; % unit: second. filter to keep peaks with rise time in the range of [min max]
-criteria_slope = [5 50]; % calcium(a.u.)/rise_time(s). filter to keep peaks with rise time in the range of [min max]
-criteria_pnr = 8; % peak-noise-ration (PNR): relative-peak-signal/std. std is calculated from highpassed data.
+criteria_riseT = [0 3]; % unit: second. filter to keep peaks with rise time in the range of [min max]
+criteria_slope = [3 80]; % calcium(a.u.)/rise_time(s). filter to keep peaks with rise time in the range of [min max]
+criteria_mag = 3; % peak_mag_normhp
+criteria_pnr = 0; % peak-noise-ration (PNR): relative-peak-signal/std. std is calculated from highpassed data.
+criteria_excitated = 2; % If a peak starts to rise in 2 sec since stimuli, it's a excitated peak
+criteria_rebound = 1; % a peak is concidered as rebound if it starts to rise within 2s after stimulation end
+stimTime_corr = 0.3; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 use_criteria = true; % choose to use criteria or not for picking peaks
+
+% parameters for makeing a new row for peak frequencies
+peakFq_size = [1 14];
+peakFq_varTypes = {'string', 'double', 'double', 'double', 'double',...
+'double', 'double', 'double', 'double', 'double',...
+'double', 'double', 'double', 'double'};
+peakFq_varNames = {'stim', 'recTime', 'stimTime', 'stimNum', 'stimTsum',...
+'nostimTsum', 'peakNumTrig', 'peakNumTrigDelay', 'peakNumRebound', 'peakNumOther',...
+'timeTrig', 'timeTrigDelay', 'timeRebound', 'timeOther'}; 
 
 if nargin < 2
 	plot_traces = 0;
@@ -55,13 +68,13 @@ if plot_traces == 2
 		figfolder = uigetdir('G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\peaks',...
 			'Select a folder to save figures');
 	elseif isunix
-		figfolder = uigetdir('/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/plots',...
+		figfolder = uigetdir('/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/peaks',...
 			'Select a folder to save figures');
 	end
 end
 
 recording_num = size(ROIdata, 1);
-for rn = 1:record`g_num
+for rn = 1:recording_num
 	recording_name = ROIdata{rn, 1};
 
 	if plot_traces == 2
@@ -105,6 +118,10 @@ for rn = 1:record`g_num
 
 	if isempty(ROIdata{rn, 3}) 
 		GPIO_trace = 0; % no stimulation used during recording, don't show GPIO trace
+		stim_str = 'noStim';
+	elseif strfind(ROIdata{rn, 3}{:}, 'noStim')
+		GPIO_trace = 0; % no stimulation used during recording, don't show GPIO trace
+		stim_str = 'noStim';
 	else
 		GPIO_trace = 1; % show GPIO trace representing stimulation
 		stimulation = ROIdata{rn, 3}{1, 1};
@@ -116,10 +133,17 @@ for rn = 1:record`g_num
 		gpio_x = cell(1, (length(channel)-2)); % pre-allocate gpio_x
 		gpio_y = cell(1, (length(channel)-2)); % pre-allocate gpio_y
 		for nc = 1:(length(channel)-2) % number of GPIOs used for stimulation
+			if strfind(channel(nc+2).name{1}, 'GPIO-1')
+				gpio_thresh = 30000;
+			elseif strfind(channel(nc+2).name{1}, 'OG-LED')
+				gpio_thresh = 0.15;
+			end
+
+
 			gpio_offset = 6; % in case there are multiple stimuli, GPIO traces will be stacked, seperated by offset 6
 			gpio_signal{nc}(:, 1) = channel(nc+2).time_value(:, 1); % time value of GPIO signal
 			gpio_signal{nc}(:, 2) = channel(nc+2).time_value(:, 2); % voltage value of GPIO signal
-			gpio_rise_loc = find(gpio_signal{nc}(:, 2)); % locations of GPIO voltage not 0, ie stimuli start
+			gpio_rise_loc = find(gpio_signal{nc}(:, 2)>gpio_thresh); % locations of GPIO voltage not 0, ie stimuli start
 			gpio_rise_num = length(gpio_rise_loc); % number of GPIO voltage rise
 
 			% Looking for stimulation groups. Many stimuli are train signal. Ditinguish trains by finding rise time interval >=5s
@@ -147,10 +171,15 @@ for rn = 1:record`g_num
 				gpio_train_patch_x{nc}(3+(ngt-1)*4, 1) = gpio_signal{nc}(train_end_loc{nc}(ngt)+1, 1);
 				gpio_train_patch_x{nc}(4+(ngt-1)*4, 1) = gpio_signal{nc}(train_end_loc{nc}(ngt)+1, 1);
 
-				gpio_train_patch_y{nc}(1+(ngt-1)*4, 1) = gpio_signal{nc}(train_start_loc{nc}(ngt)+1, 2);
-				gpio_train_patch_y{nc}(2+(ngt-1)*4, 1) = gpio_signal{nc}(train_start_loc{nc}(ngt), 2);
-				gpio_train_patch_y{nc}(3+(ngt-1)*4, 1) = gpio_signal{nc}(train_end_loc{nc}(ngt), 2);
-				gpio_train_patch_y{nc}(4+(ngt-1)*4, 1) = gpio_signal{nc}(train_end_loc{nc}(ngt)+1, 2);
+				% gpio_train_patch_y{nc}(1+(ngt-1)*4, 1) = gpio_signal{nc}(train_start_loc{nc}(ngt)+1, 2);
+				% gpio_train_patch_y{nc}(2+(ngt-1)*4, 1) = gpio_signal{nc}(train_start_loc{nc}(ngt), 2);
+				% gpio_train_patch_y{nc}(3+(ngt-1)*4, 1) = gpio_signal{nc}(train_end_loc{nc}(ngt), 2);
+				% gpio_train_patch_y{nc}(4+(ngt-1)*4, 1) = gpio_signal{nc}(train_end_loc{nc}(ngt)+1, 2);
+
+				gpio_train_patch_y{nc}(1+(ngt-1)*4, 1) = 0;
+				gpio_train_patch_y{nc}(2+(ngt-1)*4, 1) = 1;
+				gpio_train_patch_y{nc}(3+(ngt-1)*4, 1) = 1;
+				gpio_train_patch_y{nc}(4+(ngt-1)*4, 1) = 0;
 			end
 			gpio_train_lim_loc{nc, 1} = find(gpio_train_patch_y{nc}(:, 1) == 0); % location of gpio voltage ==0 in gpio_train_lim_loc
 			gpio_train_lim_loc{nc, 2} = find(gpio_train_patch_y{nc}(:, 1)); % location of gpio voltage ~=0 in gpio_train_lim_loc
@@ -171,10 +200,21 @@ for rn = 1:record`g_num
 			gpio_lim_loc{nc, 1} = find(gpio_y{nc}(:, 1) == 0); % location of gpio voltage ==0 in gpio_y
 			gpio_lim_loc{nc, 2} = find(gpio_y{nc}(:, 1)); % location of gpio voltage ~=0 in gpio_y
 		end
+		stim_duration = round(ROIdata{rn, 4}(3).stim_range(1, 2) - ROIdata{rn, 4}(3).stim_range(1, 1)); % duration of stimulation
+		stim_str = [ROIdata{rn, 4}(3).name{1}, '-', num2str(stim_duration), 's']; % OG_LED-5s, OG_LED-10s, GPIO1-1s, etc.
 	end
+	ROIdata{rn, 3}{1} = stim_str;
 
 
 	peak_loc_mag = ROIdata{rn, 5};
+	if size(peak_loc_mag, 1)<4 % if there is no row for peak frquency
+		neuron_n = size(peak_loc_mag, 2); % number of rois
+		peakFqrow = cell2table(cell(1, neuron_n)); % new peakFqrow 
+		peakFqrow.Properties.VariableNames = peak_loc_mag.Properties.VariableNames; % give new row var names
+		peakFqrow.Properties.RowNames{1} = 'Peak_Fq';
+		peak_loc_mag = [peak_loc_mag; peakFqrow]; % add new row to table
+	end
+
 	peakinfo_row = find(strcmp(peakinfo_row_name, peak_loc_mag.Properties.RowNames));
 	peakinfo_row_plot = find(strcmp(peakinfo_row_name_plot, peak_loc_mag.Properties.RowNames));
 	[recording_rawdata, recording_time, roi_num_all] = ROI_calc_plot(recording_rawdata);
@@ -201,7 +241,7 @@ for rn = 1:record`g_num
 		recording_highpassed{:, roi_data_loc} = roi_highpassed;
 		recording_lowpassed{:, roi_data_loc} = roi_lowpasseddata;
 		if ~cnmfe_process
-			thresh = mean(roi_highpassed)+5*std(roi_highpassed);
+			thresh = mean(roi_highpassed)+4*std(roi_highpassed);
 			recording_thresh{:, roi_data_loc} = ones(size(timeinfo))*thresh;
 
 			roi_data_peak_calc = roi_lowpasseddata;
@@ -276,23 +316,90 @@ for rn = 1:record`g_num
 			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakTime75percent')(pn) = peaktime_lowpassed_75per;
 			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakSlope')(pn) = peakslope;
 
-
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('stim')(pn) = {stim_str};
 			% check whether peak start to rise during stimulation
-			if ~isempty(ROIdata{rn, 3})
+			if isempty(strfind(ROIdata{rn, 3}{1}, 'noStim')) % ~isempty(ROIdata{rn, 3})
 				for stim_n = 1:length(gpio_train_start_time{nc}) % number of stimulation
 					peak_rise_start_time = peak_loc_mag{peakinfo_row, roi_n}{:, :}.('Rise_start_s_');
-					if peak_rise_start_time(pn) >= gpio_train_start_time{nc}(stim_n) && peak_rise_start_time(pn) <= gpio_train_end_time{nc}(stim_n)
-						peak_loc_mag{peakinfo_row, roi_n}{:, :}.('triggeredPeak')(pn) = 1;
-					else
-						peak_loc_mag{peakinfo_row, roi_n}{:, :}.('triggeredPeak')(pn) = 0;
-					end
+					peak_time = peak_loc_mag{peakinfo_row, roi_n}{:, :}.('Peak_loc_s_');
+					% if stim_n == 1
+					% 	if peak_rise_start_time(pn) < (gpio_train_start_time{nc}(stim_n)-stimTime_corr) % stimTime_corr is defiened in the beginning of the code
+					% 		if peak_time < (gpio_train_start_time{nc}(stim_n)-stimTime_corr)
+					% 			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = {'noStim'}; % peaks not related to stimulation at all
+					% 		elseif peak_time >= (gpio_train_start_time{nc}(stim_n)-stimTime_corr)
+					% 			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = {['noStim-', stim_str]};
+					% 		end
+					% 		peak_loc_mag{peakinfo_row, roi_n}{:, :}.('riseTime_stimRelative')(pn) = NaN;
+					% 	elseif peak_rise_start_time(pn) >= (gpio_train_start_time{nc}(stim_n)-stimTime_corr) && peak_rise_start_time(pn) < gpio_train_start_time{nc}(stim_n+1)
+					% 		riseTime_stimRelative = peak_rise_start_time(pn)-gpio_train_start_time{nc}(stim_n);
+					% 		if riseTime_stimRelative < 0 
+					% 			riseTime_stimRelative = 0;
+					% 		end
+					% 		peak_loc_mag{peakinfo_row, roi_n}{:, :}.('riseTime_stimRelative')(pn) = riseTime_stimRelative;
+					% 	end
+					% else
+						% if peak_rise_start_time(pn) >= (gpio_train_start_time{nc}(stim_n)-stimTime_corr) && peak_rise_start_time(pn) <= gpio_train_end_time{nc}(stim_n)
+						% 	peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = { 'triggered'};
+						% elseif peak_rise_start_time(pn) > gpio_train_end_time{nc}(stim_n) && peak_rise_start_time(pn) <= (gpio_train_end_time{nc}(stim_n)+criteria_rebound)
+						% 	peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = { 'rebound'};
+						% else
+						% 	peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = { 'not_triggered'};
+						% end
+						if stim_n < length(gpio_train_start_time{nc})
+							period_end = gpio_train_start_time{nc}(stim_n+1);
+						elseif stim_n == length(gpio_train_start_time{nc})
+							period_end = recording_data.Time(end);
+						end
+
+						if peak_rise_start_time(pn) >= (gpio_train_start_time{nc}(stim_n)-stimTime_corr) && peak_rise_start_time(pn) < period_end
+							riseTime_stimRelative = peak_rise_start_time(pn)-gpio_train_start_time{nc}(stim_n);
+							if riseTime_stimRelative < 0 
+								riseTime_stimRelative = 0;
+							end
+							peak_loc_mag{peakinfo_row, roi_n}{:, :}.('riseTime_stimRelative')(pn) = riseTime_stimRelative;
+							% peak start to rise in 2sec since stimuli start
+							if stim_duration >= 2
+								if peak_rise_start_time(pn) <= (gpio_train_start_time{nc}(stim_n)+criteria_excitated)
+									peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = { 'triggered'}; % immediat peak triggered by stim
+									
+								elseif peak_rise_start_time(pn) < (gpio_train_end_time{nc}(stim_n)-stimTime_corr)
+									peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = { 'triggered_delay'}; % delay triggered peak. Still during stim
+								elseif peak_rise_start_time(pn) >= (gpio_train_end_time{nc}(stim_n)-stimTime_corr) && peak_rise_start_time(pn) <= (gpio_train_end_time{nc}(stim_n)+criteria_rebound)
+									peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = { 'rebound'}; % rebound peak after inhibition
+								else
+									peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = { 'interval'}; % peaks not during stimuli, and not happen immediatly after stimuli
+								end
+							else
+								if peak_rise_start_time(pn) < (gpio_train_end_time{nc}(stim_n)-stimTime_corr)
+									peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = { 'triggered'}; % immediat peak triggered by stim
+								elseif peak_rise_start_time(pn) >= (gpio_train_end_time{nc}(stim_n)-stimTime_corr) && peak_rise_start_time(pn) <= (gpio_train_end_time{nc}(stim_n)+criteria_rebound)
+									peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = { 'rebound'}; % rebound peak after inhibition
+								else
+									peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = { 'interval'}; % 
+								end
+							end
+						elseif peak_rise_start_time(pn) < (gpio_train_start_time{nc}(stim_n)-stimTime_corr)
+							if stim_n == 1
+								if peak_time(pn) < (gpio_train_start_time{nc}(stim_n)-stimTime_corr)
+									peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = {'noStim'}; % peaks not related to stimulation at all
+								elseif peak_time(pn) >= (gpio_train_start_time{nc}(stim_n)-stimTime_corr)
+									peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = {['noStim-', stim_str]};
+								end
+								peak_loc_mag{peakinfo_row, roi_n}{:, :}.('riseTime_stimRelative')(pn) = NaN;
+							end
+						end
+					% end
 				end
+			else
+				peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = {'noStim'};
+				peak_loc_mag{peakinfo_row, roi_n}{:, :}.('riseTime_stimRelative')(pn) = NaN;
 			end
 			
 
 			% check whether to discard this peak
 			peak_rise_time = peak_loc_mag{peakinfo_row, roi_n}{:, :}.('Rise_duration_s_')(pn);
 			peak_slope = peakslope;
+			peak_mag_normhp = peak_loc_mag{peakinfo_row, roi_n}{:, :}.('Peak_relative_NormHP')(pn);
 			discard_logic = false;
 			if peak_rise_time < criteria_riseT(1) || peak_rise_time > criteria_riseT(2)
 				discard_logic = true;
@@ -301,6 +408,9 @@ for rn = 1:record`g_num
 				discard_logic = true;
 			end
 			if peakmag_relative_rise/roi_highpassed_std <= criteria_pnr % discard peaks with small PNR (peakSignal/std)
+				discard_logic = true;
+			end
+			if peak_mag_normhp <= criteria_mag
 				discard_logic = true;
 			end
 			if discard_logic == true
@@ -317,6 +427,85 @@ for rn = 1:record`g_num
 			peak_loc_mag{peakinfo_row, roi_n}{:, :}(discard_peak, :) = [];
 		end
 
+		% calculate peak frequency
+		% peakFq_size = [1 14];
+		% peakFq_varTypes = {'string', 'double', 'double', 'double', 'double',...
+		% 'double', 'double', 'double', 'double', 'double',...
+		% 'double', 'double', 'double', 'double'};
+		% peakFq_varNames = {'stim', 'recTime', 'stimTime', 'stimNum', 'stimTsum',...
+		% 'nostimTsum', 'peakNumTrig', 'peakNumTrigDelay', 'peakNumRebound', 'peakNumOther',...
+		% 'timeTrig', 'timeTrigDelay', 'timeRebound', 'timeOther'}; 
+		% criteria_excitated = 2; % If a peak starts to rise in 2 sec since stimuli, it's a excitated peak
+		% criteria_rebound = 1; % a peak is concidered as rebound if it starts to rise within 2s after stimulation end
+
+		peakFq_T = table('Size', peakFq_size, 'VariableTypes', peakFq_varTypes, 'VariableNames', peakFq_varNames);
+		peakFq_T.stim = stim_str;
+		peakFq_T.recTime = recording_data.Time(end)-recording_data.Time(1); % recording time
+		if ~isempty(peak_loc_mag{peakinfo_row, roi_n}{:, :})
+			if isempty(strfind(ROIdata{rn, 3}{1}, 'noStim')) % if there are stimuli
+				peakFq_T.stimTime = stim_duration; % time duration of a single stimulation
+				peakFq_T.stimNum = size(ROIdata{rn, 4}(3).stim_range, 1); % number of stimuli
+				peakFq_T.stimTsum = peakFq_T.stimTime*peakFq_T.stimNum; % whole time duration of stimuli
+				peakFq_T.nostimTsum = peakFq_T.recTime-peakFq_T.stimTsum; % time duration of no stimuli
+				peak_num_roi = size(peak_loc_mag{peakinfo_row, roi_n}{:, :}, 1); % number of peak in this roi
+
+				% peakTrig_strfind = strfind(peak_loc_mag{peakinfo_row, roi_n}{:, :}.peakCategory, 'triggered'); % find strings triggered peaks
+				% peakFq_T.peakNumTrig = length(find(cellfun(@(x) ~isempty(x), peakTrig_strfind))); % number of triggered peaks
+
+				% peakTrigDelay_strfind = strfind(peak_loc_mag{peakinfo_row, roi_n}{:, :}.peakCategory, 'triggered_delay'); % find strings triggered peaks
+				% peakFq_T.peakNumTrigDelay = length(find(cellfun(@(x) ~isempty(x), peakTrigDelay_strfind))); % number of triggered peaks
+
+				% peakRebound_strfind = strfind(peak_loc_mag{peakinfo_row, roi_n}{:, :}.peakCategory, 'triggered'); % find strings triggered peaks
+				% peakFq_T.peakNumRebound = length(find(cellfun(@(x) ~isempty(x), peakRebound_strfind))); % number of triggered peaks
+
+				% peakFq_T.peakNumOther = peak_num_roi-peakFq_T.peakNumTrig-peakFq_T.peakNumTrigDelay-peakFq_T.peakNumRebound; % number of other peaks. interval of stimuli
+
+				peakTrig_strfind = strcmp('triggered', peak_loc_mag{peakinfo_row, roi_n}{:, :}.peakCategory);
+				peakFq_T.peakNumTrig = length(find(peakTrig_strfind)); % number of triggered peaks
+				peakTrigDelay_strfind = strcmp('triggered_delay', peak_loc_mag{peakinfo_row, roi_n}{:, :}.peakCategory);
+				peakFq_T.peakNumTrigDelay = length(find(peakTrigDelay_strfind)); % number of triggered peaks
+				peakRebound_strfind = strcmp('rebound', peak_loc_mag{peakinfo_row, roi_n}{:, :}.peakCategory);
+				peakFq_T.peakNumRebound = length(find(peakRebound_strfind)); % number of triggered peaks
+				peakInterval_strfind = strcmp('interval', peak_loc_mag{peakinfo_row, roi_n}{:, :}.peakCategory);
+				peakFq_T.peakNumInterval = length(find(peakInterval_strfind)); % number of triggered peaks
+				peakFq_T.peakNumNostim = peak_num_roi-peakFq_T.peakNumTrig-peakFq_T.peakNumTrigDelay-peakFq_T.peakNumRebound-peakFq_T.peakNumInterval; % number of other peaks. Interval of stimuli
+				peakFq_T.peakNumOther = peakFq_T.peakNumInterval+peakFq_T.peakNumOther; % number of other peaks. Interval of stimuli
+
+				if peakFq_T.stimTime > criteria_excitated
+					peakFq_T.timeTrig = criteria_excitated*peakFq_T.stimNum; % summation of time windows used for picking trig peaks
+				else
+					peakFq_T.timeTrig = peakFq_T.stimTime*peakFq_T.stimNum;
+				end
+				if peakFq_T.stimTime > criteria_excitated
+					peakFq_T.timeTrigDelay = (peakFq_T.stimTime-criteria_excitated)*peakFq_T.stimNum; % summation of time windows used for picking trig_delay peaks
+				else
+					peakFq_T.timeTrigDelay = 0;
+				end
+				peakFq_T.timeRebound = criteria_rebound*peakFq_T.stimNum; % summation of time windows used for picking rebound peaks
+				peakFq_T.timeInterval = peakFq_T.recTime-peakFq_T.stimTsum-peakFq_T.timeRebound-ROIdata{rn, 4}(3).stim_range(1,1); % % summation of time windows used for picking other peaks
+				peakFq_T.timeNostim = ROIdata{rn, 4}(3).stim_range(1,1); % % summation of time windows used for picking other peaks
+				peakFq_T.timeOther = peakFq_T.recTime-peakFq_T.stimTsum-peakFq_T.timeRebound; % % summation of time windows used for picking other peaks
+
+			else % when no stimuli
+				peakFq_T.stimTime = 0; % time duration of a single stimulation
+				peakFq_T.stimNum = 0; % number of stimuli
+				peakFq_T.stimTsum = 0; % whole time duration of stimuli
+				peakFq_T.nostimTsum = peakFq_T.recTime; % time duration of no stimuli
+
+				peak_num_roi = size(peak_loc_mag{peakinfo_row, roi_n}{:, :}, 1); % number of peak in this roi
+				peakFq_T.peakNumTrig = 0; % number of triggered peaks
+				peakFq_T.peakNumTrigDelay = 0; % number of triggered peaks
+				peakFq_T.peakNumRebound = 0; % number of triggered peaks
+				peakFq_T.peakNumOther = peak_num_roi; % number of other peaks. outside of stimul
+				peakFq_T.timeTrig = 0;
+				peakFq_T.timeTrigDelay = 0;
+				peakFq_T.timeRebound = 0;
+				peakFq_T.timeInterval = 0;
+				peakFq_T.timeNostim = peakFq_T.recTime;
+				peakFq_T.timeOther = peakFq_T.recTime;
+			end
+		end
+		peak_loc_mag{'Peak_Fq', roi_n}{:} = peakFq_T; % fill peakFq_T into peak_loc_mag table
 
 		roi_peakloc = peak_loc_mag{peakinfo_row, roi_n}{:, :}.('Peak_loc'); % accquire peak locations in roi_n
 		peak_zscore = z_score_roi_data_peak_calc(roi_peakloc); % z-score value of peaks
@@ -483,8 +672,8 @@ for rn = 1:record`g_num
 
 						if cnmfe_process
 							plot(timeinfo, roi_rawdata, 'Color', '#7E2F8E')
-							plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'o', 'Color', '#D95319', 'linewidth', 1) % plot peak marks of lowpassed data
-							plot(peak_rise_turning_time_lowpassed, peak_rise_turning_value_lowpassed, 'd', 'Color', '#D95319',  'linewidth', 1) % plot start of transient of lowpassed data, turning point
+							plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'o', 'Color', '#D95319', 'linewidth', 2) % plot peak marks of lowpassed data
+							plot(peak_rise_turning_time_lowpassed, peak_rise_turning_value_lowpassed, 'd', 'Color', '#D95319',  'linewidth', 2) % plot start of transient of lowpassed data, turning point
 						end
 						ylim_gpio = ylim;
 

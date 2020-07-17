@@ -10,7 +10,11 @@ function [ROIdata_peakevent] = nvoke_event_detection(ROIdata, plot_traces, subpl
 %
 % nvoke_event_detection(ROIdata,1, 1)
 
-figfolder_default = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\peaks';
+if ispc
+	figfolder_default = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\peaks';
+elseif isunix
+	figfolder_default = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/peaks';
+end
 lowpass_fpass = 1;
 
 if nargin < 2
@@ -43,7 +47,11 @@ for rn = 1:recording_num
 		if subplot_roi == 1
 			fig_subfolder = figfolder; % do not creat subfolders when subplots are 5x2
 		elseif subplot_roi == 2
-			fig_subfolder = [figfolder, '\', ROIdata{rn, 1}(1:25)]; % when the size of subplots is 2x1, use subfolders
+			if ispc
+				fig_subfolder = [figfolder, '\', ROIdata{rn, 1}(1:25)]; % when the size of subplots is 2x1, use subfolders
+			elseif isunix
+				fig_subfolder = [figfolder, '/', ROIdata{rn, 1}(1:25)]; % when the size of subplots is 2x1, use subfolders
+			end
 			if ~exist(fig_subfolder)
 				mkdir(fig_subfolder);
 			end
@@ -91,7 +99,6 @@ for rn = 1:recording_num
 		rn;
 		n;
 
-
 		clear peakmag_lowpassed_delta
 		clear peakloc_lowpassed_25per
 		clear peakloc_lowpassed_75per
@@ -121,7 +128,7 @@ for rn = 1:recording_num
 
 		% use findpeaks instead of pickfinder function
 		% findpeaks criteria
-		peakprom_thr = std(roi_highpassed)*5; % x times std of highpassed data: threshold for peak prominence
+		peakprom_thr = std(roi_highpassed)*6; % x times std of highpassed data: threshold for peak prominence
 
 		prominences = (max(roi_readout)-min(roi_readout))/4; % default value: max(roi_readout)-min(roi_readout)/4
 		prominences_raw = (max(roi_readout_raw)-min(roi_readout_raw))/4; 
@@ -224,7 +231,7 @@ for rn = 1:recording_num
 	 				% peakmag_lowpassed(pn) = max(roi_lowpassed(turning_loc_rising:turning_loc_decay)); % get peak value using the max value between rising and decay loc (found in CNMFe processed data) 
 					% peakloc_lowpassed(pn) = (turning_loc_rising-1)+find(roi_lowpassed(turning_loc_rising:turning_loc_decay) == peakmag_lowpassed(pn), 1);
 					turning_loc_rising_lowpassed = check_start-1+find(roi_lowpassed(check_start:peakloc_lowpassed(pn))<=roi_readout_select(turning_loc_rising), 1, 'last'); % last point in range (last_peak:this_peak) <= rise point value in CNMFe data
-					if isempty(turning_loc_rising_lowpassed) % accoring to last line, all lowpassed data point in range bigger than CNMFe rise start point
+					if isempty(turning_loc_rising_lowpassed) % accoring to last line, all lowpassed data points in range are bigger than CNMFe rise start point
 						turning_loc_rising_lowpassed = turning_loc_rising; % use CNMFe rise loc
 					elseif abs(turning_loc_rising-turning_loc_rising_lowpassed)/recording_fr >= 1 % if the difference of turning_loc_rising_lowpassed and turning_loc_rising is bigger than 1s
 						turning_loc_rising_lowpassed = turning_loc_rising; % use CNMFe rise loc. 
@@ -313,15 +320,15 @@ for rn = 1:recording_num
 
 			% below: discard small peaks and related data in noisey recording
 			peak_discard = [];
-			for pn = 1:length(peakloc_select) % compare peak prominence to peakprom_thr. small peak in noisy data will be discarded
-				% pn
-				if peakprom_select(pn) <= peakprom_thr
-					peak_discard = [peak_discard; pn];
-					% peakmag_select(pn) = [];
-					% peakloc_select(pn) = [];
-					% peakprom_select(pn) = [];
-				end
-			end
+			% for pn = 1:length(peakloc_select) % compare peak prominence to peakprom_thr. small peak in noisy data will be discarded
+			% 	% pn
+			% 	if peakprom_select(pn) <= peakprom_thr
+			% 		peak_discard = [peak_discard; pn];
+			% 		% peakmag_select(pn) = [];
+			% 		% peakloc_select(pn) = [];
+			% 		% peakprom_select(pn) = [];
+			% 	end
+			% end
 
 
 
@@ -479,8 +486,8 @@ for rn = 1:recording_num
 
 							if cnmfe_process
 								plot(time_info, roi_col_data_raw, 'Color', '#7E2F8E')
-								plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'o', 'Color', '#D95319', 'linewidth', 1) % plot peak marks of lowpassed data
-								plot(peak_rise_turning_time_lowpassed, peak_rise_turning_value_lowpassed, 'd', 'Color', '#D95319',  'linewidth', 1) % plot start of transient of lowpassed data, turning point
+								plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'o', 'Color', '#D95319', 'linewidth', 2) % plot peak marks of lowpassed data
+								plot(peak_rise_turning_time_lowpassed, peak_rise_turning_value_lowpassed, 'd', 'Color', '#D95319',  'linewidth', 2) % plot start of transient of lowpassed data, turning point
 							end
 							
 							set(get(sub_handle(roi_plot), 'YLabel'), 'String', single_recording.Properties.VariableNames{roi_plot+1});

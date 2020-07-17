@@ -1,11 +1,14 @@
 %% clear workspace
-clear; clc; close all;  
+clearvars -except dir_nm; clc; close all;  
 global  d1 d2 numFrame ssub tsub sframe num2read Fs neuron neuron_ds ...
     neuron_full Ybg_weights; %#ok<NUSED> % global variables, don't change them manually
 
 %% select data and map it to the RAM
+if ~exist('dir_nm', 'var') || ~ischar(dir_nm)
+    dir_nm = 'G:\Workspace\Inscopix_Seagate\Projects\IO_GCaMP_IO_ChrimsonR_CN_ventral\Exported_tiffs\';
+end
 [file_nm, dir_nm, file_type] = uigetfile({'*.tif; *.tiff', 'tif Files(*.tif, *.tiff)'}, 'Select recording',...
- 'G:\Workspace\Inscopix_Seagate\Projects\IO_GCaMP_IO_ChrimsonR_CN_ventral\Exported_tiffs\');
+ dir_nm);
 nam = [dir_nm, file_nm];
 % nam = './data_1p.tif';
 if isequal(nam, 0)
@@ -16,11 +19,11 @@ else
 end
 
 %% create Source2D class object for storing results and parameters
-Fs = 10;             % frame rate
+Fs = 40;             % frame rate
 ssub = 1;           % spatial downsampling factor
 tsub = 1;           % temporal downsampling factor
-gSig = 12;           % set it to ~ diameter/2. width of the gaussian kernel, which can approximates the average neuron shape
-gSiz = 24;          % default=13. maximum diameter of neurons in the image plane. larger values are preferred.
+gSig = 5;           % set it to ~ diameter/2. width of the gaussian kernel, which can approximates the average neuron shape
+gSiz = 10;          % default=13. maximum diameter of neurons in the image plane. larger values are preferred.
 neuron_full = Sources2D('d1',d1,'d2',d2, ... % dimensions of datasets
     'ssub', ssub, 'tsub', tsub, ...  % downsampleing
     'gSig', gSig,...    % sigma of the 2D gaussian that approximates cell bodies
@@ -72,7 +75,7 @@ patch_par = [1,1]*1; %1;  % default=[1,1]*1. divide the optical field into m X n
 K = []; % maximum number of neurons to search within each patch. you can use [] to search the number automatically
 
 min_corr = 0.8;     % default=0.8. minimum local correlation for a seeding pixel
-min_pnr = 8;       % default=8. minimum peak-to-noise ratio for a seeding pixel
+min_pnr = 10;       % default=8. minimum peak-to-noise ratio for a seeding pixel
 min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
 bd = 1;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 neuron.updateParams('min_corr', min_corr, 'min_pnr', min_pnr, ...
@@ -103,7 +106,6 @@ spatial_ds_factor = 1;      % default=1. spatial downsampling factor. it's  for 
 thresh = 10;     % default=10. threshold for detecting frames with large cellular activity. (mean of neighbors' activity  + thresh*sn)
 
 bg_neuron_ratio = 1.5;  % spatial range / diameter of neurons
-
 
 % parameters, estimate the spatial components
 update_spatial_method = 'hals';  % the method for updating spatial components {'hals', 'hals_thresh', 'nnls', 'lars'}
@@ -231,7 +233,7 @@ neuron.Cn = Cn;
 neuron.runMovie(Ysignal, [0, 150], save_avi, avi_name);
 
 %% save video
-kt = 3;     % default=3. play one frame in every kt frames
+kt = 2;     % default=3. play one frame in every kt frames
 save_avi = true;
 center_ac = median(max(neuron.A,[],1)'.*max(neuron.C,[],2)); % the denoised video are mapped to [0, 2*center_ac] of the colormap 
 cnmfe_save_video;
@@ -240,12 +242,12 @@ cnmfe_save_video;
 results = neuron.obj2struct(); 
 eval(sprintf('save %s%s%s_results.mat results', dir_nm, filesep, file_nm));
 
-%% Maybe save others?
-eval(sprintf('save %s%s%s_neuron.mat neuron', dir_nm, filesep, file_nm));
-eval(sprintf('save %s%s%s_Y.mat Y Yac Ysignal Y_mixed Ybg Ybg_weights', dir_nm, filesep, file_nm));
+% %% Maybe save others?
+% eval(sprintf('save %s%s%s_neuron.mat neuron', dir_nm, filesep, file_nm));
+% eval(sprintf('save %s%s%s_Y.mat Y Yac Ysignal Y_mixed Ybg Ybg_weights', dir_nm, filesep, file_nm));
 
 
-%% save the whole workspace
-workspace_file_nm = [file_nm, 'workspace.m'];
-workspace_file_path = fullfile(dir_nm, workspace_file_nm);
-save(workspace_file_path)
+% %% save the whole workspace
+% workspace_file_nm = [file_nm, 'workspace.m'];
+% workspace_file_path = fullfile(dir_nm, workspace_file_nm);
+% save(workspace_file_path)

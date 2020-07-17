@@ -3,15 +3,24 @@ function [ROIdata, varargout] = ROI_matinfo2matlab(inputArg)
 % read all ROI.csv in a folder and get info into matlab
 %   Detailed explanation goes here
 
-input_dir = 'G:\Workspace\Inscopix_Seagate\Projects';
-output_dir = 'G:\Workspace\Inscopix_Seagate\Analysis';
+if ispc
+	input_dir = 'G:\Workspace\Inscopix_Seagate\Projects\';
+	output_dir = 'G:\Workspace\Inscopix_Seagate\Analysis\';
+elseif isunix
+	input_dir = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/ventral_exported_decon_demix_rawdata/';
+	output_dir = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/';
+end
 
 roi_readout_file_folder = uigetdir(input_dir, 'Select a folder containing CNMF-E processed results');
 
 % roi_readout_file_info = dir([roi_readout_file_folder, '\', '*-ROI.csv']);
-roi_readout_file_info = dir([roi_readout_file_folder, '\*ROI*.csv']); % file containing raw ROI data with time info
-roi_readout_file_info_processed = dir([roi_readout_file_folder, '\*results*.mat']); % file containing CNMF-E processed data
-
+if ispc
+	roi_readout_file_info = dir([roi_readout_file_folder, '\*ROI*.csv']); % file containing raw ROI data with time info
+	roi_readout_file_info_processed = dir([roi_readout_file_folder, '\*results*.mat']); % file containing CNMF-E processed data
+elseif isunix
+	roi_readout_file_info = dir([roi_readout_file_folder, '/*ROI*.csv']); % file containing raw ROI data with time info
+	roi_readout_file_info_processed = dir([roi_readout_file_folder, '/*results*.mat']); % file containing CNMF-E processed data
+end
 
 
 cell_num = 0;
@@ -55,8 +64,18 @@ for n = 1:numel(roi_readout_file_info_processed)
 	ROIdata{n, 2}.raw = CalSig_raw;
 
 	% decide whether there is a gpio file for this roi file. If yes, get GPIO info
-	filename_stem = roi_readout_file_info(n).name(1:25); % filename like recording_20190910_130653 (25 letters+numbers)
-	gpio_file_info = dir([roi_readout_file_folder, '\', filename_stem, '*gpio*.csv']); % looking for accompnied gpio file
+	filename_stem = roi_readout_file_info(n).name(1:25); % filename like recording_20190910_130653 (25 letters+numbers) or 2020-04-16-15-37-11_video (from nvoke2)
+	if ispc
+		gpio_file_info = dir([roi_readout_file_folder, '\', filename_stem, '*gpio*.csv']); % looking for accompnied gpio file
+		if isempty(gpio_file_info)
+			gpio_file_info = dir([roi_readout_file_folder, '\', filename_stem, '*GPIO*.csv']); % looking for accompnied gpio file
+		end
+	elseif isunix
+		gpio_file_info = dir([roi_readout_file_folder, '/', filename_stem, '*gpio*.csv']); % looking for accompnied gpio file
+		if isempty(gpio_file_info)
+			gpio_file_info = dir([roi_readout_file_folder, '/', filename_stem, '*GPIO*.csv']); % looking for accompnied gpio file
+		end
+	end 
 	if ~isempty(gpio_file_info)
         % n
         % gpio_file_info.name
@@ -65,7 +84,7 @@ for n = 1:numel(roi_readout_file_info_processed)
         % end
 		gpio_file = fullfile(gpio_file_info.folder, gpio_file_info.name);
 		GPIO_table = readtable(gpio_file);
-		[ channel, EX_LED_power, GPIO_duration, stimulation ] = GPIO_data_extract(GPIO_table);
+		[channel, EX_LED_power, GPIO_duration, stimulation ] = GPIO_data_extract(GPIO_table);
 		ROIdata{n, 3} = stimulation;
 		ROIdata{n, 4} = channel;
 	else
