@@ -10,22 +10,28 @@ nvoke_file_process;
 % 	- Check each recording with plot app: 'D:\guoda\Documents\MATLAB\Codes\nvoke-analysis\plot_roi_gpio_App.mlapp'
 		plot_roi_gpio_App.mlapp
 
-%%
-%==================== 3. Convert ROI info to matlab file (.m). Copy ROI info (csv files) to analysis folder, and run this
+%% ====================
+% 3. Convert ROI info to matlab file (.m). Copy ROI info (csv files) to analysis folder, and run this
 % function
 % [ROIdata, recording_num, cell_num] = ROIinfo2matlab; % for data without CNMFe process
 
 [ROIdata, recording_num, cell_num] = ROI_matinfo2matlab; % for CNMFe processed data
 
+%% ====================
+% 3. Convert in vitro calcium imaging info to matlab file (.m). 
+
+sample_frequency = 40;
+[ROIdata] = ROI_matinfo2matlab_invitro(sample_frequency); % for in vitro and CNMFe processed data
 %%
 %====================
 % 4. Check data with plot function 
-plot_save = 0; % 0-no plot. 1-plot. 2-plot and save
+plot_save = 1; % 0-no plot. 1-plot. 2-plot and save
 % pause_plot = 1; % pause after plot of one recording
 subplot_roi = 2;
 pause_plot = 1; % plot without pause
+lowpass_fpass = 10; % ventral approach default: 1. slice default: 10
  
-[ROIdata_peakevent] = nvoke_event_detection(ROIdata, plot_save, subplot_roi, pause_plot); % plot with pause. (ROIdata, 2, 1) plot and save with pause
+[ROIdata_peakevent] = nvoke_event_detection(ROIdata, plot_save, subplot_roi, pause_plot, lowpass_fpass); % plot with pause. (ROIdata, 2, 1) plot and save with pause
 
 prompt_save_ROIdata_peakevent = 'Do you want to save ROIdata_peakevent? y/n [y]: ';
 input_str = input(prompt_save_ROIdata_peakevent, 's');
@@ -113,9 +119,10 @@ plot_save = 0; % 0-no plot. 1-plot. 2-plot and save
 % pause_plot = 1; % pause after plot of one recording
 subplot_roi = 2;
 pause_plot = 0; % plot with (1) or without (0) pause
+lowpass_fpass = 10; % ventral approach default: 1. slice default: 10
 
 
-[modified_ROIdata] = nvoke_correct_peakdata(ROIdata_peakevent,plot_save,subplot_roi,pause_plot); 
+[modified_ROIdata] = nvoke_correct_peakdata(ROIdata_peakevent,plot_save,subplot_roi,pause_plot,lowpass_fpass); 
 
 prompt_save_modified_ROIdata = 'Do you want to save modified_ROIdata? y/n [y]: ';
 input_str = input(prompt_save_modified_ROIdata, 's');
@@ -124,11 +131,24 @@ if isempty(input_str)
 end
 if input_str == 'y'
 	stimulation = input(['Input info including stimulation for the name of the file saving modified_ROIdata var [', modified_ROIdata{1, 3}{:}, '] : '], 's');
-	if ispc
-		HDD_folder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\'; % to save peak_info_sheet var
-		workspace_folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Ventral_approach\processed mat files\'; % to save peak_info_sheet var
-	elseif isunix
-		workspace_folder = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/';
+	experiment = input(['Save the modified_ROIdata in "ventral_approach" folder (1) or in "slice" folder (2) [Default-1]: ']);
+	if isempty(experiment)
+		experiment = 1;
+	end
+	if experiment == 1
+		if ispc
+			HDD_folder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\'; % to save peak_info_sheet var
+			workspace_folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Ventral_approach\processed mat files\'; % to save peak_info_sheet var
+		elseif isunix
+			workspace_folder = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/';
+		end
+	elseif experiment == 2
+		if ispc
+			HDD_folder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_slice\'; % to save peak_info_sheet var
+			workspace_folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Slice\'; % to save peak_info_sheet var
+		elseif isunix
+			workspace_folder = '/home/guoda/Documents/Workspace/Analysis/nVoke/Slice/';
+		end
 	end
 	modified_ROIdata_fn = ['modified_ROIdata_', datestr(datetime('now'), 'yyyymmdd'), '_', stimulation];
 	if ispc
@@ -194,11 +214,24 @@ plot_analysis = 2; % 0-no plot. 1-plot. 2-plot and save
 
 % stimulation = 'ogled10s_fast_peak'; % to save peak_info_sheet var
 stimulation = input(['Input info including stimulation for the name of the file saving modified_ROIdata var [', modified_ROIdata{1, 3}{:}, '] : '], 's');
-if ispc
-	HDD_folder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\'; % to save peak_info_sheet var
-	workspace_folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Ventral_approach\processed mat files\'; % to save peak_info_sheet var
-elseif isunix
-	workspace_folder = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/';
+experiment = input(['Save the modified_ROIdata in "ventral_approach" folder (1) or in "slice" folder (2) [Default-1]: ']);
+if isempty(experiment)
+		experiment = 1;
+end
+if experiment == 1
+	if ispc
+		HDD_folder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\'; % to save peak_info_sheet var
+		workspace_folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Ventral_approach\processed mat files\'; % to save peak_info_sheet var
+	elseif isunix
+		workspace_folder = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/';
+	end
+elseif experiment == 2
+	if ispc
+		HDD_folder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_slice\'; % to save peak_info_sheet var
+		workspace_folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Slice\'; % to save peak_info_sheet var
+	elseif isunix
+		workspace_folder = '/home/guoda/Documents/Workspace/Analysis/nVoke/Slice/';
+	end
 end
 
 % C = cellfun(@(x) strfind(x, 'OG'), stimstr)
@@ -643,7 +676,7 @@ end
 %% ====================
 % plot peak_info_compilation
 plotsave = 1; % 0-no plot. 1-plot. 2-plot and save
-varargin = 3;
+varargin = 0;
 % varargin(1): 0-peaks are not grouped. 1-peaks are grouped according to category. 
 % 			   2-peaks are grouped according to stimuli
 %			   3-peaks are grouped according to both category and stimuli

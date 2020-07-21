@@ -22,8 +22,8 @@ end
 Fs = 40;             % frame rate
 ssub = 1;           % spatial downsampling factor
 tsub = 1;           % temporal downsampling factor
-gSig = 5;           % set it to ~ diameter/2. width of the gaussian kernel, which can approximates the average neuron shape
-gSiz = 10;          % default=13. maximum diameter of neurons in the image plane. larger values are preferred.
+gSig = 6;           % set it to ~ diameter/2. width of the gaussian kernel, which can approximates the average neuron shape
+gSiz = 12;          % default=13. maximum diameter of neurons in the image plane. larger values are preferred.
 neuron_full = Sources2D('d1',d1,'d2',d2, ... % dimensions of datasets
     'ssub', ssub, 'tsub', tsub, ...  % downsampleing
     'gSig', gSig,...    % sigma of the 2D gaussian that approximates cell bodies

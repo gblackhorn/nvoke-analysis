@@ -1,9 +1,13 @@
-function [modified_ROIdata] = nvoke_correct_peakdata(ROIdata,plot_traces,subplot_roi,pause_step)
+function [modified_ROIdata] = nvoke_correct_peakdata(ROIdata, varargin)
 % After manually discarding ROIs and correcting peak rise and fall point.
 % Correct the rise_loc, decay_loc, etc.
+% nvoke_correct_peakdata(ROIdata,plot_traces,subplot_roi,pause_step, lowpass_fpass)
 % Input:
-% 		- plot_traces: 1-plot, 2-plot and save, 3-plot original traces and stimuli triggered response, 4-plot 3 and save
-% 		- pause_step: 1-pause after ploting every figure, 0-no pause
+%		- 1. ROIdata
+% 		- 2. plot_traces: 1-plot, 2-plot and save, 3-plot original traces and stimuli triggered response, 4-plot 3 and save
+%		- 3. subplot_roi: 1-5x2 rois in 1 figure, 2-2x1 rois in 1 figure
+% 		- 4. pause_step: 1-pause after ploting every figure, 0-no pause
+%		- 5. lowpass_fpass: lowpassfilter default passband is 1 (ventral approach). 10 for slice
 % 
 % 
 % 
@@ -17,13 +21,16 @@ highpass_fpass = 4;
 peakinfo_row_name = 'Peak_lowpassed';
 
 criteria_riseT = [0 3]; % unit: second. filter to keep peaks with rise time in the range of [min max]
-criteria_slope = [3 80]; % calcium(a.u.)/rise_time(s). filter to keep peaks with rise time in the range of [min max]
-criteria_mag = 3; % peak_mag_normhp
-criteria_pnr = 0; % peak-noise-ration (PNR): relative-peak-signal/std. std is calculated from highpassed data.
+criteria_slope = [50 20000]; % default: slice-[50 2000]
+							% calcium(a.u.)/rise_time(s). filter to keep peaks with rise time in the range of [min max]
+							% ventral approach default: [3 80]
+							% slice default: 
+criteria_mag = 3; % default: 3. peak_mag_normhp
+criteria_pnr = 3; % default: 3. peak-noise-ration (PNR): relative-peak-signal/std. std is calculated from highpassed data.
 criteria_excitated = 2; % If a peak starts to rise in 2 sec since stimuli, it's a excitated peak
 criteria_rebound = 1; % a peak is concidered as rebound if it starts to rise within 2s after stimulation end
 stimTime_corr = 0.3; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
-use_criteria = true; % choose to use criteria or not for picking peaks
+use_criteria = true; % true or false. choose to use criteria or not for picking peaks
 
 % parameters for makeing a new row for peak frequencies
 peakFq_size = [1 14];
@@ -34,10 +41,11 @@ peakFq_varNames = {'stim', 'recTime', 'stimTime', 'stimNum', 'stimTsum',...
 'nostimTsum', 'peakNumTrig', 'peakNumTrigDelay', 'peakNumRebound', 'peakNumOther',...
 'timeTrig', 'timeTrigDelay', 'timeRebound', 'timeOther'}; 
 
-if nargin < 2
+if nargin == 1 % ROIdata
 	plot_traces = 0;
 	pause_step = 0;
-elseif nargin == 2
+elseif nargin == 2 % ROIdata, plot_traces
+	plot_traces = varargin{1};
 	if plot_traces == 3 || 4
 		stimuli_triggered_response = 1;
 	elseif plot_traces == 1 || 2
@@ -48,7 +56,9 @@ elseif nargin == 2
 		pause_step = 0;
 		subplot_roi = 2; % mode-2: 2x1 rois in 1 figure
 	end
-elseif nargin >= 3
+elseif nargin == 3 % ROIdata, plot_traces, subplot_roi
+	plot_traces = varargin{1};
+	subplot_roi = varargin{2};
 	% if plot_traces ~= 0
 	% 	pause_step = 1;
 	% else
@@ -56,11 +66,21 @@ elseif nargin >= 3
 	% end
 	if plot_traces == 3 || 4
 		stimuli_triggered_response = 1;
+	elseif plot_traces == 1 || 2
+		pause_step = 1;
 	else
 		stimuli_triggered_response = 0;
+		pause_step = 0;
 	end
-elseif nargin > 4
-	error('Too many input. Maximum 3. Read document of function "nvoke_correct_peakdata"')
+elseif nargin >= 4 && nargin <= 5 % ROIdata, plot_traces, subplot_roi, pause_step, (lowpass_fpass)
+	plot_traces = varargin{1};
+	subplot_roi = varargin{2};
+	pause_step = varargin{3};
+	if nargin == 5
+		lowpass_fpass = varargin{4};
+	end
+elseif nargin > 5
+	error('Too many input. Maximum 5. Read document of function "nvoke_correct_peakdata"')
 end
 
 if plot_traces == 2
@@ -496,6 +516,8 @@ for rn = 1:recording_num
 				peakFq_T.peakNumTrig = 0; % number of triggered peaks
 				peakFq_T.peakNumTrigDelay = 0; % number of triggered peaks
 				peakFq_T.peakNumRebound = 0; % number of triggered peaks
+				peakFq_T.peakNumInterval = 0;
+				peakFq_T.peakNumNostim = peak_num_roi;
 				peakFq_T.peakNumOther = peak_num_roi; % number of other peaks. outside of stimul
 				peakFq_T.timeTrig = 0;
 				peakFq_T.timeTrigDelay = 0;
