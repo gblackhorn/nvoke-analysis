@@ -79,7 +79,7 @@ for rn = 1:recording_num
 		if ~isempty(ROIdata{rn,5}{peakinfo_row_name, roi_n}{:})
 			roi_imported = 1;
 			roi_name = ROIdata{rn,5}.Properties.VariableNames{roi_n};
-			roi_code = roi_n-1;
+			roi_code = roi_n;
 
 			roi_peaksize = size(ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('Rise_start_s_')); % number of peaks in one roi
 
@@ -98,9 +98,11 @@ for rn = 1:recording_num
 			decay_duration = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('decay_duration_s_');
 			peak_amp = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('Peak_mag_relative'); % relative one
 			peak_slope = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('PeakSlope'); % peak slope
+			peakslope_normhp = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('PeakSlope_normhp'); % peak slope
 			peak_zscore = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('PeakZscore'); % z-score
 			peak_norm_hp = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('PeakNormHP'); % peak normalized to std of highpassed data
 			peak_relative_norm_hp = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('Peak_relative_NormHP'); % peak normalized to std of highpassed data
+			riseTime_stimStart = ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.('riseTime2stimStart');
 
 			Exist_Column_peakCategory = strcmp('peakCategory',ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.Properties.VariableNames);
 			Exist_Column_stim = strcmp('stim',ROIdata{rn,5}{peakinfo_row_name, roi_n}{1, 1}.Properties.VariableNames);
@@ -138,11 +140,13 @@ for rn = 1:recording_num
 			wholeDuration(sheet_start:sheet_end, 1) = transient_duration;
 			peakAmp(sheet_start:sheet_end, 1) = peak_amp;
 			peakSlope(sheet_start:sheet_end, 1) = peak_slope;
+			peakSlope_normhp(sheet_start:sheet_end, 1) = peakslope_normhp;
 			peakZscore(sheet_start:sheet_end, 1) = peak_zscore;
 			peakNormHP(sheet_start:sheet_end, 1) = peak_relative_norm_hp;
 			peakCategory(sheet_start:sheet_end, 1) = peak_category;
 			peakStim(sheet_start:sheet_end, 1) = peak_stim;
 			riseTimeRelative2Stim(sheet_start:sheet_end, 1) = riseTime_Relative2Stim;
+			riseTime2stimStart(sheet_start:sheet_end, 1) = riseTime_stimStart;
 
 			sheet_fill_count = sheet_fill_count+length(peak_start);
 
@@ -192,8 +196,8 @@ else
 
 	peak_info_sheet = table(recNo, roiNo, recName, roiName, peakStart,...
 		peakEnd, riseDuration, decayDuration, wholeDuration, peakAmp,...
-		peakSlope, peakZscore, peakNormHP, peakStim, peakCategory,...
-		riseTimeRelative2Stim);
+		peakSlope, peakSlope_normhp, peakZscore, peakNormHP, peakStim, peakCategory,...
+		riseTimeRelative2Stim, riseTime2stimStart);
 
 	% peak_category value: noStim, triggered, not_triggered, rebound, and stimulation as prefix, such as OG_LED-10s-triggered
 
@@ -266,7 +270,7 @@ else
 	else
 		
 		if nargin >= 2
-			if plot_analysis == 1 || 2 
+			if plot_analysis == 1 || plot_analysis == 2 
 				% calculate proper bin number according to The Freedman-Diaconis rule
 				% h=2×IQR×n^(−1/3), bin+number = (max−min)/h
 				iqr_rise = iqr(peak_info_sheet{:, 'riseDuration'});
@@ -300,6 +304,7 @@ else
 				bin_num_transient = 40;
 				bin_num_peakmag = 40;
 				bin_num_peakslope = 200;
+				bin_num_peakslope_normhp = 200;
 				bin_num_peak_zscore = 40;
 				bin_num_peak_norm_hp = 40;
 				bin_num_rise_rela2stim = 40;
@@ -323,8 +328,8 @@ else
 				histogram(peak_info_sheet{:, 'peakAmp'}, bin_num_peakmag); % peak_mag
 				title('Peak amp', 'FontSize', 16);
 				subplot(2, 3, 4);
-				histogram(peak_info_sheet{:, 'peakSlope'}, bin_num_peakslope); % peak_slope
-				title('Peak slope', 'FontSize', 16);
+				histogram(peak_info_sheet{:, 'peakSlope_normhp'}, bin_num_peakslope_normhp); % peak_slope
+				title('Peak slope normhp', 'FontSize', 16);
 				% subplot(2, 3, 5);
 				% histogram(peak_info_sheet{:, 'peakZscore'}, bin_num_peak_zscore); % peak zscore
 				% title('Peak zscore', 'FontSize', 16);
@@ -366,6 +371,7 @@ else
 				max_riseT = max(peak_info_sheet.riseDuration);
 				max_peakAmp = max(peak_info_sheet.peakAmp);
 				max_peakSlope = max(peak_info_sheet.peakSlope);
+				max_peakSlope_normhp = max(peak_info_sheet.peakSlope_normhp);
 				max_peakAmpzscore = max(peak_info_sheet.peakZscore);
 				max_PeakAmpNormHp = max(peak_info_sheet.peakNormHP);
 
@@ -402,6 +408,17 @@ else
 				zlabel('Slope', 'FontSize', 16)
 				title(['nVoke analysis - scatter ', str_fn], 'FontSize', 16)
 
+				s4 = figure(7);
+				scatter3(peak_info_sheet.riseDuration, peak_info_sheet.peakNormHP, peak_info_sheet.peakSlope_normhp)
+				% set(gca, 'XLim', [0 150], 'YLim', [0 30], 'ZLim' [0 40])
+				xlim([0 (max_riseT+0.5)])
+				ylim([0 (max_PeakAmpNormHp+5)])
+				zlim([0 (max_peakSlope_normhp+0.05)])
+				xlabel('RiseT', 'FontSize', 16)
+				ylabel('PeakAmpNormHp', 'FontSize', 16)
+				zlabel('SlopeNormhp', 'FontSize', 16)
+				title(['nVoke analysis - scatter ', str_fn], 'FontSize', 16)
+
 				if triggeredPeak_filter == 0
 					Trig_peak_str = ['Trig-Peak (n=', num2str(peak_fq_numTrig), ')'];
 					trigDelay_peak_str = ['TrigDelay-Peak (n=', num2str(peak_fq_numTrigDelay), ')'];
@@ -409,7 +426,7 @@ else
 					Other_peak_str = ['Other-Peak (n=', num2str(peak_fq_numOther), ')'];
 					peak_cat = categorical({Trig_peak_str, trigDelay_peak_str, Rebound_peak_str, Other_peak_str});
 					peak_fq_plot = [peak_fq_trig*100 peak_fq_trigDelay*100 peak_fq_rebound*100 peak_fq_other*100];
-					s4 = figure(7);
+					s5 = figure(8);
 					bar(peak_cat, peak_fq_plot)
 					ylabel('peakFrequency x 100', 'FontSize', 16)
 					title(['nVoke peak frequency ', str_fn])
@@ -417,13 +434,14 @@ else
 
 
 				if plot_analysis == 2 && ~isempty(figfolder)
-					figfile_histo = [triggeredPeak_filter_string, '_nVoke event analysis - Histograms'];
-					figfile_corr = [triggeredPeak_filter_string, '_nVoke event analysis - corralations'];
-					figfile_scatter = [triggeredPeak_filter_string, '_nVoke event analysis - scatter'];
-					% figfile_corr2 = [triggeredPeak_filter_string, '_nVoke event analysis - corralations2'];
-					figfile_scatter2 = [triggeredPeak_filter_string, '_nVoke event analysis - scatter2'];
-					figfile_scatter3 = [triggeredPeak_filter_string, '_nVoke event analysis - scatter3'];
-					figfile_fqbar = [triggeredPeak_filter_string, '_nVoke event analysis - peak_fq'];
+					% figfile_histo = [triggeredPeak_filter_string, '_nVoke event analysis - Histograms'];
+					% figfile_corr = [triggeredPeak_filter_string, '_nVoke event analysis - corralations'];
+					% figfile_scatter = [triggeredPeak_filter_string, '_nVoke event analysis - scatter'];
+					% % figfile_corr2 = [triggeredPeak_filter_string, '_nVoke event analysis - corralations2'];
+					% figfile_scatter2 = [triggeredPeak_filter_string, '_nVoke event analysis - scatter2'];
+					% figfile_scatter3 = [triggeredPeak_filter_string, '_nVoke event analysis - scatter3'];
+					% figfile_scatter4 = [triggeredPeak_filter_string, '_nVoke event analysis - scatter4'];
+					% figfile_fqbar = [triggeredPeak_filter_string, '_nVoke event analysis - peak_fq'];
 
 					figfile_histo = [datestr(datetime('now'), 'yyyymmdd'), ' ',str_fn, ' nVoke - Histograms'];
 					figfile_corr = [datestr(datetime('now'), 'yyyymmdd'), ' ',str_fn, ' nVoke - corralations'];
@@ -431,6 +449,7 @@ else
 					% figfile_corr2 = [peak_info_group.group, ' nVoke - corralations2'];
 					figfile_scatter2 = [datestr(datetime('now'), 'yyyymmdd'), ' ',str_fn, ' nVoke - scatter2'];
 					figfile_scatter3 = [datestr(datetime('now'), 'yyyymmdd'), ' ',str_fn, ' nVoke - scatter3'];
+					figfile_scatter4 = [datestr(datetime('now'), 'yyyymmdd'), ' ',str_fn, ' nVoke - scatter4'];
 					figfile_fqbar = [datestr(datetime('now'), 'yyyymmdd'), ' ',str_fn, ' nVoke - peakFrequency'];
 
 
@@ -440,6 +459,7 @@ else
 					% figfullpath_corr2 = fullfile(figfolder,figfile_corr2);
 					figfullpath_scatter2 = fullfile(figfolder,figfile_scatter2);
 					figfullpath_scatter3 = fullfile(figfolder,figfile_scatter3);
+					figfullpath_scatter4 = fullfile(figfolder,figfile_scatter4);
 					figfullpath_fqbar = fullfile(figfolder, figfile_fqbar);
 
 					savefig(h, figfullpath_histo);
@@ -448,6 +468,7 @@ else
 					% savefig(cor2, figfullpath_corr2);
 					savefig(s2, figfullpath_scatter2);
 					savefig(s3, figfullpath_scatter3);
+					savefig(s4, figfullpath_scatter4);
 
 					saveas(h, figfullpath_histo,'jpg');
 					saveas(cor, figfullpath_corr,'jpg');
@@ -455,6 +476,7 @@ else
 					% saveas(cor2, figfullpath_corr2,'jpg');
 					saveas(s2, figfullpath_scatter2,'jpg');
 					saveas(s3, figfullpath_scatter3,'jpg');
+					saveas(s4, figfullpath_scatter4,'jpg');
 
 					saveas(h, figfullpath_histo,'svg');
 					saveas(cor, figfullpath_corr,'svg');
@@ -462,6 +484,7 @@ else
 					% saveas(cor2, figfullpath_corr2,'svg');
 					saveas(s2, figfullpath_scatter2,'svg');
 					saveas(s3, figfullpath_scatter3,'svg');
+					saveas(s4, figfullpath_scatter4,'svg');
 
 					saveas(h, figfullpath_histo,'fig');
 					saveas(cor, figfullpath_corr,'fig');
@@ -469,11 +492,12 @@ else
 					% saveas(cor2, figfullpath_corr2,'fig');
 					saveas(s2, figfullpath_scatter2,'fig');
 					saveas(s3, figfullpath_scatter3,'fig');
+					saveas(s4, figfullpath_scatter4,'fig');
 
 					if triggeredPeak_filter == 0
-						savefig(s4, figfullpath_fqbar);
-						saveas(s4, figfullpath_fqbar,'jpg');
-						saveas(s4, figfullpath_fqbar,'fig');
+						savefig(s5, figfullpath_fqbar);
+						saveas(s5, figfullpath_fqbar,'jpg');
+						saveas(s5, figfullpath_fqbar,'fig');
 					end
 				end
 

@@ -18,7 +18,7 @@ if ispc
 elseif isunix
 	figfolder_default = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/peaks';
 end
-lowpass_fpass = 1;
+lowpass_fpass = 10;
 
 if nargin == 1 % ROIdata
 	plot_traces = 0;

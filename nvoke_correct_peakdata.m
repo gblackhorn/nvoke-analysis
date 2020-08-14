@@ -16,21 +16,25 @@ function [modified_ROIdata] = nvoke_correct_peakdata(ROIdata, varargin)
 %[modified_ROIdata] = nvoke_correct_peakdata(ROIdata,plot_traces,pause_step)
 
 
-lowpass_fpass = 1;
+lowpass_fpass = 10; % lowpassfilter default passband is 1 (ventral approach). 10 for slice
 highpass_fpass = 4;
 peakinfo_row_name = 'Peak_lowpassed';
 
 criteria_riseT = [0 3]; % unit: second. filter to keep peaks with rise time in the range of [min max]
-criteria_slope = [50 20000]; % default: slice-[50 2000]
+criteria_slope = [3 80]; % default: slice-[50 2000]
 							% calcium(a.u.)/rise_time(s). filter to keep peaks with rise time in the range of [min max]
 							% ventral approach default: [3 80]
-							% slice default: 
+							% slice default: [50 2000]
 criteria_mag = 3; % default: 3. peak_mag_normhp
 criteria_pnr = 3; % default: 3. peak-noise-ration (PNR): relative-peak-signal/std. std is calculated from highpassed data.
 criteria_excitated = 2; % If a peak starts to rise in 2 sec since stimuli, it's a excitated peak
 criteria_rebound = 1; % a peak is concidered as rebound if it starts to rise within 2s after stimulation end
 stimTime_corr = 0.3; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 use_criteria = true; % true or false. choose to use criteria or not for picking peaks
+
+% use follwing parameters to select a window for aligned stimulation analysis.
+stimPreTime = 10; % time (s) before stimuli start
+stimPostTime = 10; % time (s) after stimuli end
 
 % parameters for makeing a new row for peak frequencies
 peakFq_size = [1 14];
@@ -154,9 +158,11 @@ for rn = 1:recording_num
 		gpio_y = cell(1, (length(channel)-2)); % pre-allocate gpio_y
 		for nc = 1:(length(channel)-2) % number of GPIOs used for stimulation
 			if strfind(channel(nc+2).name{1}, 'GPIO-1')
-				gpio_thresh = 30000;
+				gpio_thresh = 30000; % 30000 for nvoke2
 			elseif strfind(channel(nc+2).name{1}, 'OG-LED')
 				gpio_thresh = 0.15;
+			else
+				gpio_thresh = 0.5;
 			end
 
 
@@ -308,18 +314,22 @@ for rn = 1:recording_num
 			peakmag_25per_cal = peakmag_lowpassed_delta*0.25+roi_data_peak_calc(closestIndex_rise); % 25% peakmag value 
 			peakmag_75per_cal = peakmag_lowpassed_delta*0.75+roi_data_peak_calc(closestIndex_rise); % 25% peakmag value
 
-			[peakmag_lowpassed_25per_diff peakloc_lowpassed_25per] = min(abs(roi_data_peak_calc(closestIndex_rise:closestIndex_peak)-peakmag_25per_cal)); % 25% loc in (rising:peak) range
-			peakloc_lowpassed_25per = closestIndex_rise-1+peakloc_lowpassed_25per; % location of 25% peak value in data
+			[peakmag_lowpassed_25per_diff peakloc_lowpassed_25per(pn, 1)] = min(abs(roi_data_peak_calc(closestIndex_rise:closestIndex_peak)-peakmag_25per_cal)); % 25% loc in (rising:peak) range
+			peakloc_lowpassed_25per(pn, 1) = closestIndex_rise-1+peakloc_lowpassed_25per(pn, 1); % location of 25% peak value in data
 
-			[peakmag_lowpassed_75per_diff peakloc_lowpassed_75per] = min(abs(roi_data_peak_calc(closestIndex_rise:closestIndex_peak)-peakmag_75per_cal)); % 75% loc in (rising:peak) range
-			peakloc_lowpassed_75per = closestIndex_rise-1+peakloc_lowpassed_75per; % location of 75% peak value in data
+			[peakmag_lowpassed_75per_diff peakloc_lowpassed_75per(pn, 1)] = min(abs(roi_data_peak_calc(closestIndex_rise:closestIndex_peak)-peakmag_75per_cal)); % 75% loc in (rising:peak) range
+			peakloc_lowpassed_75per(pn, 1) = closestIndex_rise-1+peakloc_lowpassed_75per(pn, 1); % location of 75% peak value in data
 
-			peakmag_lowpassed_25per = roi_data_peak_calc(peakloc_lowpassed_25per);
-			peaktime_lowpassed_25per = timeinfo(peakloc_lowpassed_25per); % time stamp of 25% peak value in data
-			peakmag_lowpassed_75per = roi_data_peak_calc(peakloc_lowpassed_75per);
-			peaktime_lowpassed_75per = timeinfo(peakloc_lowpassed_75per); % time stamp of 75% peak value in data
+			peakmag_lowpassed_25per(pn, 1) = roi_data_peak_calc(peakloc_lowpassed_25per(pn, 1));
+			peaktime_lowpassed_25per(pn, 1) = timeinfo(peakloc_lowpassed_25per(pn, 1)); % time stamp of 25% peak value in data
+			peakmag_lowpassed_75per(pn, 1) = roi_data_peak_calc(peakloc_lowpassed_75per(pn, 1));
+			peaktime_lowpassed_75per(pn, 1) = timeinfo(peakloc_lowpassed_75per(pn, 1)); % time stamp of 75% peak value in data
 
-			peakslope = (peakmag_lowpassed_75per-peakmag_lowpassed_25per)/(peaktime_lowpassed_75per-peaktime_lowpassed_25per);
+			peakmag_normhp_25per(pn, 1) = norm_roi_data_peak_calc(peakloc_lowpassed_25per(pn, 1));
+			peakmag_normhp_75per(pn, 1) = norm_roi_data_peak_calc(peakloc_lowpassed_75per(pn, 1));
+
+			peakslope = (peakmag_lowpassed_75per(pn, 1)-peakmag_lowpassed_25per(pn, 1))/(peaktime_lowpassed_75per(pn, 1)-peaktime_lowpassed_25per(pn, 1));
+			peakslope_normhp = (peakmag_normhp_75per(pn, 1)-peakmag_normhp_25per(pn, 1))/(peaktime_lowpassed_75per(pn, 1)-peaktime_lowpassed_25per(pn, 1));
 
 			% rn
 			% roi_n
@@ -328,15 +338,20 @@ for rn = 1:recording_num
 			% 	pause
 			% end
 
-			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakLoc25percent')(pn) = peakloc_lowpassed_25per;
-			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakLoc75percent')(pn) = peakloc_lowpassed_75per;
-			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakMag25percent')(pn) = peakmag_lowpassed_25per;
-			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakMag75percent')(pn) = peakmag_lowpassed_75per;
-			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakTime25percent')(pn) = peaktime_lowpassed_25per;
-			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakTime75percent')(pn) = peaktime_lowpassed_75per;
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakLoc25percent')(pn) = peakloc_lowpassed_25per(pn, 1);
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakLoc75percent')(pn) = peakloc_lowpassed_75per(pn, 1);
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakMag25percent')(pn) = peakmag_lowpassed_25per(pn, 1);
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakMag75percent')(pn) = peakmag_lowpassed_75per(pn, 1);
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakMag25percent_normhp')(pn) = peakmag_normhp_25per(pn, 1);
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakMag75percent_normhp')(pn) = peakmag_normhp_75per(pn, 1);
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakTime25percent')(pn) = peaktime_lowpassed_25per(pn, 1);
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakTime75percent')(pn) = peaktime_lowpassed_75per(pn, 1);
 			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakSlope')(pn) = peakslope;
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('PeakSlope_normhp')(pn) = peakslope_normhp;
 
 			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('stim')(pn) = {stim_str};
+
+			peak_loc_mag{peakinfo_row, roi_n}{:, :}.('riseTime2stimStart')(pn) = NaN;
 			% check whether peak start to rise during stimulation
 			if isempty(strfind(ROIdata{rn, 3}{1}, 'noStim')) % ~isempty(ROIdata{rn, 3})
 				for stim_n = 1:length(gpio_train_start_time{nc}) % number of stimulation
@@ -371,9 +386,16 @@ for rn = 1:recording_num
 							period_end = recording_data.Time(end);
 						end
 
+						preTimeEdge = gpio_train_start_time{nc}(stim_n)-stimPreTime;
+						postTimeEdge = gpio_train_end_time{nc}(stim_n)+stimPostTime;
+						if peak_rise_start_time(pn) >= preTimeEdge && peak_rise_start_time(pn) <= postTimeEdge
+							riseTime2stimStart = peak_rise_start_time(pn)-gpio_train_start_time{nc}(stim_n);
+							peak_loc_mag{peakinfo_row, roi_n}{:, :}.('riseTime2stimStart')(pn) = riseTime2stimStart;
+						end
+
 						if peak_rise_start_time(pn) >= (gpio_train_start_time{nc}(stim_n)-stimTime_corr) && peak_rise_start_time(pn) < period_end
-							riseTime_stimRelative = peak_rise_start_time(pn)-gpio_train_start_time{nc}(stim_n);
-							if riseTime_stimRelative < 0 
+							riseTime_stimRelative = peak_rise_start_time(pn)-gpio_train_start_time{nc}(stim_n); % riseTime_stimRelative is used to decide peak category. It's always positive
+							if riseTime_stimRelative < 0 % if rise time fall into the stimTime_corr range
 								riseTime_stimRelative = 0;
 							end
 							peak_loc_mag{peakinfo_row, roi_n}{:, :}.('riseTime_stimRelative')(pn) = riseTime_stimRelative;
@@ -406,6 +428,7 @@ for rn = 1:recording_num
 									peak_loc_mag{peakinfo_row, roi_n}{:, :}.('peakCategory')(pn) = {['noStim-', stim_str]};
 								end
 								peak_loc_mag{peakinfo_row, roi_n}{:, :}.('riseTime_stimRelative')(pn) = NaN;
+								peak_loc_mag{peakinfo_row, roi_n}{:, :}.('riseTime2stimStart')(pn) = NaN;
 							end
 						end
 					% end
@@ -537,6 +560,8 @@ for rn = 1:recording_num
 		peak_loc_mag{peakinfo_row, roi_n}{:, :}.PeakZscore = peak_zscore;
 		peak_loc_mag{peakinfo_row, roi_n}{:, :}.PeakNormHP = peak_norm_highpass;
 	end
+	ROIdata{rn,2}.lowpass = recording_lowpassed;
+	ROIdata{rn,2}.highpass = recording_highpassed;
 	ROIdata{rn, 5} = peak_loc_mag;
 
 	if nargin >= 2
@@ -564,75 +589,6 @@ for rn = 1:recording_num
 			close all
 			% end
 
-			% if isempty(ROIdata{rn, 3}) 
-			% 	GPIO_trace = 0; % no stimulation used during recording, don't show GPIO trace
-			% else
-			% 	GPIO_trace = 1; % show GPIO trace representing stimulation
-			% 	stimulation = ROIdata{rn, 3}{1, 1};
-			% 	channel = ROIdata{rn, 4}; % GPIO channels
-			% 	gpio_signal = cell(1, (length(channel)-2)); % pre-allocate number of stimulation to gpio_signal used to store signal time and value
-
-			% 	gpio_train_patch_x = cell(1, (length(channel)-2)); % pre-allocate gpio_x
-			% 	gpio_train_patch_y = cell(1, (length(channel)-2)); % pre-allocate gpio_y
-			% 	gpio_x = cell(1, (length(channel)-2)); % pre-allocate gpio_x
-			% 	gpio_y = cell(1, (length(channel)-2)); % pre-allocate gpio_y
-			% 	for nc = 1:(length(channel)-2) % number of GPIOs used for stimulation
-			% 		gpio_offset = 6; % in case there are multiple stimuli, GPIO traces will be stacked, seperated by offset 6
-			% 		gpio_signal{nc}(:, 1) = channel(nc+2).time_value(:, 1); % time value of GPIO signal
-			% 		gpio_signal{nc}(:, 2) = channel(nc+2).time_value(:, 2); % voltage value of GPIO signal
-			% 		gpio_rise_loc = find(gpio_signal{nc}(:, 2)); % locations of GPIO voltage not 0, ie stimuli start
-			% 		gpio_rise_num = length(gpio_rise_loc); % number of GPIO voltage rise
-
-			% 		% Looking for stimulation groups. Many stimuli are train signal. Ditinguish trains by finding rise time interval >=5s
-			% 		% Next line calculate time interval between to gpio_rise. (Second:End stimuli_time)-(first:Second_last stimuli_time)
-			% 		gpio_rise_interval{nc} = gpio_signal{nc}(gpio_rise_loc(2:end), 1)-gpio_signal{nc}(gpio_rise_loc(1:(end-1)), 1);
-			% 		train_interval_loc{nc} = find(gpio_rise_interval{1, nc} >= 5); % If time interval >=5s, this is between end of a train and start of another train
-			% 		train_end_loc{nc} = [gpio_rise_loc(train_interval_loc{nc}); gpio_rise_loc(end)]; % time of the train_end rises start
-			% 		train_start_loc{nc} = [gpio_rise_loc(1); gpio_rise_loc(train_interval_loc{nc}+1)]; % time of the train_start rises start
-
-			% 		gpio_train_start_time{nc} = gpio_signal{nc}(train_start_loc{nc}, 1); % time points when GPIO trains start
-			% 		gpio_train_end_time{nc} = gpio_signal{nc}(train_end_loc{nc}+1, 1); % time points when GPIO trains end
-
-			% 		ROIdata{rn, 4}(4).stim_range(:, 1) = gpio_train_start_time{nc}; % save stimulation signal start time info
-			% 		ROIdata{rn, 4}(4).stim_range(:, 2) = gpio_train_end_time{nc}; % save stimulation signal end time info
-
-			% 		% for peak_n = 1:size(peak_loc_mag{peakinfo_row, roi_n}{:, :}, 1) % number of peaks in this roi
-			% 		% 	for stim_n = 1:length(gpio_train_start_time{nc}) % number of stimulation
-
-			% 		% 	end
-			% 		% end
-
-			% 		for ngt = 1:length(gpio_train_start_time{nc})
-			% 			gpio_train_patch_x{nc}(1+(ngt-1)*4, 1) = gpio_signal{nc}(train_start_loc{nc}(ngt), 1);
-			% 			gpio_train_patch_x{nc}(2+(ngt-1)*4, 1) = gpio_signal{nc}(train_start_loc{nc}(ngt), 1);
-			% 			gpio_train_patch_x{nc}(3+(ngt-1)*4, 1) = gpio_signal{nc}(train_end_loc{nc}(ngt)+1, 1);
-			% 			gpio_train_patch_x{nc}(4+(ngt-1)*4, 1) = gpio_signal{nc}(train_end_loc{nc}(ngt)+1, 1);
-
-			% 			gpio_train_patch_y{nc}(1+(ngt-1)*4, 1) = gpio_signal{nc}(train_start_loc{nc}(ngt)+1, 2);
-			% 			gpio_train_patch_y{nc}(2+(ngt-1)*4, 1) = gpio_signal{nc}(train_start_loc{nc}(ngt), 2);
-			% 			gpio_train_patch_y{nc}(3+(ngt-1)*4, 1) = gpio_signal{nc}(train_end_loc{nc}(ngt), 2);
-			% 			gpio_train_patch_y{nc}(4+(ngt-1)*4, 1) = gpio_signal{nc}(train_end_loc{nc}(ngt)+1, 2);
-			% 		end
-			% 		gpio_train_lim_loc{nc, 1} = find(gpio_train_patch_y{nc}(:, 1) == 0); % location of gpio voltage ==0 in gpio_train_lim_loc
-			% 		gpio_train_lim_loc{nc, 2} = find(gpio_train_patch_y{nc}(:, 1)); % location of gpio voltage ~=0 in gpio_train_lim_loc
-
-			% 		% gpio_x = zeros(gpio_rise_num*4, length(channel)-2); % pre-allocate gpio_x used to plot GPIO with "patch" function
-			% 		% gpio_y = zeros(gpio_rise_num*4, length(channel)-2); % pre-allocate gpio_y used to plot GPIO with "patch" function
-			% 		for ng = 1:gpio_rise_num % number of GPIO voltage rise, ie stimuli
-			% 			gpio_x{nc}(1+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng), 1);
-			% 			gpio_x{nc}(2+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng), 1);
-			% 			gpio_x{nc}(3+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng)+1, 1);
-			% 			gpio_x{nc}(4+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng)+1, 1);
-
-			% 			gpio_y{nc}(1+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng)+1, 2);
-			% 			gpio_y{nc}(2+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng), 2);
-			% 			gpio_y{nc}(3+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng), 2);
-			% 			gpio_y{nc}(4+(ng-1)*4, 1) = gpio_signal{nc}(gpio_rise_loc(ng)+1, 2);
-			% 		end
-			% 		gpio_lim_loc{nc, 1} = find(gpio_y{nc}(:, 1) == 0); % location of gpio voltage ==0 in gpio_y
-			% 		gpio_lim_loc{nc, 2} = find(gpio_y{nc}(:, 1)); % location of gpio voltage ~=0 in gpio_y
-			% 	end
-			% end
 				
 			for p = 1:plot_fig_num % figure number
 				peak_plot_handle(p) = figure (p);

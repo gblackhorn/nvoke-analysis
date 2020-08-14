@@ -1,3 +1,20 @@
+% set folders for different situation
+if ispc
+	HDD_folder_invivo = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\'; % to save peak_info_sheet var
+	workspace_folder_invivo = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Ventral_approach\processed mat files\'; % to save peak_info_sheet var
+	HDD_folder_invitro = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_slice\'; % to save peak_info_sheet var
+	workspace_folder_invitro = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Slice\'; % to save peak_info_sheet var
+	mat_folder_invivo = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\';
+	mat_folder_invitro = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_slice\';
+elseif isunix
+	HDD_folder_invivo = '';
+	HDD_folder_invitro = '';
+	workspace_folder_invivo = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/';
+	workspace_folder_invitro = '/home/guoda/Documents/Workspace/Analysis/nVoke/Slice/';
+	mat_folder_invivo = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/';
+	mat_folder_invitro = '/home/guoda/Documents/Workspace/Analysis/nVoke/Slice/';
+end
+
 %%
 %==================== 1. Process nVoke recorded files in recording folder: PP, BP, MC and DFF. Copy these files and GPIO
 % info to project folder
@@ -25,11 +42,11 @@ sample_frequency = 40;
 %%
 %====================
 % 4. Check data with plot function 
-plot_save = 1; % 0-no plot. 1-plot. 2-plot and save
+plot_save = 0; % 0-no plot. 1-plot. 2-plot and save
 % pause_plot = 1; % pause after plot of one recording
 subplot_roi = 2;
 pause_plot = 1; % plot without pause
-lowpass_fpass = 10; % ventral approach default: 1. slice default: 10
+lowpass_fpass = 2; % ventral approach default: 1. slice default: 10
  
 [ROIdata_peakevent] = nvoke_event_detection(ROIdata, plot_save, subplot_roi, pause_plot, lowpass_fpass); % plot with pause. (ROIdata, 2, 1) plot and save with pause
 
@@ -41,12 +58,18 @@ if isempty(input_str)
 end
 if input_str == 'y'
 	stimulation = input(['Input info including stimulation for the name of the file saving ROIdata_peakevent var [', ROIdata{1, 3}{:}, '] : '], 's');
-	if ispc
-		HDD_folder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\'; % to save peak_info_sheet var
-		workspace_folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Ventral_approach\processed mat files\'; % to save peak_info_sheet var
-	elseif isunix
-		workspace_folder = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/';
+	experiment = input(['Save the ROIdata_peakevent in "ventral_approach" folder (1) or in "slice" folder (2) [Default-1]: ']);
+	if isempty(experiment)
+		experiment = 1;
 	end
+	if experiment == 1
+		HDD_folder = HDD_folder_invivo; % to save peak_info_sheet var
+		workspace_folder = workspace_folder_invivo; % to save peak_info_sheet var
+	elseif experiment == 2
+		HDD_folder = HDD_folder_invitro; % to save peak_info_sheet var
+		workspace_folder = workspace_folder_invitro; % to save peak_info_sheet var
+	end
+	
 	ROIdata_peakevent_fn = ['ROIdata_peakevent_', datestr(datetime('now'), 'yyyymmdd'), '_', stimulation];
 	if ispc
         HDD_path = fullfile(HDD_folder, ROIdata_peakevent_fn);
@@ -58,18 +81,21 @@ if input_str == 'y'
 	disp(['var ROIdata_peakevent was saved to file: ', workspace_path])
 end
 
+
 %%
 %====================
 % manully delet bad ROIs
 nvoke_data = ROIdata; % specify the variable containing all ROI_data
-rec_row = 1; % specify recording number
-ROI_num = width(ROIdata{rec_row, 2}.decon)-1
-ROIdata{rec_row, 2}.decon.Properties.VariableNames
+rec_row = 8; % specify recording number
+roi_keep = [1]; % ROIs will be kept
+ROI_num = width(ROIdata{rec_row, 2}.decon)-1;
+disp(nvoke_data{rec_row, 1})
+disp(['roi num: ', num2str(ROI_num)])
+disp(nvoke_data{rec_row, 2}.decon.Properties.VariableNames)
 roi_total = [1:ROI_num];
 
-%%
+%
 ROIdata_backup = ROIdata;
-roi_keep = [1]; % ROIs will be kept
 discard_ind = ismember(roi_total, roi_keep);
 roiID = find(discard_ind==0); % specify roi needed to be deleted
 
@@ -80,6 +106,7 @@ nvoke_data{rec_row,2}.decon(:, (roiID+1)) = [];
 nvoke_data{rec_row,2}.raw(:, (roiID+1)) = [];
 
 ROIdata = nvoke_data;
+disp(ROIdata{rec_row, 2}.decon.Properties.VariableNames)
 
 % cd('/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files')
 % data_decon(:, (roiID+1)) = [];
@@ -88,12 +115,16 @@ ROIdata = nvoke_data;
 %%
 %====================
 % load roidata (ROIdata, ROIdata_peakevent, modified_ROIdata, etc.) from file
-if ispc
-    % mat_folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Ventral_approach\processed mat files\';
-    mat_folder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\';
-elseif isunix
-	mat_folder = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/';
+experiment = input(['Load mat file from "ventral_approach" folder (1) or in "slice" folder (2) [Default-1]: ']);
+if isempty(experiment)
+	experiment = 1;
 end
+if experiment == 1
+	mat_folder = mat_folder_invivo;
+elseif experiment == 2
+	mat_folder = mat_folder_invitro;
+end
+
 [mat_fn, mat_folder]=uigetfile([mat_folder, '*.mat'],...
 	'Select a mat file with roidata or peak info (generated by event_detection, correct_peakdata or even_cal) in it');
 mat_path = fullfile(mat_folder, mat_fn);
@@ -118,8 +149,8 @@ end
 plot_save = 0; % 0-no plot. 1-plot. 2-plot and save
 % pause_plot = 1; % pause after plot of one recording
 subplot_roi = 2;
-pause_plot = 0; % plot with (1) or without (0) pause
-lowpass_fpass = 10; % ventral approach default: 1. slice default: 10
+pause_plot = 1; % plot with (1) or without (0) pause
+lowpass_fpass = 2; % ventral approach default: 1. slice default: 10
 
 
 [modified_ROIdata] = nvoke_correct_peakdata(ROIdata_peakevent,plot_save,subplot_roi,pause_plot,lowpass_fpass); 
@@ -136,19 +167,11 @@ if input_str == 'y'
 		experiment = 1;
 	end
 	if experiment == 1
-		if ispc
-			HDD_folder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\'; % to save peak_info_sheet var
-			workspace_folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Ventral_approach\processed mat files\'; % to save peak_info_sheet var
-		elseif isunix
-			workspace_folder = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/';
-		end
+		HDD_folder = HDD_folder_invivo; % to save peak_info_sheet var
+		workspace_folder = workspace_folder_invivo; % to save peak_info_sheet var
 	elseif experiment == 2
-		if ispc
-			HDD_folder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_slice\'; % to save peak_info_sheet var
-			workspace_folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Slice\'; % to save peak_info_sheet var
-		elseif isunix
-			workspace_folder = '/home/guoda/Documents/Workspace/Analysis/nVoke/Slice/';
-		end
+		HDD_folder = HDD_folder_invitro; % to save peak_info_sheet var
+		workspace_folder = workspace_folder_invitro; % to save peak_info_sheet var
 	end
 	modified_ROIdata_fn = ['modified_ROIdata_', datestr(datetime('now'), 'yyyymmdd'), '_', stimulation];
 	if ispc
@@ -160,14 +183,41 @@ if input_str == 'y'
 	save(workspace_path, 'modified_ROIdata');
 	disp(['var modified_ROIdata was saved to file: ', workspace_path])
 end
-%%
-%====================
+
+%% ====================
+% Manully correct rise and peak position
+close all
+modified_ROIdata_backup = modified_ROIdata;
+recNum = size(modified_ROIdata, 1);
+for rn = 1:recNum
+	recName =  modified_ROIdata{rn, 1};
+	roiNum = size(modified_ROIdata{rn, 2}.raw, 2)-1;
+	for roin = 1:roiNum
+		close all
+		roiCol = roin+1;
+		roiName = modified_ROIdata{rn, 2}.raw.Properties.VariableNames{roiCol};
+
+		disp([recName, ' - ', roiName]);
+
+		rawTrace = modified_ROIdata{rn, 2}.raw{:, [1 roiCol]};
+		deconTrace = modified_ROIdata{rn, 2}.decon{:, [1 roiCol]};
+		lowpassTrace = modified_ROIdata{rn, 2}.lowpass{:, [1 roiCol]};
+		peakInfo = modified_ROIdata{rn, 5};
+		lowpassPeakInfo = peakInfo.(roiName){3};
+		[lowpassPeakInfo_correct] = correctRisePeak(rawTrace, deconTrace, lowpassTrace, lowpassPeakInfo);
+		modified_ROIdata{rn, 5}.(roiName){3} = lowpassPeakInfo_correct;
+	end
+end
+
+%% ====================
 % 6. Check peaks and their start and end point. Manully correct these numbers and go through step 5 function.
 plot_save = 0; % 0-no plot. 1-plot. 2-plot and save
 % pause_plot = 1; % pause after plot of one recording
 subplot_roi = 2;
-pause_plot = 1; % plot without pause
-[modified_ROIdata] = nvoke_correct_peakdata(modified_ROIdata,plot_save,subplot_roi,pause_plot); % save plots with pauses 
+pause_plot = 0; % plot without pause
+lowpass_fpass = 1; % ventral approach default: 1. slice default: 10
+
+[modified_ROIdata] = nvoke_correct_peakdata(modified_ROIdata,plot_save,subplot_roi,pause_plot, lowpass_fpass); % save plots with pauses 
 
 prompt_save_modified_ROIdata = 'Do you want to save modified_ROIdata? y/n [y]: ';
 input_str = input(prompt_save_modified_ROIdata, 's');
@@ -176,11 +226,16 @@ if isempty(input_str)
 end
 if input_str == 'y'
 	stimulation = input(['Input info including stimulation for the name of the file saving modified_ROIdata var [', modified_ROIdata{1, 3}{:}, '] : '], 's');
-	if ispc
-		HDD_folder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\'; % to save peak_info_sheet var
-		workspace_folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Ventral_approach\processed mat files\'; % to save peak_info_sheet var
-	elseif isunix
-		workspace_folder = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/';
+	experiment = input(['Save the modified_ROIdata in "ventral_approach" folder (1) or in "slice" folder (2) [Default-1]: ']);
+	if isempty(experiment)
+		experiment = 1;
+	end
+	if experiment == 1
+		HDD_folder = HDD_folder_invivo; % to save peak_info_sheet var
+		workspace_folder = workspace_folder_invivo; % to save peak_info_sheet var
+	elseif experiment == 2
+		HDD_folder = HDD_folder_invitro; % to save peak_info_sheet var
+		workspace_folder = workspace_folder_invitro; % to save peak_info_sheet var
 	end
 	modified_ROIdata_fn = ['modified_ROIdata_', datestr(datetime('now'), 'yyyymmdd'), '_', stimulation];
 	if ispc
@@ -210,28 +265,20 @@ end
 %%
 %====================
 % 8. Calculate peak amplitude, rise and decay duration. Plot correlations
-plot_analysis = 2; % 0-no plot. 1-plot. 2-plot and save
+plot_analysis = 0; % 0-no plot. 1-plot. 2-plot and save
 
 % stimulation = 'ogled10s_fast_peak'; % to save peak_info_sheet var
 stimulation = input(['Input info including stimulation for the name of the file saving modified_ROIdata var [', modified_ROIdata{1, 3}{:}, '] : '], 's');
-experiment = input(['Save the modified_ROIdata in "ventral_approach" folder (1) or in "slice" folder (2) [Default-1]: ']);
+experiment = input(['Save the peak_info_sheet in "ventral_approach" folder (1) or in "slice" folder (2) [Default-1]: ']);
 if isempty(experiment)
 		experiment = 1;
 end
 if experiment == 1
-	if ispc
-		HDD_folder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\'; % to save peak_info_sheet var
-		workspace_folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Ventral_approach\processed mat files\'; % to save peak_info_sheet var
-	elseif isunix
-		workspace_folder = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/';
-	end
+	HDD_folder = HDD_folder_invivo; % to save peak_info_sheet var
+	workspace_folder = workspace_folder_invivo; % to save peak_info_sheet var
 elseif experiment == 2
-	if ispc
-		HDD_folder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_slice\'; % to save peak_info_sheet var
-		workspace_folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Slice\'; % to save peak_info_sheet var
-	elseif isunix
-		workspace_folder = '/home/guoda/Documents/Workspace/Analysis/nVoke/Slice/';
-	end
+	HDD_folder = HDD_folder_invitro; % to save peak_info_sheet var
+	workspace_folder = workspace_folder_invitro; % to save peak_info_sheet var
 end
 
 % C = cellfun(@(x) strfind(x, 'OG'), stimstr)
@@ -285,19 +332,54 @@ for triggeredPeak_filter = 0:triggeredPeak_filter_max
 	end
 end
 
-% % save peak_info_sheet
-% peak_sheet_fn = 'peak_info_sheet_20200526_ogled10s_trig2';
-% HDD_folder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral';
-% workspace_folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Ventral_approach\processed mat files';
+%% ====================
+% organize riseTimeRelative2Stim and histogram bar plot
+% close peakRise_histo
+stimDuration = 5;
+titleStr = 'ogled5s-stimpos-riseTime(<0.55)';
+% 'ogled10s-stimpos-riseTime(<0.55)'
 
-% HDD_path = fullfile(HDD_folder, peak_sheet_fn);
-% workspace_path = fullfile(workspace_folder, peak_sheet_fn);
+riseTime2stimStart = peak_info_sheet.riseTime2stimStart;
+nanidx = find(isnan(riseTime2stimStart));
+riseTime2stimStart(nanidx) = [];
+peakRise_histo = figure;
+histogram(riseTime2stimStart, 'BinWidth', 0.5);
+hold on
+Yrange = ylim;
+stimPatchX = [0 0 stimDuration stimDuration];
+stimPatchY = [Yrange(1) Yrange(2) Yrange(2) Yrange(1)];
+patch(stimPatchX, stimPatchY, 'red', 'EdgeColor', 'none', 'FaceAlpha', 0.3)
+title(titleStr)
 
-% save(HDD_path, 'peak_info_sheet');
-% save(workspace_path, 'peak_info_sheet');
+%% ====================
+% Nomalize peakNormHP in peak_info_sheet with max value
+peak_info_sheet_plus = peak_info_sheet; % peak_info_sheet_plus will have a new column for peakNorm_maxNorm
+peakNormHP = peak_info_sheet_plus.peakNormHP;
+riseDuration = peak_info_sheet_plus.riseDuration;
+max_peakNorm = max(peakNormHP);
+peakNorm_maxNorm = peakNormHP/max_peakNorm;
+peakSlope_maxNorm = peakNorm_maxNorm./riseDuration;
 
-%%
-%====================
+peak_info_sheet_plus.peakNorm_maxNorm = peakNorm_maxNorm;
+peak_info_sheet_plus.peakSlope_maxNorm = peakSlope_maxNorm;
+
+[peakNorm_maxNorm, idx] = rmoutliers(peakNorm_maxNorm); % remove outliers. an outlier is a value that is more than three scaled median absolute deviations (MAD) 
+outlier_row = find(idx == 0);
+peak_info_sheet_plus(idx, :) = [];
+
+%% ====================
+% add multiple peak_info_sheet_plus generated in previous section to a structure
+if ~exist('pispStru', 'var') % peak_info_sheet_plus-Structure (pispStru)
+	idx = 1;
+else
+	idx = size(pispStru, 2)+1;
+end
+peakCat = input('Input a string to specify the peak_info_sheet_plus about to added to pispStru: ', 's');
+pispStru(idx).Category = peakCat;
+pispStru(idx).peakInfo = peak_info_sheet_plus;
+
+
+%% ====================
 % assign peak_info_sheet var to a single structure var with filename and datetime info
 if ~exist('peak_sheet_folder', 'var')
 	if ispc
@@ -675,13 +757,13 @@ end
 
 %% ====================
 % plot peak_info_compilation
-plotsave = 1; % 0-no plot. 1-plot. 2-plot and save
-varargin = 0;
-% varargin(1): 0-peaks are not grouped. 1-peaks are grouped according to category. 
+plotsave = 2; % 0-no plot. 1-plot. 2-plot and save
+groupType = 1;
+% groupType: 0-peaks are not grouped. 1-peaks are grouped according to category. 
 % 			   2-peaks are grouped according to stimuli
 %			   3-peaks are grouped according to both category and stimuli
 
-nvoke_peak_plot(peak_info_compilation, plotsave, varargin);
+nvoke_peak_plot(peak_info_compilation, plotsave, groupType);
 
 %% ====================
 % Filter peaks by setting range of various parameter
