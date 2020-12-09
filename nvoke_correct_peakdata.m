@@ -20,7 +20,7 @@ lowpass_fpass = 10; % lowpassfilter default passband is 1 (ventral approach). 10
 highpass_fpass = 4;
 peakinfo_row_name = 'Peak_lowpassed';
 
-criteria_riseT = [0 3]; % unit: second. filter to keep peaks with rise time in the range of [min max]
+criteria_riseT = [0 8]; % unit: second. filter to keep peaks with rise time in the range of [min max]
 criteria_slope = [3 80]; % default: slice-[50 2000]
 							% calcium(a.u.)/rise_time(s). filter to keep peaks with rise time in the range of [min max]
 							% ventral approach default: [3 80]
@@ -249,9 +249,9 @@ for rn = 1:recording_num
     recording_code = rn;
 	roi_num = size(peak_loc_mag, 2); % total roi numbers after handpick
 
-	recording_highpassed = recording_rawdata;
-    recording_thresh = recording_rawdata;
-	recording_lowpassed = recording_rawdata;
+	recording_highpassed = recording_rawdata; % allocate ram
+    recording_thresh = recording_rawdata; % allocate ram
+	recording_lowpassed = recording_rawdata; % allocate ram
 
 	for roi_n = 1:roi_num
 		roi_name = ROIdata{rn,5}.Properties.VariableNames{roi_n};

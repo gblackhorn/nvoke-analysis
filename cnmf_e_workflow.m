@@ -19,11 +19,11 @@ else
 end
 
 %% create Source2D class object for storing results and parameters
-Fs = 40;             % frame rate
+Fs = 10;             % frame rate
 ssub = 1;           % spatial downsampling factor
 tsub = 1;           % temporal downsampling factor
-gSig = 6;           % set it to ~ diameter/2. width of the gaussian kernel, which can approximates the average neuron shape
-gSiz = 12;          % default=13. maximum diameter of neurons in the image plane. larger values are preferred.
+gSig = 13;           % set it to ~ diameter/2. width of the gaussian kernel, which can approximates the average neuron shape
+gSiz = 26;          % default=13. maximum diameter of neurons in the image plane. larger values are preferred.
 neuron_full = Sources2D('d1',d1,'d2',d2, ... % dimensions of datasets
     'ssub', ssub, 'tsub', tsub, ...  % downsampleing
     'gSig', gSig,...    % sigma of the 2D gaussian that approximates cell bodies
@@ -233,7 +233,7 @@ neuron.Cn = Cn;
 neuron.runMovie(Ysignal, [0, 150], save_avi, avi_name);
 
 %% save video
-kt = 2;     % default=3. play one frame in every kt frames
+kt = 1;     % default=3. play one frame in every kt frames
 save_avi = true;
 center_ac = median(max(neuron.A,[],1)'.*max(neuron.C,[],2)); % the denoised video are mapped to [0, 2*center_ac] of the colormap 
 cnmfe_save_video;

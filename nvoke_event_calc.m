@@ -151,8 +151,10 @@ for rn = 1:recording_num
 			sheet_fill_count = sheet_fill_count+length(peak_start);
 
 			if Sheet_fill_count_pfq == 1
+                ROIdata{rn,5}{'Peak_Fq', roi_n}{:}.stim = string(ROIdata{rn,5}{'Peak_Fq', roi_n}{:}.stim); % convert stim column to string array
 				peak_fq_sheet = ROIdata{rn,5}{'Peak_Fq', roi_n}{:};
-			else
+            else
+                ROIdata{rn,5}{'Peak_Fq', roi_n}{:}.stim = string(ROIdata{rn,5}{'Peak_Fq', roi_n}{:}.stim); % convert stim column to string array
 				peak_fq_sheet = [peak_fq_sheet; ROIdata{rn,5}{'Peak_Fq', roi_n}{:}];
 			end
 			Sheet_fill_count_pfq = Sheet_fill_count_pfq+1;

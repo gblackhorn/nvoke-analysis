@@ -150,7 +150,7 @@ plot_save = 0; % 0-no plot. 1-plot. 2-plot and save
 % pause_plot = 1; % pause after plot of one recording
 subplot_roi = 2;
 pause_plot = 1; % plot with (1) or without (0) pause
-lowpass_fpass = 2; % ventral approach default: 1. slice default: 10
+lowpass_fpass = 1; % ventral approach default: 1. slice default: 10
 
 
 [modified_ROIdata] = nvoke_correct_peakdata(ROIdata_peakevent,plot_save,subplot_roi,pause_plot,lowpass_fpass); 
@@ -186,6 +186,7 @@ end
 
 %% ====================
 % Manully correct rise and peak position
+% correctRisePeak is compatible with modified_ROIdata. Should be good with ROIdata_peakevent as well 
 close all
 modified_ROIdata_backup = modified_ROIdata;
 recNum = size(modified_ROIdata, 1);
@@ -265,7 +266,7 @@ end
 %%
 %====================
 % 8. Calculate peak amplitude, rise and decay duration. Plot correlations
-plot_analysis = 0; % 0-no plot. 1-plot. 2-plot and save
+plot_analysis = 2; % 0-no plot. 1-plot. 2-plot and save
 
 % stimulation = 'ogled10s_fast_peak'; % to save peak_info_sheet var
 stimulation = input(['Input info including stimulation for the name of the file saving modified_ROIdata var [', modified_ROIdata{1, 3}{:}, '] : '], 's');
@@ -298,7 +299,7 @@ for triggeredPeak_filter = 0:triggeredPeak_filter_max
 	case 2
 		disp(['trigger filter: ', num2str(triggeredPeak_filter), ': non-excited peaks used. peaks with rise point outside of stimulation'])
 	case 3
-		disp(['trigger filter: ', num2str(triggeredPeak_filter), ': excited peaks used. immediat peaks since stimulation'])
+		disp(['trigger filter: ', num2str(triggeredPeak_filter), ': excited peaks used. immediate peaks since stimulation'])
 	case 4
 		disp(['trigger filter: ', num2str(triggeredPeak_filter), ': delayed excited peaks used. peaks start to rise after a seconds duration of stimulation'])
 	case 5
@@ -336,19 +337,33 @@ end
 % organize riseTimeRelative2Stim and histogram bar plot
 % close peakRise_histo
 stimDuration = 5;
-titleStr = 'ogled5s-stimpos-riseTime(<0.55)';
-% 'ogled10s-stimpos-riseTime(<0.55)'
+riseDurationLim = [2.5 3]; % use this to filter peaks
+% [0 0.55] [0.55 1] [1 1.5] [1.5 2] [2 2.5] [2.5 3]
+titleStr = ['ogled5s-stimpos-manualCorrect', '(>', num2str(riseDurationLim(1)), 's <', num2str(riseDurationLim(2)), 's)'];
+% 'ogled10s-stimpos-riseTime', 'airpuffIpsi nVoke1-stimpos nVoke2-handpick'
 
 riseTime2stimStart = peak_info_sheet.riseTime2stimStart;
+riseDuration = peak_info_sheet.riseDuration;
 nanidx = find(isnan(riseTime2stimStart));
-riseTime2stimStart(nanidx) = [];
+% riseTime2stimStart(nanidx) = [];
+shortRiseIdx = find(riseDuration<=riseDurationLim(1));
+longRiseIdx = find(riseDuration>=riseDurationLim(2));
+discardIdx = [nanidx; shortRiseIdx; longRiseIdx];
+riseTime2stimStart(discardIdx) = [];
+
 peakRise_histo = figure;
-histogram(riseTime2stimStart, 'BinWidth', 0.5);
+histogram(riseTime2stimStart, 'BinWidth', 1);
+xlim([-10 15]) % specify the start and end time of histogram plot
 hold on
 Yrange = ylim;
 stimPatchX = [0 0 stimDuration stimDuration];
 stimPatchY = [Yrange(1) Yrange(2) Yrange(2) Yrange(1)];
 patch(stimPatchX, stimPatchY, 'red', 'EdgeColor', 'none', 'FaceAlpha', 0.3)
+
+%Returns handles to the patch and line objects
+chi=get(gca, 'Children');
+%Reverse the stacking order so that the patch overlays the line
+set(gca, 'Children',flipud(chi))
 title(titleStr)
 
 %% ====================

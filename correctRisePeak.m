@@ -1,5 +1,6 @@
 function [lowpassPeakInfo_correct] = correctRisePeak(rawTrace, deconTrace, lowpassTrace, lowpassPeakInfo)
 % Plot raw, decon, and lowpassed traces. Manually correct rise and peak position
+%	lowpassPeakInfo is compatible with data from modified_ROIdata, should be good with ROIdata_peakevent data as well
 %   rawTrace, deconTrace and lowpassTrace are arries
 % 	lowpassPeakInfo is table variable
 	fig = figure;
