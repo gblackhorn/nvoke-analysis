@@ -15,13 +15,13 @@ elseif isunix
 	mat_folder_invitro = '/home/guoda/Documents/Workspace/Analysis/nVoke/Slice/';
 end
 
-%%
-%==================== 1. Process nVoke recorded files in recording folder: PP, BP, MC and DFF. Copy these files and GPIO
+%% ==================== 
+% 1. Process nVoke recorded files in recording folder: PP, BP, MC and DFF. Copy these files and GPIO
 % info to project folder
 nvoke_file_process;
 
-%%
-%==================== 2. Draw ROIs with Inscopix Data Processing Software (IDPS)
+%% ==================== 
+%2. Draw ROIs with Inscopix Data Processing Software (IDPS). Or process motion corrected tiff with CNMFe code
 % 	- Export ROI info as .csv
 % 	- Export GPIO info as .csv if exists
 % 	- Check each recording with plot app: 'D:\guoda\Documents\MATLAB\Codes\nvoke-analysis\plot_roi_gpio_App.mlapp'
