@@ -46,7 +46,7 @@ plot_save = 0; % 0-no plot. 1-plot. 2-plot and save
 % pause_plot = 1; % pause after plot of one recording
 subplot_roi = 2;
 pause_plot = 1; % plot without pause
-lowpass_fpass = 2; % ventral approach default: 1. slice default: 10
+lowpass_fpass = 1; % ventral approach default: 1. slice default: 10
  
 [ROIdata_peakevent] = nvoke_event_detection(ROIdata, plot_save, subplot_roi, pause_plot, lowpass_fpass); % plot with pause. (ROIdata, 2, 1) plot and save with pause
 
@@ -84,7 +84,7 @@ end
 
 %%
 %====================
-% manully delet bad ROIs
+% manully delete bad ROIs
 nvoke_data = ROIdata; % specify the variable containing all ROI_data
 rec_row = 8; % specify recording number
 roi_keep = [1]; % ROIs will be kept
