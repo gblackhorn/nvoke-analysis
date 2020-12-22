@@ -23,7 +23,7 @@ function plotroimap(roi_map,roi_center,varargin)
     		'FontSize', 20, 'BoxColor', 'yellow', 'TextColor', 'yellow', 'BoxOpacity', 0);
     end
 
-    rm = figure;
+    % rm = figure;
     imshow(roi_map);
 end
 

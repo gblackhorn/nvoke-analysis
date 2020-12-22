@@ -173,12 +173,8 @@ for rn = 1:recording_num
 			peakprom_select = peakprom_lowpassed;
 		end
 
-		% if rn == 6 && n == 1
-		% 	pause
-		% end
-
 		turning_loc = zeros(size(peakloc_select, 1), 3);
-		speed_chang_loc = zeros(size(peakloc_select, 1), 2);
+		% speed_chang_loc = zeros(size(peakloc_select, 1), 2);
 		if ~isempty(peakloc_select)
 			for pn = 1:length(peakloc_select) % counting number of peaks in data
 
@@ -394,6 +390,10 @@ for rn = 1:recording_num
 		end
 	end
 
+	if isfield(ROIdata{rn,2}, 'cnmfe_results') % extract roi spatial information from CNMFe results
+		[ROIdata{rn,2}.roi_map, ROIdata{rn,2}.roi_center] = roimap(ROIdata{rn,2}.cnmfe_results);
+	end
+
 	peak_loc_mag_table_row = {'peak'; 'peak_smooth'; 'Peak_lowpassed'};
 	peak_loc_mag_table = array2table(peak_table, 'VariableNames', peak_loc_mag_table_variable, 'RowNames', peak_loc_mag_table_row);
 
@@ -490,27 +490,36 @@ for rn = 1:recording_num
 							roi_col_data_highpassed = single_recording_highpassed(:, roi_col_loc);
 							thresh_data = single_recording_min_height(:, roi_col_loc);
 
+							% plot traces, peaks, and rises 
 							sub_handle(roi_plot) = subplot((rowNumPerFig+1), colNumPerFig, q+(m-1)*colNumPerFig);
-							plot(time_info, roi_col_data, 'k') % plot original data
-							hold on
-							plot(time_info, roi_col_data_lowpassed, 'Color', '#0072BD', 'linewidth', 1); % plot lowpass filtered data
+							
+							traceinfo = [roi_col_data roi_col_data_lowpassed roi_col_data_raw];
+							peakinfo{1} = [peak_loc_mag{1, roi_plot}(:, 5) peak_loc_mag{1, roi_plot}(:, 2)];
+							peakinfo{2} = [peak_loc_mag{3, roi_plot}(:, 5) peak_loc_mag{3, roi_plot}(:, 2)];
+							riseinfo{1} = [peak_loc_mag{peak_table_row, roi_plot}(:, 6) roi_col_data_select(peak_loc_mag{peak_table_row, roi_plot}(:, 3))];
+							riseinfo{2} = [peak_loc_mag{3, roi_plot}(:, 6) roi_col_data_lowpassed(peak_loc_mag{3, roi_plot}(:, 3))];
 
-							% plot detected peaks and their starting and ending points
-							plot(peak_time_loc_select, peak_value_select, 'o', 'Color', '#000000', 'linewidth', 1) % plot peak marks
-							plot(peak_rise_turning_time, peak_rise_turning_value, '>', peak_decay_turning_time, peak_decay_turning_value, '<', 'Color', '#000000', 'linewidth', 1) % plot start and end of transient, turning point
+							plot_trace_peak_rise(time_info,traceinfo,peakinfo,riseinfo)
 
-							if cnmfe_process
-								plot(time_info, roi_col_data_raw, 'Color', '#7E2F8E')
-								plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'o', 'Color', '#D95319', 'linewidth', 2) % plot peak marks of lowpassed data
-								plot(peak_rise_turning_time_lowpassed, peak_rise_turning_value_lowpassed, 'd', 'Color', '#D95319',  'linewidth', 2) % plot start of transient of lowpassed data, turning point
-							end
+							% plot(time_info, roi_col_data, 'k') % plot original data
+							% hold on
+							% plot(time_info, roi_col_data_lowpassed, 'Color', '#0072BD', 'linewidth', 1); % plot lowpass filtered data
+
+							% % plot detected peaks and their starting and ending points
+							% plot(peak_time_loc_select, peak_value_select, 'o', 'Color', '#000000', 'linewidth', 1) % plot peak marks
+							% plot(peak_rise_turning_time, peak_rise_turning_value, '>', peak_decay_turning_time, peak_decay_turning_value, '<', 'Color', '#000000', 'linewidth', 1) % plot start and end of transient, turning point
+
+							% if cnmfe_process
+							% 	plot(time_info, roi_col_data_raw, 'Color', '#7E2F8E')
+							% 	plot(peak_time_loc_lowpassed, peak_value_lowpassed, 'o', 'Color', '#D95319', 'linewidth', 2) % plot peak marks of lowpassed data
+							% 	plot(peak_rise_turning_time_lowpassed, peak_rise_turning_value_lowpassed, 'd', 'Color', '#D95319',  'linewidth', 2) % plot start of transient of lowpassed data, turning point
+							% end
 							
 							set(get(sub_handle(roi_plot), 'YLabel'), 'String', single_recording.Properties.VariableNames{roi_plot+1});
-							ylim_roi_max = max(max(roi_col_data)*1.1, max(roi_col_data_lowpassed)*1.1); % max value of ROI trace y axis
-							ylim_roi_min = min((min(roi_col_data) - abs(min(roi_col_data)*0.1)), (min(roi_col_data_lowpassed) - abs(min(roi_col_data_lowpassed)*0.1)));
-							axis([0 recording_time ylim_roi_min ylim_roi_max]); 
-							hold off
-
+							% ylim_roi_max = max(max(roi_col_data)*1.1, max(roi_col_data_lowpassed)*1.1); % max value of ROI trace y axis
+							% ylim_roi_min = min((min(roi_col_data) - abs(min(roi_col_data)*0.1)), (min(roi_col_data_lowpassed) - abs(min(roi_col_data_lowpassed)*0.1)));
+							% axis([0 recording_time ylim_roi_min ylim_roi_max]); 
+							% hold off
 						end
 					end
 					if GPIO_trace == 1
@@ -539,6 +548,19 @@ for rn = 1:recording_num
 					svgfile_fullpath = fullfile(fig_subfolder, svgfile_name);
 					saveas(gcf, svgfile_fullpath);
 				end	
+				if pause_step == 1
+					disp('Press any key to continue')
+					pause;
+				end
+			end
+			if isfield(ROIdata{rn,2}, 'roi_map') && isfield(ROIdata{rn,2}, 'roi_center')
+				roimap_handle = figure;
+				plotroimap(ROIdata{rn,2}.roi_map, ROIdata{rn,2}.roi_center, 1)
+				if plot_traces == 2 && ~isempty(figfolder)
+					roimap_file_name = [ROIdata{rn,1}(1:(end-4)), '-roimap.jpg'];
+					roimap_file_fullpath = fullfile(fig_subfolder, roimap_file_name);
+					saveas(gcf, roimap_file_fullpath);
+				end
 				if pause_step == 1
 					disp('Press any key to continue')
 					pause;

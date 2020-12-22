@@ -62,6 +62,7 @@ for n = 1:numel(roi_readout_file_info_processed)
 
 	ROIdata{n, 2}.decon = CalSig_decon;
 	ROIdata{n, 2}.raw = CalSig_raw;
+	ROIdata{n, 2}.cnmfe_results = organize_extract_CNMFspacialInfo(results);
 
 	% decide whether there is a gpio file for this roi file. If yes, get GPIO info
 	filename_stem = roi_readout_file_info(n).name(1:25); % filename like recording_20190910_130653 (25 letters+numbers) or 2020-04-16-15-37-11_video (from nvoke2)

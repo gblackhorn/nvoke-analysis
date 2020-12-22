@@ -564,6 +564,12 @@ for rn = 1:recording_num
 	ROIdata{rn,2}.highpass = recording_highpassed;
 	ROIdata{rn, 5} = peak_loc_mag;
 
+	if isfield(ROIdata{rn,2}, 'cnmfe_results') % extract roi spatial information from CNMFe results
+		if ~isfield(ROIdata{rn,2}, 'roi_map') || ~isfield(ROIdata{rn,2}, 'roi_center')
+			[ROIdata{rn,2}.roi_map, ROIdata{rn,2}.roi_center] = roimap(ROIdata{rn,2}.cnmfe_results);
+		end
+	end
+
 	if nargin >= 2
 		% if plot_traces == 1 || 2
 		% 	% plot_col_num = ceil(roi_num/5);
@@ -807,6 +813,19 @@ for rn = 1:recording_num
 					svgfile_fullpath = fullfile(fig_subfolder, svgfile_name);
 					saveas(gcf, svgfile_fullpath);
 				end	
+				if pause_step == 1
+					disp('Press any key to continue')
+					pause;
+				end
+			end
+			if isfield(ROIdata{rn,2}, 'roi_map') && isfield(ROIdata{rn,2}, 'roi_center')
+				roimap_handle = figure;
+				plotroimap(ROIdata{rn,2}.roi_map, ROIdata{rn,2}.roi_center, 1)
+				if plot_traces == 2 && ~isempty(figfolder)
+					roimap_file_name = [ROIdata{rn,1}(1:(end-4)), '-roimap.jpg'];
+					roimap_file_fullpath = fullfile(fig_subfolder, roimap_file_name);
+					saveas(gcf, roimap_file_fullpath);
+				end
 				if pause_step == 1
 					disp('Press any key to continue')
 					pause;
