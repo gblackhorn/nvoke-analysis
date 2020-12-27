@@ -176,7 +176,7 @@ end
 %% ====================
 % Plot calcium imaging and ePhy traces from the same cell in the same figure. Use data from ePhy_imaging_data
 T_diff = 1; % default = 1s. time difference between ePhy and calcium imaging 
-savePlots = 0; % 0-do not save plots. 1-save plots
+savePlots = 1; % 0-do not save plots. 1-save plots
 close all
 
 if ~exist('ePhy_imaging_data', 'var') % load ePhy_imaging_data if it's not in workspace

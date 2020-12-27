@@ -1,5 +1,5 @@
 function [outputArg] = organize_invitro_data(organize_folder)
-    % organize in vitro calcium imaging data fro CNMFe process
+    % organize in vitro calcium imaging data for CNMFe process
     %   CNMFe process requires single folder for each recording
 
     % default_folder = 'G:\Workspace\Kevin_data\';

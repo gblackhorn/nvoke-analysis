@@ -20,8 +20,8 @@ function [SyncInfo, SyncStat] = SyncAnalysis(timeinfo,traces,varargin)
 
 
     % Settings
-    sync_RiseWinError = 0.3; % default: 0.2 s. Due to low temperol frequency, transients from 2 ROIs with rise time as close as 0.2 or less are categoried to synced 
-    sync_PeakWinError = 0.3; % default: 0.2 s. Calcium signal may reach to the peak slightly different among neurons. Low temperol resolution may also influence it.  
+    sync_RiseWinError = 0.2; % default: 0.2 s. Due to low temperol frequency, transients from 2 ROIs with rise time as close as 0.2 or less are categoried to synced 
+    sync_PeakWinError = 0.3; % default: 0.3 s. Calcium signal may reach to the peak slightly different among neurons. Low temperol resolution may also influence it.  
     riseCol = 1; % column index of rise location in transient information var (varargin(1), transientInfo)
     peakCol = 2; % column index of peak location in transient information var (varargin(1), transientInfo)
     
