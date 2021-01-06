@@ -155,7 +155,7 @@ for rn = 1:recording_num
 		% find peaks
 		% [peakmag, peakloc] = findpeaks(roi_readout, 'MinPeakProminence', prominences, 'MinPeakHeight', min_height);
 		[peakmag, peakloc, peakw, peakprom] = findpeaks(roi_readout, 'MinPeakHeight', peakprom_thr);
-		[peakmag_smooth, peakloc_smooth, peakw_smaooth, peakprom_smooth] = findpeaks(roi_readout_smooth, 'MinPeakProminence', prominences_smooth);
+		[peakmag_smooth, peakloc_smooth, peakw_smooth, peakprom_smooth] = findpeaks(roi_readout_smooth, 'MinPeakProminence', prominences_smooth);
 		[peakmag_lowpassed, peakloc_lowpassed, peakw_lowpassed, peakprom_lowpassed] = findpeaks(roi_lowpassed, 'MinPeakProminence', prominences_lowpassed);
 
 
