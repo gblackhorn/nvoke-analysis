@@ -3,8 +3,8 @@ function [SyncInfo, SyncStat] = SyncAnalysis(timeinfo,traces,varargin)
     % alpha version: peak info calculation is not implemented. Always input varargin(1).
     %   timeinfo: 1-column vector of time information of data
     %	traces: data matrix with multiple columns containing trace data
-    %	varargin: (1) 1 or 0. 1: cell array containing transient rise index (1st-col) and peak location index (2nd-col) of each trace
-    %					When varargin(1) is input, this function use transient info there. 0: no transient info given. This func will calculate them
+    %	varargin: (1) cell array containing transient rise index (1st-col) and peak location index (2nd-col) of each trace
+    %					
     %			  (2) a cell array containing roi names.
     %	SyncInfo: table cell array. 1st row: each cell contains a table of host transient rises and guests' transient rises synced to host
     %						  2nd row: each cell contains a table of host transient peaks and guests' transient peaks synced to host

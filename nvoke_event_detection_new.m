@@ -14,6 +14,11 @@ function [ROIdata_peakevent] = nvoke_event_detection_new(ROIdata, varargin)
 % nvoke_event_detection(ROIdata,1, 1)
 
 smooth_span = 0.1; % default value for smoothing data traces
+prominence_factor = 4;
+lowpass_fpass = 1;
+smooth_span = 0.1
+[transient_properties_variable_names] = transient_properties_variable_names('peak')
+
 
 if ispc
 	figfolder_default = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\peaks';
@@ -86,9 +91,17 @@ for rn = 1:recording_num
 
 	time_info = single_recording{:, 1};
 
-	[TransientProperties_decon,dataTable_processed_decon] = CalculateTransientProperties(single_recording, 1, 'none');
-	[TransientProperties_raw_lp,dataTable_processed_raw_lp] = CalculateTransientProperties(single_rec_raw, 0, 'lowpass', lowpass_fpass);
-	[TransientProperties_raw_smooth,dataTable_processed_raw_smooth] = CalculateTransientProperties(single_rec_raw, 0, 'smooth', smooth_span);
+	[TransientProperties_decon, dataTable_processed_decon] = organize_transient_properties(single_recording,...
+		'decon', 1, 'prom_par', prominence_factor,...
+		'TransientProperties_names', transient_properties_variable_names);
+	[TransientProperties_raw_lp, dataTable_processed_raw_lp] = organize_transient_properties(single_rec_raw,...
+		'decon', 0, 'prom_par', prominence_factor, 'filter', 'lowpass'...
+		'filter_par', lowpass_fpass,...
+		'TransientProperties_names', transient_properties_variable_names);
+	[TransientProperties_raw_smooth, dataTable_processed_raw_smooth] = organize_transient_properties(single_rec_raw,...
+		'decon', 0, 'prom_par', prominence_factor, 'filter', 'smooth'...
+		'filter_par', smooth_span,...
+		'TransientProperties_names', transient_properties_variable_names);
 
 	TransientProperties_decon_cell = table2cell(TransientProperties_decon);
 	TransientProperties_raw_smooth_cell = table2cell(TransientProperties_raw_smooth);
