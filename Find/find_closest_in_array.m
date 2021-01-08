@@ -4,8 +4,9 @@ function [closestValue,closestIndex] = find_closest_in_array(ideal_value,target_
     %   ideal_value: a single number or a single-column array
     %   target_array: a single-column array
 
-    target_array_repmat = (target_array, [1 length(ideal_value)]);
+    target_array_repmat = repmat(target_array, [1 length(ideal_value)]);
     [minValue, closestIndex] = min(abs(target_array_repmat-ideal_value'));
+    closestIndex = closestIndex';
     closestValue = target_array(closestIndex);
 end
 

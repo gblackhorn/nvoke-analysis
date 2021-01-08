@@ -5,6 +5,8 @@ function [check_start,check_end] = find_window_range_for_peak(roi_trace,peakLoc)
     %   Detailed explanation goes here
     if ~isempty(peakLoc)
     	peak_num = length(peakLoc);
+    	check_start = NaN(peak_num, 1);
+    	check_end = NaN(peak_num, 1);
     	for pn = 1:peak_num
     		% Decide the range to find locations of rise start and decay end for each peak
     		if pn ==1 % first peak

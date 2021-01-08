@@ -55,7 +55,7 @@ function [peak_par,varargout] = findpeaks_after_filter(roi_trace,varargin)
 	    else
 	    	if strcmpi('none', filter_chosen)
 	    		roi_trace = roi_trace;
-	    		filter_parameter = NaN
+	    		filter_parameter = NaN;
 	    	elseif strcmpi('lowpass', filter_chosen)
 	    		roi_trace = lowpass(roi_trace, filter_parameter, rec_fq);
 		    elseif strcmpi('smooth', filter_chosen)

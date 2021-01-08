@@ -53,5 +53,5 @@ function [roi_trace_processed,varargout] = process_roi_trace_with_filter(roi_tra
 		varargout{1}.parameter = filter_parameter;
 	end
 end
-end
+
 

@@ -29,8 +29,8 @@ function [transient_properties,varargout] = calculate_transient_properties(roi_t
     	peakMag_10per_target = peakMag_delta*slope_per_low+roi_trace(rise_loc); % 10% peakmag value
     	peakMag_90per_target = peakMag_delta*slope_per_high+roi_trace(rise_loc); % 90% peakmag value
 
-    	peakLoc_10per = FindClosest(roi_trace, peakMag_10per_target, [rise_loc peakLoc]);
-    	peakLoc_90per = FindClosest(roi_trace, peakMag_90per_target, [rise_loc peakLoc]);
+    	peakLoc_10per = FindClosest_multiWindows(roi_trace, peakMag_10per_target, [rise_loc peakLoc]);
+    	peakLoc_90per = FindClosest_multiWindows(roi_trace, peakMag_90per_target, [rise_loc peakLoc]);
     	peakMag_10per = roi_trace(peakLoc_10per);
     	peakMag_90per = roi_trace(peakLoc_90per);
     	peakTime_10per = time_info(peakLoc_10per);

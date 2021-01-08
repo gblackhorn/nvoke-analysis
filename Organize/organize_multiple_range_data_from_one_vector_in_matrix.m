@@ -11,10 +11,14 @@ function [matrix_data] = organize_multiple_range_data_from_one_vector_in_matrix(
 
     % fill trace data in each window in window_idx_cell
     for wn = 1:window_num
-    	matrix_data_cell{wn} = roi_trace(range_start(wn):range_end(wn));
+    	matrix_data_cell{wn} = vector_data(range_start(wn):range_end(wn));
     end
 
     % convert roi_trace_window_cell to a matrix, fill the short arrays with NaN
-    matrix_data = padcat(matrix_data_cell{:});
+    if window_num ==1
+        matrix_data = matrix_data_cell{1};
+    else
+        matrix_data = padcat(matrix_data_cell{:});
+    end
 end
 
