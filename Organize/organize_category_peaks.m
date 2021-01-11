@@ -13,7 +13,7 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
     % Optionals
     for ii = 1:2:(nargin-2)
     	if strcmpi('stim_time_error', varargin{ii})
-    		stim_time_error = varargin{ii+1};
+    		stim_time_error = varargin{ii+1};peak_cat_str;
     	end
     end
 

@@ -11,11 +11,13 @@ function [transient_properties_variable_names] = transient_properties_variable_n
 	'peak_loc_10percent', 'peak_mag_10percent', 'peak_time_10percent', 'peak_loc_90percent', 'peak_mag_90percent',...
 	'peak_time_90percent', 'peak_slope', 'peak_delta_norm_hpstd', 'peak_mag_10percent_norm_hpstd', 'peak_mag_90percent_norm_hpstd',...
     'peak_slope_norm_hpstd', 'stim_info', 'peak_category'};
-	str_select = [1:length(transient_properties_variable_names)];
 
     if nargin == 2
-    	str_select = varargin{1};
+        str_select = varargin{1};
     end
+
+	str_select = [1:length(transient_properties_variable_names)];
+   
     
     if strcmpi('peak', output_type)
     	transient_properties_variable_names = transient_properties_variable_names(str_select);

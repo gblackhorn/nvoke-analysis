@@ -32,11 +32,11 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     for ii = 1:2:(nargin-1)
     	if strcmpi('lowpass_fpass', varargin{ii})
     		lowpass_fpass = varargin{ii+1};
-		if strcmpi('highpass_fpass', varargin{ii})
+		elseif strcmpi('highpass_fpass', varargin{ii})
     		highpass_fpass = varargin{ii+1};
-		if strcmpi('smooth_method', varargin{ii})
+		elseif strcmpi('smooth_method', varargin{ii})
     		smooth_method = varargin{ii+1};
-		if strcmpi('smooth_span', varargin{ii})
+		elseif strcmpi('smooth_span', varargin{ii})
     		smooth_span = varargin{ii+1};
     	elseif strcmpi('prominence_factor', varargin{ii})
     		prominence_factor = varargin{ii+1};
@@ -96,7 +96,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     	elseif strfind(stim_name, 'noStim')
     		stim_str = 'no-stim';
     	else
-    		[recdata_organized{rn, col_gpioinfo}, gpio_info_table] = organize_gpio_info(gpio_info,...
+    		[recdata_organized{rn, col_gpioinfo}, gpio_info_table] = organize_gpio_info(recdata_organized{rn, col_gpioinfo},...
     			'stim_idx_start', 3, 'round_digit', 0);
     		stim_str = join(gpio_info_table.stim_ch_str);
     	end 
@@ -124,6 +124,10 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 		[peak_properties_highpass, rec_data_highpass] = organize_transient_properties(rec_data_raw,...
 			'decon', 0, 'filter', 'highpass', 'filter_par', highpass_fpass,...
 			'peakProperties_names', 'highpass_std'); 
+		% Store processed data in recdata_organized
+		recdata_organized{rn, col_trace}.lowpass = rec_data_lowpass.processed_data;
+		recdata_organized{rn, col_trace}.smooth = rec_data_smooth.processed_data;
+		recdata_organized{rn, col_trace}.highpass = rec_data_highpass.processed_data;
 
 		% screen peaks with criteria
 		[peak_properties_lowpass] = organize_screen_peaks_multirois(peak_properties_lowpass,...
@@ -163,15 +167,23 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
             'VariableNames', peak_properties_decon.Properties.VariableNames,...
             'RowNames', peak_properties_combine_RowNames);
 
+        % update peak_properties_tables
+        recdata_organized{rn,col_peak} = peak_properties_combine;
+
         % Calculate roi map infomation from cnmfe_results
         if isfield(recdata_organized{rn,col_trace}, 'cnmfe_results') % extract roi spatial information from CNMFe results
             [recdata_organized{rn,col_trace}.roi_map, recdata_organized{rn,2}.roi_center] = roimap(recdata_organized{rn,2}.cnmfe_results);
         end
 
-        % Plot
-        if plot_traces ~= 0
-
-        end
+        % % Plot
+        % if plot_traces ~= 0
+        % 	traceinfo = [{recdata_organized{rn, col_trace}.decon} {recdata_organized{rn, col_trace}.lowpass}, {recdata_organized{rn, col_trace}.raw}];
+        % 	peak_properties_tables = peak_properties_combine({'peak_decon', 'peak_lowpass'}, :);
+        % 	plot_trace_peak_rise_stim_multirois(traceinfo,...
+        % 		'peak_properties_tables', peak_properties_tables,...
+        % 		'stim_ch_patch', gpio_info_table.stim_ch_time_range)
+        % 	sgtitle(recdata_organized{rn, col_name}, 'Interpreter', 'none');
+        % end
     end
 
 

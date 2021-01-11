@@ -8,7 +8,7 @@ function [peak_properties_tables_with_cat,varargout] = organize_category_peaks_m
     stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
     criteria_trig = 2; % triggered peak: peak start to rise in 2s from onset of stim
     criteria_rebound = 1; % rebound peak: peak start to rise in 1s from end of stim
-    peak_cat_str = {'noStim', 'noStimFar', 'triggered', 'triggered_delay', 'rebound', 'interval'}
+    peak_cat_str = {'noStim', 'noStimFar', 'triggered', 'triggered_delay', 'rebound', 'interval'};
 
     % Optionals
     for ii = 1:2:(nargin-2)

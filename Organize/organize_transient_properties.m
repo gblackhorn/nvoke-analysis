@@ -50,6 +50,7 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
     roi_num = size(RecInfoTable, 2)-1; % number of rois/traces
     rec_fq = 1/(time_info(10)-time_info(9));
     transient_properties = cell(1, roi_num);
+    transient_prop_var_names = transient_prop_var_names(1:17);
 
     % process traces and extract transient properties
    	RecInfoTable_processed = RecInfoTable; % allocate ram for RecInfoTable_processed
