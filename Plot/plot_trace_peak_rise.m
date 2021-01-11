@@ -1,4 +1,4 @@
-function [outputArg1,outputArg2] = plot_trace_peak_rise(timeinfo,traceinfo,varargin)
+function [] = plot_trace_peak_rise(timeinfo,traceinfo,varargin)
     % plot traces, peaks (marked with "o") and rises (marked with ">") sharing
     % the same time info
     %   timeinfo: 1-col array

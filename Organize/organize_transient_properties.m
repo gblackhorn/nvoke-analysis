@@ -61,9 +61,14 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
             transient_properties{n} = peak_par.std;
             [transient_prop_var_names] = transient_properties_variable_names('std');
         else
-            if ~isempty(existing_peakInfo{1, n}{:}) % look for peaks/transients with a set of peak data
+            if ~isempty(existing_peakInfo{1, n}{:,:}) % look for peaks/transients with a set of peak data
+                if size(existing_peakInfo{1, n}, 2) ~= 1
+                    peakInfo = existing_peakInfo{1, n};
+                else
+                    peakInfo = existing_peakInfo{1, n}{:,:};
+                end
                 [peak_par, processed_data_and_info] = find_peaks_with_existing_peakinfo(roi_trace,...
-                    existing_peakInfo{1, n}{:}, 'filter', filter_chosen, 'filter_par', filter_par,...
+                    peakInfo, 'filter', filter_chosen, 'filter_par', filter_par,...
                     'recording_fq', rec_fq, 'decon', decon, 'time_info', time_info,...
                     'extension_time_pre', existing_peak_duration_extension_time_pre,...
                     'extension_time_post', existing_peak_duration_extension_time_post);

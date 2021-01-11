@@ -27,12 +27,23 @@ function [peak_properties_tables_screened,varargout] = organize_screen_peaks_mul
     peak_properties_tables_screened = peak_properties_tables;
     roi_num = size(peak_properties_tables, 2);
     for rn = 1:roi_num
-    	peak_properties_table_single = peak_properties_tables{1, rn}{:};
+        if size(peak_properties_tables{1, rn}, 2) ~= 1
+            peak_properties_table_single = peak_properties_tables{1, rn};
+        else
+            peak_properties_table_single = peak_properties_tables{1, rn}{:};
+        end
+        
+    	% peak_properties_table_single = peak_properties_tables{1, rn}{:};
     	highpass_data_std_single = highpass_data_stds{1, rn};
     	[peak_properties_table_single] = organize_screen_peaks(peak_properties_table_single,...
     		highpass_data_std_single, 'rise_time', criteria_rise_time,...
-    		'slope', criteria_slope, 'pnr', criteria_pnr)
-    	peak_properties_tables_screened{1, rn}{:} = peak_properties_table_single;
+    		'slope', criteria_slope, 'pnr', criteria_pnr);
+        
+        if size(peak_properties_tables_screened{1, rn}, 2) ~= 1
+            peak_properties_tables_screened{1, rn} = peak_properties_table_single;
+        else
+            peak_properties_tables_screened{1, rn}{:} = peak_properties_table_single;
+        end
     end
     if nargout >= 2 % return the processed traces data with time info and processing method
 	    varargout{1}.criteria_rise_time = criteria_rise_time;

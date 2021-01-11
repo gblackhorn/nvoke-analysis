@@ -52,7 +52,7 @@ function [peak_par,varargout] = find_peaks_with_existing_peakinfo(roi_trace,exis
 
     	% calculate ideal time for window starts and ends
     	window_start_time_ideal = time_info(existing_peakInfo.peak_loc)-existing_peak_duration_extension_time_pre;
-    	window_end_time_ideal   = time_info(existing_peakInfo.peak_loc)+existing_peak_duration_extension_time_post;
+    	window_end_time_ideal   = time_info(existing_peakInfo.decay_loc)+existing_peak_duration_extension_time_post;
 
     	% If window start time is smaller than timeinfo start or if window end time is bigger than timeinfo end
     	% set them to timeinfo start and end

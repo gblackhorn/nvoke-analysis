@@ -50,7 +50,7 @@ function [transient_properties,varargout] = calculate_transient_properties(roi_t
     	end
 	else
 		transient_properties = double.empty(0, 17);
-		transient_properties = num2cell(TransientProperties{n});
+		transient_properties = num2cell(transient_properties);
 		if nargout == 2
     		varargout{1} = [];
     	end

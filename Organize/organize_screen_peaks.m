@@ -28,7 +28,7 @@ function [peak_properties_table_screened, varargout] = organize_screen_peaks(pea
     end
 
     peak_properties_table_screened = peak_properties_table;
-    peak_noist_ratio = peak_properties_table.peak_mag_relative/highpass_data_std;
+    peak_noist_ratio = peak_properties_table.peak_mag_delta/highpass_data_std;
 
 	idx_fail_rise_time = find(peak_properties_table.rise_duration>=criteria_rise_time(1) & peak_properties_table.rise_duration<=criteria_rise_time(2));
 	idx_fail_slope = find(peak_properties_table.peak_slope>=criteria_slope(1) & peak_properties_table.peak_slope<=criteria_slope(2));
@@ -36,7 +36,9 @@ function [peak_properties_table_screened, varargout] = organize_screen_peaks(pea
 
 	idx_combine = [idx_fail_rise_time; idx_fail_slope; idx_fail_pnr];
 	idx_discard = unique(idx_combine);
-	peak_properties_table_screened{idx_discard, :} = [];
+    if ~isempty(idx_discard)
+        peak_properties_table_screened(idx_discard, :) = [];
+    end
 
 	if nargout >= 2 % return the processed traces data with time info and processing method
 	    varargout{1}.criteria_rise_time = criteria_rise_time;

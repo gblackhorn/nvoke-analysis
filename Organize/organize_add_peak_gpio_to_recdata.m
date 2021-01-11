@@ -26,7 +26,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     stim_post_time = 10; % time (s) after stimuli end
     plot_traces = 0; % 0: do not plot. 1: plot. 2: plot with pause
     save_traces = 0; % 0: do not save. 1: save
-    [peak_properties_variable_names] = peak_properties_variable_names('peak', [1:17]);
+    [peak_properties_variable_names] = transient_properties_variable_names('peak', [1:17]);
 
     % Optionals for inputs
     for ii = 1:2:(nargin-1)
@@ -133,12 +133,45 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 			peak_properties_highpass, 'rise_time', criteria_rise_time,...
 			'slope', criteria_slope, 'pnr', criteria_pnr);
 
+        % Calculate normalized peak value and add them to peak properties table
+        [peak_properties_lowpass] = calculate_normalized_value_multirois(peak_properties_lowpass,...
+            peak_properties_highpass);
+        [peak_properties_smooth] = calculate_normalized_value_multirois(peak_properties_smooth,...
+            peak_properties_highpass);
+
+        % Add stim_str (including name of stim_ch and stimulation train duration) to peak properties table
+        [peak_properties_lowpass] = organize_add_stim_str_to_table_multirois(peak_properties_lowpass,...
+            gpio_info_table);
+        [peak_properties_smooth] = organize_add_stim_str_to_table_multirois(peak_properties_smooth,...
+            gpio_info_table);
+
 		% category peaks
 		% [peak_category] = organize_category_peaks(peak_properties_table,gpio_info_table,varargin)
 		[peak_properties_lowpass] = organize_category_peaks_multirois(peak_properties_lowpass,...
 			gpio_info_table, 'stim_time_error', stim_time_error);
 		[peak_properties_smooth] = organize_category_peaks_multirois(peak_properties_smooth,...
 			gpio_info_table, 'stim_time_error', stim_time_error);
+
+        % Combine peak_properties tables of decon, smooth and lowpass data
+        peak_properties_decon_cell = table2cell(peak_properties_decon);
+        peak_properties_smooth_cell = table2cell(peak_properties_smooth);
+        peak_properties_lowpass_cell = table2cell(peak_properties_lowpass);
+
+        peak_properties_combine_cell = [peak_properties_decon_cell; peak_properties_smooth_cell; peak_properties_lowpass_cell];
+        peak_properties_combine_RowNames = {'peak_decon', 'peak_smooth', 'peak_lowpass'};
+        peak_properties_combine = cell2table(peak_properties_combine_cell,...
+            'VariableNames', peak_properties_decon.Properties.VariableNames,...
+            'RowNames', peak_properties_combine_RowNames);
+
+        % Calculate roi map infomation from cnmfe_results
+        if isfield(recdata_organized{rn,col_trace}, 'cnmfe_results') % extract roi spatial information from CNMFe results
+            [recdata_organized{rn,col_trace}.roi_map, recdata_organized{rn,2}.roi_center] = roimap(recdata_organized{rn,2}.cnmfe_results);
+        end
+
+        % Plot
+        if plot_traces ~= 0
+
+        end
     end
 
 

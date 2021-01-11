@@ -1,5 +1,6 @@
 function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin)
     % organize gpio_info directly outputed from nVoke. 
+    % Caution (2021.01.10): stim_ch_train_duration for airpuff is set to 1s. calculated duration is the trigger signal train duration.
     %   example: 
     %		[gpio_info_organized, gpio_info_table] = organize_gpio_info(gpio_info, 'stim_idx_start', 3, 'round_digit', 0);
 
@@ -59,7 +60,12 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
 				% organize gpio info for plotting patches for the durations of stim_trains
 				stim_ch_patch{cn} = organize_gpio_train_for_plot_patch(stim_ch_time_range{cn});
 
-				stim_ch_train_duration(cn) = round(gpio_train_end_time(1)-gpio_train_start_time(1), round_digit);
+				if strfind(stim_ch_name{cn}, 'GPIO-1')
+					stim_ch_train_duration(cn) = 1;
+				else
+					stim_ch_train_duration(cn) = round(gpio_train_end_time(1)-gpio_train_start_time(1), round_digit);
+				end
+
 				stim_ch_str{cn} = [stim_ch_name{cn}, '-', num2str(stim_ch_train_duration(cn)), 's'];
 				stim_ch_train_inter = round(gpio_train_start_time(2)-gpio_train_end_time(1), round_digit);
 
