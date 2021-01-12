@@ -168,6 +168,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
             'RowNames', peak_properties_combine_RowNames);
 
         % update peak_properties_tables
+        recdata_organized{rn,col_peak} = [];
         recdata_organized{rn,col_peak} = peak_properties_combine;
 
         % Calculate roi map infomation from cnmfe_results
