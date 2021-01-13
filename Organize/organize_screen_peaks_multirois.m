@@ -40,9 +40,18 @@ function [peak_properties_tables_screened,varargout] = organize_screen_peaks_mul
     		'slope', criteria_slope, 'pnr', criteria_pnr);
         
         if size(peak_properties_tables_screened{1, rn}, 2) ~= 1
-            peak_properties_tables_screened{1, rn} = peak_properties_table_single;
+            if isempty(peak_properties_table_single)
+                peak_properties_tables_screened{1, rn}{:,:} = NaN(size(peak_properties_tables_screened{1, rn}));
+            else
+                peak_properties_tables_screened{1, rn} = peak_properties_table_single;
+            end
         else
-            peak_properties_tables_screened{1, rn}{:} = peak_properties_table_single;
+            if isempty(peak_properties_table_single)
+                peak_properties_tables_screened{1, rn}{:}{:,:} = NaN(size(peak_properties_tables_screened{1, rn}));
+%             peak_properties_tables_screened{1, rn}{:} = [];
+            else
+                peak_properties_tables_screened{1, rn}{:} = peak_properties_table_single;
+            end
         end
     end
     if nargout >= 2 % return the processed traces data with time info and processing method
