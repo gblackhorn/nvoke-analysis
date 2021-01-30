@@ -160,9 +160,10 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
         peak_properties_decon_cell = table2cell(peak_properties_decon);
         peak_properties_smooth_cell = table2cell(peak_properties_smooth);
         peak_properties_lowpass_cell = table2cell(peak_properties_lowpass);
+        peak_properties_highpass_cell = table2cell(peak_properties_highpass);
 
-        peak_properties_combine_cell = [peak_properties_decon_cell; peak_properties_smooth_cell; peak_properties_lowpass_cell];
-        peak_properties_combine_RowNames = {'peak_decon', 'peak_smooth', 'peak_lowpass'};
+        peak_properties_combine_cell = [peak_properties_decon_cell; peak_properties_smooth_cell; peak_properties_lowpass_cell; peak_properties_highpass_cell];
+        peak_properties_combine_RowNames = {'peak_decon', 'peak_smooth', 'peak_lowpass', 'highpass_std'};
         peak_properties_combine = cell2table(peak_properties_combine_cell,...
             'VariableNames', peak_properties_decon.Properties.VariableNames,...
             'RowNames', peak_properties_combine_RowNames);
