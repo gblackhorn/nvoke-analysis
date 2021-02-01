@@ -16,6 +16,8 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
     existing_peakInfo = cell2table(cell(1, (size(RecInfoTable, 2)-1)));
     existing_peak_duration_extension_time_pre  = 0.3; % duration in second, before existing peak rise 
     existing_peak_duration_extension_time_post = 0; % duration in second, after decay
+    merge_peaks = false;
+    merge_time_interval = 0.5;
 
     % pack_singlerow_table_in_cell = 0;
     [transient_prop_var_names] = transient_properties_variable_names('peak', [1:17]);
@@ -41,6 +43,10 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
 			existing_peak_duration_extension_time_pre = varargin{ii+1};
 		elseif strcmpi('extension_time_post', varargin{ii}) 
 			existing_peak_duration_extension_time_post = varargin{ii+1};
+        elseif strcmpi('merge_peaks', varargin{ii}) % needed for smooth process
+            merge_peaks = varargin{ii+1};
+        elseif strcmpi('merge_time_interval', varargin{ii})
+            merge_time_interval = varargin{ii+1};
         end
     end
 
@@ -76,7 +82,8 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
             else
                 [peak_par,processed_data_and_info] = findpeaks_after_filter(roi_trace,...
                     'decon', decon, 'filter', filter_chosen, 'filter_par', filter_par,...
-                    'recording_fq', rec_fq, 'prom_par', prominence_factor, 'time_info', time_info);
+                    'recording_fq', rec_fq, 'prom_par', prominence_factor, 'time_info', time_info,...
+                    'merge_peaks', merge_peaks, 'merge_time_interval', merge_time_interval);
             end
             transient_properties{n} = calculate_transient_properties(processed_data_and_info.processed_trace,...
                 time_info, peak_par.peakMag, peak_par.peakLoc,...

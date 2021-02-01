@@ -1,4 +1,4 @@
-% set folders for different situation
+% 1. set folders for different situation
 if ispc
 	HDD_folder_rec_ventral = 'G:\Workspace\Inscopix_Seagate\recordings\IO_virus_ventral approach\';
 	HDD_folder_project = 'G:\Workspace\Inscopix_Seagate\Projects';
@@ -20,10 +20,11 @@ elseif isunix
 end
 
 %% ==================== 
-% 1. Process nVoke recorded files in recording folder: PP, BP, MC and DFF. Copy these files and GPIO
+% 2. Process nVoke recorded files (nVoke1 structure) in recording folder: PP, BP, MC and DFF. Copy these files and GPIO
 % info to project folder
 nvoke_file_process;
 
+%%
 % Process all raw recording files in the same folder.
 % This is designed for the output of nVoke2
 recording_dir = uigetdir(HDD_folder_rec_ventral,...
@@ -38,14 +39,6 @@ if recording_dir ~= 0
 	end
 end
 
-
-%% ==================== 
-%2. Draw ROIs with Inscopix Data Processing Software (IDPS). Or process motion corrected tiff with CNMFe code
-% 	- Export ROI info as .csv
-% 	- Export GPIO info as .csv if exists
-% 	- Check each recording with plot app: 'D:\guoda\Documents\MATLAB\Codes\nvoke-analysis\plot_roi_gpio_App.mlapp'
-		plot_roi_gpio_App.mlapp
-
 %% ====================
 % 3. Convert ROI info to matlab file (.m). Copy ROI info (csv files) to analysis folder, and run this
 % function
@@ -54,7 +47,7 @@ end
 [ROIdata, recording_num, cell_num] = ROI_matinfo2matlab; % for CNMFe processed data
 
 %% ====================
-% Add spatial information of ROIs from *results.mat to ROIdata, ROIdata_peakevent, or modified_ROIdata.
+% 4. Add spatial information of ROIs from *results.mat to ROIdata, ROIdata_peakevent, or modified_ROIdata.
 % func roimap.m needs this information to draw ROIs
 % [mat_data_file_name, mat_folder_invivo] = uigetfile(mat_folder_invivo,...
 % 	'Select a file containing ROIdata, ROIdata_peakevent or modified_ROIdata.');
@@ -77,78 +70,73 @@ end
 
 
 %% ====================
-% 3. Convert in vitro calcium imaging info to matlab file (.m). 
-
-sample_frequency = 40;
-[ROIdata] = ROI_matinfo2matlab_invitro(sample_frequency); % for in vitro and CNMFe processed data
-%%
-%====================
-% 4. Check data with plot function 
-plot_save = 0; % 0-no plot. 1-plot. 2-plot and save
-% pause_plot = 1; % pause after plot of one recording
-subplot_roi = 1;
-pause_plot = 1; % plot without pause
-lowpass_fpass = 1; % ventral approach default: 1. slice default: 10
- 
-[ROIdata_peakevent] = nvoke_event_detection(ROIdata, plot_save, subplot_roi, pause_plot, lowpass_fpass); % plot with pause. (ROIdata, 2, 1) plot and save with pause
-
-prompt_save_ROIdata_peakevent = 'Do you want to save ROIdata_peakevent? y/n [y]: ';
-input_str = input(prompt_save_ROIdata_peakevent, 's');
-
-if isempty(input_str)
-	input_str = 'y';
-end
-if input_str == 'y'
-	stimulation = input(['Input info including stimulation for the name of the file saving ROIdata_peakevent var [', ROIdata{1, 3}{:}, '] : '], 's');
-	experiment = input(['Save the ROIdata_peakevent in "ventral_approach" folder (1) or in "slice" folder (2) [Default-1]: ']);
-	if isempty(experiment)
-		experiment = 1;
-	end
-	if experiment == 1
-		HDD_folder = HDD_folder_invivo; % to save peak_info_sheet var
-		workspace_folder = workspace_folder_invivo; % to save peak_info_sheet var
-	elseif experiment == 2
-		HDD_folder = HDD_folder_invitro; % to save peak_info_sheet var
-		workspace_folder = workspace_folder_invitro; % to save peak_info_sheet var
-	end
-	
-	ROIdata_peakevent_fn = ['ROIdata_peakevent_', datestr(datetime('now'), 'yyyymmdd'), '_', stimulation];
-	if ispc
-        HDD_path = fullfile(HDD_folder, ROIdata_peakevent_fn);
-		save(HDD_path, 'ROIdata_peakevent');
-		disp(['var ROIdata_peakevent was saved to file: ', HDD_path])
-    end
-    workspace_path = fullfile(workspace_folder, ROIdata_peakevent_fn);
-	save(workspace_path, 'ROIdata_peakevent');
-	disp(['var ROIdata_peakevent was saved to file: ', workspace_path])
-end
+% 5. Add peak and gpio information to data
+% Defaults
+lowpass_fpass = 1;
+highpass_fpass = 4;   
+smooth_method = 'loess';
+smooth_span = 0.1;
+prominence_factor = 4; % prominence_factor doesn't influence peak finding in decon data
+existing_peak_duration_extension_time_pre  = 0.3; % duration in second, before existing peak rise 
+existing_peak_duration_extension_time_post = 0; % duration in second, after decay
+criteria_rise_time = [0 0.8]; % unit: second. filter to keep peaks with rise time in the range of [min max]
+criteria_slope = [3 80]; % default: slice-[50 2000]
+							% calcium(a.u.)/rise_time(s). filter to keep peaks with rise time in the range of [min max]
+							% ventral approach default: [3 80]
+							% slice default: [50 2000]
+% criteria_mag = 3; % default: 3. peak_mag_normhp
+criteria_pnr = 3; % default: 3. peak-noise-ration (PNR): relative-peak-signal/std. std is calculated from highpassed data.
+criteria_excitated = 2; % If a peak starts to rise in 2 sec since stimuli, it's a excitated peak
+criteria_rebound = 1; % a peak is concidered as rebound if it starts to rise within 2s after stimulation end
+stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
+% use_criteria = true; % true or false. choose to use criteria or not for picking peaks
+stim_pre_time = 10; % time (s) before stimuli start
+stim_post_time = 10; % time (s) after stimuli end
+merge_peaks = true;
+merge_time_interval = 1; % default: 0.5s. peak to peak interval.
+discard_noisy_roi = false;
+std_fold = 10; % used as criteria to discard noisy_rois
+plot_traces = 0; % 0: do not plot. 1: plot. 2: plot with pause
+save_traces = 0; % 0: do not save. 1: save
+[recdata_organized] = organize_add_peak_gpio_to_recdata(ROIdata,...
+	'lowpass_fpass', lowpass_fpass, 'highpass_fpass', highpass_fpass,...
+	'smooth_method', smooth_method, 'smooth_span', smooth_span,...
+	'prominence_factor', prominence_factor,...
+	'existing_peak_duration_extension_time_pre', existing_peak_duration_extension_time_pre,...
+	'existing_peak_duration_extension_time_post', existing_peak_duration_extension_time_post,...
+	'criteria_rise_time', criteria_rise_time, 'criteria_slope', criteria_slope, 'criteria_pnr', criteria_pnr,...
+	'criteria_excitated', criteria_excitated, 'criteria_rebound', criteria_rebound,...
+	'stim_time_error', stim_time_error, 'stim_pre_time', stim_pre_time, 'stim_post_time', stim_post_time,...
+	'merge_peaks', merge_peaks, 'merge_time_interval', merge_time_interval,...
+	'discard_noisy_roi', discard_noisy_roi, 'std_fold',...
+	'plot_traces', plot_traces, 'save_traces', save_traces); 
 
 
 %%
 %====================
 % manully delete bad ROIs
-nvoke_data = ROIdata; % specify the variable containing all ROI_data
+recdata_organized = recdata_organized; % specify the variable containing all ROI_data
 rec_row = 8; % specify recording number
 roi_keep = [1]; % ROIs will be kept
-ROI_num = width(ROIdata{rec_row, 2}.decon)-1;
-disp(nvoke_data{rec_row, 1})
+ROI_num = width(recdata_organized{rec_row, 2}.decon)-1;
+disp(recdata_organized{rec_row, 1})
 disp(['roi num: ', num2str(ROI_num)])
-disp(nvoke_data{rec_row, 2}.decon.Properties.VariableNames)
+disp(recdata_organized{rec_row, 2}.decon.Properties.VariableNames)
 roi_total = [1:ROI_num];
 
 %
-ROIdata_backup = ROIdata;
+ROIdata_backup = recdata_organized;
 discard_ind = ismember(roi_total, roi_keep);
 roiID = find(discard_ind==0); % specify roi needed to be deleted
 
 % data_decon = nvoke_data{rec_row,2}.decon;
 % data_raw = nvoke_data{rec_row,2}.raw;
 
-nvoke_data{rec_row,2}.decon(:, (roiID+1)) = [];
-nvoke_data{rec_row,2}.raw(:, (roiID+1)) = [];
+recdata_organized{rec_row,2}.decon(:, (roiID+1)) = [];
+recdata_organized{rec_row,2}.raw(:, (roiID+1)) = [];
 
-ROIdata = nvoke_data;
-disp(ROIdata{rec_row, 2}.decon.Properties.VariableNames)
+recdata_organized = recdata_organized;
+disp(recdata_organized{rec_row, 2}.decon.Properties.VariableNames)
 
 % cd('/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files')
 % data_decon(:, (roiID+1)) = [];
@@ -185,128 +173,7 @@ if mat_fn~=0
 end
 
 
-%%
-%====================
-% 5. Delete bad/usless cells in ROIdata generated by previous steps. Check data with plot function again
-plot_save = 0; % 0-no plot. 1-plot. 2-plot and save
-% pause_plot = 1; % pause after plot of one recording
-subplot_roi = 1;
-pause_plot = 1; % plot with (1) or without (0) pause
-lowpass_fpass = 1; % ventral approach default: 1. slice default: 10
-
-
-[modified_ROIdata] = nvoke_correct_peakdata(ROIdata_peakevent,plot_save,subplot_roi,pause_plot,lowpass_fpass); 
-
-prompt_save_modified_ROIdata = 'Do you want to save modified_ROIdata? y/n [y]: ';
-input_str = input(prompt_save_modified_ROIdata, 's');
-if isempty(input_str)
-	input_str = 'y';
-end
-if input_str == 'y'
-	stimulation = input(['Input info including stimulation for the name of the file saving modified_ROIdata var [', modified_ROIdata{1, 3}{:}, '] : '], 's');
-	experiment = input(['Save the modified_ROIdata in "ventral_approach" folder (1) or in "slice" folder (2) [Default-1]: ']);
-	if isempty(experiment)
-		experiment = 1;
-	end
-	if experiment == 1
-		HDD_folder = HDD_folder_invivo; % to save peak_info_sheet var
-		workspace_folder = workspace_folder_invivo; % to save peak_info_sheet var
-	elseif experiment == 2
-		HDD_folder = HDD_folder_invitro; % to save peak_info_sheet var
-		workspace_folder = workspace_folder_invitro; % to save peak_info_sheet var
-	end
-	modified_ROIdata_fn = ['modified_ROIdata_', datestr(datetime('now'), 'yyyymmdd'), '_', stimulation];
-	if ispc
-        HDD_path = fullfile(HDD_folder, modified_ROIdata_fn);
-		save(HDD_path, 'modified_ROIdata');
-		disp(['var modified_ROIdata was saved to file: ', HDD_path])
-    end
-    workspace_path = fullfile(workspace_folder, modified_ROIdata_fn);
-	save(workspace_path, 'modified_ROIdata');
-	disp(['var modified_ROIdata was saved to file: ', workspace_path])
-end
-
 %% ====================
-% Manully correct rise and peak position
-% correctRisePeak is compatible with modified_ROIdata. Should be good with ROIdata_peakevent as well 
-close all
-modified_ROIdata_backup = modified_ROIdata;
-recNum = size(modified_ROIdata, 1);
-for rn = 1:recNum
-	recName =  modified_ROIdata{rn, 1};
-	roiNum = size(modified_ROIdata{rn, 2}.raw, 2)-1;
-	for roin = 1:roiNum
-		close all
-		roiCol = roin+1;
-		roiName = modified_ROIdata{rn, 2}.raw.Properties.VariableNames{roiCol};
-
-		disp([recName, ' - ', roiName]);
-
-		rawTrace = modified_ROIdata{rn, 2}.raw{:, [1 roiCol]};
-		deconTrace = modified_ROIdata{rn, 2}.decon{:, [1 roiCol]};
-		lowpassTrace = modified_ROIdata{rn, 2}.lowpass{:, [1 roiCol]};
-		peakInfo = modified_ROIdata{rn, 5};
-		lowpassPeakInfo = peakInfo.(roiName){3};
-		[lowpassPeakInfo_correct] = correctRisePeak(rawTrace, deconTrace, lowpassTrace, lowpassPeakInfo);
-		modified_ROIdata{rn, 5}.(roiName){3} = lowpassPeakInfo_correct;
-	end
-end
-
-%% ====================
-% 6. Check peaks and their start and end point. Manully correct these numbers and go through step 5 function.
-plot_save = 1; % 0-no plot. 1-plot. 2-plot and save
-% pause_plot = 1; % pause after plot of one recording
-subplot_roi = 1;
-pause_plot = 1; % plot without pause
-lowpass_fpass = 1; % ventral approach default: 1. slice default: 10
-
-[modified_ROIdata] = nvoke_correct_peakdata(modified_ROIdata,plot_save,subplot_roi,pause_plot, lowpass_fpass); % save plots with pauses 
-
-prompt_save_modified_ROIdata = 'Do you want to save modified_ROIdata? y/n [y]: ';
-input_str = input(prompt_save_modified_ROIdata, 's');
-if isempty(input_str)
-	input_str = 'y';
-end
-if input_str == 'y'
-	stimulation = input(['Input info including stimulation for the name of the file saving modified_ROIdata var [', modified_ROIdata{1, 3}{:}, '] : '], 's');
-	experiment = input(['Save the modified_ROIdata in "ventral_approach" folder (1) or in "slice" folder (2) [Default-1]: ']);
-	if isempty(experiment)
-		experiment = 1;
-	end
-	if experiment == 1
-		HDD_folder = HDD_folder_invivo; % to save peak_info_sheet var
-		workspace_folder = workspace_folder_invivo; % to save peak_info_sheet var
-	elseif experiment == 2
-		HDD_folder = HDD_folder_invitro; % to save peak_info_sheet var
-		workspace_folder = workspace_folder_invitro; % to save peak_info_sheet var
-	end
-	modified_ROIdata_fn = ['modified_ROIdata_', datestr(datetime('now'), 'yyyymmdd'), '_', stimulation];
-	if ispc
-        HDD_path = fullfile(HDD_folder, modified_ROIdata_fn);
-		save(HDD_path, 'modified_ROIdata');
-		disp(['var modified_ROIdata was saved to file: ', HDD_path])
-    end
-    workspace_path = fullfile(workspace_folder, modified_ROIdata_fn);
-	save(workspace_path, 'modified_ROIdata');
-	disp(['var modified_ROIdata was saved to file: ', workspace_path])
-end
-%%
-%====================
-% 7. Rasterplot
-[rec, peak_table] = ctraster(ROIdata_peakevent);
-[rec, peak_table] = ctraster(ROIdata_peakevent, 5, 0); % ctraster(Input, sort_col, save_plot, stim_duration, pre_stim_duration, post_stim_duration)
-													   % sort_col: 5-peakTotal, 6-prePeak, 7-peakDuringStim, 8-postPeak, 
-													   % 9-prePeakDpeakTotal, 10-peakDuringStimDpeakTotal, 11-postPeakDpeakTotal
-
-
-save_plot = 0;
-for sortn = 6:15
-	close all
-    [rec, peaktable]=ctraster(ROIdata_peakevent, sortn, save_plot);
-end	
-
-%%
-%====================
 % 8. Calculate peak amplitude, rise and decay duration. Plot correlations
 plot_analysis = 2; % 0-no plot. 1-plot. 2-plot and save
 

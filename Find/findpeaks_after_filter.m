@@ -22,6 +22,8 @@ function [peak_par,varargout] = findpeaks_after_filter(roi_trace,varargin)
     decon = 0;
     time_info = (1:length(roi_trace))'/10; % default for 10 Hz
     smooth_method = 'loess';
+    merge_peaks = false;
+    merge_time_interval = 0.5;
 
     % Optionals
     for ii = 1:2:(nargin-1)
@@ -37,14 +39,24 @@ function [peak_par,varargout] = findpeaks_after_filter(roi_trace,varargin)
 			decon = varargin{ii+1};
 		elseif strcmpi('time_info', varargin{ii}) % needed for smooth process
 			time_info = varargin{ii+1};
-    	end
+    	elseif strcmpi('merge_peaks', varargin{ii}) % needed for smooth process
+            merge_peaks = varargin{ii+1};
+        elseif strcmpi('merge_time_interval', varargin{ii})
+            merge_time_interval = varargin{ii+1};
+        end
     end
 
     filter_name = filter_chosen;
 
     % process trace and find peaks
     if decon == 1
-    	[peak_par.peakMag, peak_par.peakLoc, peak_par.peakWidth, peak_par.peakProm] = findpeaks(roi_trace);
+    	% [peak_par.peakMag, peak_par.peakLoc, peak_par.peakWidth, peak_par.peakProm] = findpeaks(roi_trace);
+        [peak_par.peakMag, peak_par.peakLoc] = findpeaks(roi_trace);
+        if merge_peaks == true
+            [peak_par.peakMag, peak_par.peakLoc] = organize_merge_peaks(peak_par.peakMag,...
+                peak_par.peakLoc,...
+                time_info, 'merge_time_interval', merge_time_interval); % merge 
+        end
     	filter_name = 'none';
     	filter_parameter = NaN;
     elseif decon == 0
@@ -63,7 +75,8 @@ function [peak_par,varargout] = findpeaks_after_filter(roi_trace,varargin)
 		    	filter_name = [filter_name, '_', smooth_method];
 		    end
 		    prominence = (max(roi_trace)-min(roi_trace))/prominence_factor;
-		    [peak_par.peakMag, peak_par.peakLoc, peak_par.peakWidth, peak_par.peakProm] = findpeaks(roi_trace, 'MinPeakProminence', prominence);
+		    % [peak_par.peakMag, peak_par.peakLoc, peak_par.peakWidth, peak_par.peakProm] = findpeaks(roi_trace, 'MinPeakProminence', prominence);
+            [peak_par.peakMag, peak_par.peakLoc] = findpeaks(roi_trace, 'MinPeakProminence', prominence);
 	    end
 	end
 	if nargout == 2 % return the processed trace data and processing method
