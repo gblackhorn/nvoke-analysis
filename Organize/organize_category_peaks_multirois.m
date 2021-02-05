@@ -29,21 +29,23 @@ function [peak_properties_tables_with_cat,varargout] = organize_category_peaks_m
             peak_properties_table_single = peak_properties_tables{1, rn}{:};
         end
 
-    	stim_ch_num = size(gpio_info_table, 1);
-    	if ~isempty(gpio_info_table)
-	    	peak_category = cell(length(peak_properties_table_single.rise_time), stim_ch_num);
-	    	for sn = 1:stim_ch_num
-	    		[peak_category(:, sn)] = organize_category_peaks(peak_properties_table_single,...
-	    			gpio_info_table, 'stim_time_error', stim_time_error);
-	    	end
-	    	if stim_ch_num == 2
-	    		peak_category = strcat(peak_category(:, 1), {'-'}, peak_category(:, 2));
-	    	end
-	    else
-	    	[peak_category] = organize_category_peaks(peak_properties_table,...
-	    		gpio_info_table, 'stim_time_error', stim_time_error);
-	    end
-        peak_properties_table_single = addvars(peak_properties_table_single,peak_category);
+        if ~isempty(peak_properties_table_single)
+        	stim_ch_num = size(gpio_info_table, 1);
+        	if ~isempty(gpio_info_table)
+    	    	peak_category = cell(length(peak_properties_table_single.rise_time), stim_ch_num);
+    	    	for sn = 1:stim_ch_num
+    	    		[peak_category(:, sn)] = organize_category_peaks(peak_properties_table_single,...
+    	    			gpio_info_table, 'stim_time_error', stim_time_error);
+    	    	end
+    	    	if stim_ch_num == 2
+    	    		peak_category = strcat(peak_category(:, 1), {'-'}, peak_category(:, 2));
+    	    	end
+    	    else
+    	    	[peak_category] = organize_category_peaks(peak_properties_table,...
+    	    		gpio_info_table, 'stim_time_error', stim_time_error);
+    	    end
+            peak_properties_table_single = addvars(peak_properties_table_single,peak_category);
+        end
         peak_properties_tables_with_cat{1, rn} = peak_properties_table_single;
     end
     peak_properties_tables_with_cat = cell2table(peak_properties_tables_with_cat,...

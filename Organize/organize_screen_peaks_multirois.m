@@ -27,6 +27,8 @@ function [peak_properties_tables_screened,varargout] = organize_screen_peaks_mul
     peak_properties_tables_screened = peak_properties_tables;
     roi_num = size(peak_properties_tables, 2);
     for rn = 1:roi_num
+        % disp(['roi num: ', num2str(rn)]) % for debugging
+        
         if size(peak_properties_tables{1, rn}, 2) ~= 1
             peak_properties_table_single = peak_properties_tables{1, rn};
         else
@@ -34,10 +36,12 @@ function [peak_properties_tables_screened,varargout] = organize_screen_peaks_mul
         end
         
     	% peak_properties_table_single = peak_properties_tables{1, rn}{:};
-    	highpass_data_std_single = highpass_data_stds{1, rn};
-    	[peak_properties_table_single] = organize_screen_peaks(peak_properties_table_single,...
-    		highpass_data_std_single, 'rise_time', criteria_rise_time,...
-    		'slope', criteria_slope, 'pnr', criteria_pnr);
+        if ~isempty(peak_properties_table_single)
+        	highpass_data_std_single = highpass_data_stds{1, rn};
+        	[peak_properties_table_single] = organize_screen_peaks(peak_properties_table_single,...
+        		highpass_data_std_single, 'rise_time', criteria_rise_time,...
+        		'slope', criteria_slope, 'pnr', criteria_pnr);
+        end
         
         if size(peak_properties_tables_screened{1, rn}, 2) ~= 1
             if isempty(peak_properties_table_single)

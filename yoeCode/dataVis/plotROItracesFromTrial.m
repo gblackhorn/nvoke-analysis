@@ -13,8 +13,9 @@ nFrames = getTrialLengthInFrames(trialData);
 trialID = getTrialIDsFromROIdataStruct(trialData);
 
 figure; hold on;
-xAx = [1:nFrames];
-xAx = xAx ./ frameRate;
+% xAx = [1:nFrames];
+% xAx = xAx ./ frameRate;
+xAx = trialData{2}.lowpass.Time; % use time information from lowpass data
 
 plotInterval = 20;
 for ROI = 1:nROIs
@@ -34,17 +35,17 @@ for ROI = 1:nROIs
     
     spikeFramesDecon = getSpikeFramesForROI(trialData,ROI, 'decon');
     if (find (~isnan(spikeFramesDecon)))
-        s2= scatter (xAx(spikeFramesDecon), fullTraceShifted(spikeFramesDecon), 'ro');
+        s2= scatter (xAx(spikeFramesDecon), deconTraceShifted(spikeFramesDecon), 'ro');
     end
     
     riseFrames = getSpikeFramesForROI(trialData,ROI, 'rise');
     if (find (~isnan(riseFrames)))
-        s3= scatter (xAx(riseFrames), fullTraceShifted(riseFrames), 'g*');
+        s3= scatter (xAx(riseFrames), fullTraceShifted(riseFrames), 'g>');
     end
     
      decayFrames = getSpikeFramesForROI(trialData,ROI, 'decay');
     if (find (~isnan(decayFrames)))
-        s4= scatter (xAx(decayFrames), fullTraceShifted(decayFrames), 'c*');
+        s4= scatter (xAx(decayFrames), fullTraceShifted(decayFrames), 'c<');
     end
     
     
@@ -53,13 +54,13 @@ end
 
 annotateStims(trialData, gca);
 ROIns = [1:nROIs]';
-legendStr = num2str(ROIns);
+legendStr = cellstr(num2str(ROIns));
 legend([p s1 s2 s3 s4] , [legendStr ;'L'; 'D'; 'r'; 'd'] );
 
 
 titleString = (['Lowpass ROI traces from trial ' trialID{1}]);
 if (strcmp(trialType, 'GPIO1-1s'))
-    titleString = [titleString ', with AIRPUFF stim'];
+    titleString = [titleString ', with AIRPUFF stim']; 
 else
     
     if (contains(trialType, 'OG-LED'))

@@ -19,8 +19,8 @@ function [peak_par,varargout] = find_peaks_with_existing_peakinfo(roi_trace,exis
     decon = 0;
     time_info = (1:length(roi_trace))'/10; % default for 10 Hz
     smooth_method = 'loess';
-    existing_peak_duration_extension_time_pre  = 0.3; % duration in second, before existing peak rise 
-    existing_peak_duration_extension_time_post = 0; % duration in second, after decay
+    existing_peak_duration_extension_time_pre  = 0; % duration in second, before existing peak rise 
+    existing_peak_duration_extension_time_post = 1; % duration in second, after peak
 
     % Optionals for inputs
     for ii = 1:2:(nargin-2)
@@ -51,8 +51,8 @@ function [peak_par,varargout] = find_peaks_with_existing_peakinfo(roi_trace,exis
     				'recording_fq', rec_fq, 'decon', decon, 'time_info', time_info);
 
     	% calculate ideal time for window starts and ends
-    	window_start_time_ideal = time_info(existing_peakInfo.peak_loc)-existing_peak_duration_extension_time_pre;
-    	window_end_time_ideal   = time_info(existing_peakInfo.decay_loc)+existing_peak_duration_extension_time_post;
+    	window_start_time_ideal = time_info(existing_peakInfo.rise_loc)-existing_peak_duration_extension_time_pre;
+    	window_end_time_ideal   = time_info(existing_peakInfo.peak_loc)+existing_peak_duration_extension_time_post;
 
     	% If window start time is smaller than timeinfo start or if window end time is bigger than timeinfo end
     	% set them to timeinfo start and end

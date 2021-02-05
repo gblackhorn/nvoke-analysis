@@ -239,8 +239,14 @@ center_ac = median(max(neuron.A,[],1)'.*max(neuron.C,[],2)); % the denoised vide
 cnmfe_save_video;
 
 %% save results
+neuron.b = neuron_bk.A;
+neuron.f = neuron_bk.C;
+
 results = neuron.obj2struct(); 
+results_bk = neuron_bk.obj2struct();
 eval(sprintf('save %s%s%s_results.mat results', dir_nm, filesep, file_nm));
+eval(sprintf('save %s%s%s_results_bk.mat results_bk', dir_nm, filesep, file_nm));
+
 
 % %% Maybe save others?
 % eval(sprintf('save %s%s%s_neuron.mat neuron', dir_nm, filesep, file_nm));

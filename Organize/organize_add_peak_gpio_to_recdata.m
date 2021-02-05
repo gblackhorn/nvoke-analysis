@@ -24,10 +24,6 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     % use_criteria = true; % true or false. choose to use criteria or not for picking peaks
     stim_pre_time = 10; % time (s) before stimuli start
     stim_post_time = 10; % time (s) after stimuli end
-    merge_peaks = true;
-    merge_time_interval = 0.5; % default: 0.5s. peak to peak interval.
-    discard_noisy_roi = false;
-    std_fold = 10; % used as criteria to discard noisy_rois
     plot_traces = 0; % 0: do not plot. 1: plot. 2: plot with pause
     save_traces = 0; % 0: do not save. 1: save
     [peak_properties_variable_names] = transient_properties_variable_names('peak', [1:17]);
@@ -36,11 +32,11 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     for ii = 1:2:(nargin-1)
     	if strcmpi('lowpass_fpass', varargin{ii})
     		lowpass_fpass = varargin{ii+1};
-		elseif strcmpi('highpass_fpass', varargin{ii})
+		if strcmpi('highpass_fpass', varargin{ii})
     		highpass_fpass = varargin{ii+1};
-		elseif strcmpi('smooth_method', varargin{ii})
+		if strcmpi('smooth_method', varargin{ii})
     		smooth_method = varargin{ii+1};
-		elseif strcmpi('smooth_span', varargin{ii})
+		if strcmpi('smooth_span', varargin{ii})
     		smooth_span = varargin{ii+1};
     	elseif strcmpi('prominence_factor', varargin{ii})
     		prominence_factor = varargin{ii+1};
@@ -66,14 +62,6 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 			stim_pre_time = varargin{ii+1};
 		elseif strcmpi('stim_post_time', varargin{ii}) % needed for smooth process
 			stim_post_time = varargin{ii+1};
-		elseif strcmpi('merge_peaks', varargin{ii}) % needed for smooth process
-			merge_peaks = varargin{ii+1};
-		elseif strcmpi('merge_time_interval', varargin{ii})
-            merge_time_interval = varargin{ii+1};
-		elseif strcmpi('discard_noisy_roi', varargin(ii))
-			discard_noisy_roi = varargin{ii+1};
-		elseif strcmpi('std_fold', varargin(ii)) % used as criteria to discard noisy_rois
-			std_fold = varargin{ii+1};
 		elseif strcmpi('plot_traces', varargin{ii}) % needed for smooth process
 			plot_traces = varargin{ii+1};
 		elseif strcmpi('save_traces', varargin{ii}) % needed for smooth process
@@ -108,7 +96,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     	elseif strfind(stim_name, 'noStim')
     		stim_str = 'no-stim';
     	else
-    		[recdata_organized{rn, col_gpioinfo}, gpio_info_table] = organize_gpio_info(recdata_organized{rn, col_gpioinfo},...
+    		[recdata_organized{rn, col_gpioinfo}, gpio_info_table] = organize_gpio_info(gpio_info,...
     			'stim_idx_start', 3, 'round_digit', 0);
     		stim_str = join(gpio_info_table.stim_ch_str);
     	end 
@@ -121,8 +109,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     	% Get peak properties from decon data
     	[peak_properties_decon, data_table_processed_decon] = organize_transient_properties(rec_data_decon,...
 			'decon', 1, 'prom_par', prominence_factor,...
-			'peakProperties_names', peak_properties_variable_names,...
-			'merge_peaks', merge_peaks, 'merge_time_interval', merge_time_interval);
+			'peakProperties_names', peak_properties_variable_names);
 		% lowpass
 		[peak_properties_lowpass, rec_data_lowpass] = organize_transient_properties(rec_data_raw,...
 			'decon', 0, 'filter', 'lowpass', 'filter_par', lowpass_fpass,...
@@ -137,10 +124,6 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 		[peak_properties_highpass, rec_data_highpass] = organize_transient_properties(rec_data_raw,...
 			'decon', 0, 'filter', 'highpass', 'filter_par', highpass_fpass,...
 			'peakProperties_names', 'highpass_std'); 
-		% Store processed data in recdata_organized
-		recdata_organized{rn, col_trace}.lowpass = rec_data_lowpass.processed_data;
-		recdata_organized{rn, col_trace}.smooth = rec_data_smooth.processed_data;
-		recdata_organized{rn, col_trace}.highpass = rec_data_highpass.processed_data;
 
 		% screen peaks with criteria
 		[peak_properties_lowpass] = organize_screen_peaks_multirois(peak_properties_lowpass,...
@@ -175,39 +158,28 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
         peak_properties_lowpass_cell = table2cell(peak_properties_lowpass);
         peak_properties_highpass_cell = table2cell(peak_properties_highpass);
 
+        % without highpass info
+        peak_properties_combine_cell = [peak_properties_decon_cell; peak_properties_smooth_cell; peak_properties_lowpass_cell];
+        peak_properties_combine_RowNames = {'peak_decon', 'peak_smooth', 'peak_lowpass'};
+        % with highpass info
         peak_properties_combine_cell = [peak_properties_decon_cell; peak_properties_smooth_cell; peak_properties_lowpass_cell; peak_properties_highpass_cell];
         peak_properties_combine_RowNames = {'peak_decon', 'peak_smooth', 'peak_lowpass', 'highpass_std'};
+
         peak_properties_combine = cell2table(peak_properties_combine_cell,...
             'VariableNames', peak_properties_decon.Properties.VariableNames,...
             'RowNames', peak_properties_combine_RowNames);
 
-        % update peak_properties_tables
-        recdata_organized{rn,col_peak} = [];
-        recdata_organized{rn,col_peak} = peak_properties_combine;
 
-        % Discard noisy ROI(s)
-        if discard_noisy_roi == true
-        	peak_properties_tables = recdata_organized{rn,col_peak};
-        	highpass_data_stds = peak_properties_tables{'highpass_std', :};
-        	trace_data = recdata_organized{rn, col_trace};
-        	[recdata_organized{rn,col_peak},recdata_organized{rn, col_trace}] = organize_discard_noisy_rois(peak_properties_tables,...
-        		highpass_data_stds,trace_data,'std_fold',std_fold);
-        end
 
         % Calculate roi map infomation from cnmfe_results
         if isfield(recdata_organized{rn,col_trace}, 'cnmfe_results') % extract roi spatial information from CNMFe results
             [recdata_organized{rn,col_trace}.roi_map, recdata_organized{rn,2}.roi_center] = roimap(recdata_organized{rn,2}.cnmfe_results);
         end
 
-        % % Plot
-        % if plot_traces ~= 0
-        % 	traceinfo = [{recdata_organized{rn, col_trace}.decon} {recdata_organized{rn, col_trace}.lowpass}, {recdata_organized{rn, col_trace}.raw}];
-        % 	peak_properties_tables = peak_properties_combine({'peak_decon', 'peak_lowpass'}, :);
-        % 	plot_trace_peak_rise_stim_multirois(traceinfo,...
-        % 		'peak_properties_tables', peak_properties_tables,...
-        % 		'stim_ch_patch', gpio_info_table.stim_ch_time_range)
-        % 	sgtitle(recdata_organized{rn, col_name}, 'Interpreter', 'none');
-        % end
+        % Plot
+        if plot_traces ~= 0
+
+        end
     end
 
 

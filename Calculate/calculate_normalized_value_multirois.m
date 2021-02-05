@@ -26,9 +26,11 @@ function [peak_properties_tables_add_norm,varargout] = calculate_normalized_valu
             peak_properties_table_single = peak_properties_tables{1, rn}{:};
         end
         
-    	highpass_data_std_single = highpass_data_stds{1, rn};
-    	[peak_properties_table_single] = calculate_normalized_value(peak_properties_table_single,...
-    		highpass_data_std_single);
+        if ~isempty(peak_properties_table_single)
+        	highpass_data_std_single = highpass_data_stds{1, rn};
+        	[peak_properties_table_single] = calculate_normalized_value(peak_properties_table_single,...
+        		highpass_data_std_single);
+        end
         
         peak_properties_tables_add_norm{1, rn} = peak_properties_table_single;
         

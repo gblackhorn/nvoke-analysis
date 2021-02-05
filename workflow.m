@@ -77,8 +77,8 @@ highpass_fpass = 4;
 smooth_method = 'loess';
 smooth_span = 0.1;
 prominence_factor = 4; % prominence_factor doesn't influence peak finding in decon data
-existing_peak_duration_extension_time_pre  = 0.3; % duration in second, before existing peak rise 
-existing_peak_duration_extension_time_post = 0; % duration in second, after decay
+existing_peak_duration_extension_time_pre  = 0; % duration in second, before existing peak rise 
+existing_peak_duration_extension_time_post = 1; % duration in second, after decay
 criteria_rise_time = [0 0.8]; % unit: second. filter to keep peaks with rise time in the range of [min max]
 criteria_slope = [3 80]; % default: slice-[50 2000]
 							% calcium(a.u.)/rise_time(s). filter to keep peaks with rise time in the range of [min max]

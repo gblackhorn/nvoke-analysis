@@ -14,8 +14,8 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
     decon = 0;
     smooth_method = 'loess';
     existing_peakInfo = cell2table(cell(1, (size(RecInfoTable, 2)-1)));
-    existing_peak_duration_extension_time_pre  = 0.3; % duration in second, before existing peak rise 
-    existing_peak_duration_extension_time_post = 0; % duration in second, after decay
+    existing_peak_duration_extension_time_pre  = 0; % duration in second, before existing peak rise 
+    existing_peak_duration_extension_time_post = 1; % duration in second, after decay
     merge_peaks = false;
     merge_time_interval = 0.5;
 

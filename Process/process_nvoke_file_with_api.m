@@ -40,7 +40,7 @@ function [outputArg1,outputArg2] = process_nvoke_file_with_api(file_fullpath,var
     pp_file_output = [file_fullpath_wo_ext_output, '-PP.isxd'];  
     bp_file_output = [file_fullpath_wo_ext_output, '-PP-BP.isxd'];  
     mc_file_output = [file_fullpath_wo_ext_output, '-PP-BP-MC.isxd'];  
-    mc_trans_file_output = [file_fullpath_wo_ext_output, '-PP-BP-MC-trans.isxd']; % translation info of motion correction
+    % mc_trans_file_output = [file_fullpath_wo_ext_output, '-PP-BP-MC-trans.isxd']; % translation info of motion correction
     mc_crop_file_output = [file_fullpath_wo_ext_output, '-PP-BP-MC-crop.isxd']; % crop rectangle info applied to the motion corrected movie
     dff_file_output = [file_fullpath_wo_ext_output, '-PP-BP-MC-DFF.isxd'];  
     gpio_file_output = [file_fullpath_wo_ext_output, '.gpio']; 
@@ -64,9 +64,7 @@ function [outputArg1,outputArg2] = process_nvoke_file_with_api(file_fullpath,var
     	isx.motion_correct(bp_file_output, mc_file_output,...
 			'max_translation', 20,...
 			'reference_segment_index', 0, 'reference_frame_index', mc_reference_frame,...
-			'global_registration_weight', 1,...
-			'output_translation_files', mc_trans_file_output,...
-			'output_crop_rect_file', mc_crop_file_output);
+			'global_registration_weight', 1);
     	disp([' - Output: ', mc_file_output])
     end
 
