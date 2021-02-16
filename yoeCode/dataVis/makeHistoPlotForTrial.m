@@ -13,7 +13,8 @@ frameRate = getFrameRateForTrial(trialData);
 spikeFrames = getAllSpikeFramesForTrial(trialData, 'lowpass');
 nROIs = length(spikeFrames);
 nFrames = getTrialLengthInFrames(trialData);
-trialLength = floor(nFrames / frameRate);
+% trialLength = floor(nFrames / frameRate);
+trialLength = trialData{2}.lowpass.Time(end); % use timeinfo from data. 
 
 binLength = 5; %sec
 nBins = floor(trialLength /  binLength);

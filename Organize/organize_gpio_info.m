@@ -60,8 +60,10 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
 				% organize gpio info for plotting patches for the durations of stim_trains
 				stim_ch_patch{cn} = organize_gpio_train_for_plot_patch(stim_ch_time_range{cn});
 
-				if strfind(stim_ch_name{cn}, 'GPIO-1')
+				if strfind(stim_ch_name{cn}, 'GPIO-1') % airpuff trigger signal is 0.5s. stimulation is 1s
 					stim_ch_train_duration(cn) = 1;
+					gpio_train_end_time = gpio_train_start_time+stim_ch_train_duration(cn);
+					stim_ch_time_range{cn}(:, 2) = gpio_train_end_time;
 				else
 					stim_ch_train_duration(cn) = round(gpio_train_end_time(1)-gpio_train_start_time(1), round_digit);
 				end

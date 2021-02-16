@@ -32,11 +32,11 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     for ii = 1:2:(nargin-1)
     	if strcmpi('lowpass_fpass', varargin{ii})
     		lowpass_fpass = varargin{ii+1};
-		if strcmpi('highpass_fpass', varargin{ii})
+		elseif strcmpi('highpass_fpass', varargin{ii})
     		highpass_fpass = varargin{ii+1};
-		if strcmpi('smooth_method', varargin{ii})
+		elseif strcmpi('smooth_method', varargin{ii})
     		smooth_method = varargin{ii+1};
-		if strcmpi('smooth_span', varargin{ii})
+		elseif strcmpi('smooth_span', varargin{ii})
     		smooth_span = varargin{ii+1};
     	elseif strcmpi('prominence_factor', varargin{ii})
     		prominence_factor = varargin{ii+1};
@@ -96,7 +96,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     	elseif strfind(stim_name, 'noStim')
     		stim_str = 'no-stim';
     	else
-    		[recdata_organized{rn, col_gpioinfo}, gpio_info_table] = organize_gpio_info(gpio_info,...
+    		[recdata_organized{rn, col_gpioinfo}, gpio_info_table] = organize_gpio_info(recdata{rn, col_gpioinfo},...
     			'stim_idx_start', 3, 'round_digit', 0);
     		stim_str = join(gpio_info_table.stim_ch_str);
     	end 
@@ -152,15 +152,20 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 		[peak_properties_smooth] = organize_category_peaks_multirois(peak_properties_smooth,...
 			gpio_info_table, 'stim_time_error', stim_time_error);
 
+        % % Calculate event frequencies
+        % [event_fq_multirois] = calculate_peak_freq_multirois(peak_properties_lowpass,...
+        %     gpio_info_table.stim_ch_time_range{:},rec_data_raw.Time);
+
         % Combine peak_properties tables of decon, smooth and lowpass data
         peak_properties_decon_cell = table2cell(peak_properties_decon);
         peak_properties_smooth_cell = table2cell(peak_properties_smooth);
         peak_properties_lowpass_cell = table2cell(peak_properties_lowpass);
         peak_properties_highpass_cell = table2cell(peak_properties_highpass);
+        % event_fq_multirois_cell = table2cell(event_fq_multirois);
 
-        % without highpass info
-        peak_properties_combine_cell = [peak_properties_decon_cell; peak_properties_smooth_cell; peak_properties_lowpass_cell];
-        peak_properties_combine_RowNames = {'peak_decon', 'peak_smooth', 'peak_lowpass'};
+        % % without highpass info
+        % peak_properties_combine_cell = [peak_properties_decon_cell; peak_properties_smooth_cell; peak_properties_lowpass_cell];
+        % peak_properties_combine_RowNames = {'peak_decon', 'peak_smooth', 'peak_lowpass'};
         % with highpass info
         peak_properties_combine_cell = [peak_properties_decon_cell; peak_properties_smooth_cell; peak_properties_lowpass_cell; peak_properties_highpass_cell];
         peak_properties_combine_RowNames = {'peak_decon', 'peak_smooth', 'peak_lowpass', 'highpass_std'};
@@ -168,6 +173,8 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
         peak_properties_combine = cell2table(peak_properties_combine_cell,...
             'VariableNames', peak_properties_decon.Properties.VariableNames,...
             'RowNames', peak_properties_combine_RowNames);
+
+        recdata_organized{rn, col_peak} = peak_properties_combine;
 
 
 

@@ -112,6 +112,12 @@ save_traces = 0; % 0: do not save. 1: save
 	'plot_traces', plot_traces, 'save_traces', save_traces); 
 
 
+%% ====================
+% 6. Event frequency analysis
+[event_histcounts,stim_num,setting,event_info_high_freq_rois,spont_freq_hist] = freq_analysis_histogram(recdata_organized,...
+       'sortout_event', 'peak', 'nbins', 40, 'min_spont_freq', 0.05);
+
+
 %%
 %====================
 % manully delete bad ROIs

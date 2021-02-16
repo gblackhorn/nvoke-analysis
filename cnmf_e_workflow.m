@@ -20,10 +20,10 @@ end
 
 %% create Source2D class object for storing results and parameters
 Fs = 10;             % frame rate
-ssub = 1;           % spatial downsampling factor
-tsub = 1;           % temporal downsampling factor
-gSig = 10;           % set it to ~ diameter/2. width of the gaussian kernel, which can approximates the average neuron shape
-gSiz = 20;          % default=13. maximum diameter of neurons in the image plane. larger values are preferred.
+ssub = 2;           % default:1. spatial downsampling factor
+tsub = 2;           % default:1. temporal downsampling factor
+gSig = 16;           % set it to ~ diameter/2. width of the gaussian kernel, which can approximates the average neuron shape
+gSiz = 32;          % default=13. maximum diameter of neurons in the image plane. larger values are preferred.
 neuron_full = Sources2D('d1',d1,'d2',d2, ... % dimensions of datasets
     'ssub', ssub, 'tsub', tsub, ...  % downsampleing
     'gSig', gSig,...    % sigma of the 2D gaussian that approximates cell bodies
@@ -48,7 +48,7 @@ dmin = 1;
 neuron_full.options.deconv_flag = true; % default = true
 neuron_full.options.deconv_options = struct('type', 'ar2', ... % model of the calcium traces. {'ar1', 'ar2'}
     'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
-    'smin', -3, ...         % default=-5. minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
+    'smin', -5, ...         % default=-5. used -3 before. minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
     'optimize_pars', true, ...  % optimize AR coefficients
     'optimize_b', true, ...% optimize the baseline);
     'max_tau', 100);    % maximum decay time (unit: frame);
@@ -75,7 +75,7 @@ patch_par = [1,1]*1; %1;  % default=[1,1]*1. divide the optical field into m X n
 K = []; % maximum number of neurons to search within each patch. you can use [] to search the number automatically
 
 min_corr = 0.8;     % default=0.8. minimum local correlation for a seeding pixel
-min_pnr = 10;       % default=8. minimum peak-to-noise ratio for a seeding pixel
+min_pnr = 8;       % default=8. minimum peak-to-noise ratio for a seeding pixel
 min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
 bd = 1;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 neuron.updateParams('min_corr', min_corr, 'min_pnr', min_pnr, ...
@@ -219,6 +219,7 @@ neuron.save_neurons(dir_neurons);
 % [Cn, pnr] = neuron.correlation_pnr(Y(:, round(linspace(1, T, min(T, 1000)))));
 figure;
 Cn = imresize(Cn, [d1, d2]); 
+neuron.Cn = Cn;
 neuron.show_contours(0.6); 
 colormap gray;
 title('contours of estimated neurons');
@@ -233,19 +234,19 @@ neuron.Cn = Cn;
 neuron.runMovie(Ysignal, [0, 150], save_avi, avi_name);
 
 %% save video
-kt = 1;     % default=3. play one frame in every kt frames
+kt = 2;     % default=3. play one frame in every kt frames
 save_avi = true;
 center_ac = median(max(neuron.A,[],1)'.*max(neuron.C,[],2)); % the denoised video are mapped to [0, 2*center_ac] of the colormap 
 cnmfe_save_video;
 
 %% save results
-neuron.b = neuron_bk.A;
-neuron.f = neuron_bk.C;
+% neuron.b = neuron_bk.A;
+% neuron.f = neuron_bk.C;
 
 results = neuron.obj2struct(); 
-results_bk = neuron_bk.obj2struct();
+% results_bk = neuron_bk.obj2struct();
 eval(sprintf('save %s%s%s_results.mat results', dir_nm, filesep, file_nm));
-eval(sprintf('save %s%s%s_results_bk.mat results_bk', dir_nm, filesep, file_nm));
+% eval(sprintf('save %s%s%s_results_bk.mat results_bk', dir_nm, filesep, file_nm));
 
 
 % %% Maybe save others?

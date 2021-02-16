@@ -11,8 +11,9 @@ spikeTraces = getAllspikeCaTracesForRoi(trialData, ROI, PREwin, POSTwin);
 
 traceLen = length(spikeTraces);
 
-xAx = [1:traceLen];
-xAx = xAx ./ 10;
+% xAx = [1:traceLen];
+% xAx = xAx ./ 10;
+xAx = trialData{ROI, 2}.lowpass.Time; % use time information from lowpass data
 
 plot(xAx, spikeTraces, 'blue');
 plot(xAx, mean(spikeTraces', 'omitnan'), 'black', 'LineWidth', 2);

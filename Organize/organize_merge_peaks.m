@@ -1,5 +1,5 @@
 function [peakMag_merge,peakLoc_merge,varargout] = organize_merge_peaks(peakMag,peakLoc,time_info,varargin)
-    % Evaluate the peak_mag_delta and highpass_std, and decide whether the roi is noisey
+    % merge adjacent peaks
     
     %	highpass_data_std: output of function "organize_transient_properties" using 'highpass' filter
 

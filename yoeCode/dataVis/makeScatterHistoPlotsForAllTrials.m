@@ -27,4 +27,4 @@ for trial = 1:nTrials
 
 end
 trialType = getTrialTypeFromROIdataStruct(ROIdata);
-suptitle(['Experiment type: ' trialType]);
+sgtitle(['Experiment type: ' trialType]);
