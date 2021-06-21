@@ -1,4 +1,4 @@
-function [ ROI_table, varargout ] = ROI_calc_plot( ROI_table, draw )
+function [ROI_table, varargout] = ROI_calc_plot(ROI_table, draw)
 % Format ROI_table and find out the duration of recording and number of ROIs
 %   
 %	ROI_calc_plot(ROI_table)
@@ -23,13 +23,17 @@ function [ ROI_table, varargout ] = ROI_calc_plot( ROI_table, draw )
 narginchk(1,2); % check the number of inputs
 
 % organize ROI data table. The first row containing strings should be deleted.
-if any(strcmp(ROI_table.Properties.VariableNames, 'Var1'))
-	ROI_table.Properties.VariableNames{'Var1'} = 'Time'; % set first column varible name as Time
-else
-end
+% <<<<<<< HEAD
+% if any(strcmp(ROI_table.Properties.VariableNames, 'Var1'))
+% 	ROI_table.Properties.VariableNames{'Var1'} = 'Time'; % set first column varible name as Time
+% else
+% end
+% 
+% =======
+ROI_table.Properties.VariableNames{1} = 'Time'; % set first column varible name as Time
+% >>>>>>> origin/development
 
-
-recording_time = table2array(ROI_table(end,1)); % use the last time point as the recording duration.
+recording_time = ROI_table.Time(end); % use the last time point as the recording duration.
 ROI_num = size(ROI_table, 2) - 1; % number of ROIs
  varargout{1} = recording_time;
  varargout{2} = ROI_num;
