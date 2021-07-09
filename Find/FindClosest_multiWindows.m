@@ -7,7 +7,7 @@ function [closest_loc] = FindClosest_multiWindows(roi_trace,ideal_value,window_r
     
     closest_loc = NaN(size(ideal_value));
     for n = 1:length(ideal_value)
-    	[diff_value, loc_in_window] = min(abs(roi_trace(window_range(n, 1):window_range(n, 2)))-ideal_value(n));
+    	[diff_value, loc_in_window] = min(abs(roi_trace(window_range(n, 1):window_range(n, 2))-ideal_value(n)));
     	closest_loc(n) = window_range(n, 1)-1+loc_in_window;
     end
 end

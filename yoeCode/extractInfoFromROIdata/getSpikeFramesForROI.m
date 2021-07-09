@@ -19,6 +19,10 @@ switch (TYPE)
     case 'decay'
         spikeFrames = singleROIdata{3}.decay_loc;
 end
+
+if isempty(spikeFrames)
+	spikeFrames = NaN;
+end
         
 
 

@@ -9,11 +9,12 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
     criteria_trig = 2; % triggered peak: peak start to rise in 2s from onset of stim
     criteria_rebound = 1; % rebound peak: peak start to rise in 1s from end of stim
     peak_cat_str = {'noStim', 'noStimFar', 'triggered', 'triggered_delay', 'rebound', 'interval'};
+    [peak_cat_str] = event_category_names;
 
     % Optionals
     for ii = 1:2:(nargin-2)
     	if strcmpi('stim_time_error', varargin{ii})
-    		stim_time_error = varargin{ii+1};peak_cat_str;
+    		stim_time_error = varargin{ii+1}; %
     	end
     end
 
@@ -28,7 +29,7 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
 	    stim_train_num = size(stim_time_range, 1);
 	    stim_train_inter = gpio_info_table.stim_ch_train_inter;
 
-	    trig_duration = min(criteria_rebound, stim_train_duration);
+	    trig_duration = min(criteria_trig, stim_train_duration);
 
 	    % allocate ram
 	    idx_trig = cell(stim_train_num, 1);

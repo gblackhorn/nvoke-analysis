@@ -1,12 +1,5 @@
 function [group_idx,varargout] = freq_analysis_group_events(aligned_event_time,edges,varargin)
     % Return the indices of the groups, defined by "edges", that contain the elements of aligned_event_time.
-    %   trial_data: a cell array containing information of 1 single trial 
-    %	stimulation_win: 2-col number array. lower bounds are the starts of windows, and upper bounds are the ends
-    %   recording_time: single column array from decon or raw data   
-    % Note: peak info from lowpassed data is used
-    % example: 
-    % [event_histcounts,setting,event_info_high_freq_rois,spont_freq_hist] = freq_analysis_histogram(recdata_organized,...
-    %   'sortout_event', 'peak', 'nbins', 40, 'min_spont_freq', 0.05);
 
 
     % group data
@@ -30,7 +23,8 @@ function [group_idx,varargout] = freq_analysis_group_events(aligned_event_time,e
     end
 
    
-    varargout{1} = grouped_val_mean';
+    % varargout{1} = grouped_val_mean';
+    varargout{1} = grouped_val_mean;
     varargout{2} = grouped_val_ste;
     varargout{3} = grouped_val_num;
     varargout{4} = grouped_val_std;

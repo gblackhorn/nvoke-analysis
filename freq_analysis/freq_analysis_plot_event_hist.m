@@ -10,6 +10,8 @@ function [varargout] = freq_analysis_plot_event_hist(event_hist_val,event_hist_e
     % Defaults
     stim_name = 'stimulation';
     y_axis = 'Event number';
+    SavePlot = false;
+    SaveTo = pwd;
 
     % Optionals
     for ii = 1:2:(nargin-4)
@@ -19,6 +21,10 @@ function [varargout] = freq_analysis_plot_event_hist(event_hist_val,event_hist_e
             y_axis = varargin{ii+1};
         elseif strcmpi('nbins', varargin{ii})
             nbins = varargin{ii+1};
+        elseif strcmpi('SavePlot', varargin{ii})
+            SavePlot = varargin{ii+1};
+        elseif strcmpi('SaveTo', varargin{ii})
+            SaveTo = varargin{ii+1};
         end
     end
 
@@ -38,6 +44,7 @@ function [varargout] = freq_analysis_plot_event_hist(event_hist_val,event_hist_e
     patch('Faces', connect_order, 'Vertices', stim_patch,...
         'FaceColor', '#E895EB', 'EdgeColor', 'none', 'FaceAlpha', 0.5) % mark the stimulation perior
     xlabel('time (s)')
+    y_axis = strrep(y_axis, '_', ' ');
     ylabel(y_axis)
 
     % Plot peak normalized to highpass std on the same figure
@@ -58,7 +65,17 @@ function [varargout] = freq_analysis_plot_event_hist(event_hist_val,event_hist_e
         [stim_name, ' duration = ', num2str(setting.stim_winT), 's'],...
         ['min spontaneous freq = ', num2str(setting.min_spont_freq), 'Hz'],...
         [num2str(trial_num), ' trials; ', num2str(roi_num), ' ROIs; ', num2str(event_num), ' events']};
-    title(event_hist_title)    
+    event_hist_title = strrep(event_hist_title, '_', ' ');
+    title(event_hist_title)   
+
+    if SavePlot
+        figfile = event_hist_title{1, 1};
+        figdir = SaveTo;
+        fig_fullpath = fullfile(figdir, figfile);
+        savefig(gcf, [fig_fullpath, '.fig']);
+        saveas(gcf, [fig_fullpath, '.jpg']);
+        saveas(gcf, [fig_fullpath, '.svg']);
+    end 
 
     varargout{1} = trial_num;
     varargout{2} = roi_num;

@@ -35,7 +35,7 @@ function [peak_properties_tables_with_cat,varargout] = organize_category_peaks_m
     	    	peak_category = cell(length(peak_properties_table_single.rise_time), stim_ch_num);
     	    	for sn = 1:stim_ch_num
     	    		[peak_category(:, sn)] = organize_category_peaks(peak_properties_table_single,...
-    	    			gpio_info_table, 'stim_time_error', stim_time_error);
+    	    			gpio_info_table(sn, :), 'stim_time_error', stim_time_error);
     	    	end
     	    	if stim_ch_num == 2
     	    		peak_category = strcat(peak_category(:, 1), {'-'}, peak_category(:, 2));

@@ -58,12 +58,6 @@ function [varargout] = cnmfe_series_gen_plot_video_cluster(varargin)
 		cnmfe_workspace = dir(fullfile(recfolder, '*workspace*.mat')); % the series workspace containing several recordings
 
 		if ~isempty(cnmfe_workspace)
-			if numel(cnmfe_workspace) > 1 % if more than one workspace found, use the latest one
-				warning('%d workspace mat files found in the recording folder. Using the latest one', numel(cnmfe_workspace))
-				[~, idx] = sort ([cnmfe_workspace.datenum], 'ascend');
-				sorted_idx = idx(end);
-				cnmfe_workspace = cnmfe_workspace(sorted_idx);
-			end
 			disp(sprintf('Creating figures and videos for %s', recfolders(i).name))
 			
 			cnmfe_workspace_path = fullfile(recfolder, cnmfe_workspace.name);

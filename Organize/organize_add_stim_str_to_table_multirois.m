@@ -1,5 +1,5 @@
 function [peak_properties_tables_add_stim_str,varargout] = organize_add_stim_str_to_table_multirois(peak_properties_tables,gpio_info_table,varargin)
-    % Return peak_category for the whole recording (multiple rois)
+    % Add stimulation strings to peak property table
     % Caution (2021.01.10): only works with up to 2 stimulation channels so far 
     %   peak_properties_tables: multiple roi table
     %   gpio_info_table: output of function "organize_gpio_info". multiple stim_ch can be used
@@ -18,15 +18,15 @@ function [peak_properties_tables_add_stim_str,varargout] = organize_add_stim_str
         end
 
     	stim_ch_num = size(gpio_info_table, 1);
-        peak_category = cell(size(peak_properties_table_single.rise_time));
+        stim = cell(size(peak_properties_table_single.rise_time));
     	if ~isempty(gpio_info_table)
             stim_str_full = join(gpio_info_table.stim_ch_str);
-            peak_category = cellfun(@(x) stim_str_full, peak_category, 'UniformOutput', false);
+            stim = cellfun(@(x) stim_str_full, stim, 'UniformOutput', false);
 	    else
-	    	peak_category = cellfun(@(x) stim_str_full, peak_category, 'UniformOutput', false);
+	    	stim = cellfun(@(x) stim_str_full, stim, 'UniformOutput', false);
 	    end
 
-        peak_properties_table_single = addvars(peak_properties_table_single,peak_category);
+        peak_properties_table_single = addvars(peak_properties_table_single,stim);
         peak_properties_tables_add_stim_str{1, rn} = peak_properties_table_single;
 	    % peak_properties_tables_add_stim_str{1, rn}{:} = [peak_properties_table_single, peak_category];
     end

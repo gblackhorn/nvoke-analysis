@@ -74,9 +74,10 @@ function [peak_par,varargout] = findpeaks_after_filter(roi_trace,varargin)
 		    	roi_trace = smooth(time_info, roi_trace, filter_parameter, smooth_method);
 		    	filter_name = [filter_name, '_', smooth_method];
 		    end
-		    prominence = (max(roi_trace)-min(roi_trace))/prominence_factor;
+		    % prominence = (max(roi_trace)-min(roi_trace))/prominence_factor;
 		    % [peak_par.peakMag, peak_par.peakLoc, peak_par.peakWidth, peak_par.peakProm] = findpeaks(roi_trace, 'MinPeakProminence', prominence);
-            [peak_par.peakMag, peak_par.peakLoc] = findpeaks(roi_trace, 'MinPeakProminence', prominence);
+            % [peak_par.peakMag, peak_par.peakLoc] = findpeaks(roi_trace, 'MinPeakProminence', prominence);
+            [peak_par.peakMag, peak_par.peakLoc] = findpeaks(roi_trace);
 	    end
 	end
 	if nargout == 2 % return the processed trace data and processing method

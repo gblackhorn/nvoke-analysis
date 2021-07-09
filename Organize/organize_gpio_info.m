@@ -27,6 +27,7 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
     stim_ch_time_range = cell(stim_ch_num, 1); % time info of train starts and ends. (start, end)
     stim_ch_patch = cell(stim_ch_num, 1); % for plotting stimulations with patch func. (x, y)
     stim_ch_train_duration = NaN(stim_ch_num, 1); % duration of each single stim_train
+    stim_ch_train_inter = NaN(stim_ch_num, 1); % duration of each single stim_train
 
     if stim_ch_num ~= 0
 	    for cn = 1:stim_ch_num % loop through gpio channels used for stimulation
@@ -64,12 +65,13 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
 					stim_ch_train_duration(cn) = 1;
 					gpio_train_end_time = gpio_train_start_time+stim_ch_train_duration(cn);
 					stim_ch_time_range{cn}(:, 2) = gpio_train_end_time;
+					stim_ch_patch{cn} = organize_gpio_train_for_plot_patch(stim_ch_time_range{cn});
 				else
 					stim_ch_train_duration(cn) = round(gpio_train_end_time(1)-gpio_train_start_time(1), round_digit);
 				end
 
 				stim_ch_str{cn} = [stim_ch_name{cn}, '-', num2str(stim_ch_train_duration(cn)), 's'];
-				stim_ch_train_inter = round(gpio_train_start_time(2)-gpio_train_end_time(1), round_digit);
+				stim_ch_train_inter(cn) = round(gpio_train_start_time(2)-gpio_train_end_time(1), round_digit);
 
 				gpio_info_organized(stim_idx_start+cn-1).stim_range = stim_ch_time_range{cn};
 				gpio_info_organized(stim_idx_start+cn-1).patch_coordinats = stim_ch_patch{cn};

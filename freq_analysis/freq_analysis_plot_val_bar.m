@@ -9,6 +9,11 @@ function [varargout] = freq_analysis_plot_val_bar(meanVal,errorVal,bin_edge,sett
     % Defaults
     stim_name = 'stimulation';
     y_axis = ' ';
+    SavePlot = false;
+    SaveTo = pwd;
+    if ~isfield(setting, 'sortout_event')
+        setting.sortout_event = 'N/A';
+    end
 
     % Optionals
     for ii = 1:2:(nargin-4)
@@ -24,7 +29,13 @@ function [varargout] = freq_analysis_plot_val_bar(meanVal,errorVal,bin_edge,sett
             roi_num = varargin{ii+1};
         elseif strcmpi('event_num', varargin{ii})
             event_num = varargin{ii+1};
-        end
+        elseif strcmpi('repeats', varargin{ii})
+            repeats = varargin{ii+1};
+        elseif strcmpi('SavePlot', varargin{ii})
+            SavePlot = varargin{ii+1};
+        elseif strcmpi('SaveTo', varargin{ii})
+            SaveTo = varargin{ii+1};
+       end
     end
 
 
@@ -34,7 +45,7 @@ function [varargout] = freq_analysis_plot_val_bar(meanVal,errorVal,bin_edge,sett
     % bars
     bin_half_width = (bin_edge(2)-bin_edge(1))/2;
     x = bin_edge(1:(end-1))+bin_half_width;
-    bar(x, meanVal)
+    bar(x, meanVal, 1) % 1: bar width is 100%, no space between bars
 
     hold on
 
@@ -63,15 +74,41 @@ function [varargout] = freq_analysis_plot_val_bar(meanVal,errorVal,bin_edge,sett
     end
 
     xlabel('time (s)')
+    y_axis = strrep(y_axis, '_', ' ');
     ylabel(y_axis)
     bar_title = {[stim_name, ' ', y_axis],...
         ['event time = ', setting.sortout_event, ' time'],...
         [stim_name, ' duration = ', num2str(setting.stim_winT), 's'],...
         ['min spontaneous freq = ', num2str(setting.min_spont_freq), 'Hz']};
-    if exist('trial_num', 'var') && exist('roi_num', 'var') && exist('event_num', 'var') 
-        bar_title = {bar_title,...
-        [num2str(trial_num), ' trials; ', num2str(roi_num), ' ROIs; ', num2str(event_num), ' events']};
+    % if exist('trial_num', 'var') && exist('roi_num', 'var') && exist('event_num', 'var') 
+    %     bar_title = {bar_title,...
+    %     [num2str(trial_num), ' trials; ', num2str(roi_num), ' ROIs; ', num2str(event_num), ' events']};
+    % end
+
+    if exist('trial_num', 'var') && exist('roi_num', 'var')
+        bar_title = [bar_title,...
+        [num2str(trial_num), ' trials; ', num2str(roi_num), ' ROIs; ']];
     end
+    if exist('event_num', 'var')
+        bar_title = [bar_title,...
+        [num2str(event_num), ' events']];
+    end
+    if exist('repeats', 'var')
+        bar_title = [bar_title,...
+        [num2str(repeats), ' repeatss']];
+    end
+
+
+    bar_title = strrep(bar_title, '_', ' ');
     title(bar_title)
+
+    if SavePlot
+        figfile = bar_title{1, 1};
+        figdir = SaveTo;
+        fig_fullpath = fullfile(figdir, figfile);
+        savefig(gcf, [fig_fullpath, '.fig']);
+        saveas(gcf, [fig_fullpath, '.jpg']);
+        saveas(gcf, [fig_fullpath, '.svg']);
+    end
 
 end

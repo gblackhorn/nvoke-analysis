@@ -19,7 +19,7 @@ else
 end
 
 %% create Source2D class object for storing results and parameters
-Fs = 10;             % frame rate
+Fs = 30;             % frame rate
 ssub = 2;           % default:1. spatial downsampling factor
 tsub = 2;           % default:1. temporal downsampling factor
 gSig = 16;           % set it to ~ diameter/2. width of the gaussian kernel, which can approximates the average neuron shape

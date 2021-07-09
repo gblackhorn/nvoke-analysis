@@ -25,7 +25,7 @@ function [spont_event,varargout] = freq_analysis_spontaneous_freq_roi(peak_prope
     end
 
     % Main contents
-    % start and end of windows (exclude stimulation and rebound period) 
+    % starts and ends of windows (exclude stimulation and rebound period) 
     stimulation_win(:, 1) = stimulation_win(:, 1)-setting.stim_time_error;
     stimulation_win(:, 2) = stimulation_win(:, 1)+setting.stim_winT+setting.stim_time_error;
 

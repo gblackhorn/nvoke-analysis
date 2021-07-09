@@ -40,19 +40,26 @@ function [peak_par,varargout] = find_peaks_with_existing_peakinfo(roi_trace,exis
 			existing_peak_duration_extension_time_pre = varargin{ii+1};
 		elseif strcmpi('extension_time_post', varargin{ii}) 
 			existing_peak_duration_extension_time_post = varargin{ii+1};
+        % elseif strcmpi('merge_peaks', varargin{ii}) % needed for smooth process
+        %     merge_peaks = varargin{ii+1};
+        % elseif strcmpi('merge_time_interval', varargin{ii})
+        %     merge_time_interval = varargin{ii+1};
     	end
     end
 
     % main content
-    if ~isempty(existing_peakInfo)
-    	% process trace with filter if needed
-    	[roi_trace_processed,filter_info] = process_roi_trace_with_filter(roi_trace,...
-    				'filter', filter_chosen, 'filter_par', filter_parameter,...
-    				'recording_fq', rec_fq, 'decon', decon, 'time_info', time_info);
+    % process trace with filter if needed
+    [roi_trace_processed,filter_info] = process_roi_trace_with_filter(roi_trace,...
+                'filter', filter_chosen, 'filter_par', filter_parameter,...
+                'recording_fq', rec_fq, 'decon', decon, 'time_info', time_info);
 
+
+    if ~isempty(existing_peakInfo)
     	% calculate ideal time for window starts and ends
-    	window_start_time_ideal = time_info(existing_peakInfo.rise_loc)-existing_peak_duration_extension_time_pre;
-    	window_end_time_ideal   = time_info(existing_peakInfo.peak_loc)+existing_peak_duration_extension_time_post;
+        rise_time = existing_peakInfo.rise_loc;
+        peak_time = existing_peakInfo.peak_loc;
+    	window_start_time_ideal = time_info(rise_time)-existing_peak_duration_extension_time_pre;
+    	window_end_time_ideal   = time_info(peak_time)+existing_peak_duration_extension_time_post;
 
     	% If window start time is smaller than timeinfo start or if window end time is bigger than timeinfo end
     	% set them to timeinfo start and end
@@ -61,20 +68,36 @@ function [peak_par,varargout] = find_peaks_with_existing_peakinfo(roi_trace,exis
     	window_start_time_ideal(ideal_min_idx) = time_info(1);
     	window_end_time_ideal(ideal_max_idx) = time_info(end);
 
+        % compare win_end and following peak location. if win_end>=peak, assign win_end with following event win_start
+        if length(window_start_time_ideal) > 1
+            CompareWinMatrix = [window_end_time_ideal(1:end-1) peak_time(2:end) window_start_time_ideal(2:end)];
+            idx_mod_win = CompareWinMatrix(:, 1)>=CompareWinMatrix(:, 2);
+            CompareWinMatrix(idx_mod_win, 1) = CompareWinMatrix(idx_mod_win, 3);
+            window_end_time_ideal(1:end-1) = CompareWinMatrix(:, 1);
+        end
+
+
     	[window_start_time, window_start_time_index] = find_closest_in_array(window_start_time_ideal,time_info);
     	[window_end_time, window_end_time_index] = find_closest_in_array(window_end_time_ideal,time_info);
+
 
     	[roi_trace_window] = organize_multiple_range_data_from_one_vector_in_matrix(roi_trace_processed,...
     		[window_start_time_index window_end_time_index]);
 
     	[peak_par.peakMag, peak_par.peakLoc] = find_peaks_in_windows(roi_trace_window,window_start_time_index);
 
+        % if merge_peaks == true
+        %     [peak_par.peakMag, peak_par.peakLoc] = organize_merge_peaks(peak_par.peakMag,...
+        %         peak_par.peakLoc,...
+        %         time_info, 'merge_time_interval', merge_time_interval); % merge 
+        % end
 
-    	if nargout == 2 % return the processed trace data and processing method
-    		varargout{1}.processed_trace = roi_trace_processed;
-    		varargout{1}.method = filter_info.method;
-    		varargout{1}.parameter = filter_info.parameter;
-    	end
+    else
+        peak_par.peakMag = [];
+        peak_par.peakLoc = [];
     end
+    varargout{1}.processed_trace = roi_trace_processed;
+    varargout{1}.method = filter_info.method;
+    varargout{1}.parameter = filter_info.parameter;
 end
 

@@ -1,5 +1,5 @@
 function [event_info,varargout] = freq_analysis_events_info_roi(peak_properties_table,stimulation_win,recording_time,varargin)
-    % Return event_info (structure) including reise, peak information and event time relative to stimulation
+    % Return event_info (structure) including rise, peak information and event time relative to stimulation
     %   peak_properties_table: a table with vary properties of peaks from a
     %       single roi. 
     %	stimulation_win: 2-col number array. lower bounds are the starts of windows, and upper bounds are the ends
@@ -50,6 +50,8 @@ function [event_info,varargout] = freq_analysis_events_info_roi(peak_properties_
     [event_info] = freq_analysis_select_events(events_time,stim_extend_win,peak_properties_table);
 
     event_info.event_time_2_stim = NaN(size(event_info.events_time));
+    event_info.event_time_2_stim_pre = NaN(size(event_info.events_time));
+    event_info.event_time_2_stim_post = NaN(size(event_info.events_time));
     % event_info.events_time_preStim = NaN(size(event_info.events_time));
     % event_info.events_time_postStim = NaN(size(event_info.events_time));
     for n = 1:length(event_info.idx_in_peak_table)
@@ -59,6 +61,7 @@ function [event_info,varargout] = freq_analysis_events_info_roi(peak_properties_
             event_time_preStim = event_info.events_time(n)-stim_start_after_event;
             if event_time_preStim >= -setting.pre_stim_duration
                 event_info.event_time_2_stim(n) = event_time_preStim;
+                event_info.event_time_2_stim_pre(n) = event_time_preStim;
             end
             % event_info.events_time_preStim(n) = event_info.events_time(n)-stim_start_after_event;
         end
@@ -69,6 +72,7 @@ function [event_info,varargout] = freq_analysis_events_info_roi(peak_properties_
             event_time_postStim = event_info.events_time(n)-stim_start_before_event;
             if event_time_postStim < (setting.stim_winT+setting.post_stim_duration)
                 event_info.event_time_2_stim(n) = event_time_postStim;
+                event_info.event_time_2_stim_post(n) = event_time_postStim;
             end
             % event_info.events_time_postStim(n) = event_info.events_time(n)-stim_start_before_event;
         end

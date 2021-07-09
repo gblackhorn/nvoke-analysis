@@ -26,6 +26,9 @@ else
 %         firstUS = firstUS(1);
 %         trialID = fileName(1:firstUS-1);
 %     end
-trialID =  fileName(1:firstDash(2)-1);
+
+
+% trialID =  fileName(1:firstDash(2)-1);
+trialID = fileName(1:firstUS(1)-1);
     
 end

@@ -17,6 +17,7 @@ function [outputArg1,outputArg2] = process_nvoke_file_with_api(file_fullpath,var
     project_dir = 'G:\Workspace\Inscopix_Seagate\Projects\IO_GCaMP_IO_ChrimsonR_CN_ventral_data_nvoke2\IO_GCaMP_IO_ChrimsonR_CN_ventral_data_nvoke2_data';
     mc_reference_frame = 1;
     overwrite = false;
+    % export_mc_tiff = true;
 
     % Options
     for ii = 1:2:(nargin-1)
@@ -28,6 +29,8 @@ function [outputArg1,outputArg2] = process_nvoke_file_with_api(file_fullpath,var
     		mc_reference_frame = varargin{ii+1};
     	elseif strcmpi('overwrite', varargin{ii})
     		overwrite = varargin{ii+1};
+        % elseif strcmpi('export_mc_tiff', varargin{ii})
+        %     export_mc_tiff = varargin{ii+1};
         end
     end
 
