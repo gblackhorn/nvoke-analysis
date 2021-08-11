@@ -11,7 +11,7 @@ function [rec_data,varargout] = auto_gen_mouseID_fovID(rec_data,varargin)
 
 	hemi_sort = 'hemi_ext'; % 'hemi' or 'hemi_ext'. field in fov_info to sort fovs. 
 	fov_contents.hemi = {'left', 'right'};
-	fov_contents.hemi_ext = {'chR-pos', 'chR_neg'};
+	fov_contents.hemi_ext = {'chR-pos', 'chR-neg'};
 	fov_contents.ml = {'medial', 'lateral'};
 	fov_contents.ap = {'anterior', 'intermediate', 'posterior'};
 

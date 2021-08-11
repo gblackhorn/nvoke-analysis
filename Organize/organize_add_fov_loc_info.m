@@ -42,7 +42,7 @@ function [single_recording_fov_loc,varargout] = organize_add_fov_loc_info(single
         elseif strcmpi(modify_info, 'no')
             varargout{1} = single_recording{fov_col}.FOV_loc;
         elseif strcmpi(modify_info, 'ask')
-            mod_choice = input(sprintf('\n\tmodify the FOV location info? (y)yes/ (n)no [default-n]'));
+            mod_choice = input(sprintf('\n\tmodify the FOV location info? (y)yes/ (n)no [default-n]'), 's');
             if isempty(mod_choice)
                 mod_choice = 'n'; 
             end

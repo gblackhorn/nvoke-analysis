@@ -1,4 +1,4 @@
-% This script is used on office local desktop running windows 10
+% This script is used on VDI remote desktop running windows 10
 % Use this script after exporting motion corrected files with tiff format. 
 % Process files with CNMFe with cluster. And then come back for further analysis
 	% Inscopix API related process, such as spatial filter and motion correction cannot be run on VDI. 
@@ -7,15 +7,14 @@
 
 
 % 1. set folders for different situation
-inscopix_folder = 'G:\Workspace\Inscopix_Seagate';
-
-ins_analysis_folder = 'D:\guoda\Documents\Workspace\Analysis\'; %
+inscopix_folder = 'R:\UusisaariU\PROCESSED_DATA_BACKUPS\nRIM_MEMBERS\guoda\Inscopix';
+ins_analysis_folder = fullfile(inscopix_folder, 'Analysis'); %
 ins_projects_folder = fullfile(inscopix_folder, 'Projects'); % processed imaging data, including isxd, gpio, tiff, and csv files 
 ins_recordings_folder = fullfile(inscopix_folder, 'recordings'); % processed imaging data, including isxd, gpio, tiff, and csv files 
 
-ins_analysis_ventral_folder = fullfile(ins_analysis_folder, 'nVoke_ventral_approach'); % processed imaging data, including isxd, gpio, tiff, and csv files 
-ins_analysis_ventral_fig_folder = fullfile(ins_analysis_ventral_folder, 'figures'); % figure folder for ventral approach analysis
-ins_analysis_invitro_folder = fullfile(ins_analysis_folder, 'calcium_imaging_slice'); % processed imaging data, including isxd, gpio, tiff, and csv files 
+ins_analysis_ventral_folder = fullfile(ins_analysis_folder, 'IO_GCaMP-IO_ChrimsonR-CN_ventral'); % processed imaging data, including isxd, gpio, tiff, and csv files 
+ins_analysis_ventral_fig_folder = fullfile(ins_analysis_ventral_folder, 'figure'); % figure folder for ventral approach analysis
+ins_analysis_invitro_folder = fullfile(ins_analysis_folder, 'IO_GCaMP-IO_ChrimsonR-CN_slice'); % processed imaging data, including isxd, gpio, tiff, and csv files 
 
 ins_tiff_folder = fullfile(ins_projects_folder, 'Exported_tiff'); % motion corrected recordings in tiff format
 ins_tiff_invivo_folder = fullfile(ins_tiff_folder, 'IO_ventral_approach'); % motion corrected recordings in tiff format
@@ -24,49 +23,12 @@ ins_cnmfe_result_folder = fullfile(ins_projects_folder, 'Processed_files_for_mat
 ins_rec_ventral_folder = fullfile(ins_recordings_folder, 'IO_virus_ventral approach'); % processed imaging data, including isxd, gpio, tiff, and csv files 
 
 
-
 %% ==================== 
+% Not able to do this step on VDI. Use workflow for local desktop PC
 % 2. Crop, spatial filter, and motion corrected recordings with Inscopix API for matlab. And export them in tiff format.
 % 	Export gpio (stimulation) and recording time stamp information in csv format with IDPS
 
 % This step can be only done on local desktop installed IDPS
-
-% Process all raw recording files in the same folder.
-% This is designed for the output of nVoke2
-recording_dir = uigetdir(ins_recordings_folder,...
-	'Select a folder containing raw recording files (.isxd) and gpio files (.gpio)');
-if recording_dir ~= 0
-	ins_recordings_folder = recording_dir;
-	project_dir = uigetdir(ins_projects_folder,...
-		'Select a folder to save processed recording files (PP, BP, MC, DFF)');
-	if project_dir ~= 0 
-		ins_projects_folder = project_dir;
-		process_nvoke_files(recording_dir, 'project_dir',project_dir);
-	end
-end
-
-% If recordings were created by the nVoke1 system. Use following line instead
-% nvoke_file_process;
-
-
-
-%% ==================== 
-keyword = '2021-08-05*-DFF.isxd';
-overwrite = false;
-
-input_folder = uigetdir(ins_projects_folder, 'Select a folder containing .isdx movie files');
-output_folder = uigetdir(ins_tiff_folder, 'Select a folder to save .tiff files');
-if input_folder ~= 0 
-	ins_projects_folder = input_folder;
-end
-if output_folder ~= 0
-	ins_tiff_folder = output_folder;
-end
-
-export_nvoke_movie_to_tiff(input_folder, output_folder,...
-	'keyword', keyword, 'overwrite', overwrite);
-
-
 
 
 
@@ -87,7 +49,6 @@ else
 end
 
 
-
 %% ==================== 
 % Better use deigo cluster for this step
 % 4. Process recordings with CNMFe to extract ROI traces
@@ -97,6 +58,10 @@ Fs = 20; % Hz. recording frequency
 cnmfe_process_batch('folder',  organized_tiff_folder, 'Fs', Fs);
 
 
+
+%% ==================== 
+% 4.1 Delete cnmfe results, including the results.mat and the source_extract folder for re-analysis
+delete_cnmfe_results(ins_tiff_folder);
 
 
 %% ==================== 
@@ -123,9 +88,6 @@ end
 [not_organized_recordings] = organize_processed_files(input_folder, output_folder);
 
 
-
-
-
 %% ====================
 % 6. Convert ROI info to matlab file (.m). 
 % Place results.m from CNMFe, ROI info (csv files) and GPIO info (csv) from IDPS to the same folder, and run this
@@ -136,8 +98,6 @@ output_dir = ins_analysis_ventral_folder;
 
 [recdata, recording_num, cell_num] = ROI_matinfo2matlab('input_dir', input_dir,...
 	'output_dir', output_dir); % for CNMFe processed data
-
-
 
 %% ====================
 % % Not needed anymore. Use this if 'ROIdata' was generated without spatial info for ROIs
@@ -169,20 +129,9 @@ recdata_backup = recdata;
 
 
 
-
-
 %% ====================
-% 7. Check the gpio channel information and delete the false stimulation channels. 
-%   nVoke2 generated gpio may include channel activity from unsed channels
-rec_num = size(recdata, 1);
-for i = 1:rec_num
-	gpio_info = recdata{i, 4};
-
-	% Check and delete the false gpio channels
-	[gpio_info] = delete_false_gpio_info(gpio_info);
-
-	recdata{i, 4} = gpio_info;
-end
+% 7. Manully check the gpio channel information. nVoke2 generated gpio may include channel activity from unsed channels
+% Need to write code to cope with this problem automatically.
 
 
 
@@ -231,68 +180,7 @@ save_traces = 0; % 0: do not save. 1: save
 
 
 %% ====================
-% 8.1 Add FOV location information in second column of recdata
-% chrimsonR-pos vs neg, lateral vs medial, posterior vs anterior vs intermediate
-loc_opt.hemi = {'left', 'right'}; % hemisphere: IO with chrimsonR (pos) or without (neg)
-loc_opt.hemi_ext = {'chR-pos', 'chR-neg'}; % hemisphere: IO with chrimsonR (pos) or without (neg)
-loc_opt.ml = {'medial', 'lateral'}; % medial lateral
-loc_opt.ap = {'anterior', 'intermediate', 'posterior'}; % anterior poterior. intermediate is not well defined in the experiment
-modify_info = 'ask'; % modify the FOV location information if it exists
-
-fov_info_col = 2;
-
-recordings = a;
-rec_num = size(recordings, 1);
-
-nrec = 1;
-while nrec <= rec_num
-	fprintf('- %d/%d ', nrec, rec_num);
-	single_recording = recordings(nrec, :);
-	[~, FOV_loc] = organize_add_fov_loc_info(single_recording, 'loc_opt', loc_opt, 'modify_info', modify_info);
-	recordings{nrec, fov_info_col}.FOV_loc = FOV_loc;
-	direct_input = input(sprintf('\n(c)continue, (r)re-input or (b)go back to previous one? [default-c]\n'));
-	if isempty(direct_input)
-		direct_input = 'c';
-	end
-	if strcmpi(direct_input, 'c')
-	    nrec = nrec+1; 
-	elseif strcmpi(direct_input, 'r')
-	    nrec = nrec; 
-	elseif strcmpi(direct_input, 'b')
-	    nrec = nrec-1; 
-	end
-end
-
-% recdata_group.all(:, fov_info_col) = recordings(:, fov_info_col); 
-% recdata_organized = recordings; 
-
-%% ====================
-% 8.1 Group recordings according to stimulation
-stim_types = {'GPIO-1-1s', 'OG-LED-1s', 'OG-LED-5s', 'OG-LED-5s GPIO-1-1s'};
-
-group_info = organize_rec_group_info(recdata_organized);
-recdata_group.all = recdata_organized;
-
-for gn = 1:numel(group_info)
-	stim_type_idx = find(strcmp(group_info(gn).name, stim_types));
-	stim_type = stim_types{stim_type_idx};
-	switch stim_type
-		case 'GPIO-1-1s'
-			recdata_group.ap1s = recdata_organized(group_info(gn).idx, :);
-		case 'OG-LED-1s'
-			recdata_group.og1s = recdata_organized(group_info(gn).idx, :);
-		case 'OG-LED-5s'
-			recdata_group.og5s = recdata_organized(group_info(gn).idx, :);
-		case 'OG-LED-5s GPIO-1-1s'
-			recdata_group.og5s_ap1s = recdata_organized(group_info(gn).idx, :);
-		otherwise
-			disp('Unexpected stimulation type. May need to modify the "stim_types"')
-	end
-end
-
-
-%% ====================
-% 8.2 Save organized and calculate data 
+% 8.1 Save organized and calculate data 
 data_fullpath = fullfile(ins_analysis_ventral_folder, '*.mat');
 [data_filename, ins_analysis_ventral_folder] = uiputfile(data_fullpath,...
             'Select a folder to save data');
@@ -301,36 +189,30 @@ if isequal(data_filename, 0)
 else
 	data_fullpath = fullfile(ins_analysis_ventral_folder, data_filename);
 	disp(['User selected ', data_fullpath]);
-	% save(data_fullpath, 'recdata_organized', 'opt')
-	save(data_fullpath, 'recdata_group', 'opt')
+	save(data_fullpath, 'recdata_organized', 'opt')
 end
-
-
-%% ====================
-% 8.3 Select a specific group of data from recdata_group for further analysis
-recdata_organized = select_grouped_data(recdata_group);
 
 
 %% ====================
 % 9. Examine peak detection with plots 
 PauseTrial = false; % true or false
-traceNum_perFig = 40; % number of traces/ROIs per figure
 SavePlot = true;
-SaveTo = ins_analysis_ventral_fig_folder;
-vis = 'off'; % set the 'visible' of figures
 
-ins_analysis_ventral_fig_folder = plotTracesFromAllTrials (recdata_organized,...
-	'PauseTrial', PauseTrial,...
-	'traceNum_perFig', traceNum_perFig,...
-	'SavePlot', SavePlot, 'SaveTo', SaveTo,...
-	'vis', vis);
+if SavePlot
+    ins_analysis_ventral_fig_folder = plotTracesFromAllTrials (recdata_organized,...
+		'PauseTrial', PauseTrial,...
+        'SavePlot', SavePlot, 'SaveTo', ins_analysis_ventral_fig_folder);
+else
+	plotTracesFromAllTrials (recdata_organized,...
+		'PauseTrial', PauseTrial);
+end
 
 
 %% ====================
 % 10. Event frequency analysis
 sortout_event = 'rise';
 BinWidth = 1; % varargin: Use bin number instead of BinWidth: 'nbins', 40
-min_spont_freq = 0.1;
+min_spont_freq = 0.05;
 pre_stim_duration = 10; % second
 post_stim_duration = 10; % second
 SavePlot = false; % true or false
@@ -346,7 +228,7 @@ SavePlot = false; % true or false
 % 10.1 Save the results of event frequency analysis 
 results_fullpath = fullfile(ins_analysis_ventral_folder, '*.mat');
 [results_filename, ins_analysis_ventral_folder] = uiputfile(results_fullpath,...
-            'Select the results of event frequency analysis (PSTH)');
+            'Select a folder to save the results of event frequency analysis');
 if isequal(results_filename, 0)
 	disp('User selected Cancel')
 else
@@ -365,11 +247,9 @@ else
 	recdata_selected = recdata_organized;
 end
 
-PREwin = 10;
-POSTwin = 10;
-SavePlot = true; % true or false
-
-close all
+PREwin = 50;
+POSTwin = 30;
+SavePlot = false; % true or false
 
 [grandAverageSegments, ins_analysis_ventral_fig_folder] = plotOGsegmentsInGroup (recdata_selected, PREwin, POSTwin,...
 	'SavePlot', SavePlot, 'SaveTo', ins_analysis_ventral_fig_folder);
@@ -377,35 +257,31 @@ close all
 
 
 
+% %% ====================
+% PauseTrial = true; % true or false
+% SavePlot = false;
+
+% if SavePlot
+%     ins_analysis_ventral_fig_folder = plotTracesFromAllTrials (recdata_selected,...
+% 		'PauseTrial', PauseTrial,...
+%         'SavePlot', SavePlot, 'SaveTo', ins_analysis_ventral_fig_folder);
+% else
+% 	plotTracesFromAllTrials (recdata_selected,...
+% 		'PauseTrial', PauseTrial);
+% end
 
 
-%% ====================
-% 12.1 Get spontaneous_event_info 
-sortout_event = 'rise';
-
-[spont_event_info] = get_spontaneous_event_info_alltrial(recdata_organized,...
-	'sortout_event', sortout_event);
-
-%% ====================
-% 12.2 Group spontaneous event info
-category_names = {'mouseID'}; % {'mouseID', 'fovID'}
-filter_field = {'event_num'};
-filter_par = {'notzero'};
-
-[grouped_event_info, grouped_event_info_option] = group_event_info_multi_category(spont_event_info,...
-	'category_names', category_names,...
-	'filter_field', filter_field, 'filter_par', filter_par);
 
 
-%% ====================
-% 12.3 Plot spontaneous_event_info
-plot_combined_data = false;
-save_fig = true;
-save_dir = ins_analysis_ventral_fig_folder;
 
-plot_event_info(grouped_event_info,...
-	'plot_combined_data',plot_combined_data,...
-	'save_fig', save_fig, 'save_dir', save_dir);
+
+
+
+
+
+
+
+
 
 
 
@@ -461,9 +337,9 @@ if isempty(experiment)
 	experiment = 1;
 end
 if experiment == 1
-	mat_folder = mat_folder_invivo;
+	mat_folder = ins_analysis_ventral_folder;
 elseif experiment == 2
-	mat_folder = mat_folder_invitro;
+	mat_folder = ins_analysis_invitro_folder;
 end
 
 [mat_fn, mat_folder]=uigetfile([mat_folder, '*.mat'],...
@@ -489,34 +365,24 @@ end
 plot_analysis = 2; % 0-no plot. 1-plot. 2-plot and save
 
 % stimulation = 'ogled10s_fast_peak'; % to save peak_info_sheet var
-stimulation = input(['Input info including stimulation for the name of the file saving modified_ROIdata var [', char(recdata_organized{1, 3}), '] : '], 's');
-if isempty(stimulation)
-	stimulation = char(recdata_organized{1, 3});
+stimulation = input(['Input info including stimulation for the name of the file saving modified_ROIdata var [', modified_ROIdata{1, 3}{:}, '] : '], 's');
+experiment = input(['Save the peak_info_sheet in "ventral_approach" folder (1) or in "slice" folder (2) [Default-1]: ']);
+if isempty(experiment)
+		experiment = 1;
 end
-
-prompt_save_ROIdata_peakevent = 'Do you want to save peak_info_sheet? y/n [y]: ';
-input_str = input(prompt_save_ROIdata_peakevent, 's');
-if isempty(input_str)
-	input_str = 'y';
+if experiment == 1
+	HDD_folder = ins_analysis_ventral_folder; % to save peak_info_sheet var
+	workspace_folder = ins_analysis_ventral_folder; % to save peak_info_sheet var
+elseif experiment == 2
+	HDD_folder = ins_analysis_invitro_folder; % to save peak_info_sheet var
+	workspace_folder = ins_analysis_invitro_folder; % to save peak_info_sheet var
 end
-% experiment = input(['Save the peak_info_sheet in "ventral_approach" folder (1) or in "slice" folder (2) [Default-1]: ']);
-% if isempty(experiment)
-% 		experiment = 1;
-% end
-% if experiment == 1
-	
-	% HDD_folder = HDD_folder_invivo; % to save peak_info_sheet var
-	% workspace_folder = workspace_folder_invivo; % to save peak_info_sheet var
-% elseif experiment == 2
-% 	HDD_folder = HDD_folder_invitro; % to save peak_info_sheet var
-% 	workspace_folder = workspace_folder_invitro; % to save peak_info_sheet var
-% end
 
 % C = cellfun(@(x) strfind(x, 'OG'), stimstr)
-if strfind(recdata_organized{1, 3}{1}, 'noStim') % isempty(modified_ROIdata{1, 3}) 
+if strfind(modified_ROIdata{1, 3}{1}, 'noStim') % isempty(modified_ROIdata{1, 3}) 
 	triggeredPeak_filter_max = 0;
 else
-	triggeredPeak_filter_max = 6;
+	triggeredPeak_filter_max = 5;
 end
 
 for triggeredPeak_filter = 0:triggeredPeak_filter_max
@@ -527,40 +393,39 @@ for triggeredPeak_filter = 0:triggeredPeak_filter_max
 	case 1
 		disp(['trigger filter: ', num2str(triggeredPeak_filter), ': noStim peaks used. peaks in noStim groups'])
 	case 2
-		disp(['trigger filter: ', num2str(triggeredPeak_filter), ': noStim peaks used. peaks in noStimfar groups'])
+		disp(['trigger filter: ', num2str(triggeredPeak_filter), ': non-excited peaks used. peaks with rise point outside of stimulation'])
 	case 3
-		disp(['trigger filter: ', num2str(triggeredPeak_filter), ': interval peaks used. peaks with rise point outside of stimulation'])
+		disp(['trigger filter: ', num2str(triggeredPeak_filter), ': excited peaks used. immediate peaks since stimulation'])
 	case 4
-		disp(['trigger filter: ', num2str(triggeredPeak_filter), ': triggered peaks used. immediate peaks since stimulation'])
+		disp(['trigger filter: ', num2str(triggeredPeak_filter), ': delayed excited peaks used. peaks start to rise after a seconds duration of stimulation'])
 	case 5
-		disp(['trigger filter: ', num2str(triggeredPeak_filter), ': triggered_delayed peaks used. peaks start to rise after a seconds duration of stimulation'])
-	case 6
 		disp(['trigger filter: ', num2str(triggeredPeak_filter), ': rebound peaks used. peaks start to rise shortly after stimulation'])
 	end
-	% [peak_info_sheet, peak_fq_sheet, total_cell_num, total_peak_num] = nvoke_event_calc(modified_ROIdata, plot_analysis, triggeredPeak_filter);
-	[peak_info_sheet, total_cell_num, total_peak_num] = organize_event_info_and_plot(recdata_organized, plot_analysis, triggeredPeak_filter);
+	[peak_info_sheet, peak_fq_sheet, total_cell_num, total_peak_num] = nvoke_event_calc(modified_ROIdata, plot_analysis, triggeredPeak_filter);
 
 	peak_sheet_fn = ['peak_info_sheet_', datestr(datetime('now'), 'yyyymmdd'), '_', stimulation, '_trig', num2str(triggeredPeak_filter)];
-	% peakfq_sheet_fn = ['peakfq_info_sheet_', datestr(datetime('now'), 'yyyymmdd'), '_', stimulation, '_trig', num2str(triggeredPeak_filter)];
+	peakfq_sheet_fn = ['peakfq_info_sheet_', datestr(datetime('now'), 'yyyymmdd'), '_', stimulation, '_trig', num2str(triggeredPeak_filter)];
 
-	
+	prompt_save_ROIdata_peakevent = 'Do you want to save peak_info_sheet and peak_fq_sheet? y/n [y]: ';
+	input_str = input(prompt_save_ROIdata_peakevent, 's');
+	if isempty(input_str)
+		input_str = 'y';
+	end
 	if input_str == 'y'
-%         ins_analysis_folder = uigetdir(ins_analysis_folder,...
-% 			    'Select a folder to save figures');
-		% if ispc
-	 %        HDD_path = fullfile(HDD_folder, peak_sheet_fn);
-	 %        HDD_path_pfq = fullfile(HDD_folder, peakfq_sheet_fn);
-		% 	save(HDD_path, 'peak_info_sheet');
-		% 	if triggeredPeak_filter == 0
-		% 		save(HDD_path_pfq, 'peak_fq_sheet');
-		% 	end
-	 %    end
-	    workspace_path = fullfile(ins_analysis_folder, peak_sheet_fn);
-	    % workspace_path_pfq = fullfile(ins_analysis_folder, peakfq_sheet_fn);
+		if ispc
+	        HDD_path = fullfile(HDD_folder, peak_sheet_fn);
+	        HDD_path_pfq = fullfile(HDD_folder, peakfq_sheet_fn);
+			save(HDD_path, 'peak_info_sheet');
+			if triggeredPeak_filter == 0
+				save(HDD_path_pfq, 'peak_fq_sheet');
+			end
+	    end
+	    workspace_path = fullfile(workspace_folder, peak_sheet_fn);
+	    workspace_path_pfq = fullfile(workspace_folder, peakfq_sheet_fn);
 		save(workspace_path, 'peak_info_sheet');
-		% if triggeredPeak_filter == 0
-		% 	save(workspace_path_pfq, 'peak_fq_sheet');
-		% end
+		if triggeredPeak_filter == 0
+			save(workspace_path_pfq, 'peak_fq_sheet');
+		end
 	end
 end
 
