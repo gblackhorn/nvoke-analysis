@@ -51,7 +51,7 @@ end
 
 
 %% ==================== 
-keyword = '2021-08-05*-DFF.isxd';
+keyword = '2021-08-09*-DFF.isxd';
 overwrite = false;
 
 input_folder = uigetdir(ins_projects_folder, 'Select a folder containing .isdx movie files');
