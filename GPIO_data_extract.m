@@ -39,55 +39,109 @@ function [ channel, varargout ] = GPIO_data_extract( GPIO_table, draw )
 narginchk(1,2);
 % error(nargoutchk(0,2,nargout,'struct'));
 
-% nVoke has a bug to generate a bigger time value. The delayed starting time should be corrected
-SYNC_table = GPIO_table(ismember(GPIO_table.ChannelName, 'SYNC'), :);
-time_stamp_start = SYNC_table.Time_s_(1);
-if time_stamp_start ~= 0
-	GPIO_table.Time_s_ = GPIO_table.Time_s_ - time_stamp_start;
-end
-
-% find out active channels. SYNC is always active
-channel_list = {'SYNC'; 'EX_LED'; 'GPIO1'; 'GPIO2'; 'GPIO3'; 'GPIO4'; 'OG_LED'};
-active_channels = []; % location of channel in the list
-
-p = 1; % p is the position of each active channel info in channel structure
-for n = 1 : length(channel_list)
-	channel_table = GPIO_table(ismember(GPIO_table.ChannelName, channel_list(n)), :);
-	channel_value = find(channel_table.Value(:) ~= 0);
-	if ~isempty(channel_value)
-		active_channels = [active_channels n];
-		channel(p).name = channel_list(n);
-		channel(p).time_value(:, 1) = table2array(GPIO_table(ismember(GPIO_table.ChannelName, channel(p).name), 1)); % time info
-		channel(p).time_value(:, 2) = table2array(GPIO_table(ismember(GPIO_table.ChannelName, channel(p).name), 3)); % value info
-		p = p+1; 
-	else
-		p = p; % do not generated empty arrays in channel structure
+% check whether the GPIO info is from nVoke1 or nVoke2 system
+if ~isempty(find(strcmp('SYNC', GPIO_table.ChannelName))) % nVoke1 sync signal is called 'SYNC'
+	% nVoke has a bug to generate a bigger time value. The delayed starting time should be corrected
+	SYNC_table = GPIO_table(ismember(GPIO_table.ChannelName, 'SYNC'), :);
+	time_stamp_start = SYNC_table.Time_s_(1);
+	if time_stamp_start ~= 0
+		GPIO_table.Time_s_ = GPIO_table.Time_s_ - time_stamp_start;
 	end
-end
 
-% outputs. varible 'channel' is not listed below, but it is outputed primarily
-EX_LED_power = max(channel(2).time_value(:, 2)); % EX_LED power for imaging
-GPIO_duration = channel(1).time_value(end, 1); % end point of SYNC channel time, the duration of recording
-stimulation = channel_list(active_channels(3 : end)); % name of stimulation channel. 1-SYNC， 2-EX_LED
+	% find out active channels. SYNC is always active
+	channel_list = {'SYNC'; 'EX_LED'; 'GPIO1'; 'GPIO2'; 'GPIO3'; 'GPIO4'; 'OG_LED'};
+	active_channels = []; % location of channel in the list
 
-varargout{1} = EX_LED_power;
-varargout{2} = GPIO_duration;
-varargout{3} = stimulation;
-
-if nargin == 2
-	if draw == 1
-		channel_no = length(active_channels) - 1; % SYNC channel is not plotted, thus -1
-		figure
-		for n = 1 : channel_no
-			subplot(channel_no, 1, n)
-			struct_loc = active_channels(n+1); % channel location in 'channel' structure. SYNC is skipped
-			x = channel(struct_loc).time_value(:, 1); % time axis
-			y = channel(struct_loc).time_value(:, 2); % value
-			stairs(x, y);
-			axis([0 GPIO_duration 0 max(y)*1.1]); % limit of x is 0 to the end. limit of y is 110% of max y
-			title(channel(struct_loc).name);
+	p = 1; % p is the position of each active channel info in channel structure
+	for n = 1 : length(channel_list)
+		channel_table = GPIO_table(ismember(GPIO_table.ChannelName, channel_list(n)), :);
+		channel_value = find(channel_table.Value(:) ~= 0);
+		if ~isempty(channel_value)
+			active_channels = [active_channels n];
+			channel(p).name = channel_list(n);
+			channel(p).time_value(:, 1) = table2array(GPIO_table(ismember(GPIO_table.ChannelName, channel(p).name), 1)); % time info
+			channel(p).time_value(:, 2) = table2array(GPIO_table(ismember(GPIO_table.ChannelName, channel(p).name), 3)); % value info
+			p = p+1; 
+		else
+			p = p; % do not generated empty arrays in channel structure
 		end
 	end
-end
+
+	% outputs. varible 'channel' is not listed below, but it is outputed primarily
+	EX_LED_power = max(channel(2).time_value(:, 2)); % EX_LED power for imaging
+	GPIO_duration = channel(1).time_value(end, 1); % end point of SYNC channel time, the duration of recording
+	stimulation = channel_list(active_channels(3 : end)); % name of stimulation channel. 1-SYNC， 2-EX_LED
+
+	varargout{1} = EX_LED_power;
+	varargout{2} = GPIO_duration;
+	varargout{3} = stimulation;
+
+	if nargin == 2
+		if draw == 1
+			channel_no = length(active_channels) - 1; % SYNC channel is not plotted, thus -1
+			figure
+			for n = 1 : channel_no
+				subplot(channel_no, 1, n)
+				struct_loc = active_channels(n+1); % channel location in 'channel' structure. SYNC is skipped
+				x = channel(struct_loc).time_value(:, 1); % time axis
+				y = channel(struct_loc).time_value(:, 2); % value
+				stairs(x, y);
+				axis([0 GPIO_duration 0 max(y)*1.1]); % limit of x is 0 to the end. limit of y is 110% of max y
+				title(channel(struct_loc).name);
+			end
+		end
+	end
+elseif ~isempty(find(strcmp('BNC Sync Output', GPIO_table.ChannelName))) % nVoke2 sync signal is called 'BNC sync Output'
+	SYNC_table = GPIO_table(ismember(GPIO_table.ChannelName, 'BNC Sync Output'), :);
+	time_stamp_start = SYNC_table.Time_s_(1);
+	if time_stamp_start ~= 0
+		GPIO_table.Time_s_ = GPIO_table.Time_s_ - time_stamp_start;
+	end
+	channel_list = {'BNC Sync Output'; 'EX-LED'; 'OG-LED';...
+	'Digital GPO 0'; 'Digital GPO 1'; 'Digital GPO 2';...
+	'GPIO-1'}; 
+	active_channels = []; % location of channel in the list
+
+	p = 1; % p is the position of each active channel info in channel structure
+	for n = 1 : length(channel_list)
+		channel_table = GPIO_table(ismember(GPIO_table.ChannelName, channel_list(n)), :);
+		channel_value = find(channel_table.Value(:) ~= 0);
+		if ~isempty(channel_value)
+			active_channels = [active_channels n];
+			channel(p).name = channel_list(n);
+			channel(p).time_value(:, 1) = table2array(GPIO_table(ismember(GPIO_table.ChannelName, channel(p).name), 1)); % time info
+			channel(p).time_value(:, 2) = table2array(GPIO_table(ismember(GPIO_table.ChannelName, channel(p).name), 3)); % value info
+			p = p+1; 
+		else
+			p = p; % do not generated empty arrays in channel structure
+		end
+	end
+	% outputs. varible 'channel' is not listed below, but it is outputed primarily
+	EX_LED_power = max(channel(2).time_value(:, 2)); % EX_LED power for imaging
+
+	idx_last_sync_sig = find(channel(1).time_value(:, 2), 1, 'last'); % nVoke2 keeps working after scheduled rec finished. Use last sync signal to find the real recording end
+	GPIO_duration = channel(1).time_value(idx_last_sync_sig, 1); % end point of SYNC channel time, the duration of recording
+	stimulation = channel_list{active_channels(3)}; % name of stimulation channel. 1-SYNC， 2-EX_LED
+
+	varargout{1} = EX_LED_power;
+	varargout{2} = GPIO_duration;
+	varargout{3} = stimulation;
+
+	if nargin == 2
+		if draw == 1
+			channel_no = size(channel, 2) - 1; % SYNC channel is not plotted, thus -1
+			figure
+			for n = 1 : channel_no
+				subplot(channel_no, 1, n)
+				struct_loc = n+1; % channel location in 'channel' structure. SYNC is skipped
+				x = channel(struct_loc).time_value(:, 1); % time axis
+				y = channel(struct_loc).time_value(:, 2); % value
+				stairs(x, y);
+				axis([0 GPIO_duration 0 max(y)*1.1]); % limit of x is 0 to the end. limit of y is 110% of max y
+				title(channel(struct_loc).name);
+			end
+		end
+	end
+
 end
 
