@@ -16,6 +16,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	align_on_y = true; % subtract data with the values at the align points
 	% win_range = []; 
 	cat_keywords =[]; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
+	mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 
 
 	% Optionals
@@ -42,6 +43,8 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	        align_on_y = varargin{ii+1};
 	    elseif strcmpi('scale_data', varargin{ii})
 	        scale_data = varargin{ii+1};
+        elseif strcmpi('mod_pcn', varargin{ii})
+        mod_pcn = varargin{ii+1};
 	    end
 	end
 
@@ -60,7 +63,8 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 		[data_cell{n}] = get_event_trace_trial(trialData, 'event_type', event_type,...
 		'traceData_type', traceData_type, 'event_data_group', event_data_group,...
 		'event_filter', event_filter, 'event_align_point', event_align_point, 'cat_keywords', cat_keywords,...
-		'pre_event_time', pre_event_time, 'post_event_time', post_event_time);
+		'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
+		'mod_pcn', mod_pcn);
 	end
 
 	alignedData_allTrials = [data_cell{:}];

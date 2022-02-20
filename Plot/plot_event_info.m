@@ -13,7 +13,8 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 
 	% Defaults
 	plot_combined_data = false; % applied to histogram plots
-	parNames = {'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'}; 
+	parNames = {'rise_duration','peak_mag_delta','peak_delta_norm_hpstd',...
+		'peak_slope','peak_slope_norm_hpstd','baseDiff','baseDiff_stimWin'}; 
 		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
 	save_fig = false;
 	save_dir = '';
@@ -48,8 +49,6 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 			return
 		end
 	end
-	
-
 
 	close all
 
@@ -64,32 +63,18 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	else
 		dataType = 'event'; % 1 entry in a struct only contains 1 event. No mean value
 	end
- 
-	duration_val_idx = find(contains(parNames, 'duration')); % idx of duration pars, such as rise_duration
-	mag_val_idx = find(contains(parNames, 'mag_delta')); % idx of mag, such as peak_mag_delta
-	mag_norm_val_idx = find(contains(parNames, 'peak_delta_norm_hpstd')); % idx of normalized mag, such as peak_mag_norm_delta
-	all_mag_val_idx = [mag_val_idx; mag_norm_val_idx];
-	all_slope_val_idx = find(contains(parNames, 'slope')); % idx of all slopes, such as peak_slope and peak_slope_norm_hpstd
-	norm_slope_val_idx = find(contains(parNames, 'peak_slope_norm_hpstd')); % idx of slope calculated using norm data, such as peak_slope_norm_hpstd
-	slope_val_idx = setdiff(all_slope_val_idx, norm_slope_val_idx); % idx of slope calculated with non-normalized data
 
-	mag_num = numel(mag_val_idx);
-	mag_norm_num = numel(mag_norm_val_idx);
-	slope_num = numel(slope_val_idx);
-	slope_norm_num = numel(norm_slope_val_idx);
-
-
-	% histogram plot
+	%% histogram plot
 	par_num = numel(parNames);
 	for pn = 1:par_num
 		par = parNames{pn};
 
 		[hist_data.(par), hist_setting.(par)] = plot_event_info_hist(event_info_struct,...
 			par, 'plot_combined_data', plot_combined_data,...
-			'save_fig', save_fig, 'save_dir', save_dir);
+			'save_fig', save_fig, 'save_dir', save_dir, 'nbins', 200);
 	end
-	% bar plot
-	f_bar = figure;
+	%% bar plot
+	f_bar = figure('Name', 'bar plots');
 	if par_num == 1
 		fig_position = [0.1 0.1 0.2 0.6];
 	else
@@ -115,8 +100,8 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
 	end
 
-	% box plot
-	f_box = figure;
+	%% box plot
+	f_box = figure('Name', 'box plots');
 	if par_num == 1
 		fig_position = [0.1 0.1 0.2 0.6];
 	else
@@ -143,7 +128,52 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
 	end
 
-	% scatter plot
+	%% cumulative plot
+	f_cd = figure('Name', 'cumulative distribution plots'); 
+	if par_num == 1
+		fig_position = [0.1 0.1 0.2 0.6];
+	else
+		fig_position = [0.1 0.1 0.8 0.6];
+	end 
+	set(gcf, 'Units', 'normalized', 'Position', fig_position)
+	tlo = tiledlayout(f_cd, ceil(par_num/4), 4);
+	groupNames = {event_info_struct.group};
+	group_num = numel(groupNames);
+	for pn = 1:par_num
+		ax = nexttile(tlo);
+		par = parNames{pn};
+		event_info_cell = cell(1, group_num);
+		for gn = 1:group_num
+			event_info_cell{gn} = [event_info_struct(gn).event_info.(par)]';
+		end
+		[data_cd, data_cdCombine] = cumulative_distr_plot(event_info_cell, 'groupNames', groupNames,...
+			'plotWhere', ax, 'stat', true);
+		title(replace(par, '_', '-'));
+	end
+	if save_fig
+		fname = 'cd_plots';
+		savePlot(f_cd,...
+			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
+	end
+
+	%% scatter plot
+	duration_val_idx = find(contains(parNames, 'duration')); % idx of duration pars, such as rise_duration
+	mag_val_idx = find(contains(parNames, 'mag_delta')); % idx of mag, such as peak_mag_delta
+	mag_norm_val_idx = find(contains(parNames, 'peak_delta_norm_hpstd')); % idx of normalized mag, such as peak_mag_norm_delta
+	all_mag_val_idx = [mag_val_idx; mag_norm_val_idx];
+	all_slope_val_idx = find(contains(parNames, 'slope')); % idx of all slopes, such as peak_slope and peak_slope_norm_hpstd
+	norm_slope_val_idx = find(contains(parNames, 'peak_slope_norm_hpstd')); % idx of slope calculated using norm data, such as peak_slope_norm_hpstd
+	slope_val_idx = setdiff(all_slope_val_idx, norm_slope_val_idx); % idx of slope calculated with non-normalized data
+	baseDiff_idx = find(contains(parNames, 'baseDiff')); 
+	val_rise_idx = find(contains(parNames, 'val_rise')); 
+	% sponNorm_peak_mag_delta_idx = find(contains(parNames, 'sponNorm_peak_mag_delta')); 
+
+	% mag_num = numel(mag_val_idx);
+	% mag_norm_num = numel(mag_norm_val_idx);
+	% slope_num = numel(slope_val_idx);
+	% slope_norm_num = numel(norm_slope_val_idx);
+
+	%% scatter plot
 	% duration vs mag/slope
 	if ~isempty(duration_val_idx)
 		duration_par_num = numel(duration_val_idx);
@@ -209,6 +239,39 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 			end
 		end
 	end
+
+	% baseDiff vs mag
+	if ~isempty(baseDiff_idx)
+		baseDiff_num = numel(baseDiff_idx);
+		for bn = 1:baseDiff_num
+			par_baseDiff = parNames{baseDiff_idx(bn)};
+			mag_par_num = numel(mag_val_idx);
+			for mn = 1:mag_par_num
+				par_mag = parNames{mag_val_idx(mn)};
+				[scatter_data.([par_baseDiff, '_vs_' par_mag])] = plot_event_info_scatter(event_info_struct,...
+					par_baseDiff, par_mag,...
+					'save_fig', save_fig, 'save_dir', save_dir);
+			end
+		end
+	end
+
+	% baseDiff vs riseDuration
+	if ~isempty(baseDiff_idx)
+		baseDiff_num = numel(baseDiff_idx);
+		for bn = 1:baseDiff_num
+			par_baseDiff = parNames{baseDiff_idx(bn)};
+			duration_par_num = numel(duration_val_idx);
+			for dn = 1:duration_par_num
+				par_duration = parNames{duration_val_idx(dn)};
+				[scatter_data.([par_baseDiff, '_vs_' par_duration])] = plot_event_info_scatter(event_info_struct,...
+					par_baseDiff, par_duration,...
+					'save_fig', save_fig, 'save_dir', save_dir);
+			end
+		end
+	end
+
+
+	%% plot data and stat
 	if exist('hist_data', 'var')
 		plot_info.hist_data = hist_data;
 		plot_info.hist_setting = hist_setting;

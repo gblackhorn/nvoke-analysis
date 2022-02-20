@@ -24,6 +24,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	cat_keywords =[]; % % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 
 	rebound_duration = 1; % default 1s. Used to extend events screen window when 'stimWin' is used for 'event_type'
+	mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 
 
 	% Optionals
@@ -50,6 +51,8 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	        align_on_y = varargin{ii+1};
 	    elseif strcmpi('scale_data', varargin{ii})
 	        scale_data = varargin{ii+1};
+	    elseif strcmpi('mod_pcn', varargin{ii})
+	        mod_pcn = varargin{ii+1};
 	    end
 	end
 
@@ -78,13 +81,14 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	if ~isempty(gpio_info)
 		[alignedData.stimInfo,combine_stimRange,combine_stimDuration] = get_stimInfo(gpio_info);
 		if strcmpi(event_type, 'stimWin')
-			stimRange = combine_stimRange(:, 1);
+			stimStart = combine_stimRange(:, 1);
 			post_event_time = post_event_time+combine_stimDuration;
 		end
 	else
 		alignedData.stimInfo = 'NA';
+		combine_stimRange = [];
 		if strcmpi(event_type, 'stimWin')
-			stimRange = [];
+			stimStart = [];
 		end
 	end
 
@@ -121,8 +125,8 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 				end
 
 			case 'stimWin'
-				if ~isempty(stimRange)
-					[aligned_time,traceValue,traceMean_val,traceStd_val] = get_event_trace(stimRange,full_time,roi_trace_data,...
+				if ~isempty(stimStart)
+					[aligned_time,traceValue,traceMean_val,traceStd_val] = get_event_trace(stimStart,full_time,roi_trace_data,...
 						'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
 						'align_on_y', align_on_y, 'scale_data', scale_data);
 					alignedData.traces(n).value = traceValue; 
@@ -147,6 +151,15 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 				fprintf('Warning: only use [detected_events] or [stimWin] for var [event_type]\n')
 		end
 		alignedData.traces(n).fullTrace = roi_trace_data;
+		if ~isempty(alignedData.traces(n).eventProp) && mod_pcn
+			[alignedData.traces(n).eventProp] = mod_cat_name(alignedData.traces(n).eventProp,'dis_extra',false);
+			[alignedData.traces(n).eventProp] = add_eventBaseDiff_to_eventProp(alignedData.traces(n).eventProp,...
+				combine_stimRange,full_time,roi_trace_data,varargin);
+			[alignedData.traces(n).eventProp] = add_tfTag_to_eventProp(alignedData.traces(n).eventProp,...
+				'peak_category','trig','newFieldName','stimTrig');
+			[alignedData.traces(n).eventProp] = add_riseDelay_to_eventProp(alignedData.traces(n).eventProp,...
+				combine_stimRange,'errCali',0);
+		end
 	end
 	alignedData.time = aligned_time;
 	alignedData.fullTime = full_time;

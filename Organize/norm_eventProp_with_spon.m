@@ -22,6 +22,8 @@ function [eventProp_all_norm,varargout] = norm_eventProp_with_spon(eventProp_all
             entry = varargin{ii+1};
         elseif strcmpi('dis_spon', varargin{ii})
             dis_spon = varargin{ii+1};
+	    elseif strcmpi('propNames', varargin{ii})
+            propNames = varargin{ii+1};
 	    end
 	end
 

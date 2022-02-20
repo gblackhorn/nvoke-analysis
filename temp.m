@@ -105,3 +105,16 @@ for n = 1:numel(alignedTraces)
 end
 
 
+%% ====================
+% test color
+x = [1:10];
+y = ones(1, numel(x));
+colorGroup = {'#3FF5E6', '#F55E58', '#F5A427', '#4CA9F5', '#33F577',...
+	'#408F87', '#8F4F7A', '#798F7D', '#8F7832', '#28398F'};
+sf = figure;
+hold on
+for n = 1:numel(x)
+	scatter(x(n), y(n), 100, 'filled', 'MarkerFaceColor', colorGroup{n},...
+		'MarkerFaceAlpha',1,'MarkerEdgeAlpha',0)
+end
+hold off

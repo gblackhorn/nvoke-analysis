@@ -1,5 +1,5 @@
 function [locDataVal,varargout] = get_val_from_roiData(roiData,locInfo,varargin)
-	% Given roiData and locInfo (location of data point(s). 1 point or a shrot range),
+	% Given roiData and locInfo (location of data point(s). 1 point or a short range),
 	% returns the value of trace at locInfo (1 point or mean of the short range)
 	% locInfo: canbe either the location in roiData or the timeStamp for roiData. 
 	%	timeInfo along the roiData is needed if locInfo is the latter one.

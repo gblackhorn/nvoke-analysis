@@ -22,7 +22,7 @@ function [grouped_event_info, varargout] = group_event_info_multi_category(event
 
 
 
-    % Main content
+    %% Main content
     % filter data
 
     event_info_fieldnames = fieldnames(event_info);
@@ -61,17 +61,5 @@ function [grouped_event_info, varargout] = group_event_info_multi_category(event
         grouped_event_info_option.filter_par = filter_par;
 
         varargout{1} = grouped_event_info_option;
-
-    	% group_names = group_names_temp;
-
-    	% group_count = 0;
-    	% for cn = 1:category_num
-    	% 	for scn = 1:numel(group_cat_info(cn).g_content_unique)
-
-    	% 	end
-    	% end
     end
-
-    
-
 end

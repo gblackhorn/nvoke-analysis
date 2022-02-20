@@ -1,5 +1,5 @@
 function [varargout] = boxPlot_with_scatter(CellArrayData,varargin)
-	% Plot box plot with scatter data 
+	% Box plot with scatter data 
 
 	% CellArrayData: data should be organized in cell array. each cell contain a group of data.
 	%				each cell contains a single vector
@@ -50,12 +50,20 @@ function [varargout] = boxPlot_with_scatter(CellArrayData,varargin)
 	% ====================
 	% Main content
 	boxGroups_cell = cell(groupNum, 1);
+	dis_idx = []; % in case there are empty groups
 	for n = 1:groupNum
 		datapointNum = numel(CellArrayData{n});
+		if datapointNum==0
+			dis_idx = [dis_idx n];
+		end
 		singleGroup = cell(datapointNum, 1);
 		singleGroup(:) = groupNames(n);
 		boxGroups_cell{n} = singleGroup;
 	end
+	groupNum = groupNum-numel(dis_idx);
+	CellArrayData(dis_idx) = [];
+	boxGroups_cell(dis_idx) = [];
+
 	boxPlot_data = cat(1, CellArrayData{:});
 	boxPlot_group = cat(1, boxGroups_cell{:});
     

@@ -17,7 +17,7 @@ function [grouped_event_info, varargout] = group_event_info_single_category(even
         end
     end
 
-    % Main content
+    %% Main content
     if ~isempty(filter_field)
     	[event_info] = filter_struct(event_info, filter_field, filter_par);
     end

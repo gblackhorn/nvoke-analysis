@@ -25,8 +25,11 @@ ins_cnmfe_result_folder = fullfile(ins_projects_folder, 'Processed_files_for_mat
 
 ins_rec_ventral_folder = fullfile(ins_recordings_folder, 'IO_virus_ventral approach'); % processed imaging data, including isxd, gpio, tiff, and csv files 
 
-
-
+%% ====================
+% Save processed data
+save_dir = uigetdir(ins_analysis_folder);
+dt = datestr(now, 'yyyymmdd');
+save(fullfile(save_dir, [dt, '_ProcessedData_optoEx']), 'recdata_organized','alignedData_allTrials','grouped_event_info');
 
 %% ====================
 % 8.4 Select a specific group of data from recdata_group for further analysis
@@ -92,12 +95,13 @@ cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger',
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
 pre_event_time = 5; % unit: s. event trace starts at 1s before event onset
 post_event_time = 5; % unit: s. event trace ends at 2s after event onset
+mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
 
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', event_type,...
 	'traceData_type', traceData_type, 'event_data_group', event_data_group,...
 	'event_filter', event_filter, 'event_align_point', event_align_point, 'cat_keywords', cat_keywords,...
-	'pre_event_time', pre_event_time, 'post_event_time', post_event_time);
+	'pre_event_time', pre_event_time, 'post_event_time', post_event_time, 'mod_pcn', mod_pcn);
 
 % if filter_alignedData 
 % 	alignedData_bk = alignedData_allTrials;
@@ -128,15 +132,44 @@ entry = 'event'; % options: 'roi' or 'event'
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 dis_spon = false; % true/false
+screenEventProp = true;
 
 modify_eventType_name = true; % true/false
 [eventProp_all] = collect_event_prop(alignedData_allTrials, 'style', 'event'); % only use 'event' for 'style'
-% mod_cat_name will cause n number problem if style is 'roi' in the last step
+
+% modify the stimulation name in eventProp_all
+cat_setting.cat_type = 'stim_name';
+cat_setting.cat_names = {'opto', 'ap', 'opto-ap'};
+cat_setting.cat_merge = {{'OG-LED-5s'}, {'GPIO-1-1s'}, {'OG-LED-5s GPIO-1-1s'}};
+[eventProp_all] = mod_cat_name(eventProp_all,...
+	'cat_setting',cat_setting,'dis_extra', false,'stimType',false);
+
+% Rename stim name for opto if opto-5s exhibited excitation effect
+if screenEventProp 
+	tag_check = {'opto', 'opto-ap'};
+	idx_check = cell(1, numel(tag_check));
+	for n = 1:numel(tag_check)
+		[~,idx_check{n}] = filter_structData(eventProp_all,'stim_name',tag_check{n},[]);
+	end
+	idxAll_check = [idx_check{:}];
+	eventProp_check = eventProp_all(idxAll_check);
+	eventProp_uncheck = eventProp_all;
+	eventProp_uncheck(idxAll_check) = [];
+	[~,idx_optoEx] = filter_structData(eventProp_check,'stimTrig',1,[]);
+	cat_setting.cat_type = 'stim_name';
+	cat_setting.cat_names = {'EXopto', 'EXopto-ap'};
+	cat_setting.cat_merge = {{'opto'}, {'opto-ap'}};
+	[eventProp_check(idx_optoEx)] = mod_cat_name(eventProp_check(idx_optoEx),...
+		'cat_setting',cat_setting,'dis_extra', false,'stimType',false);
+	eventProp_all = [eventProp_uncheck eventProp_check];
+end
+
+[eventProp_all_norm] = norm_eventProp_with_spon(eventProp_all,'entry',entry,'dis_spon',dis_spon);
+% modify the peak category names
 if modify_eventType_name % Note: when style is 'roi', there will be more data number, if noStim and interval are categorized as spon
 	dis_extra = true;
-	[eventProp_all] = mod_cat_name(eventProp_all,'dis_extra', dis_extra);
+	[eventProp_all_norm] = mod_cat_name(eventProp_all_norm,'dis_extra', dis_extra,'seperate_spon',true);
 end
-[eventProp_all_norm] = norm_eventProp_with_spon(eventProp_all,'entry',entry,'dis_spon',dis_spon);
 
 category_names = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'
 % [grouped_event_info, grouped_event_info_option] = group_event_info_multi_category(eventProp_all,...
@@ -180,14 +213,15 @@ grouped_event_info(disIdx) = [];
 
 %% ====================
 % 9.3.2 plot event properties
-close all
+% close all
 plot_combined_data = true;
-parNames = {'rise_duration', 'sponNorm_rise_duration', 'peak_mag_delta', 'sponNorm_peak_mag_delta'};
+parNames = {'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
+	'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise','rise_delay'};
         % {'sponNorm_rise_duration', 'sponNorm_peak_delta_norm_hpstd', 'sponNorm_peak_slope_norm_hpstd'}; 
 		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
 		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
 		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
-save_fig = true; % true/false
+save_fig = false; % true/false
 save_dir = ins_analysis_ventral_fig_folder;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not

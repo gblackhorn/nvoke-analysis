@@ -99,7 +99,7 @@ function [hist_info,varargout] = plot_event_info_hist(event_info_struct,par_name
 
 			if plot_combined_data
 				histogram('BinEdges',hist_info(1).edges,'BinCounts',hist_info(1).N,...
-					'Normalization', 'probability', 'FaceAlpha',0.3);
+					'Normalization', 'probability', 'FaceAlpha',0.1);
 				hold on
 			end
 

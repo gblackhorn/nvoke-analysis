@@ -32,10 +32,10 @@ function [event_info,varargout] = mod_cat_name(event_info,varargin)
 	        cat_setting = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
         elseif strcmpi('dis_extra', varargin{ii})
 	        dis_extra = varargin{ii+1};
-        % elseif strcmpi('stimStart_err', varargin{ii})
-        %     stimStart_err = varargin{ii+1};
-        % elseif strcmpi('nonstimMean_pos', varargin{ii})
-        %     nonstimMean_pos = varargin{ii+1};
+        elseif strcmpi('stimType', varargin{ii})
+            stimType = varargin{ii+1};
+        elseif strcmpi('seperate_spon', varargin{ii})
+            seperate_spon = varargin{ii+1};
 	    end
 	end
 
@@ -54,33 +54,41 @@ function [event_info,varargout] = mod_cat_name(event_info,varargin)
 	for n = 1:event_num
 		mod_name = false; % mark if the cat name has been modified
 		old_name = event_info(n).(cat_type);
-		for cn = 1:cat_num
-			tf = strcmpi(old_name, cat_merge{cn});
-			if ~isempty(find(tf, 1))
-				new_name = cat_names{cn};
-				spon_tf = strcmpi('spon', cat_names{cn});
+		tf_newName = strcmpi(old_name, cat_names); % check if the category name is already modified
+		if isempty(find(tf_newName, 1))
+			for cn = 1:cat_num
+				tf = strcmpi(old_name, cat_merge{cn});
+				if ~isempty(find(tf, 1))
+					new_name = cat_names{cn};
+					tf_newName = true;
 
-				if stimType
-					addStim_tf = true;
-					if spon_tf
-						if ~seperate_spon
-							addStim_tf = false;
-						end
-					end
+					mod_name = true;
+					break
 				end
-
-				if addStim_tf && isfield(event_info(n), 'stim_name')
-					new_name = sprintf('%s [%s]', new_name, event_info(n).stim_name);
-				end
-
-				event_info(n).(cat_type) = new_name;
-				mod_name = true;
-				break
 			end
+			if ~mod_name
+				dis_idx(n) = 1;
+			end
+		else
+			new_name = old_name;
 		end
-		if ~mod_name
-			dis_idx(n) = 1;
+
+		spon_tf = strcmpi('spon', new_name);
+		if stimType
+			addStim_tf = true;
+			if spon_tf
+				if ~seperate_spon
+					addStim_tf = false;
+				end
+			end
+		else
+			addStim_tf = false;
 		end
+		if addStim_tf && isfield(event_info(n), 'stim_name')
+			new_name = sprintf('%s [%s]', new_name, event_info(n).stim_name);
+		end
+
+		event_info(n).(cat_type) = new_name;
 	end
 
 	if dis_extra
