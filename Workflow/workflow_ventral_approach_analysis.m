@@ -179,6 +179,12 @@ category_names = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_categ
 if numel(category_names)==1 && strcmpi(category_names, 'peak_category')
 	[grouped_event_info] = merge_event_info(grouped_event_info); % merge some groups
 end
+
+for gn = 1:numel(grouped_event_info)
+	[grouped_event_info(gn).numTrial,grouped_event_info(gn).numRoi,grouped_event_info(gn).numRoiVec] = get_num_fieldUniqueContent(grouped_event_info(gn).event_info,...
+		'fn_1', 'trialName', 'fn_2', 'roiName');
+end
+
 grouped_event_info_option.event_type = event_type;
 grouped_event_info_option.traceData_type = traceData_type;
 grouped_event_info_option.event_data_group = event_data_group;
@@ -213,7 +219,7 @@ grouped_event_info(disIdx) = [];
 
 %% ====================
 % 9.3.2 plot event properties
-% close all
+close all
 plot_combined_data = true;
 parNames = {'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
 	'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise','rise_delay'};
