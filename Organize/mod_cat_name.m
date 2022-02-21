@@ -64,6 +64,8 @@ function [event_info,varargout] = mod_cat_name(event_info,varargin)
 
 					mod_name = true;
 					break
+                else
+                    new_name = old_name;
 				end
 			end
 			if ~mod_name

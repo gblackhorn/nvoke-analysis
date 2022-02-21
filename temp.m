@@ -5,7 +5,7 @@ plot_combined_data = true;
 plot_stim_shade = true;
 y_range = [-20 30];
 
-alignedData = alignedData_filtered;
+alignedData = alignedData_allTrials;
 [C, ia, ic] = unique({alignedData.stim_name});
 num_C = numel(C);
 

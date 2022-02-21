@@ -25,6 +25,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 
 	rebound_duration = 1; % default 1s. Used to extend events screen window when 'stimWin' is used for 'event_type'
 	mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
+	debug_mode = false;
 
 	% Defaults for [get_stimEffect]
 	base_timeRange = 2; % default 2s. 
@@ -111,7 +112,10 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 		alignedData.traces(n).roi = roiName;
 		roi_event_spec_table = event_spec_fulltable{event_data_group, roiName}{:};
 
-		% fprintf(' - roi %d/%d %s\n', n, roi_num, roiName)
+		if debug_mode
+			fprintf(' - roi %d/%d %s\n', n, roi_num, roiName)
+		end
+		
 
 		switch event_type
 			case 'detected_events'

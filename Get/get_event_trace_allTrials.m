@@ -17,6 +17,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	% win_range = []; 
 	cat_keywords =[]; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 	mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
+	debug_mode = false; 
 
 
 	% Optionals
@@ -54,10 +55,12 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	data_cell = cell(1, trial_num);
 
 	for n = 1:trial_num
-		% fprintf('trial %d: %s\n', n, allTrialsData{n, 1})
-		% if n == 4
-		% 	pause
-		% end
+		if debug_mode
+			fprintf('trial %d: %s\n', n, allTrialsData{n, 1})
+			if n == 3
+				pause
+			end
+		end
 
 		trialData = allTrialsData(n, :);
 		[data_cell{n}] = get_event_trace_trial(trialData, 'event_type', event_type,...

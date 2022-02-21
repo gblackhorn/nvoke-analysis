@@ -86,7 +86,7 @@ recdata_organized_bk = recdata_organized;
 [recdata_organized] = discard_recData_roi(recdata_organized,'stims',stims,'eventCats',eventCats);
 %% ====================
 % 9.2 Align traces from all trials. Also collect the properties of events
-event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
+event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
 traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 event_data_group = 'peak_lowpass';
 event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
@@ -102,6 +102,16 @@ mod_pcn = true; % true/false modify the peak category names with func [mod_cat_n
 	'traceData_type', traceData_type, 'event_data_group', event_data_group,...
 	'event_filter', event_filter, 'event_align_point', event_align_point, 'cat_keywords', cat_keywords,...
 	'pre_event_time', pre_event_time, 'post_event_time', post_event_time, 'mod_pcn', mod_pcn);
+
+%% ====================
+% 9.2.0.1 Check trace aligned to stim window
+% note: 'event_type' for alignedData_allTrials must be 'stimWin'
+plot_combined_data = true;
+plot_stim_shade = true;
+y_range = [-20 30];
+stimEffectType = 'excitation'; % options: 'excitation', 'inhibition', 'rebound'
+fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedData_allTrials,...
+	'plot_combined_data',plot_combined_data,'plot_stim_shade',plot_stim_shade,'y_range',y_range,'stimEffectType',stimEffectType);
 
 % if filter_alignedData 
 % 	alignedData_bk = alignedData_allTrials;
@@ -310,7 +320,7 @@ close all
 save_fig = false; % true/false
 save_dir = ins_analysis_ventral_fig_folder;
 plot_combined_data = true;
-ins_analysis_ventral_fig_folder=plot_trace_allTrials(alignedData_allTrials,...
+plot_trace_allTrials(alignedData_allTrials,...
 	'plot_combined_data', plot_combined_data, 'save_fig', save_fig, 'save_dir', save_dir);
 
 
