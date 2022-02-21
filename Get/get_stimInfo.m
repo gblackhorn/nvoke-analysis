@@ -1,9 +1,26 @@
 function [stimInfo,varargout] = get_stimInfo(gpioInfo,varargin)
 % Read recdata_organized gpio info and extract stimulation info (used for aligned events)
 
+	
+	% Defaults
+	fn_stimName = 'name'; % field name of stimulation
+	fn_range = 'stim_range'; % field name of stimulation range (n x 2 vector). n is repeat times
 
+	% Optionals
+	for ii = 1:2:(nargin-1)
+	    if strcmpi('fn_stimName', varargin{ii})
+	        fn_stimName = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
+        elseif strcmpi('fn_range', varargin{ii})
+	        fn_range = varargin{ii+1};
+        % elseif strcmpi('in_thresh', varargin{ii})
+	       %  in_thresh = varargin{ii+1};
+        % elseif strcmpi('in_calLength', varargin{ii})
+	       %  in_calLength = varargin{ii+1};
+	    end
+	end	
 
-	stim_range_cells = {gpioInfo.stim_range}; % convert stim_range to cell array.
+	%% Content
+	stim_range_cells = {gpioInfo.(fn_range)}; % convert stim_range to cell array.
 	stim_rows = find(~cellfun(@isempty, stim_range_cells)); % rows contain stim info have non-empty stim_range
 
 	gpioInfo_stim = gpioInfo(stim_rows);
@@ -15,11 +32,11 @@ function [stimInfo,varargout] = get_stimInfo(gpioInfo,varargin)
 		stim_start_time = NaN(1, stim_ch_num);
 
 		for scn = 1:stim_ch_num
-			stimInfo(scn).stim = gpioInfo_stim(scn).name;
-			stimInfo(scn).duration_sec = gpioInfo_stim(scn).stim_range(1, 2)-gpioInfo_stim(scn).stim_range(1, 1);
-			stimInfo(scn).time_range_notAlign = gpioInfo_stim(scn).stim_range;
-			stimInfo(scn).repeats = size(gpioInfo_stim(scn).stim_range, 1); % number of repeats
-			stim_start_time(scn) = gpioInfo_stim(scn).stim_range(1, 1);
+			stimInfo(scn).stim = gpioInfo_stim(scn).(fn_stimName);
+			stimInfo(scn).duration_sec = gpioInfo_stim(scn).(fn_range)(1, 2)-gpioInfo_stim(scn).(fn_range)(1, 1);
+			stimInfo(scn).time_range_notAlign = gpioInfo_stim(scn).(fn_range);
+			stimInfo(scn).repeats = size(gpioInfo_stim(scn).(fn_range), 1); % number of repeats
+			stim_start_time(scn) = gpioInfo_stim(scn).(fn_range)(1, 1);
 		end
 
 		[~, stim_start_order] = sort(stim_start_time); % When various stim applied, use the one start early as the stim_start

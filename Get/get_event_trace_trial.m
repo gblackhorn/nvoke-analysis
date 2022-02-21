@@ -26,6 +26,12 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	rebound_duration = 1; % default 1s. Used to extend events screen window when 'stimWin' is used for 'event_type'
 	mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 
+	% Defaults for [get_stimEffect]
+	base_timeRange = 2; % default 2s. 
+	ex_eventCat = {'trig'}; % event category string used to define excitation. May contain multiple strings
+	rb_eventCat = {'rebound'}; % event category string used to define rebound. May contain multiple strings
+	in_thresh_stdScale = 2; % n times of std lower than baseline level. Last n s during stimulation is used
+	in_calLength = 1; % calculate the last n s trace level during stimulation to 
 
 	% Optionals
 	for ii = 1:2:(nargin-1)
@@ -160,6 +166,10 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			[alignedData.traces(n).eventProp] = add_riseDelay_to_eventProp(alignedData.traces(n).eventProp,...
 				combine_stimRange,'errCali',0);
 		end
+		[alignedData.traces(n).stimEffect] = get_stimEffect(full_time,roi_trace_data,combine_stimRange,...
+			{alignedData.traces(n).eventProp.peak_category},'ex_eventCat',ex_eventCat,...
+			'rb_eventCat',rb_eventCat,'in_thresh_stdScale',in_thresh_stdScale,...
+			'in_calLength',in_calLength); % find the stimulation effect. stimEffect is a struct var
 	end
 	alignedData.time = aligned_time;
 	alignedData.fullTime = full_time;
