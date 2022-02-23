@@ -70,6 +70,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	alignedData.cat_keywords = cat_keywords;
 	alignedData.data_type = traceData_type;
 	alignedData.stim_name = char(trialData{stim_name_col});
+	alignedData.roi_map = trialData{traceData_col}.roi_map;
 	if isfield(trialData{traceData_col}, 'fovID')
 		alignedData.fovID = trialData{traceData_col}.fovID;
 	else

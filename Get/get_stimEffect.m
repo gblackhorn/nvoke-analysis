@@ -21,8 +21,8 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 	        ex_eventCat = varargin{ii+1};
         elseif strcmpi('rb_eventCat', varargin{ii})
 	        rb_eventCat = varargin{ii+1};
-        elseif strcmpi('in_thresh', varargin{ii})
-	        in_thresh = varargin{ii+1};
+        elseif strcmpi('in_thresh_stdScale', varargin{ii})
+	        in_thresh_stdScale = varargin{ii+1};
         elseif strcmpi('in_calLength', varargin{ii})
 	        in_calLength = varargin{ii+1};
 	    end

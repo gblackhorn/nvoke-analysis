@@ -86,7 +86,7 @@ recdata_organized_bk = recdata_organized;
 [recdata_organized] = discard_recData_roi(recdata_organized,'stims',stims,'eventCats',eventCats);
 %% ====================
 % 9.2 Align traces from all trials. Also collect the properties of events
-event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
+event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
 traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 event_data_group = 'peak_lowpass';
 event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
