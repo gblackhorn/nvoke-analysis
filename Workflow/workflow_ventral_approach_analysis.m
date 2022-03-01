@@ -113,15 +113,18 @@ stimEffectType = 'excitation'; % options: 'excitation', 'inhibition', 'rebound'
 fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedData_allTrials,...
 	'plot_combined_data',plot_combined_data,'plot_stim_shade',plot_stim_shade,'y_range',y_range,'stimEffectType',stimEffectType);
 
-% if filter_alignedData 
-% 	alignedData_bk = alignedData_allTrials;
-% 	stims = {'GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s GPIO-1-1s'};
-% 	eventCats = {{'trigger'},...
-% 			{'trigger'},... % 'trigger', 'rebound'
-% 			{'delay-trigger'}}; % 'trigger-beforeStim', 'trigger-interval', 'delay-trigger', 'rebound-interval'
-% 
-% 	[alignedData_allTrials] = discard_alignedData_roi(alignedData_allTrials,'stims',stims,'eventCats',eventCats);
-% end
+%% ====================
+% 9.2.0.2 Plot roi maps. 
+% give roi different color acoording to stim effect
+close all
+trial_num = numel(alignedData_allTrials);
+for n = 1:trial_num
+	alignedData = alignedData_allTrials(n);
+	% title_str = sprintf('roi-map: %s', alignedData.trialName(1:15));
+	% f_roiMap = figure('Name', title_str);
+	plot_roi_coor_alignedData(alignedData,[],'label','text');
+end
+
 
 %% ====================
 % 9.2.1

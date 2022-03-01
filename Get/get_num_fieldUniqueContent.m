@@ -2,7 +2,7 @@ function [num_f1,varargout] = get_num_fieldUniqueContent(structData,varargin)
 	% Get the numbers of unique contents in fields (max field nume == 2)
 	% if field numer is 2. fn_2 number will be calculated from each unique fn_1
 	% varargout{1}: total number of unique num_f2
-	% varargout{1}: a vector containing unique numbers of fn_2 from each fn_1
+	% varargout{2}: a vector containing unique numbers of fn_2 from each fn_1
 
 	% field names can be specified with varargin
 
@@ -25,7 +25,7 @@ function [num_f1,varargout] = get_num_fieldUniqueContent(structData,varargin)
 		num_f1 = numel(uni_f1);
 		num_f2_array = [];
 		for nf1 = 1:num_f1
-			if ~isempty(fn_2) && isfield(structData, fn_1)
+			if ~isempty(fn_2) && isfield(structData, fn_2)
 				idxSec = find(ic_f1==nf1); % index of entries of small section
 				structDataSec = structData(idxSec); % section of structData
 				[uni_f2, ia_f2, ic_f2] = unique({structDataSec.(fn_2)});

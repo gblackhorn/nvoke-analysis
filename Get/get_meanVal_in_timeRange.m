@@ -7,8 +7,8 @@ function [meanVal,varargout] = get_meanVal_in_timeRange(timeRange,timeInfo,trace
 	% traceData: vector var. Calcium level information from a single roi
 
 	repeatNum = size(timeRange, 1);
-	meanVal = NaN(repeatNum); 
-	stdVal = NaN(repeatNum); 
+	meanVal = NaN(repeatNum, 1); 
+	stdVal = NaN(repeatNum, 1); 
 
 	for rn = 1:repeatNum
 		idxStart = find(timeInfo==timeRange(rn, 1));

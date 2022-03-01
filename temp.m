@@ -118,3 +118,14 @@ for n = 1:numel(x)
 		'MarkerFaceAlpha',1,'MarkerEdgeAlpha',0)
 end
 hold off
+
+
+
+%% ====================
+alignedData = alignedData_allTrials(17);
+roiMap = alignedData.roi_map;
+roiNames = alignedData.traces.roi;
+roiCoor = {alignedData.traces.roi_coor}';
+roiCoor = cell2mat(roiCoor);
+roiCoor = convert_roi_coor(roiCoor);
+plot_roi_coor(roiMap,roiCoor,[]);

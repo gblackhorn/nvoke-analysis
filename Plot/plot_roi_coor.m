@@ -18,9 +18,12 @@ function [varargout] = plot_roi_coor(roi_map,coor,plotWhere,varargin)
 
 	shapeColor = 'magenta'; % 'Color' for [insertShape]. 'BoxColor' for [insertText]
 	opacity  = 0.8; % 'Opacity' for [insertShape]. 'BoxOpacity' for [insertText]
+	textColor = 'black';
 
-	contrast_scale = 0.1; % used to decrease the contrast of roi_map for better visulization
+	contrast_scale = 0.5; % used to decrease the contrast of roi_map for better visulization
 	plotWhere = [];
+
+	showMap = true;
 
 	% Optionals
 	for ii = 1:2:(nargin-3)
@@ -40,6 +43,10 @@ function [varargout] = plot_roi_coor(roi_map,coor,plotWhere,varargin)
 	        shapeColor = varargin{ii+1}; % a column cell containing neuron lables
         elseif strcmpi('opacity', varargin{ii})
 	        opacity = varargin{ii+1}; % a column cell containing neuron lables
+        elseif strcmpi('textColor', varargin{ii})
+	        textColor = varargin{ii+1}; % a column cell containing neuron lables
+        elseif strcmpi('showMap', varargin{ii})
+	        showMap = varargin{ii+1}; % a column cell containing neuron lables
 	    end
 	end	
 
@@ -47,7 +54,7 @@ function [varargout] = plot_roi_coor(roi_map,coor,plotWhere,varargin)
 	%% Content
 	coor_num = size(coor, 1);
 
-	if strcmpi(label, 'text') || ~isempty(textCell)
+	if strcmpi(label, 'text') && ~isempty(textCell)
 		if numel(textCell) ~= coor_num
 			error('Error in func [plot_roi_coor]: \n number of text str are differenct from coor');
 		else
@@ -70,20 +77,25 @@ function [varargout] = plot_roi_coor(roi_map,coor,plotWhere,varargin)
 				text_str{n} = textCell{n};
 			end
 		else
-			roi_map = insertShape(roi_map, shape_style, [coor(n, :) shape_size],...
+			roi_map_marked = insertShape(roi_map, shape_style, [coor(n, :) shape_size],...
 				'Color', shapeColor,'Opacity',opacity);
 		end
 	end
 	if text_lable
-		roi_map = insertText(roi_map, coor, text_str,'FontSize',fontSize,...
-			'BoxOpacity',opacity,'AnchorPoint',anchorpoint);
+		roi_map_marked = insertText(roi_map, coor, text_str,'FontSize',fontSize,...
+			'BoxOpacity',opacity,'AnchorPoint',anchorpoint,'TextColor',textColor,'BoxColor',shapeColor);
 	end
 
 	if isempty(plotWhere)
-    	f = figure;
+    	% f = figure;
     else
     	axes(plotWhere)
     	f = gcf;
     end
-    imshow(roi_map)
+    
+    if showMap
+    	imshow(roi_map_marked)
+    else
+
+    varargout{1} = roi_map_marked;
 end
