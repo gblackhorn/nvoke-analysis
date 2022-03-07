@@ -21,7 +21,6 @@ function [varargout] = plot_roi_coor(roi_map,coor,plotWhere,varargin)
 	textColor = 'black';
 
 	contrast_scale = 0.5; % used to decrease the contrast of roi_map for better visulization
-	plotWhere = [];
 
 	showMap = true;
 

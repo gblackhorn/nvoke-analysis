@@ -6,7 +6,6 @@ function [varargout] = plot_roi_coor_alignedData(alignedData,plotWhere,varargin)
 	% Defaults
 	stimEffect = true; % true/false. give different color to ROIs according to stim effect
 	label = 'shape'; % 'shape'/'text'. lables of rois.
-	plotWhere = [];
 
 	% Optionals
 	for ii = 1:2:(nargin-2)
@@ -43,27 +42,29 @@ function [varargout] = plot_roi_coor_alignedData(alignedData,plotWhere,varargin)
 	if isempty(plotWhere)
 		title_str = sprintf('roi-map: %s', alignedData.trialName(1:15));
     	f = figure('Name', title_str);
+    	ax = gca;
     else
-    	axes(plotWhere)
+    	axes(plotWhere);
+    	ax = gca;
     	f = gcf;
     end
 
     if stimEffect
     	if ~isempty(coor_ex)
-    		[roi_map] = plot_roi_coor(roi_map,coor_ex,[],...
+    		[roi_map] = plot_roi_coor(roi_map,coor_ex,ax,...
     			'label',label,'textCell',roiNames_ex,'shapeColor','magenta','showMap',false); % plotWhere is [] to supress plot
     	end
     	if ~isempty(coor_in)
-    		[roi_map] = plot_roi_coor(roi_map,coor_in,[],...
+    		[roi_map] = plot_roi_coor(roi_map,coor_in,ax,...
     			'label',label,'textCell',roiNames_in,'shapeColor','cyan','showMap',false); % plotWhere is [] to supress plot
     	end
     	if ~isempty(coor_other)
-    		[roi_map] = plot_roi_coor(roi_map,coor_other,[],...
+    		[roi_map] = plot_roi_coor(roi_map,coor_other,ax,...
     			'label',label,'textCell',roiNames_other,'shapeColor','yellow','showMap',false); % plotWhere is [] to supress plot
     	end
     	imshow(roi_map)
     else
-    	[roi_map] = plot_roi_coor(roi_map,roiCoor,[],...
+    	[roi_map] = plot_roi_coor(roi_map,roiCoor,ax,...
     			'label',label,'textCell',roiNames,'shapeColor','black','showMap',true); % plotWhere is [] to supress plot
     end
 end

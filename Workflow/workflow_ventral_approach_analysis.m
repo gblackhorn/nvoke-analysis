@@ -37,12 +37,12 @@ recdata_organized = select_grouped_data(recdata_group);
 
 %% ====================
 % 9.1 Examine peak detection with plots 
-PauseTrial = false; % true or false
+PauseTrial = true; % true or false
 traceNum_perFig = 10; % number of traces/ROIs per figure
-SavePlot = true; % true or false
+SavePlot = false; % true or false
 SaveTo = ins_analysis_ventral_fig_folder;
-vis = 'off'; % set the 'visible' of figures
-decon = false; % true/false plot decon trace
+vis = 'on'; % on/off. set the 'visible' of figures
+decon = true; % true/false plot decon trace
 marker = true; % true/false plot markers
 
 [SaveTo] = plotTracesFromAllTrials (recdata_organized,...
@@ -86,7 +86,7 @@ recdata_organized_bk = recdata_organized;
 [recdata_organized] = discard_recData_roi(recdata_organized,'stims',stims,'eventCats',eventCats);
 %% ====================
 % 9.2 Align traces from all trials. Also collect the properties of events
-event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
+event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
 traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 event_data_group = 'peak_lowpass';
 event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
@@ -120,9 +120,17 @@ close all
 trial_num = numel(alignedData_allTrials);
 for n = 1:trial_num
 	alignedData = alignedData_allTrials(n);
-	% title_str = sprintf('roi-map: %s', alignedData.trialName(1:15));
-	% f_roiMap = figure('Name', title_str);
 	plot_roi_coor_alignedData(alignedData,[],'label','text');
+end
+
+%% ====================
+% 9.2.0.3 Plot traces, aligned traces and roi map
+close all
+trial_num = numel(alignedData_allTrials);
+for n = 1:trial_num
+	alignedData = alignedData_allTrials(n);
+	plot_trace_roiCoor(alignedData)
+	pause
 end
 
 

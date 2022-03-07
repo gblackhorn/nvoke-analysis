@@ -93,16 +93,16 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 
     fprintf('Processing recordings: \n')
     for rn = 1:recording_num
+        recording_name = recdata_organized{rn, col_name};
 
         % Debugging
-        fprintf(' - recording_num: %d/%d\n', rn, recording_num);
+        fprintf(' - recording_num: %d/%d (%s)\n', rn, recording_num, recording_name);
         % disp(['recording_num: ', num2str(rn), '/', num2str(recording_num)])
         % if rn == 38
         %     disp('pause for debugging')
         %     pause
         % end
 
-    	recording_name = recdata_organized{rn, col_name};
     	rec_data_decon = recdata_organized{rn, col_trace}.decon; % deconvoluted data processed by CNMFe
     	rec_data_raw = recdata_organized{rn, col_trace}.raw; % data after removing background, neuropil, and demixing 
     	roi_num = size(rec_data_decon, 2)-1;

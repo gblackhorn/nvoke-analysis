@@ -8,7 +8,7 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	% save_fig = false;
 	% save_dir = '';
 	mean_trace = [];
-	mean_trace_shade = [];
+	mean_trace_shade = []; % usually std of the mean_trace is used 
 	line_color = '#616887';
 	mean_line_color = '#2942BA'; % color of the mean-value trace
 	shade_color = '#4DBEEE';
@@ -55,12 +55,6 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	end
 	hold on
 
-	% if save_fig && isempty(save_dir)
-	% 	save_dir = uigetdir;
-	% end
-
-	% f = figure;
-	% hold on
 	if plot_combined_data
 		h_m = plot(time_info, mean_trace,...
 			'Color', mean_line_color, 'LineWidth', line_mean_width);
@@ -96,24 +90,6 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 				stimShadeRange = stim_range{stn};
 				draw_shade(stimShadeRange, gca, 'shadeColor', stim_shade_color{stn});
 			end
-
-			% ax = gca;
-			% ymin = ax.YLim(1);
-			% ymax = ax.YLim(2);
-			% y_set = [ymin ymax ymax ymin];
-
-			% stim_repeat = size(stim_range, 1);
-			% stim_shade_x = [];
-			% stim_shade_y = [];
-			% for s = 1:stim_repeat
-			% 	stim_shade_x = [stim_shade_x, repelem(stim_range(s, :), 2)];
-			% 	stim_shade_y = [stim_shade_y, y_set];
-			% end
-
-			% % stim_shade_x = [stim_range, flip(stim_range)];
-			% % stim_shade_y = [ymin, ymin, ymax, ymax];
-			% h_s_stim = patch('XData',stim_shade_x, 'YData', stim_shade_y,...
-			% 	'FaceColor', stim_shade_color, 'FaceAlpha', shade_alpha, 'EdgeColor', 'none');
 		else
 			fprintf('Warning: [stim_range] was not input, stim shade was not plotted\n')
 			return
@@ -122,7 +98,4 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	chi=get(gca, 'Children');
 	set(gca, 'Children',flipud(chi));
 	set(gca,'Xtick',[time_info(1):1:time_info(end)])
-	% set(gca,'XtickLabel',time_info(1):1:time_info(end))
-
-
 end
