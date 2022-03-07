@@ -25,7 +25,6 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 
 	rebound_duration = 1; % default 1s. Used to extend events screen window when 'stimWin' is used for 'event_type'
 	mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
-	debug_mode = true; % true/false
 
 	% Defaults for [get_stimEffect]
 	base_timeRange = 1; % default 2s. 
@@ -33,6 +32,8 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	rb_eventCat = {'rebound'}; % event category string used to define rebound. May contain multiple strings
 	in_thresh_stdScale = 0.5; % n times of std lower than baseline level. Last n s during stimulation is used
 	in_calLength = 1; % calculate the last n s trace level during stimulation to 
+
+	debug_mode = false; % true/false
 
 	% Optionals
 	for ii = 1:2:(nargin-1)
@@ -79,6 +80,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 
 	time_trace_data = trialData{traceData_col}.(traceData_type);
 	full_time = time_trace_data.Time;
+	duration_full_time = full_time(end)-full_time(1);
 	full_traces_data = time_trace_data(:, 2:end);
 	% roi_num = size(full_traces_data, 2);
 
@@ -119,7 +121,6 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 				pause
 			end
 		end
-		
 
 		switch event_type
 			case 'detected_events'
@@ -151,7 +152,8 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 					condition_win(:, 2) = condition_win(:, 2)+rebound_duration;
 					events_time = roi_event_spec_table.rise_time;
 					if ~isempty(events_time)
-						[eventProp] = get_events_info(events_time,condition_win,roi_event_spec_table,'style','event');
+						% [eventProp] = get_events_info(events_time,condition_win,roi_event_spec_table,'style','event');
+						[eventProp] = get_events_info(events_time,[],roi_event_spec_table,'style','event');
                         alignedData.traces(n).eventProp = eventProp;
                         alignedData.traces(n).roi_coor = trialData{traceData_col}.roi_center(n,:); 
                     else
@@ -178,6 +180,20 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			{alignedData.traces(n).eventProp.peak_category},'ex_eventCat',ex_eventCat,...
 			'rb_eventCat',rb_eventCat,'in_thresh_stdScale',in_thresh_stdScale,...
 			'in_calLength',in_calLength); % find the stimulation effect. stimEffect is a struct var
+
+		if contains(alignedData.stim_name, 'GPIO-1', 'IgnoreCase',true)
+			events_time = [alignedData.traces(n).eventProp.rise_time];
+			[~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
+				combine_stimRange,duration_full_time,'exepWinDur',0);
+		else
+			[~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
+				combine_stimRange,duration_full_time,'exepWinDur',rebound_duration);
+		end
+		alignedData.traces(n).sponfq = sponfq;
+		alignedData.traces(n).stimfq = stimfq;
+		alignedData.traces(n).sponEventNum = sponEventNum;
+		alignedData.traces(n).stimEventNum = stimEventNum;
+		alignedData.traces(n).exepEventNum = exepEventNum;
 	end
 	[~,alignedData.num_exROI] = get_struct_entry_idx(alignedData.traces,'stimEffect','excitation','req',true);
 	[~,alignedData.num_inROI] = get_struct_entry_idx(alignedData.traces,'stimEffect','inhibition','req',true);

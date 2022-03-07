@@ -127,12 +127,21 @@ end
 % 9.2.0.3 Plot traces, aligned traces and roi map
 close all
 trial_num = numel(alignedData_allTrials);
-for n = 1:trial_num
-	alignedData = alignedData_allTrials(n);
+tn = 1;
+while tn <= trial_num
+	alignedData = alignedData_allTrials(tn);
 	plot_trace_roiCoor(alignedData)
-	pause
+	fprintf('- %d/%d: %s', tn, trial_num, alignedData.trialName);
+	direct_input = input(sprintf('\n(c)continue or (b)back to previous? [default-c]\n'), 's');
+	if isempty(direct_input)
+		direct_input = 'c';
+	end
+	if strcmpi(direct_input, 'c')
+	    nrec = nrec+1; 
+	elseif strcmpi(direct_input, 'b')
+	    nrec = nrec-1; 
+	end
 end
-
 
 %% ====================
 % 9.2.1

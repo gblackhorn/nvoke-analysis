@@ -27,48 +27,59 @@ function [Ratio_zscore,varargout] = stim_effect_compare_eventFreq_roi2(events_ti
 	% Main content
 	eventNum = numel(events_time);
 	eventCat = ones(size(events_time)); % event categorey. default all are 1: simultaneous events
-	stimRepeats = size(stim_range, 1);
-	stim_range(:, 1) = stim_range(:, 1)-stimStart_err;
 
-	if afterStim_exepWin
-		exepWin(:, 1) = stim_range(:, 2); 
-		exepWin(:, 2) = stim_range(:, 2)+exepWinDur; 
-	end
+	if ~isempty(stim_range)
+		stimRepeats = size(stim_range, 1);
+		stim_range(:, 1) = stim_range(:, 1)-stimStart_err;
 
-	stimDurAll = sum(stim_range(:, 2)-stim_range(:, 1));
-	exepWinDurAll = sum(exepWin(:, 2)-exepWin(:, 1));
-	sponDurAll = timeDuration-stimDurAll-exepWinDurAll;
+		if afterStim_exepWin
+			exepWin(:, 1) = stim_range(:, 2); 
+			exepWin(:, 2) = stim_range(:, 2)+exepWinDur; 
+		end
 
-	for n = 1:eventNum
-		% 1-simulataneous, 2-insideStim, NaN-insideExepWin
-		for ii = 1:stimRepeats
-			if events_time(n)>=stim_range(ii, 1) && events_time(n)<stim_range(ii, 2)
-				eventCat(n) = 2;
-			elseif events_time(n)>=exepWin(ii, 1) && events_time(n)<exepWin(ii, 2)
-				eventCat(n) = NaN;
+		stimDurAll = sum(stim_range(:, 2)-stim_range(:, 1));
+		exepWinDurAll = sum(exepWin(:, 2)-exepWin(:, 1));
+		sponDurAll = timeDuration-stimDurAll-exepWinDurAll;
+
+		for n = 1:eventNum
+			% 1-simulataneous, 2-insideStim, NaN-insideExepWin
+			for ii = 1:stimRepeats
+				if events_time(n)>=stim_range(ii, 1) && events_time(n)<stim_range(ii, 2)
+					eventCat(n) = 2;
+				elseif events_time(n)>=exepWin(ii, 1) && events_time(n)<exepWin(ii, 2)
+					eventCat(n) = NaN;
+				end
 			end
 		end
-	end
 
-	sponEvent = find(eventCat==1);
-	stimEvent = find(eventCat==2);
+		sponEvent = find(eventCat==1);
+		stimEvent = find(eventCat==2);
+		exepEvent = find(isnan(eventCat));
+		exepEventNum = numel(exepEvent);
 
-	% use small number substitute zero for further calculation. Temperay solution
-	if isempty(sponEvent)
-		sponEventNum = 0; % assign a small number if there is no spontaneous event
-	else
+		% use small number substitute zero for further calculation. Temperay solution
 		sponEventNum = numel(sponEvent);
-	end
-	if isempty(stimEvent)
-		stimEventNum = 0; % assign a small number if there is no spontaneous event
-	else
 		stimEventNum = numel(stimEvent);
+
+		sponfq = sponEventNum/sponDurAll;
+		stimfq = stimEventNum/stimDurAll;
+	else
+		sponEventNum = eventNum;
+		sponfq = sponEventNum/timeDuration;
+		stimfq = NaN;
+		stimEventNum = NaN;
+		exepEventNum = NaN;
+		Ratio_zscore = NaN;
 	end
 
-	sponfq = sponEventNum/sponDurAll;
-	stimfq = stimEventNum/stimDurAll;
+	if exepEventNum == 0
+		exepEventNum = NaN;
+	end
 
 	Ratio_zscore = (stimfq-sponfq)/sponfq;
 	varargout{1} = sponfq;
 	varargout{2} = stimfq;
+	varargout{3} = sponEventNum;
+	varargout{4} = stimEventNum;
+	varargout{5} = exepEventNum;
 end
