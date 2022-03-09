@@ -12,7 +12,7 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 	rb_eventCat = {'rebound'}; % event category string used to define rebound. May contain multiple strings
 	in_thresh_stdScale = 2; % n times of std lower than baseline level. Last n s during stimulation is used
 	in_calLength = 1; % calculate the last n s trace level during stimulation to 
-	freq_spon_stim = [];
+	freq_spon_stim = []; 
 	logRatio_threshold = 0; % threshold for log(stimfq/sponfq);
 
 	% Optionals
@@ -28,7 +28,7 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
         elseif strcmpi('in_calLength', varargin{ii})
 	        in_calLength = varargin{ii+1};
         elseif strcmpi('freq_spon_stim', varargin{ii})
-	        freq_spon_stim = varargin{ii+1};
+	        freq_spon_stim = varargin{ii+1}; % 1*2 vec. frequencies of spon and stim events
 	    end
 	end	
 
@@ -59,7 +59,7 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 		mean_in_diff = NaN(size(mean_in));
 		for rn = 1:repeat_num
 			mean_in_diff(rn) = (mean_base(rn)-std_base(rn)*in_thresh_stdScale);
-			if mean_in_diff < 0
+			if mean_in_diff(rn) < 0
 				tfRepeat_in(rn) = true;
 				% inhibition = true;
 				% break

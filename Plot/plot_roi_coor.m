@@ -20,7 +20,7 @@ function [varargout] = plot_roi_coor(roi_map,coor,plotWhere,varargin)
 	opacity  = 0.8; % 'Opacity' for [insertShape]. 'BoxOpacity' for [insertText]
 	textColor = 'black';
 
-	contrast_scale = 0.6; % used to decrease the contrast of roi_map for better visulization
+	contrast_scale = 0.7; % used to decrease the contrast of roi_map for better visulization
 
 	showMap = true;
 

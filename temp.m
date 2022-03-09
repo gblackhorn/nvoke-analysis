@@ -222,11 +222,11 @@ for gn = 1:num_groups
 	end
 	h(gn) = scatter(meanTrace_stim.(groups{gn}), logRatio_SponStim.(groups{gn}),...
 		mSize, 'filled', 'MarkerFaceColor', colorGroup{gn},...
-		'MarkerFaceAlpha', 1, 'MarkerEdgeAlpha', 0);
+		'MarkerFaceAlpha', 0.5, 'MarkerEdgeAlpha', 0);
 end
 legend(h(1:num_groups), groups, 'Location', 'northeastoutside', 'FontSize', 16);
 xlabel('meanTraceDiff during stimulation', 'FontSize', 16)
-ylabel('log(freqSpon/freqStim)', 'FontSize', 16)
+ylabel('log(freqStim/freqSpon)', 'FontSize', 16)
 hold off
 
 
