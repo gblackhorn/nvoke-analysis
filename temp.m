@@ -129,3 +129,105 @@ roiCoor = {alignedData.traces.roi_coor}';
 roiCoor = cell2mat(roiCoor);
 roiCoor = convert_roi_coor(roiCoor);
 plot_roi_coor(roiMap,roiCoor,[]);
+
+
+
+%% ====================
+% get the stimEffect and related info for checking the parameter
+num_trial = numel(alignedData_allTrials);
+
+in_info_cell = cell(1, num_trial);
+for tn = 1:num_trial
+	trialData = alignedData_allTrials(tn);
+	trialName = trialData.trialName;
+	timeInfo = trialData.fullTime;
+	stimName = trialData.stim_name;
+	stimTimeInfo = trialData.stimInfo(1).time_range_notAlign;  
+
+	% fprintf('trial %d/%d: %s\n', tn, num_trial, trialName)
+
+	if contains(stimName, 'OG-LED', 'IgnoreCase',true)
+		num_roi = numel(trialData.traces);
+		in_info_struct =  struct('trial', cell(1, num_roi), 'roi', cell(1, num_roi),...
+			'inhibition', cell(1, num_roi), 'excitation',...
+			cell(1, num_roi),'rebound', cell(1, num_roi), 'ex_in', cell(1, num_roi),...
+			'meanIn_average', cell(1, num_roi), 'sponStim_logRatio', cell(1, num_roi));
+
+		for rn = 1:num_roi
+			roiData = trialData.traces(rn);
+			roiName = roiData.roi;
+			traceData = roiData.fullTrace;
+			eventCats = roiData.eventProp;
+			sponfq = roiData.sponfq;
+			stimfq = roiData.stimfq;
+			freq_spon_stim = [sponfq stimfq];
+
+			% fprintf(' - roi %d/%d: %s\n', rn, num_roi, roiName)
+
+			[stimEffect,in_info] = get_stimEffect(timeInfo,traceData,stimTimeInfo,eventCats,...
+				'freq_spon_stim', freq_spon_stim);
+			if roiData.stimEffect.excitation && roiData.stimEffect.inhibition
+				ex_in = true;
+			else
+				ex_in = false;
+			end
+
+			in_info_struct(rn).trial = trialName;
+			in_info_struct(rn).roi = roiName;
+			in_info_struct(rn).inhibition = roiData.stimEffect.inhibition;
+			in_info_struct(rn).excitation = roiData.stimEffect.excitation;
+			in_info_struct(rn).rebound = roiData.stimEffect.rebound;
+			in_info_struct(rn).ex_in = ex_in;
+			in_info_struct(rn).meanIn_average = in_info.meanIn_average;
+			in_info_struct(rn).sponStim_logRatio = in_info.sponStim_logRatio;
+		end
+		in_info_cell{tn} = in_info_struct;
+	end
+end
+in_info_all = [in_info_cell{:}];
+
+% plot
+close all
+colorGroup = {'#3FF5E6', '#F55E58', '#F5A427', '#4CA9F5', '#33F577',...
+	'#408F87', '#8F4F7A', '#798F7D', '#8F7832', '#28398F', '#000000'};
+tf_inhibition = [in_info_all.inhibition];
+tf_excitation = [in_info_all.excitation];
+tf_rebound = [in_info_all.rebound];
+tf_ExIn = [in_info_all.ex_in];
+
+idx_inhibition = find(tf_inhibition);
+idx_excitation = find(tf_excitation);
+idx_rebound = find(tf_rebound);
+idx_ExIn = find(tf_ExIn);
+
+meanTrace_stim.inhibition = [in_info_all(idx_inhibition).meanIn_average];
+meanTrace_stim.excitation = [in_info_all(idx_excitation).meanIn_average];
+meanTrace_stim.rebound = [in_info_all(idx_rebound).meanIn_average];
+meanTrace_stim.ExIn = [in_info_all(idx_ExIn).meanIn_average];
+
+logRatio_SponStim.inhibition = [in_info_all(idx_inhibition).sponStim_logRatio];
+logRatio_SponStim.excitation = [in_info_all(idx_excitation).sponStim_logRatio];
+logRatio_SponStim.rebound = [in_info_all(idx_rebound).sponStim_logRatio];
+logRatio_SponStim.ExIn = [in_info_all(idx_ExIn).sponStim_logRatio];
+
+groups = {'inhibition', 'excitation', 'rebound', 'ExIn'}; % 'rebound'
+num_groups = numel(groups);
+figure
+hold on
+for gn = 1:num_groups
+	if contains(groups{gn}, 'rebound')
+		mSize = 30;
+	else
+		mSize = 80;
+	end
+	h(gn) = scatter(meanTrace_stim.(groups{gn}), logRatio_SponStim.(groups{gn}),...
+		mSize, 'filled', 'MarkerFaceColor', colorGroup{gn},...
+		'MarkerFaceAlpha', 1, 'MarkerEdgeAlpha', 0);
+end
+legend(h(1:num_groups), groups, 'Location', 'northeastoutside', 'FontSize', 16);
+xlabel('meanTraceDiff during stimulation', 'FontSize', 16)
+ylabel('log(freqSpon/freqStim)', 'FontSize', 16)
+hold off
+
+
+

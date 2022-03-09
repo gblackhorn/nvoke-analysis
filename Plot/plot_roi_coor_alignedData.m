@@ -30,13 +30,17 @@ function [varargout] = plot_roi_coor_alignedData(alignedData,plotWhere,varargin)
 	idx_all = 1:numel(alignedData.traces);
 	[idx_ex,num_ex] = get_struct_entry_idx(alignedData.traces,'stimEffect','excitation','req',true);
 	[idx_in,num_in] = get_struct_entry_idx(alignedData.traces,'stimEffect','inhibition','req',true);
+	idx_ex_in = intersect(idx_ex, idx_in); % idx of rois exhibit both excitation and inhibition effects
+	num_ex_in = numel(idx_ex_in);
 	idx_other = setdiff(idx_all, [idx_ex idx_in]);
 
 	coor_ex = roiCoor(idx_ex, :);
 	coor_in = roiCoor(idx_in, :);
+	coor_ex_in = roiCoor(idx_ex_in, :); % coordination of rois exhibit both excitation and inhibition effects
 	coor_other = roiCoor(idx_other, :);
 	roiNames_ex = roiNames(idx_ex);
 	roiNames_in = roiNames(idx_in);
+	roiNames_ex_in = roiNames(idx_ex_in);
 	roiNames_other = roiNames(idx_other);
 
 	if isempty(plotWhere)
@@ -57,6 +61,10 @@ function [varargout] = plot_roi_coor_alignedData(alignedData,plotWhere,varargin)
     	if ~isempty(coor_in)
     		[roi_map] = plot_roi_coor(roi_map,coor_in,ax,...
     			'label',label,'textCell',roiNames_in,'shapeColor','cyan','showMap',false); % plotWhere is [] to supress plot
+    	end
+    	if ~isempty(coor_ex_in)
+    		[roi_map] = plot_roi_coor(roi_map,coor_ex_in,ax,...
+    			'label',label,'textCell',roiNames_ex_in,'shapeColor','blue','showMap',false); % plotWhere is [] to supress plot
     	end
     	if ~isempty(coor_other)
     		[roi_map] = plot_roi_coor(roi_map,coor_other,ax,...

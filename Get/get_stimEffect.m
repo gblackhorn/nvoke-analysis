@@ -12,6 +12,8 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 	rb_eventCat = {'rebound'}; % event category string used to define rebound. May contain multiple strings
 	in_thresh_stdScale = 2; % n times of std lower than baseline level. Last n s during stimulation is used
 	in_calLength = 1; % calculate the last n s trace level during stimulation to 
+	freq_spon_stim = [];
+	logRatio_threshold = 0; % threshold for log(stimfq/sponfq);
 
 	% Optionals
 	for ii = 1:2:(nargin-4)
@@ -25,6 +27,8 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 	        in_thresh_stdScale = varargin{ii+1};
         elseif strcmpi('in_calLength', varargin{ii})
 	        in_calLength = varargin{ii+1};
+        elseif strcmpi('freq_spon_stim', varargin{ii})
+	        freq_spon_stim = varargin{ii+1};
 	    end
 	end	
 
@@ -33,7 +37,6 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 	inhibition = false; % pre-set
 	rebound = false; % pre-set
 
-	% Check if inhibition
 	if ~isempty(stimTimeInfo)
 		stim_duration = stimTimeInfo(1,2)-stimTimeInfo(1,1);
 		if in_calLength > stim_duration
@@ -50,10 +53,30 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 		[mean_in,std_in] = get_meanVal_in_timeRange(in_range,traceTimeInfo,traceData);
 		[mean_base,std_base] = get_meanVal_in_timeRange(base_range,traceTimeInfo,traceData);
 
-		for rn = 1:numel(mean_in)
-			if mean_in < (mean_base-std_base*in_thresh_stdScale)
-				inhibition = true;
-				break
+		% Check if inhibition
+		repeat_num = numel(mean_in);
+		tfRepeat_in = logical(zeros(size(mean_in)));
+		mean_in_diff = NaN(size(mean_in));
+		for rn = 1:repeat_num
+			mean_in_diff(rn) = (mean_base(rn)-std_base(rn)*in_thresh_stdScale);
+			if mean_in_diff < 0
+				tfRepeat_in(rn) = true;
+				% inhibition = true;
+				% break
+			end
+		end
+		if numel(find(tfRepeat_in)) >= 0.25*repeat_num
+			inhibition = true;
+		end
+		if ~isempty(freq_spon_stim) % check the event frequency to confirm the inhibition effect
+			for fn = 1:numel(freq_spon_stim)
+				if freq_spon_stim(fn) == 0; % if spontaneous/stimulation event frequency is 0
+					freq_spon_stim(fn) = 1e-5;
+				end
+			end
+			logRatio = log(freq_spon_stim(2)/freq_spon_stim(1));
+			if logRatio >= 0+logRatio_threshold
+				inhibition = false;
 			end
 		end
 
@@ -84,4 +107,11 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 		stimEffect.inhibition = [];
 		stimEffect.rebound = [];
 	end
+
+	avg_meanInDiff = mean(mean_in_diff);
+	varargout{1}.meanIn = mean_in_diff;
+	varargout{1}.meanIn_average = avg_meanInDiff;
+	varargout{1}.base_timeLength = base_timeRange;
+	varargout{1}.in_timeLength = in_calLength;
+	varargout{1}.sponStim_logRatio = logRatio;
 end

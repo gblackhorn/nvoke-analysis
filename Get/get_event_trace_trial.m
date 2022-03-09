@@ -30,7 +30,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	base_timeRange = 1; % default 2s. 
 	ex_eventCat = {'trig'}; % event category string used to define excitation. May contain multiple strings
 	rb_eventCat = {'rebound'}; % event category string used to define rebound. May contain multiple strings
-	in_thresh_stdScale = 0.5; % n times of std lower than baseline level. Last n s during stimulation is used
+	in_thresh_stdScale = 2; % n times of std lower than baseline level. Last n s during stimulation is used
 	in_calLength = 1; % calculate the last n s trace level during stimulation to 
 
 	debug_mode = false; % true/false
@@ -176,10 +176,6 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			[alignedData.traces(n).eventProp] = add_riseDelay_to_eventProp(alignedData.traces(n).eventProp,...
 				combine_stimRange,'errCali',0);
 		end
-		[alignedData.traces(n).stimEffect] = get_stimEffect(full_time,roi_trace_data,combine_stimRange,...
-			{alignedData.traces(n).eventProp.peak_category},'ex_eventCat',ex_eventCat,...
-			'rb_eventCat',rb_eventCat,'in_thresh_stdScale',in_thresh_stdScale,...
-			'in_calLength',in_calLength); % find the stimulation effect. stimEffect is a struct var
 
 		if contains(alignedData.stim_name, 'GPIO-1', 'IgnoreCase',true)
 			events_time = [alignedData.traces(n).eventProp.rise_time];
@@ -189,6 +185,12 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			[~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
 				combine_stimRange,duration_full_time,'exepWinDur',rebound_duration);
 		end
+
+		[alignedData.traces(n).stimEffect] = get_stimEffect(full_time,roi_trace_data,combine_stimRange,...
+			{alignedData.traces(n).eventProp.peak_category},'ex_eventCat',ex_eventCat,...
+			'rb_eventCat',rb_eventCat,'in_thresh_stdScale',in_thresh_stdScale,...
+			'in_calLength',in_calLength,'freq_spon_stim', [sponfq stimfq]); % find the stimulation effect. stimEffect is a struct var
+		
 		alignedData.traces(n).sponfq = sponfq;
 		alignedData.traces(n).stimfq = stimfq;
 		alignedData.traces(n).sponEventNum = sponEventNum;

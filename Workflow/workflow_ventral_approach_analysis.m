@@ -129,17 +129,20 @@ close all
 trial_num = numel(alignedData_allTrials);
 tn = 1;
 while tn <= trial_num
+	close all
 	alignedData = alignedData_allTrials(tn);
 	plot_trace_roiCoor(alignedData)
 	fprintf('- %d/%d: %s', tn, trial_num, alignedData.trialName);
-	direct_input = input(sprintf('\n(c)continue or (b)back to previous? [default-c]\n'), 's');
+	direct_input = input(sprintf('\n(c)continue  (b)back to previous or input the trial number [default-c]:\n'), 's');
 	if isempty(direct_input)
 		direct_input = 'c';
 	end
 	if strcmpi(direct_input, 'c')
-	    nrec = nrec+1; 
+	    tn = tn+1; 
 	elseif strcmpi(direct_input, 'b')
-	    nrec = nrec-1; 
+	    tn = tn-1; 
+	else
+		tn = str2num(direct_input);
 	end
 end
 
