@@ -11,8 +11,9 @@ function [varargout] = drawStims(trialData, plotWhere)
 
     gpio_info = trialData{1, 4};
     stim_num = length(gpio_info)-2; % subtract 'BNC Sync Output' and 'EX-LED' channels which are not used for stimulation
-    patchColor = 'cyan';
+    patchColor = '#4DBEEE';
     patchAlpha = 0.3; % transparency of patch 
+
 
     if stim_num > 0 % if stimulation applied
         for i = 1:stim_num
@@ -20,9 +21,9 @@ function [varargout] = drawStims(trialData, plotWhere)
             stim_patch_data = gpio_info(i+2).patch_coordinats; % number arrays used for plot "patch" representing stimulation
 
             if strcmpi('GPIO-1', stim_name)
-                patchColor = 'blue';
+                patchColor = '#4DBEEE';
             elseif strcmpi('OG-LED', stim_name)
-                patchColor = 'red';
+                patchColor = '#ED8564';
             end
 
             % Locate the min and max value in patch_data, and replace them with yLims
@@ -31,8 +32,8 @@ function [varargout] = drawStims(trialData, plotWhere)
             stim_patch_data(stim_patch_data_ymin_idx, 2) = ylims(1);
             stim_patch_data(stim_patch_data_ymax_idx, 2) = ylims(2);
 
-            patch(stim_patch_data(:, 1), stim_patch_data(:, 2),...
-                patchColor, 'FaceAlpha', patchAlpha);
+            patch('XData',stim_patch_data(:, 1), 'YData', stim_patch_data(:, 2),...
+                'FaceColor', patchColor, 'FaceAlpha', patchAlpha, 'EdgeColor', 'none');
         end
     end
 end

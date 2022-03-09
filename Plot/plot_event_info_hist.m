@@ -20,6 +20,8 @@ function [hist_info,varargout] = plot_event_info_hist(event_info_struct,par_name
 	save_fig = false;
 	save_dir = '';
 
+	sp_colNum = 3; % subplot column number
+
 	% Optionals
 	for ii = 1:2:(nargin-2)
 	    if strcmpi('BinWidth', varargin{ii})
@@ -70,25 +72,22 @@ function [hist_info,varargout] = plot_event_info_hist(event_info_struct,par_name
 	title_str = ['Histogram: ', par_name]; 
 	title_str = replace(title_str, '_', '-');
 	figure('Name', title_str);
-	hold on
+    set(gcf,'units','Normalized','position',[0.1, 0.1, 0.8, 0.8])
 
 	if group_num == 1
 		plot_combined_data = true;
 	end
-	if plot_combined_data
-		h(1) = histogram('BinEdges',hist_info(1).edges,'BinCounts',hist_info(1).N);
-		h(1).Normalization = 'probability';
-		alpha(0.2)
-		
-		if group_num == 1
-			legend_start = 2;
-		else
-			legend_start = 1;
-		end
-	else
-		legend_start = 2;
-	end
-	legend_end = 1+group_num;
+
+	%% ====================
+	% subplot
+	sp_rowNum = ceil((group_num+1)/sp_colNum);
+	subplot(sp_rowNum, sp_colNum, 1)
+	
+	h(1) = histogram('BinEdges',hist_info(1).edges,'BinCounts',hist_info(1).N);
+	h(1).Normalization = 'probability';
+	legend(hist_info(1).group)
+	xRange = xlim(gca);
+	yRange = ylim(gca);
 
 	if group_num > 1
 		for n = 1:group_num
@@ -96,16 +95,21 @@ function [hist_info,varargout] = plot_event_info_hist(event_info_struct,par_name
 			hist_info(n+1).group = event_info_struct(n).group;
 			[hist_info(n+1).N, hist_info(n+1).edges] = histcounts(group_data, edges);
 
+			subplot(sp_rowNum, sp_colNum, n+1)
+
+			if plot_combined_data
+				histogram('BinEdges',hist_info(1).edges,'BinCounts',hist_info(1).N,...
+					'Normalization', 'probability', 'FaceAlpha',0.1);
+				hold on
+			end
+
 			h(n+1) = histogram('BinEdges',hist_info(n+1).edges,'BinCounts',hist_info(n+1).N);
 			h(n+1).Normalization = 'probability';
-			alpha(0.5)
+			legend(h(n+1), hist_info(n+1).group)
+			xlim(xRange)
+			ylim(yRange)
 		end
 	end
-
-	legendstr = {hist_info.group}';
-	legend(h(legend_start:legend_end), legendstr(legend_start:legend_end));
-	title(title_str)
-	hold off
 
 	if save_fig
 		title_str = replace(title_str, ':', '-');

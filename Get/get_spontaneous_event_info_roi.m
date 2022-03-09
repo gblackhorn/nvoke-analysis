@@ -56,13 +56,22 @@ function [spont_event_info,varargout] = get_spontaneous_event_info_roi(peak_prop
         	error('Use "rise" or "peak" for sortout_event')
         end
 
-        [spont_event_info] = get_events_info(events_time,spont_win,peak_properties_table);
-        spont_event_info.event_num = length(spont_event_info.events_time);
-        spont_event_info.duration = spont_duration; % second
-        spont_event_info.freq = spont_event_info.event_num/spont_event_info.duration; % frequency of spontaneous event
+        [spont_event_info] = get_events_info(events_time,spont_win,peak_properties_table,...
+            'style', 'roi', 'cal_interval', true);
+        if ~isempty(spont_event_info.events_time)
+            % spont_event_info.event_num = length(spont_event_info.events_time);
+            spont_event_info.duration = spont_duration; % second
+            spont_event_info.freq = spont_event_info.event_num/spont_event_info.duration; % frequency of spontaneous event
 
-        if ~isempty(trace_data)
-            spont_event_info.traces = get_event_trace(spont_event_info.events_time, recording_time, trace_data);
+            if ~isempty(trace_data)
+                [alignedTime,alignedValue,alignedValue_mean,alignedValue_std] = get_event_trace(spont_event_info.events_time, recording_time, trace_data);
+                spont_event_info.traces.time = alignedTime;
+                spont_event_info.traces.value = alignedValue;
+                spont_event_info.traces.value_mean = alignedValue_mean;
+                spont_event_info.traces.value_std = alignedValue_std;
+            end
+        else
+            spont_event_info = [];
         end
     else
         spont_event_info = [];

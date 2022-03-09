@@ -1,6 +1,13 @@
-function [roi_map,roi_center] = roimap(results)
+function [roi_map,roi_center] = roimap(results, varargin)
     % Read results mat file exported by CNMFe code and output ROI spatial info 
     % creat a a matrix of ROI contour (roi_array) and extract the locations of ROI centers (roi_center)
+    % varargin{1} is an array to specific which roi centers should be output
+
+    filter_output = false;
+    if nargin == 2
+        neuron_idx = varargin{1}; % an array
+        filter_output = true;
+    end
 
     roiNum = size(results.A, 2); % number of ROIs
     imgRowNum = size(results.Cn, 1); % number of vertical pixels of recorded video
@@ -20,6 +27,12 @@ function [roi_map,roi_center] = roimap(results)
 
     	roi_array = roi_array+results.A(:, rn);
     end
+
+    if filter_output
+        roi_center = roi_center(neuron_idx, :);
+    end
+
+
     roi_map = full(reshape(roi_array, imgRowNum, imgColNum));
 end
 

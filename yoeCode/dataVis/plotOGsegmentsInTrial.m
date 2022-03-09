@@ -17,6 +17,7 @@ frameRate = getFrameRateForTrial(trialData);
 nROIs = getNROIsFromTrialData(trialData);
 trialType = getTrialTypeFromROIdataStruct(trialData);
 trialIDs = getTrialIDsFromROIdataStruct(trialData);
+fovInfo = get_fov_info(trialData);
 
 
 [stim_info] = get_stim_duration(trialType);
@@ -68,6 +69,9 @@ if nROIs ~= 0
     %    legend({'ROI mean'});
         titleString = [trialIDs{1} ' with ' num2str(nROIs) ' ROIs, ' num2str(length(eventStarts)) ' stimulations'];
         titleString = strrep(titleString, '_', ' ');
+        if ~isempty(fovInfo)
+            titleString = {titleString; fovInfo};
+        end
         title(titleString);
 end
     

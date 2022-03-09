@@ -22,7 +22,7 @@ function [grouped_event_info, varargout] = group_event_info_multi_category(event
 
 
 
-    % Main content
+    %% Main content
     % filter data
 
     event_info_fieldnames = fieldnames(event_info);
@@ -33,9 +33,10 @@ function [grouped_event_info, varargout] = group_event_info_multi_category(event
     	% group_cat_info = struct('g_name', cell(category_num, 1), 'g_content_unique', cell(category_num, 1);
 
         grouped_event_info_temp = cell(category_num, 1); % each cell contains grouped info using "cn" categories  
+        group_tags = cell(category_num, 1);
     	for cn = 1:category_num 
     		if cn == 1 % first level group
-    			[grouped_event_info_temp{cn}] = group_event_info_single_category(event_info, category_names{cn},...
+    			[grouped_event_info_temp{cn},~,group_tags{cn}] = group_event_info_single_category(event_info, category_names{cn},...
     				'filter_field', filter_field, 'filter_par', filter_par);
             else % for the 2nd and more levels of group. Visit parent group and creat new groups from there
                 % group_names_prev = fieldnames(grouped_event_info_temp{cn-1});
@@ -47,10 +48,11 @@ function [grouped_event_info, varargout] = group_event_info_multi_category(event
                     name_prefix = group(np).group;
                     event_info = group(np).event_info;
                     % group_event_info = grouped_event_info_temp{cn-1}.(group_names_prev{np});
-                    [new_group_cell{np}] = group_event_info_single_category(event_info, category_names{cn},...
+                    [new_group_cell{np},~,tags] = group_event_info_single_category(event_info, category_names{cn},...
                         'groupname_prefix', name_prefix);
                 end
                 grouped_event_info_temp{cn} = [new_group_cell{:}];
+                group_tags{cn} = tags;
             end
     	end
         grouped_event_info = grouped_event_info_temp{category_num};
@@ -59,17 +61,5 @@ function [grouped_event_info, varargout] = group_event_info_multi_category(event
         grouped_event_info_option.filter_par = filter_par;
 
         varargout{1} = grouped_event_info_option;
-
-    	% group_names = group_names_temp;
-
-    	% group_count = 0;
-    	% for cn = 1:category_num
-    	% 	for scn = 1:numel(group_cat_info(cn).g_content_unique)
-
-    	% 	end
-    	% end
     end
-
-    
-
 end

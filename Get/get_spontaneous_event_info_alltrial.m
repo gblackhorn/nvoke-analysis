@@ -38,9 +38,9 @@ function [spont_event_info,varargout] = get_spontaneous_event_info_alltrial(rec_
         trial_data = rec_data(n, :);
 
         % Info for debug
-        % trial_name = trial_data{1};
+        trial_name = trial_data{1};
         % fprintf('%d/%d trials: %s\n', n, trial_num, trial_name);
-        % if  n == 4
+        % if  n == 36
         %     pause
         % end
 

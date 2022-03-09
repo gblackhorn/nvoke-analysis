@@ -5,11 +5,11 @@ function [event_info_all_trials,varargout] = freq_analysis_events_info_allTrials
     % Note: peak info from lowpassed data is used
 
     gpio_col = 4;
-    stimulation_win = all_trial_data{1, gpio_col}(3).stim_range; % 3 is the first gpio channel used for stimulation. if 2 stimuli were used, 4 is the second
+    
     
     % settings
     setting.stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
-    setting.stim_winT = stimulation_win(1, 2)-stimulation_win(1, 1); % the duration of stimulation 
+    % setting.stim_winT = stimulation_win(1, 2)-stimulation_win(1, 1); % the duration of stimulation 
     setting.rebound_winT = 1; % second. rebound window duration
     setting.sortout_event = 'rise'; % use rise location to sort peak
     setting.pre_stim_duration = 10; % seconds
@@ -43,6 +43,18 @@ function [event_info_all_trials,varargout] = freq_analysis_events_info_allTrials
         % end
 
         trial_data = all_trial_data(n, :);
+
+        gpio_info = trial_data{gpio_col}(3);
+        if numel(gpio_info) > 0 % if stimulation was applied
+            stimulation_win = gpio_info.stim_range; % 3 is the first gpio channel used for stimulation. if 2 stimuli were used, 4 is the second
+            stimulation_repeat = size(stimulation_win, 1);
+            setting.stim_winT = stimulation_win(1, 2)-stimulation_win(1, 1); % the duration of stimulation 
+        else
+            stimulation_win = [];
+            stimulation_repeat = [];
+            setting.stim_winT = [];
+        end
+
         [event_info_trial] = freq_analysis_events_info_trial(trial_data,...
             'stim_time_error', setting.stim_time_error, 'stim_winT', setting.stim_winT,...
             'sortout_event', setting.sortout_event,...

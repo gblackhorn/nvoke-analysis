@@ -95,10 +95,18 @@ function [spont_event_info,varargout] = get_spontaneous_event_info_trial(trial_d
             end
 
             spont_event_info(n) = event_info;
+        % else
+        %     spont_event_info(n) = [];
         end
     end
-
-    spont_event_info = orderfields(spont_event_info);
+    if exist('spont_event_info', 'var')
+        spont_event_info = orderfields(spont_event_info);
+    else
+        spont_event_info = [];
+    end
+    % if ~isempty(spont_event_info)
+    %     spont_event_info = orderfields(spont_event_info);
+    % end
 end
 
 

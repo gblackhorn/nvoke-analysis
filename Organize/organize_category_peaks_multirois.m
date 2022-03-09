@@ -3,12 +3,16 @@ function [peak_properties_tables_with_cat,varargout] = organize_category_peaks_m
     % Caution (2021.01.10): only works with up to 2 stimulation channels so far 
     %   peak_properties_tables: multiple roi table
     %   gpio_info_table: output of function "organize_gpio_info". multiple stim_ch can be used
+
+    % event_category_names
+    % {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'};
     
     % Defaults
     stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
     criteria_trig = 2; % triggered peak: peak start to rise in 2s from onset of stim
     criteria_rebound = 1; % rebound peak: peak start to rise in 1s from end of stim
-    peak_cat_str = {'noStim', 'noStimFar', 'triggered', 'triggered_delay', 'rebound', 'interval'};
+    % peak_cat_str = {'noStim', 'noStimFar', 'triggered', 'triggered_delay', 'rebound', 'interval'};
+    % [peak_cat_str] = event_category_names;
 
     % Optionals
     for ii = 1:2:(nargin-2)
@@ -38,10 +42,14 @@ function [peak_properties_tables_with_cat,varargout] = organize_category_peaks_m
     	    			gpio_info_table(sn, :), 'stim_time_error', stim_time_error);
     	    	end
     	    	if stim_ch_num == 2
-    	    		peak_category = strcat(peak_category(:, 1), {'-'}, peak_category(:, 2));
+                    if strcmp(peak_category(:, 1), peak_category(:, 2))
+                        peak_category = peak_category(:, 1);
+                    else
+    	    		    peak_category = strcat(peak_category(:, 1), {'-'}, peak_category(:, 2));
+                    end
     	    	end
     	    else
-    	    	[peak_category] = organize_category_peaks(peak_properties_table,...
+    	    	[peak_category] = organize_category_peaks(peak_properties_table_single,...
     	    		gpio_info_table, 'stim_time_error', stim_time_error);
     	    end
             peak_properties_table_single = addvars(peak_properties_table_single,peak_category);

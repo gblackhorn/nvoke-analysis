@@ -20,7 +20,7 @@ function plotroimap(roi_map,roi_center,varargin)
     value = roi_center(:, 1); % roi number code
     if label_roi == 1
     	roi_map = insertText(roi_map, position, value,...
-    		'FontSize', 20, 'BoxColor', 'yellow', 'TextColor', 'yellow', 'BoxOpacity', 0);
+    		'FontSize', 20, 'BoxColor', 'yellow', 'TextColor', 'yellow', 'BoxOpacity', 0.5);
     end
 
     % rm = figure;

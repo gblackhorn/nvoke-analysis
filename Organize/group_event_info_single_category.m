@@ -17,7 +17,7 @@ function [grouped_event_info, varargout] = group_event_info_single_category(even
         end
     end
 
-    % Main content
+    %% Main content
     if ~isempty(filter_field)
     	[event_info] = filter_struct(event_info, filter_field, filter_par);
     end
@@ -41,7 +41,9 @@ function [grouped_event_info, varargout] = group_event_info_single_category(even
     	idx{n} = find([idx_logic{:}]);
         grouped_event_info(n).group = groupname;
     	grouped_event_info(n).event_info = event_info(idx{n});
+        grouped_event_info(n).tag = keyword;
     end
 
     varargout{1} = idx;
+    varargout{2} = category_content_unique;
 end

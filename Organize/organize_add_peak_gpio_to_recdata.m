@@ -93,16 +93,16 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 
     fprintf('Processing recordings: \n')
     for rn = 1:recording_num
+        recording_name = recdata_organized{rn, col_name};
 
         % Debugging
-        fprintf(' - recording_num: %d/%d\n', rn, recording_num);
+        fprintf(' - recording_num: %d/%d (%s)\n', rn, recording_num, recording_name);
         % disp(['recording_num: ', num2str(rn), '/', num2str(recording_num)])
-%         if rn == 1
-%             disp('pause for debugging')
-%             pause
-%         end
+        % if rn == 38
+        %     disp('pause for debugging')
+        %     pause
+        % end
 
-    	recording_name = recdata_organized{rn, col_name};
     	rec_data_decon = recdata_organized{rn, col_trace}.decon; % deconvoluted data processed by CNMFe
     	rec_data_raw = recdata_organized{rn, col_trace}.raw; % data after removing background, neuropil, and demixing 
     	roi_num = size(rec_data_decon, 2)-1;
@@ -120,7 +120,11 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     	else
     		[recdata_organized{rn, col_gpioinfo}, gpio_info_table] = organize_gpio_info(recdata{rn, col_gpioinfo},...
     			'stim_idx_start', 3, 'round_digit', 0);
-    		stim_str = join(gpio_info_table.stim_ch_str);
+            if ~isempty(gpio_info_table)
+    		    stim_str = char(join(gpio_info_table.stim_ch_str));
+            else
+                stim_str = 'no-stim';
+            end
     	end 
     	recdata_organized{rn, col_gpioname} = stim_str;
 
@@ -186,6 +190,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 
 		% category peaks
 		% [peak_category] = organize_category_peaks(peak_properties_table,gpio_info_table,varargin)
+        % Peak Categories: {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'};
 		[peak_properties_lowpass] = organize_category_peaks_multirois(peak_properties_lowpass,...
 			gpio_info_table, 'stim_time_error', stim_time_error);
 		[peak_properties_smooth] = organize_category_peaks_multirois(peak_properties_smooth,...
@@ -226,7 +231,10 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 
         % Calculate roi map infomation from cnmfe_results
         if isfield(recdata_organized{rn,col_trace}, 'cnmfe_results') % extract roi spatial information from CNMFe results
-            [recdata_organized{rn,col_trace}.roi_map, recdata_organized{rn,2}.roi_center] = roimap(recdata_organized{rn,2}.cnmfe_results);
+            roi_names = recdata_organized{rn, col_trace}.lowpass.Properties.VariableNames(2:end); % roi names in lowpass
+            roi_idx = cell2mat(cellfun(@(x) str2double(x(7:end)), roi_names, 'UniformOutput',false)); % first 6 strings are neuron
+
+            [recdata_organized{rn,col_trace}.roi_map, recdata_organized{rn,2}.roi_center] = roimap(recdata_organized{rn,2}.cnmfe_results, roi_idx);
         end
 
         % Plot

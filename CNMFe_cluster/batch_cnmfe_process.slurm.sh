@@ -1,8 +1,7 @@
 #!/bin/bash
 #SBATCH -p compute
 #SBATCH -t 1-0
-#SBATCH --mem=128G
-#SBATCH -c 32
+
 
 # Load matlab
 module load matlab 
@@ -16,7 +15,7 @@ mlab_cmd="matlab -nosplash -nodisplay -nodesktop"
 tempdir=$(mktemp -d /flash/UusisaariU/GD/data_folder.XXXXXX) 
 
 # set inputs
-folder_to_process='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/concatenated/' 
+
 Fs=20 # sampling frequency. default is 20 Hz 
 
 # enter the user directory on flash
@@ -25,10 +24,7 @@ cd /flash/UusisaariU/GD/code
 # Copy files to be processed into the tempdir
 cp -r $folder_to_process/* $tempdir
 
-# Copy codes to temp folder
-# codedir=$(mktemp -d /$tempdir/code.XXXXXX)
-# cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMFe_cluster/* ./
-# cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/CNMF_E/ ./
+
 
 # Run code for CNMFe process
 ${mlab_cmd} -r "folder_to_process='${tempdir}'; Fs=${Fs}; cnmfe_process_batch_cluster('folder', folder_to_process, 'Fs', Fs);"

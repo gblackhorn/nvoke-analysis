@@ -13,6 +13,14 @@ SaveWithGUI = false;
 traceNum_perFig = 10;
 plotInterval = 20; % offset for traces on y axis to seperate them
 vis = 'on'; % set the 'visible' of figures
+decon = true; % true/false plot decon trace
+marker = true; % true/false plot markers
+marker_rise_decay = false; % true/false plot markers for rise and decay frames
+line_color = '#616887';
+line_color_decon = '#24283B';
+markerPeak_color = '#8D73BA';
+markerPeak_color_decon = '#5B7A87';
+marker_rise_decay_color = '#BA9973';
 
 % Optionals
 for ii = 1:2:(nargin-1)
@@ -26,6 +34,10 @@ for ii = 1:2:(nargin-1)
         traceNum_perFig = varargin{ii+1};
     elseif strcmpi('vis', varargin{ii})
         vis = varargin{ii+1};
+    elseif strcmpi('decon', varargin{ii})
+        decon = varargin{ii+1};
+    elseif strcmpi('marker', varargin{ii})
+        marker = varargin{ii+1};
     end
 end
 
@@ -45,16 +57,11 @@ trialType = getTrialTypeFromROIdataStruct(trialData);
 nFrames = getTrialLengthInFrames(trialData);
 trialID = getTrialIDsFromROIdataStruct(trialData);
 fovInfo = get_fov_info(trialData);
-% if isfield(trialData{2}, 'FOV_loc')
-%     fovInfo = get_fov_info(trialData{2}.FOV_loc);
-% end
 
 peak_properties_col = 5;
 xAx = trialData{2}.lowpass.Time; % use time information from lowpass data
 
 nFig = ceil(nROIs/traceNum_perFig);
-
-
 
 
 for fn = 1:nFig
@@ -68,12 +75,10 @@ for fn = 1:nFig
         clear p % clear figure info from previous figure
     end
 
-    % xAx = [1:nFrames];
-    % xAx = xAx ./ frameRate;
-    % xAx = trialData{2}.lowpass.Time; % use time information from lowpass data
-
     
     roi_names = cell((roi_num_end-roi_num_start+1), 1);
+    trace_y_pos = zeros(1, roi_num_end-roi_num_start+1);
+    trace_y_tick = cell(size(trace_y_pos));
     for ROI = roi_num_start:roi_num_end
         ROI_plot_idx = ROI-(fn-1)*traceNum_perFig; % the index of ROI in a figure
         
@@ -81,45 +86,60 @@ for fn = 1:nFig
 
         roi_name = trialData{peak_properties_col}(:,ROI).Properties.VariableNames{:};
         roi_names{ROI_plot_idx} = roi_name;
+        trace_y_pos(ROI_plot_idx) = trace_y_pos(ROI_plot_idx)-ROI_plot_idx*plotInterval;
+        trace_y_tick{ROI_plot_idx} = roi_name;
         
         fullTrace = getROItraceFromTrialData(trialData, ROI, 'lowpass', 'roi_name', roi_name);
         fullTraceShifted = fullTrace - (ROI_plot_idx*plotInterval);
         deconTrace = getROItraceFromTrialData(trialData, ROI, 'decon', 'roi_name', roi_name);
         deconTraceShifted = deconTrace - (ROI_plot_idx*plotInterval);
         
-        p(ROI_plot_idx) = plot (xAx, fullTraceShifted, 'LineWidth', 1, 'Color','k');
-        p(ROI_plot_idx) = plot (xAx, deconTraceShifted, 'LineWidth', 1.5);
-        
-        spikeFrames = getSpikeFramesForROI(trialData,ROI, 'lowpass');
-        if (find (~isnan(spikeFrames)))
-            s1= scatter (xAx(spikeFrames), fullTraceShifted(spikeFrames), 'b*', 'LineWidth', 1);
-        else
-            s1 = [];
+        p(ROI_plot_idx) = plot (xAx, fullTraceShifted, 'LineWidth', 1, 'Color',line_color);
+        if decon
+            p(ROI_plot_idx) = plot (xAx, deconTraceShifted, 'LineWidth', 1.5, 'color', line_color_decon);
         end
         
-        spikeFramesDecon = getSpikeFramesForROI(trialData,ROI, 'decon');
-        if (find (~isnan(spikeFramesDecon)))
-            s2= scatter (xAx(spikeFramesDecon), deconTraceShifted(spikeFramesDecon), 'ro', 'LineWidth', 1);
-        else
-            s2 = [];
+        if marker
+            spikeFrames = getSpikeFramesForROI(trialData,ROI, 'lowpass');
+            if (find (~isnan(spikeFrames)))
+                s1= scatter (xAx(spikeFrames), fullTraceShifted(spikeFrames), 'b*',...
+                    'MarkerEdgeColor', markerPeak_color,'LineWidth', 1);
+            else
+                s1 = [];
+            end
+            
+            if decon
+                spikeFramesDecon = getSpikeFramesForROI(trialData,ROI, 'decon');
+                if (find (~isnan(spikeFramesDecon)))
+                    s2= scatter (xAx(spikeFramesDecon), deconTraceShifted(spikeFramesDecon), 'ro',...
+                        'MarkerEdgeColor', markerPeak_color_decon, 'LineWidth', 1);
+                else
+                    s2 = [];
+                end
+            end
+            
+            if marker_rise_decay
+                riseFrames = getSpikeFramesForROI(trialData,ROI, 'rise');
+                if (find (~isnan(riseFrames)))
+                    s3= scatter (xAx(riseFrames), fullTraceShifted(riseFrames), 'g>',...
+                        'MarkerEdgeColor', marker_rise_decay_color, 'LineWidth', 1);
+                else
+                    s3 = [];
+                end
+                
+                 decayFrames = getSpikeFramesForROI(trialData,ROI, 'decay');
+                if (find (~isnan(decayFrames)))
+                    s4= scatter (xAx(decayFrames), fullTraceShifted(decayFrames), 'c<',...
+                        'MarkerEdgeColor', marker_rise_decay_color, 'LineWidth', 1);
+                else
+                    s4 = [];
+                end
+            end
         end
-        
-        riseFrames = getSpikeFramesForROI(trialData,ROI, 'rise');
-        if (find (~isnan(riseFrames)))
-            s3= scatter (xAx(riseFrames), fullTraceShifted(riseFrames), 'g>', 'LineWidth', 1);
-        else
-            s3 = [];
-        end
-        
-         decayFrames = getSpikeFramesForROI(trialData,ROI, 'decay');
-        if (find (~isnan(decayFrames)))
-            s4= scatter (xAx(decayFrames), fullTraceShifted(decayFrames), 'c<');
-        else
-            s4 = [];
-        end
-        
-        
     end
+    yticks(flip(trace_y_pos));
+    yticklabels(flip(trace_y_tick));
+    set(gca,'Xtick',[xAx(1):10:xAx(end)])
 
     if nROIs ~= 0
         % annotateStims(trialData, gca);
@@ -127,23 +147,13 @@ for fn = 1:nFig
         set(gca,'children',flipud(get(gca,'children')))
         % ROIns = [1:nROIs]';
         % legendStr = cellstr(num2str(ROIns));
-        legendStr = roi_names;
-        legend([p s1 s2 s3 s4] , [legendStr ;'L'; 'D'; 'r'; 'd'], 'Location', 'northeastoutside');
+        % legendStr = roi_names;
+        % legend([p s1 s2 s3 s4] , [legendStr ;'L'; 'D'; 'r'; 'd'], 'Location', 'northeastoutside');
     end
 
+
     trialID_title = strrep(trialID{1}, '_', ' ');
-    titleString = (['Lowpass ROI traces from trial ', trialID_title, ' - ', num2str(fn)]);
-    % if (strcmp(trialType, 'GPIO1-1s'))
-    %     titleString = [titleString ', with AIRPUFF stim']; 
-    % else
-        
-    %     if (contains(trialType, 'OG-LED'))
-    %         titleString = [titleString ', with OPTOGEN stim'];
-    %     else
-    %         titleString = [titleString ', no stim'];
-    %     end
-        
-    % end
+    titleString = sprintf('Lowpass ROI traces from trial %s-%d yInt%d', trialID_title, fn, plotInterval);
 
     if ~isempty(strfind(trialType, 'OG-LED')) || ~isempty(strfind(trialType, 'GPIO-1'))
         trialType_new = replace(trialType, 'OG-LED', 'OPTOGEN-stim');
@@ -171,4 +181,6 @@ for fn = 1:nFig
         saveas(gcf, [fig_fullpath, '.svg']);
         % close(gcf)
     end
+
+    varargout{1} = plotInterval;
 end

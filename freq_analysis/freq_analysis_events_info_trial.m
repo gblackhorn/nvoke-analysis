@@ -14,13 +14,23 @@ function [event_info_trial,varargout] = freq_analysis_events_info_trial(trial_da
 
     recording_name = trial_data{rec_name_col};
     recording_time = trial_data{trace_col}.raw.Time;
-    stimulation_win = trial_data{gpio_col}(3).stim_range; % 3 is the first gpio channel used for stimulation. if 2 stimuli were used, 4 is the second
-    stimulation_repeat = size(stimulation_win, 1);
     peak_info_table = trial_data{peak_info_col};
+
+    gpio_info = trial_data{gpio_col}(3);
+    if numel(gpio_info) > 0 % if stimulation was applied
+        stimulation_win = trial_data{gpio_col}(3).stim_range; % 3 is the first gpio channel used for stimulation. if 2 stimuli were used, 4 is the second
+        stimulation_repeat = size(stimulation_win, 1);
+        setting.stim_winT = stimulation_win(1, 2)-stimulation_win(1, 1); % the duration of stimulation 
+    else
+        stimulation_win = [];
+        stimulation_repeat = [];
+        setting.stim_winT = [];
+    end
+
     
     % settings
     setting.stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
-    setting.stim_winT = stimulation_win(1, 2)-stimulation_win(1, 1); % the duration of stimulation 
+    
     setting.rebound_winT = 1; % second. rebound window duration
     setting.sortout_event = 'rise'; % use rise location to sort peak
     setting.pre_stim_duration = 10; % seconds
@@ -50,34 +60,38 @@ function [event_info_trial,varargout] = freq_analysis_events_info_trial(trial_da
     for n = 1:roi_num
         roi_name = peak_info_table.Properties.VariableNames{n};
         peak_properties_table = peak_info_table{'peak_lowpass', roi_name}{:}; 
-        if ~isempty(peak_properties_table)
-            [event_info] = freq_analysis_events_info_roi(peak_properties_table,...
-                stimulation_win,recording_time,...
-                'stim_time_error', setting.stim_time_error, 'stim_winT', setting.stim_winT,...
-                'sortout_event', setting.sortout_event,...
-                'pre_stim_duration', setting.pre_stim_duration, 'post_stim_duration', setting.post_stim_duration);
-            roi_names_cell = repelem({roi_name}, length(event_info.events_time), 1);
-            roi_names_table = table(roi_names_cell, 'VariableNames', {'roi_name'});
 
-            [spont_event] = freq_analysis_spontaneous_freq_roi(peak_properties_table,...
-                stimulation_win,recording_time,...
-                'stim_time_error', setting.stim_time_error, 'stim_winT', setting.stim_winT,...
-                'sortout_event', setting.sortout_event,'rebound_winT', setting.rebound_winT);
-            spont_event_info_cell = repelem(spont_event.freq, length(event_info.events_time), 1);
-            spont_event_info_table = table(spont_event_info_cell, 'VariableNames', {'spont_event_freq'});
+        [spont_event] = freq_analysis_spontaneous_freq_roi(peak_properties_table,...
+            stimulation_win,recording_time,...
+            'stim_time_error', setting.stim_time_error, 'stim_winT', setting.stim_winT,...
+            'sortout_event', setting.sortout_event,'rebound_winT', setting.rebound_winT);
 
+        [event_info] = freq_analysis_events_info_roi(peak_properties_table,...
+            stimulation_win,recording_time,...
+            'stim_time_error', setting.stim_time_error, 'stim_winT', setting.stim_winT,...
+            'sortout_event', setting.sortout_event,...
+            'pre_stim_duration', setting.pre_stim_duration, 'post_stim_duration', setting.post_stim_duration);
+        roi_names_cell = repelem({roi_name}, length(event_info.events_time), 1);
+        roi_names_table = table(roi_names_cell, 'VariableNames', {'roi_name'});
 
-            % event_info_roi_table = struct2table(event_info);
-            events_cell{n} = [roi_names_table struct2table(event_info) spont_event_info_table];
-            % stim_num_array(n) = stimulation_repeat;
-        end
+        spont_event_info_cell = repelem(spont_event.freq, length(event_info.events_time), 1);
+        spont_event_info_table = table(spont_event_info_cell, 'VariableNames', {'spont_event_freq'});
+
+        % event_info_roi_table = struct2table(event_info);
+        events_cell{n} = [roi_names_table struct2table(event_info) spont_event_info_table];
+        % stim_num_array(n) = stimulation_repeat;
     end
     event_info_trial = cat(1, events_cell{:});
     recording_names_cell = repelem({recording_name}, size(event_info_trial, 1), 1);
     recording_names_table = table(recording_names_cell, 'VariableNames', {'recording_name'});
-    stim_num_roi_array = repelem(stimulation_repeat, size(event_info_trial, 1), 1);
-    stim_num_roi_table = table(stim_num_roi_array, 'VariableNames', {'stim_num_per_roi'});
-    event_info_trial = [recording_names_table event_info_trial stim_num_roi_table];
+
+    if ~isempty(stimulation_repeat)
+        stim_num_roi_array = repelem(stimulation_repeat, size(event_info_trial, 1), 1);
+        stim_num_roi_table = table(stim_num_roi_array, 'VariableNames', {'stim_num_per_roi'});
+        event_info_trial = [recording_names_table event_info_trial stim_num_roi_table];
+    else
+        event_info_trial = [recording_names_table event_info_trial];
+    end
 
     % stim_num = sum(stim_num_array, 'omitnan');
     varargout{1} = setting;

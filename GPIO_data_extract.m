@@ -121,7 +121,7 @@ elseif ~isempty(find(strcmp('BNC Sync Output', GPIO_table.ChannelName))) % nVoke
 
 	idx_last_sync_sig = find(channel(1).time_value(:, 2), 1, 'last'); % nVoke2 keeps working after scheduled rec finished. Use last sync signal to find the real recording end
 	GPIO_duration = channel(1).time_value(idx_last_sync_sig, 1); % end point of SYNC channel time, the duration of recording
-	stimulation = channel_list(active_channels(3)); % name of stimulation channel. 1-SYNC， 2-EX_LED
+	stimulation = channel_list{active_channels(3)}; % name of stimulation channel. 1-SYNC， 2-EX_LED
 
 	varargout{1} = EX_LED_power;
 	varargout{2} = GPIO_duration;

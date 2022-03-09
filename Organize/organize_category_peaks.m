@@ -3,12 +3,21 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
     %   peak_properties_table: a table with vary properties of peaks from a
     %       single roi. must have variable "rise_time"
     %   gpio_info_table: output of function "organize_gpio_info". if multiple stim_ch exist, only input one     
+
+    % {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'};
+    % noStim: events from recordings without any stimulations
+	% beforeStim: events appearing before applying the first stim in a recording
+	% interval: events appearing between stimulations
+	% trigger: events appearing immediatly after the onset of a stim
+	% delay: events appearing during a stim but not immediatly after its onset
+	% rebound: events appearing immediatly after the end of a stim
     
     % Defaults
     stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
-    criteria_trig = 2; % triggered peak: peak start to rise in 2s from onset of stim
+    criteria_trig = 0.5; % triggered peak: peak start to rise in (criteria_trig)s from onset of stim
     criteria_rebound = 1; % rebound peak: peak start to rise in 1s from end of stim
-    peak_cat_str = {'noStim', 'noStimFar', 'triggered', 'triggered_delay', 'rebound', 'interval'};
+    % peak_cat_str = {'noStim', 'noStimFar', 'triggered', 'triggered_delay', 'rebound', 'interval'};
+    % peak_cat_str = eventCatStr;
     [peak_cat_str] = event_category_names;
 
     % Optionals
@@ -33,7 +42,7 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
 
 	    % allocate ram
 	    idx_trig = cell(stim_train_num, 1);
-	    idx_trig_delay = cell(stim_train_num, 1);
+	    idx_delay = cell(stim_train_num, 1);
 	    idx_rebound = cell(stim_train_num, 1);
 	    idx_inter = cell(stim_train_num, 1);
 
@@ -56,42 +65,45 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
 	    % Find index of peaks fall in various windows for peak category
 	    idx_befor_1st_stim = find(peak_rise_time>=win_befor_1st_stim(1) & peak_rise_time<win_befor_1st_stim(2));
 	    idx_after_last_stim = find(peak_rise_time>=time_after_last_stim);
-	    idx_far_from_stim = [idx_befor_1st_stim; idx_after_last_stim];
+	    % idx_beforeStim = [idx_befor_1st_stim; idx_after_last_stim];
+	    idx_beforeStim = idx_befor_1st_stim;
 	    for wn = 1:stim_train_num
 	    	idx_trig{wn} = find(peak_rise_time>=win_trig(wn, 1) & peak_rise_time<win_trig(wn, 2));
 	    	if stim_train_duration >= criteria_trig
-		    	idx_trig_delay{wn} = find(peak_rise_time>=win_trig_delay(wn, 1) & peak_rise_time<win_trig_delay(wn, 2));
+		    	idx_delay{wn} = find(peak_rise_time>=win_trig_delay(wn, 1) & peak_rise_time<win_trig_delay(wn, 2));
 		    end
 		    idx_rebound{wn} = find(peak_rise_time>=win_rebound(wn, 1) & peak_rise_time<win_rebound(wn, 2));
 		    idx_inter{wn} = find(peak_rise_time>=win_inter(wn, 1) & peak_rise_time<win_inter(wn, 2));
 	    end
 	    idx_trig = cell2mat(idx_trig);
 	    if stim_train_duration >= criteria_trig
-	    	idx_trig_delay = cell2mat(idx_trig_delay);
+	    	idx_delay = cell2mat(idx_delay);
 	    else
-	    	idx_trig_delay = [];
+	    	idx_delay = [];
 	    end
 	    idx_rebound = cell2mat(idx_rebound);
-	    idx_inter = cell2mat(idx_inter);
+	    % idx_inter = cell2mat(idx_inter);
+	    idx_inter = [cell2mat(idx_inter); idx_after_last_stim];
 
 	    % Fill peak_category using index
-	    if ~isempty(idx_far_from_stim)
-		    peak_category(idx_far_from_stim) = peak_cat_str(2);
+	    if ~isempty(idx_beforeStim)
+		    peak_category(idx_beforeStim) = peak_cat_str(2);
 		end
 		if ~isempty(idx_trig)
-		    peak_category(idx_trig) = peak_cat_str(3);
+		    peak_category(idx_trig) = peak_cat_str(4);
 		end
-		if ~isempty(idx_trig_delay)
-		    peak_category(idx_trig_delay) = peak_cat_str(4);
+		if ~isempty(idx_delay)
+		    peak_category(idx_delay) = peak_cat_str(5);
 		end
 		if ~isempty(idx_rebound)
-		    peak_category(idx_rebound) = peak_cat_str(5);
+		    peak_category(idx_rebound) = peak_cat_str(6);
 		end
 		if ~isempty(idx_inter)
-		    peak_category(idx_inter) = peak_cat_str(6);
+		    peak_category(idx_inter) = peak_cat_str(3);
 		end
+		% varargout{1} = stim_ch_name;
 	else
-		peak_category(:) = peak_cat_str{1};
+		peak_category(:) = peak_cat_str(1);
 	end
 end
 

@@ -32,8 +32,8 @@ function [event_hist,varargout] = freq_analysis_histogram(all_trial_data,varargi
     for ii = 1:2:(nargin-1)
     	if strcmpi('stim_time_error', varargin{ii})
     		setting.stim_time_error = varargin{ii+1};
-    	elseif strcmpi('stim_winT', varargin{ii})
-    		setting.stim_winT = varargin{ii+1};
+    	% elseif strcmpi('stim_winT', varargin{ii})
+    	% 	setting.stim_winT = varargin{ii+1};
     	% elseif strcmpi('rebound_winT', varargin{ii})
     	% 	setting.rebound_winT = varargin{ii+1};
     	elseif strcmpi('sortout_event', varargin{ii})

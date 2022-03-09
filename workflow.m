@@ -15,7 +15,7 @@ ins_recordings_folder = fullfile(inscopix_folder, 'recordings'); % processed ima
 
 ins_analysis_ventral_folder = fullfile(ins_analysis_folder, 'nVoke_ventral_approach'); % processed imaging data, including isxd, gpio, tiff, and csv files 
 ins_analysis_ventral_fig_folder = fullfile(ins_analysis_ventral_folder, 'figures'); % figure folder for ventral approach analysis
-ins_analysis_invitro_folder = fullfile(ins_analysis_folder, 'calcium_imaging_slice'); % processed imaging data, including isxd, gpio, tiff, and csv files 
+ins_analysis_invitro_folder = fullfile(ins_analysis_folder, 'Kevin_calcium_imaging_slice'); % processed imaging data, including isxd, gpio, tiff, and csv files 
 
 ins_tiff_folder = fullfile(ins_projects_folder, 'Exported_tiff'); % motion corrected recordings in tiff format
 ins_tiff_invivo_folder = fullfile(ins_tiff_folder, 'IO_ventral_approach'); % motion corrected recordings in tiff format
@@ -45,33 +45,30 @@ if recording_dir ~= 0
 	end
 end
 
-% If recordings were created by the nVoke1 system. Use following line instead
+% 2.1. If recordings were created by the nVoke1 system. Use following line instead
 % nvoke_file_process;
 
 
-
 %% ==================== 
-keyword = '2021-08-09*-DFF.isxd';
+% 3.1 Export nvoke movies to tiff files
+keywords = '2021-09-30*-MC.isxd'; % used to filter 
 overwrite = false;
 
-input_folder = uigetdir(ins_projects_folder, 'Select a folder containing .isdx movie files');
-output_folder = uigetdir(ins_tiff_folder, 'Select a folder to save .tiff files');
-if input_folder ~= 0 
-	ins_projects_folder = input_folder;
+input_isxd_folder = uigetdir(project_dir,...
+	'Select a folder (project folder) containing processed recording files (.isxd)');
+if input_isxd_folder ~= 0
+	project_dir = input_isxd_folder;
+	output_tiff_folder = uigetdir(ins_tiff_folder,...
+		'Select a folder to save the exported tiff files');
+	if output_tiff_folder ~= 0
+		ins_tiff_folder = output_tiff_folder;
+		export_nvoke_movie_to_tiff(input_isxd_folder, output_tiff_folder,...
+			'keyword', keywords, 'overwrite', overwrite);
+	end
 end
-if output_folder ~= 0
-	ins_tiff_folder = output_folder;
-end
-
-export_nvoke_movie_to_tiff(input_folder, output_folder,...
-	'keyword', keyword, 'overwrite', overwrite);
-
-
-
-
 
 %% ==================== 
-% 3. make subfolders for each tiff file with their date and time information for following CNMFe process
+% 3.2 make subfolders for each tiff file with their date and time information for following CNMFe process
 key_string = 'video'; % Key_string is used to locate the end of string used for nameing subfolder
 num_idx_correct = -2; % key_string idx + num_idx_correct = idx of the end of string for subfolder name
 
@@ -83,6 +80,25 @@ if organize_folder ~= 0
 		'key_string', key_string, 'num_idx_correct', num_idx_correct);
 else
 	disp('Folder not selected')
+	return
+end
+
+
+%% ==================== 
+% 3.3 Remove cnmfe generated files for a new process
+dir_path_clear = ins_tiff_folder;
+keywords_file = {'*contours*', '*results.mat'};
+keywords_dir = {'*source_extraction*'};
+
+dir_path_clear = uigetdir(ins_tiff_folder,...
+	'Warning: about to delete objects in the subfolders!');
+if dir_path_clear ~= 0
+	ins_tiff_folder = dir_path_clear;
+
+	rm_subdir_files('dir_path', dir_path_clear,...
+		'keywords_file', keywords_file, 'keywords_dir', keywords_dir);
+else
+	fprintf('folder not selected')
 	return
 end
 
@@ -211,8 +227,8 @@ opt.stim_time_error = 0; % due to low temperal resolution and error in lowpassed
 opt.stim_pre_time = 10; % time (s) before stimuli start
 opt.stim_post_time = 10; % time (s) after stimuli end
 opt.merge_peaks = true;
-opt.merge_time_interval = 1; % default: 0.5s. peak to peak interval.
-opt.discard_noisy_roi = true;
+opt.merge_time_interval = 0.5; % default: 0.5s. peak to peak interval.
+opt.discard_noisy_roi = false;
 opt.std_fold = 10; % used as criteria to discard noisy_rois
 plot_traces = 0; % 0: do not plot. 1: plot. 2: plot with pause
 save_traces = 0; % 0: do not save. 1: save
@@ -241,7 +257,7 @@ modify_info = 'ask'; % modify the FOV location information if it exists
 
 fov_info_col = 2;
 
-recordings = a;
+recordings = recdata_group.all;
 rec_num = size(recordings, 1);
 
 nrec = 1;
@@ -263,36 +279,55 @@ while nrec <= rec_num
 	end
 end
 
+
+%% ====================
+% 8.11 Copy the FOV_loc struct-field from a sourceData to a newly formed recdata_organized
+recdata_target = recdata_organized_new;
+recdata_source = recdata_organized;
+
+[recdata_target_with_fov,trial_list_wo_fov] = copy_fovInfo(recdata_source,recdata_target);
+
+%% ====================
+% 8.12 Add FOV category code to FOV_loc
+[recdata_organized] = add_fov_category(recdata_organized,...
+	'hemi_sort', hemi_sort, 'fov_contents', fov_contents);
+
+
 % recdata_group.all(:, fov_info_col) = recordings(:, fov_info_col); 
 % recdata_organized = recordings; 
 
 %% ====================
-% 8.1 Group recordings according to stimulation
-stim_types = {'GPIO-1-1s', 'OG-LED-1s', 'OG-LED-5s', 'OG-LED-5s GPIO-1-1s'};
-
+% 8.2 Group recordings according to stimulation
+% stim_types = {'GPIO-1-1s', 'OG-LED-1s', 'OG-LED-5s', 'OG-LED-5s GPIO-1-1s'};
+% stim_types = unique(cellfun(@(x) char(x), recdata_organized(:,3), 'UniformOutput',false));
 group_info = organize_rec_group_info(recdata_organized);
+stim_types = {group_info.name};
 recdata_group.all = recdata_organized;
 
 for gn = 1:numel(group_info)
-	stim_type_idx = find(strcmp(group_info(gn).name, stim_types));
-	stim_type = stim_types{stim_type_idx};
-	switch stim_type
-		case 'GPIO-1-1s'
-			recdata_group.ap1s = recdata_organized(group_info(gn).idx, :);
-		case 'OG-LED-1s'
-			recdata_group.og1s = recdata_organized(group_info(gn).idx, :);
-		case 'OG-LED-5s'
-			recdata_group.og5s = recdata_organized(group_info(gn).idx, :);
-		case 'OG-LED-5s GPIO-1-1s'
-			recdata_group.og5s_ap1s = recdata_organized(group_info(gn).idx, :);
-		otherwise
-			disp('Unexpected stimulation type. May need to modify the "stim_types"')
-	end
+	fieldName = strrep(group_info(gn).name, '-', '_');
+	fieldName = strrep(fieldName, ' ', '_');
+	recdata_group.(fieldName) = recdata_organized(group_info(gn).idx, :);
+
+	% stim_type_idx = find(strcmp(group_info(gn).name, stim_types));
+	% stim_type = stim_types{stim_type_idx};
+	% switch stim_type
+	% 	case 'GPIO-1-1s'
+	% 		recdata_group.ap1s = recdata_organized(group_info(gn).idx, :);
+	% 	case 'OG-LED-1s'
+	% 		recdata_group.og1s = recdata_organized(group_info(gn).idx, :);
+	% 	case 'OG-LED-5s'
+	% 		recdata_group.og5s = recdata_organized(group_info(gn).idx, :);
+	% 	case 'OG-LED-5s GPIO-1-1s'
+	% 		recdata_group.og5s_ap1s = recdata_organized(group_info(gn).idx, :);
+	% 	otherwise
+	% 		disp('Unexpected stimulation type. May need to modify the "stim_types"')
+	% end
 end
 
 
 %% ====================
-% 8.2 Save organized and calculate data 
+% 8.3 Save organized and calculate data 
 data_fullpath = fullfile(ins_analysis_ventral_folder, '*.mat');
 [data_filename, ins_analysis_ventral_folder] = uiputfile(data_fullpath,...
             'Select a folder to save data');
@@ -307,14 +342,14 @@ end
 
 
 %% ====================
-% 8.3 Select a specific group of data from recdata_group for further analysis
+% 8.4 Select a specific group of data from recdata_group for further analysis
 recdata_organized = select_grouped_data(recdata_group);
 
 
 %% ====================
 % 9. Examine peak detection with plots 
 PauseTrial = false; % true or false
-traceNum_perFig = 40; % number of traces/ROIs per figure
+traceNum_perFig = 20; % number of traces/ROIs per figure
 SavePlot = true;
 SaveTo = ins_analysis_ventral_fig_folder;
 vis = 'off'; % set the 'visible' of figures
@@ -346,7 +381,7 @@ SavePlot = false; % true or false
 % 10.1 Save the results of event frequency analysis 
 results_fullpath = fullfile(ins_analysis_ventral_folder, '*.mat');
 [results_filename, ins_analysis_ventral_folder] = uiputfile(results_fullpath,...
-            'Select the results of event frequency analysis (PSTH)');
+            'Save results of event frequency analysis (PSTH)');
 if isequal(results_filename, 0)
 	disp('User selected Cancel')
 else
@@ -377,35 +412,77 @@ close all
 
 
 
+%% ====================
+% 12.1 Align traces from all ROIs in the same trial
+event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
+traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
+event_data_group = 'peak_lowpass';
+event_filter = 'none';
+event_align_point = 'rise';
+cat_keywords =[];
+pre_event_time = 1; % unit: s. event trace starts at 1s before event onset
+post_event_time = 2; % unit: s. event trace ends at 2s after event onset
+
+[alignedData] = get_event_trace_trial(trialData,'event_type', event_type,...
+	'traceData_type', traceData_type, 'event_data_group', event_data_group,...
+	'event_filter', event_filter, 'event_align_point', event_align_point, 'cat_keywords', cat_keywords,...
+	'pre_event_time', pre_event_time, 'post_event_time', post_event_time);
+
+%% ====================
+% 12.2 Align traces from all trials 
+event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
+traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
+event_data_group = 'peak_lowpass';
+event_filter = 'none';
+event_align_point = 'rise';
+cat_keywords =[];
+pre_event_time = 1; % unit: s. event trace starts at 1s before event onset
+post_event_time = 2; % unit: s. event trace ends at 2s after event onset
+
+[alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', event_type,...
+	'traceData_type', traceData_type, 'event_data_group', event_data_group,...
+	'event_filter', event_filter, 'event_align_point', event_align_point, 'cat_keywords', cat_keywords,...
+	'pre_event_time', pre_event_time, 'post_event_time', post_event_time);
+
+
 
 
 %% ====================
-% 12.1 Get spontaneous_event_info 
-sortout_event = 'rise';
+% 12.3 Examine traces from a single ROI
+plot_combined_data = true;
+plot_stim_shade = true;
+trial_n = 2;
+alignedData = alignedData_allTrials(trial_n);
 
-[spont_event_info] = get_spontaneous_event_info_alltrial(recdata_organized,...
-	'sortout_event', sortout_event);
 
-%% ====================
-% 12.2 Group spontaneous event info
-category_names = {'mouseID'}; % {'mouseID', 'fovID'}
-filter_field = {'event_num'};
-filter_par = {'notzero'};
-
-[grouped_event_info, grouped_event_info_option] = group_event_info_multi_category(spont_event_info,...
-	'category_names', category_names,...
-	'filter_field', filter_field, 'filter_par', filter_par);
+plot_trace_trial(alignedData)
 
 
 %% ====================
-% 12.3 Plot spontaneous_event_info
-plot_combined_data = false;
-save_fig = true;
-save_dir = ins_analysis_ventral_fig_folder;
+% 12.4 Examine traces from a trial. group events from all ROIs
+plot_trace_allTrials(alignedData_allTrials)
 
-plot_event_info(grouped_event_info,...
-	'plot_combined_data',plot_combined_data,...
-	'save_fig', save_fig, 'save_dir', save_dir);
+
+% %% ====================
+% PauseTrial = true; % true or false
+% SavePlot = false;
+
+% if SavePlot
+%     workspace_folder_invivo_plot = plotTracesFromAllTrials (recdata_selected,...
+% 		'PauseTrial', PauseTrial,...
+%         'SavePlot', SavePlot, 'SaveTo', workspace_folder_invivo_plot);
+% else
+% 	plotTracesFromAllTrials (recdata_selected,...
+% 		'PauseTrial', PauseTrial);
+% end
+
+
+
+
+
+
+
+
 
 
 

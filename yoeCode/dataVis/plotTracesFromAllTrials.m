@@ -1,10 +1,12 @@
-function SaveTo = plotTracesFromAllTrials (IOnVokeData, varargin)
+function [SaveTo, varargout] = plotTracesFromAllTrials (IOnVokeData, varargin)
 
 	% Default
 	PauseTrial = 0; % pause after each trial
 	SavePlot = false;
 	SaveTo = pwd; % save plot to dir
 	traceNum_perFig = 10; % number of traces/ROIs per figure
+	decon = true; % true/false plot decon trace
+	marker = true; % true/false plot markers
 	vis = 'on'; % set the 'visible' of figures
 
 	% Optionals
@@ -17,6 +19,10 @@ function SaveTo = plotTracesFromAllTrials (IOnVokeData, varargin)
             SaveTo = varargin{ii+1};
         elseif strcmpi('traceNum_perFig', varargin{ii})
             traceNum_perFig = varargin{ii+1};
+        elseif strcmpi('decon', varargin{ii})
+            decon = varargin{ii+1};
+        elseif strcmpi('marker', varargin{ii})
+            marker = varargin{ii+1};
         elseif strcmpi('vis', varargin{ii})
             vis = varargin{ii+1};
         end
@@ -45,20 +51,14 @@ function SaveTo = plotTracesFromAllTrials (IOnVokeData, varargin)
 
 	    trialData = IOnVokeData(trial, :);
 	    plotROItracesFromTrial(trialData,...
-	    	'traceNum_perFig', traceNum_perFig,...
+	    	'traceNum_perFig', traceNum_perFig, 'decon', decon, 'marker', marker,...
 	    	'SavePlot', SavePlot, 'SaveTo', SaveTo, 'SaveWithGUI', false,...
 	    	'vis', vis);
 
 	    fprintf('%d/%d recordings have been plotted\n', trial, nTrials)
-
-	   % if SavePlot
-	   % 	figfile = titleString;
-	   % 	fig_fullpath = fullfile(figdir, figfile);
-	   % 	savefig(gcf, [fig_fullpath, '.fig']);
-	   % 	saveas(gcf, [fig_fullpath, '.jpg']);
-	   % 	saveas(gcf, [fig_fullpath, '.svg']);
-	   % 	close(gcf)
-	   % end
+	    if trial==25
+	    	pause
+	    end
 
 
 	   if PauseTrial
@@ -66,5 +66,6 @@ function SaveTo = plotTracesFromAllTrials (IOnVokeData, varargin)
 	   	pause
 	   end
 	end
+% 	varargout{1} = plotInterval; % distance between y ticks
 	% R = 1;
 end

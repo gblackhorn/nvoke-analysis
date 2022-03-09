@@ -1,3 +1,5 @@
+cd /flash/UusisaariU/GD/
+
 # update codes
 cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMFe_cluster/*.sh /flash/UusisaariU/GD/
 cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMFe_cluster/*.m /flash/UusisaariU/GD/code/
@@ -21,21 +23,22 @@ cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/Organize/ /fl
 module load matlab
 srun -p short -t 0-1 --mem=10G -c8 --x11 --pty matlab
 srun -p compute -t 1-0 --mem=256G -c16 --x11 --pty matlab
+srun -p compute -t 1-0 --nodes=1 --ntasks=1 --cpus-per-task=32 --mem-per-cpu=8G --x11 --pty matlab
 
 
 # sync process data back to bucket
-flashdatadir='/flash/UusisaariU/GD/data_folder.5rx8nM'
+flashdatadir='/flash/UusisaariU/GD/data_folder.qNDugf'
 bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach_cluster_trial/'
 
-flashdatadir='/flash/UusisaariU/GD/data_folder.teRXkO'
-bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/series/'
+flashdatadir='/flash/UusisaariU/GD/data_folder.tvyDSm/'
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2021-10-08_aav9_20hz/'
 rsync -av --no-group --no-perms $flashdatadir/ deigo:$bucketdatadir/
 
 
 
 # Copy data from bucket to /flash
-flashdatadir='/flash/UusisaariU/GD/data_folder.9mHEqf'
-bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_add_videos/'
+flashdatadir='/flash/UusisaariU/GD/data_folder.par_test'
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach_cluster_trial/'
 cp -r $bucketdatadir/* $flashdatadir/
 
 flashdatadir='/flash/UusisaariU/GD/data_folder.teRXkO/2021-04-05_loc1/'

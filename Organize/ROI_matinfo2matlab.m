@@ -15,7 +15,7 @@ function [recdata, varargout] = ROI_matinfo2matlab(varargin)
 	for ii = 1:2:(nargin)
 		if strcmpi('input_dir', varargin{ii})
 			input_dir = varargin{ii+1};
-		if strcmpi('output_dir', varargin{ii})
+		elseif strcmpi('output_dir', varargin{ii})
 			output_dir = varargin{ii+1};
 		end
 	end

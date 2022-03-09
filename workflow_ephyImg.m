@@ -4,11 +4,11 @@
 global dir_ibw ephy_dir ePhy_img_dir ePhyImgPlot_dir 
 
 if ispc
-	dir_ibw = 'G:\Workspace\Kevin_data\ePhy\RAW_SPIKE_DATA';
-	ephy_dir = 'G:\Workspace\Kevin_data\ePhy\RAW_SPIKE_DATA\';
-	ePhy_img_dir = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_slice';
+	dir_ibw = 'G:\Workspace\in_vitro\';
+	ephy_dir = 'G:\Workspace\in_vitro\';
+	ePhy_img_dir = 'D:\guoda\Documents\Workspace\Analysis\Analysis\calcium_imaging_slice\';
     % HDD_folder = 'G:\Workspace\Inscopix_Seagate\Analysis\IO_GCaMP-IO_ChrimsonR-CN_ventral\'; % to save peak_info_sheet var
-    ePhyImgPlot_dir = 'D:\guoda\Documents\Workspace\Analysis\nVoke\Slice\plots'; % to save peak_info_sheet var
+    ePhyImgPlot_dir = 'D:\guoda\Documents\Workspace\Analysis\calcium_imaging_slice\figures\'; % to save peak_info_sheet var
 elseif isunix
     dir_ibw = '/home/guoda/Documents/Workspace/Analysis/Kevin Data/ePhy';
 	ephy_dir = '/home/guoda/Documents/Workspace/Analysis/Kevin Data/ePhy';

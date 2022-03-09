@@ -60,8 +60,10 @@ function [varargout] = cnmfe_process_batch_cluster(varargin)
 	for ii = 1:numel(file_names)
 		% tic
 		nam = file_names{ii};
+		fprintf('\n\nProcessing %d/%d: %s\n', ii, numel(file_names), nam)
 		cnmfe_large_data_script_cluster
 		% toc
+		fprintf('\nCNMFe finished %d/%d: %s\n', ii, numel(file_names), nam)
 	end
 
 end

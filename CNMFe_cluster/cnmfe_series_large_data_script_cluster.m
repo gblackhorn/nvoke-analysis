@@ -12,12 +12,12 @@ nams = neuron.select_multiple_files(nams);  %if nam is [], then select data inte
 %% parameters  
 % -------------------------    COMPUTATION    -------------------------  %
 pars_envs = struct('memory_size_to_use', 256, ...   % GB, memory space you allow to use in MATLAB 
-    'memory_size_per_patch', 5, ...   % GB, space for loading data within one patch 
-    'patch_dims', [128, 128],...  %GB, patch size 
-    'batch_frames', 6000);           % number of frames per batch 
+    'memory_size_per_patch', 8, ...   % GB, space for loading data within one patch 
+    'patch_dims', [256, 256],...  %GB, patch size 
+    'batch_frames', 6000);           % ('batch_frames', 6000) number of frames per batch 
   % -------------------------      SPATIAL      -------------------------  %
-gSig = 16;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
-gSiz = 32;          % pixel, neuron diameter
+gSig = 12;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
+gSiz = 24;          % pixel, neuron diameter
 ssub = 1;           % spatial downsampling factor
 with_dendrites = false;   % with dendrites or not
 if with_dendrites
@@ -60,25 +60,25 @@ deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1'
     'optimize_b', true, ...% optimize the baseline);
     'max_tau', 100);    % maximum decay time (unit: frame);
 
-nk = 3;             % detrending the slow fluctuation. usually 1 is fine (no detrending)
+nk = 1;             % detrending the slow fluctuation. usually 1 is fine (no detrending)
 % when changed, try some integers smaller than total_frame/(Fs*30)
 detrend_method = 'spline';  % compute the local minimum as an estimation of trend.
 
 % -------------------------     BACKGROUND    -------------------------  %
 bg_model = 'ring';  % model of the background {'ring', 'svd'(default), 'nmf'}
 nb = 1;             % number of background sources for each patch (only be used in SVD and NMF model)
-bg_neuron_factor = 1.4;
+bg_neuron_factor = 1.5;
 ring_radius = round(bg_neuron_factor * gSiz);  % when the ring model used, it is the radius of the ring used in the background model.
 %otherwise, it's just the width of the overlapping area
-num_neighbors = 50; % number of neighbors for each neuron
+num_neighbors = []; % number of neighbors for each neuron
 
 % -------------------------      MERGING      -------------------------  %
 show_merge = false;  % if true, manually verify the merging step
 merge_thr = 0.65;     % thresholds for merging neurons; [spatial overlap ratio, temporal correlation of calcium traces, spike correlation]
 method_dist = 'max';   % method for computing neuron distances {'mean', 'max'}
-dmin = 5;       % minimum distances between two neurons. it is used together with merge_thr
+dmin = 10;       % previous_val = 5. minimum distances between two neurons. it is used together with merge_thr
 dmin_only = 2;  % merge neurons if their distances are smaller than dmin_only.
-merge_thr_spatial = [0.8, 0.4, -inf];  % merge components with highly correlated spatial shapes (corr=0.8) and small temporal correlations (corr=0.1)
+merge_thr_spatial = [1e-1, 0.65, 0];  % pre_val = [0.8, 0.4, -inf]. merge components with highly correlated spatial shapes (corr=0.8) and small temporal correlations (corr=0.1)
 
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
@@ -90,13 +90,13 @@ frame_range = [];   % when [], uses all frames
 save_initialization = false;    % save the initialization procedure as a video.
 use_parallel = true;    % use parallel computation for parallel computing
 show_init = true;   % show initialization results
-choose_params = true; % manually choose parameters
+choose_params = false; % manually choose parameters
 center_psf = true;  % set the value as true when the background fluctuation is large (usually 1p data)
 % set the value as false when the background fluctuation is small (2p)
 
 % -------------------------  Residual   -------------------------  %
-min_corr_res = 0.7;
-min_pnr_res = 6;
+min_corr_res = 0.9; % default=0.7
+min_pnr_res = 10; % default=6
 seed_method_res = 'auto';  % method for initializing neurons from the residual
 update_sn = true;
 
@@ -156,8 +156,7 @@ neuron.update_background_batch(use_parallel);
 %% merge neurons 
 neuron = cnmfe_series_merge_rois(neuron,show_merge,merge_thr_spatial,...
     min_corr_res,min_pnr_res,seed_method_res,...
-    'keyword', keyword, 'save_initialization', save_initialization, 'use_parallel', use_parallel,...
-    'save_workspace', save_workspace);
+    'keyword', keyword, 'save_initialization', save_initialization, 'use_parallel', use_parallel);
 
 %% get the correlation image and PNR image for all neurons 
 neuron.correlation_pnr_batch(); 

@@ -10,7 +10,7 @@ else
     if (length(trialData) ~= 5)
         TF = 0;
     else
-        if ((~ischar(trialData{1})) ||(~ischar(trialData{3}{1})))
+        if ((~ischar(trialData{1})) ||(~ischar(trialData{3}))) % original: ((~ischar(trialData{1})) ||(~ischar(trialData{3}{1})))
             TF = 0;
         end
         

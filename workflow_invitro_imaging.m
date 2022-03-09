@@ -3,10 +3,10 @@
 % organized files in subfolders
 % organized subfolders. date/sliceCell/recording
 if ~exist('date_folder', 'var') 
-	date_folder = 'G:\Workspace\Kevin_data\';
+	date_folder = 'G:\Workspace\in_vitro\';
 else
 	if ~isstr(date_folder)
-		date_folder = 'G:\Workspace\Kevin_data\';
+		date_folder = 'G:\Workspace\in_vitro\';
 	end
 end
 
@@ -25,10 +25,10 @@ end
 % make a list of sampling frequency of recordings in sub-subfolders
 % date/sliceCell/recording. 3 layers. invitro_rec_frequency can deal with recording folder when sliceCell is chosen
 if ~exist('date_folder', 'var') 
-	date_folder = 'G:\Workspace\Kevin_data\';
+	date_folder = 'G:\Workspace\in_vitro\';
 else
 	if ~ischar(date_folder)
-		date_folder = 'G:\Workspace\Kevin_data\';
+		date_folder = 'G:\Workspace\in_vitro\';
 	end
 end
 

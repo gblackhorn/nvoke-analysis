@@ -29,7 +29,8 @@ function [rec_data,varargout] = add_fov_category(rec_data,varargin)
 			rec_data{ii, 2}.fovID = fovIDs{ii};
 			
 		else
-			fprintf('"FOV_loc" is not found in recording %s', rec_name);
+			rec_name = char(rec_data{ii, 1});
+			fprintf('"FOV_loc" is not found in recording %s\n', rec_name);
 			break
 		end
 	end		

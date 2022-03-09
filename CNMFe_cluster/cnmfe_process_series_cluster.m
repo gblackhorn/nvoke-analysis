@@ -67,7 +67,7 @@ function [varargout] = cnmfe_process_series_cluster(varargin)
 		end
 	end
 	non_empty_idx = find(~cellfun(@isempty, file_names)); % index of cells not empty
-	% file_names = file_names(non_empty_idx); % discard empty cells from "file_names"
+	file_names = file_names(non_empty_idx); % discard empty cells from "file_names"
 	% file_num = numel(file_names);
 	disp([num2str(file_num), ' files will be processed:'])
 	% disp(file_names)
