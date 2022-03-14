@@ -33,7 +33,7 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 	num_C = numel(C);
 
 	f_trace_win = figure;
-	fig_position = [0.1 0.1 0.8 0.4];
+	fig_position = [0.1 0.1 0.6 0.7];
 	set(gcf, 'Units', 'normalized', 'Position', fig_position)
 	if isempty(stimEffectType)
 		tile_row_num = 1;
@@ -43,8 +43,6 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 	tlo = tiledlayout(f_trace_win, tile_row_num, num_C);
 
 	for n = 1:num_C
-		
-
 		stimName = C{n};
 		IDX_trial = find(ic == n);
 		timeInfo = alignedData(IDX_trial(1)).time;
@@ -83,11 +81,11 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 			'plot_stim_shade', plot_stim_shade, 'stim_range', stim_range,...
 	        'y_range', y_range); % 'y_range', y_range
 		if ~isempty(stimEffectType)
-			titleName_g1 = sprintf('%s - %s', stimName, stimEffectType);
+			titleName_g1 = sprintf('%s: %s', stimName, stimEffectType);
 		else
 			titleName_g1 = stimName;
 		end
-		title(stimName)
+		title(titleName_g1)
 
 		traceData_trials_g2 = [traceData_cell_trials_g2{:}];
 		if ~isempty(traceData_trials_g2)
@@ -100,7 +98,7 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 				'mean_trace', traceData_trials_g2_mean, 'mean_trace_shade', traceData_trials_g2_shade,...
 				'plot_stim_shade', plot_stim_shade, 'stim_range', stim_range,...
 		        'y_range', y_range); % 'y_range', y_range
-			titleName_g2 = sprintf('%s - (negative)%s ', stimName, stimEffectType);
+			titleName_g2 = sprintf('%s: %s-negative ', stimName, stimEffectType);
 			title(titleName_g2)
 		end
 	end

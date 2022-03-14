@@ -167,7 +167,9 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 				fprintf('Warning: only use [detected_events] or [stimWin] for var [event_type]\n')
 		end
 		alignedData.traces(n).fullTrace = roi_trace_data;
-		if ~isempty(alignedData.traces(n).eventProp) && mod_pcn
+
+		% modify the names of peak catigories 
+		if ~isempty(alignedData.traces(n).eventProp) && mod_pcn 
 			[alignedData.traces(n).eventProp] = mod_cat_name(alignedData.traces(n).eventProp,'dis_extra',false);
 			[alignedData.traces(n).eventProp] = add_eventBaseDiff_to_eventProp(alignedData.traces(n).eventProp,...
 				combine_stimRange,full_time,roi_trace_data,varargin);
@@ -177,8 +179,9 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 				combine_stimRange,'errCali',0);
 		end
 
+		% get the event number and frequency (spontaneous events and event during stimulation)
+		events_time = [alignedData.traces(n).eventProp.rise_time];
 		if contains(alignedData.stim_name, 'GPIO-1', 'IgnoreCase',true)
-			events_time = [alignedData.traces(n).eventProp.rise_time];
 			[~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
 				combine_stimRange,duration_full_time,'exepWinDur',0);
 		else
@@ -186,6 +189,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 				combine_stimRange,duration_full_time,'exepWinDur',rebound_duration);
 		end
 
+		% Get the effect of stimulation on each ROI
 		[alignedData.traces(n).stimEffect] = get_stimEffect(full_time,roi_trace_data,combine_stimRange,...
 			{alignedData.traces(n).eventProp.peak_category},'ex_eventCat',ex_eventCat,...
 			'rb_eventCat',rb_eventCat,'in_thresh_stdScale',in_thresh_stdScale,...
@@ -196,6 +200,11 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 		alignedData.traces(n).sponEventNum = sponEventNum;
 		alignedData.traces(n).stimEventNum = stimEventNum;
 		alignedData.traces(n).exepEventNum = exepEventNum;
+
+		% Get the event amplitude of spontaneous events
+		if ~isempty(alignedData.traces(n).eventProp)
+			
+		end
 	end
 	[~,alignedData.num_exROI] = get_struct_entry_idx(alignedData.traces,'stimEffect','excitation','req',true);
 	[~,alignedData.num_inROI] = get_struct_entry_idx(alignedData.traces,'stimEffect','inhibition','req',true);

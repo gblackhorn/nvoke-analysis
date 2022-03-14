@@ -1,6 +1,6 @@
 function [eventProp_all_norm,varargout] = norm_eventProp_with_spon(eventProp_all,varargin)
 	% Normalize event properties with spontaneous event properties of the same ROI. Discard spon entries
-	% Categories other than 'spon' can be also used. Specify it with varargin
+	% Categories other than 'spon' can be also used. Specify it with varargin ('peakCat_denorm')
 
 	% If sponoutaneous event not found in the ROI, discard the ROI 
 

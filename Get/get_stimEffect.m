@@ -14,6 +14,7 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 	in_calLength = 1; % calculate the last n s trace level during stimulation to 
 	freq_spon_stim = []; 
 	logRatio_threshold = 0; % threshold for log(stimfq/sponfq);
+	perc_meanInDiff = 0.25; % stimEffect is considered to be inhibition when significant different mean_in_diff found in "perc_meanInDiff"*stim number
 
 	% Optionals
 	for ii = 1:2:(nargin-4)
@@ -65,7 +66,7 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 				% break
 			end
 		end
-		if numel(find(tfRepeat_in)) >= 0.25*repeat_num
+		if numel(find(tfRepeat_in)) >= perc_meanInDiff*repeat_num
 			inhibition = true;
 		end
 		if ~isempty(freq_spon_stim) % check the event frequency to confirm the inhibition effect
