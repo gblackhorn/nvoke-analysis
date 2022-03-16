@@ -21,7 +21,7 @@ function [grouped_alignedTrace,varargout] = group_aligned_eventTrace(alignedTrac
 	end	
 
 	%% Content
-	[category_idx, catNum, catName] = get_eventCategory_idx(peakCategories);
+	[category_idx, catNum, catName] = get_category_idx(peakCategories);
 
 	if ~isempty(pc_norm) && ~isempty(amp_data)
 		pc_norm_loc = find(strcmpi(pc_norm, catName));
@@ -42,12 +42,16 @@ function [grouped_alignedTrace,varargout] = group_aligned_eventTrace(alignedTrac
 		else
 			fprintf('Warning [func group_aligned_eventTrace]: \n peakCat(%s) data is empty',...
 				pc_norm);
+			normData = false;
 		end
 	end
 
-	grouped_alignedTrace = struct('group', cell(1, catNum), 'alignedTrace', cell(1, catNum));
+	grouped_alignedTrace = struct('group', cell(1, catNum), 'alignedTrace', cell(1, catNum),...
+		'normalization', cell(1, catNum));
 	for n = 1:catNum
 		grouped_alignedTrace(n).group = category_idx(n).name;
-		grouped_alignedTrace(n).alignedTrace = alignedTrace(category_idx(n).idx);
+		grouped_alignedTrace(n).alignedTrace = alignedTrace(:, category_idx(n).idx);
+		grouped_alignedTrace(n).normalization = normData;
 	end
+	varargout{1} = catNum;
 end
