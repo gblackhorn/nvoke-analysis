@@ -41,9 +41,10 @@ function [event_info,varargout] = get_events_info(all_events_time,condition_win,
         events_time = vertcat(event_time_cell{:});
         events_interval_time = vertcat(event_interval_time_cell{:});
     else
-        events_value = peak_properties_table.rise_time;
-        [~, idx_in_peak_table] = intersect(events_value, events_time, 'stable');
-        events_time = events_value;
+        idx_in_peak_table = [1:size(peak_properties_table, 1)];
+        events_time = peak_properties_table.rise_time(idx_in_peak_table);
+        % [~, idx_in_peak_table] = intersect(events_value, events_time, 'stable');
+        % events_time = events_value;
         events_interval_time = diff(events_time);
     end
 
@@ -51,6 +52,7 @@ function [event_info,varargout] = get_events_info(all_events_time,condition_win,
         events_interval_time_mean = mean(events_interval_time);
     else
         clear events_interval_time
+        clear freq
     end
 
     event_num = length(events_time);
@@ -74,6 +76,9 @@ function [event_info,varargout] = get_events_info(all_events_time,condition_win,
             if exist('events_interval_time', 'var')
                 event_info.events_interval_time = events_interval_time;
                 event_info.events_interval_time_mean = events_interval_time_mean;
+            end
+            if exist('freq', 'var')
+            event_info.freq = freq;
             end
 
             event_info.rise_time = rise_time;

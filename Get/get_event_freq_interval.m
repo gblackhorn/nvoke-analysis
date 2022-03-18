@@ -21,14 +21,20 @@ function [freq,meanInterval,varargout] = get_event_freq_interval(all_events_time
 	% end	
 
 	%% Content
-	all_events_time = all_events_time';
+	% all_events_time = all_events_time';
+	if size(all_events_time, 2) > 1
+		all_events_time = all_events_time(:);
+	end 
 	win_num = size(condition_win, 1);
 	idx_cell = cell(win_num, 1); % idx of events in each condition window
 	event_time_cell = cell(win_num, 1);
 	event_interval_time_cell = cell(win_num, 1);
 	for n = 1:win_num
 	    idx_cell{n} = find(all_events_time>=condition_win(n, 1) & all_events_time<condition_win(n, 2))';
-	    event_time_cell{n} = all_events_time(idx_cell{n})';
+	    if size(idx_cell{n}, 2) > 1
+	    	idx_cell{n} = idx_cell{n}(:);
+	    end
+	    event_time_cell{n} = all_events_time(idx_cell{n});
 	    event_interval_time_cell{n} = diff(event_time_cell{n});
 	end
 

@@ -89,6 +89,8 @@ function [eventProp_all,varargout] = collect_event_prop(alignedData,varargin)
                                 eventProp_trial_roi{pcn}.entryStyle = style;
 
                                 eventProp_trial_roi{pcn}.eventPropData = eventProp_roi_peakCat;
+                                eventProp_trial_roi{pcn}.sponfq = alignedData_trial.traces(rn).sponfq;
+                                eventProp_trial_roi{pcn}.sponInterval = alignedData_trial.traces(rn).sponInterval;
                                 eventProp_trial_roi{pcn}.rise_duration = mean([eventProp_roi_peakCat.rise_duration]);
                                 eventProp_trial_roi{pcn}.peak_mag_delta = mean([eventProp_roi_peakCat.peak_mag_delta]);
                                 eventProp_trial_roi{pcn}.peak_delta_norm_hpstd = mean([eventProp_roi_peakCat.peak_delta_norm_hpstd]);
@@ -123,7 +125,7 @@ function [eventProp_all,varargout] = collect_event_prop(alignedData,varargin)
                             eventProp_trial{rn} = eventProp_roi;
 
         			end
-                    eventProp_trial{rn} = orderfields(eventProp_trial{rn});
+                    % eventProp_trial{rn} = orderfields(eventProp_trial{rn});
                 else
                     eventProp_trial{rn} = [];
                 end

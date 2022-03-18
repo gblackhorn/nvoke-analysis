@@ -230,34 +230,7 @@ ylabel('log(freqStim/freqSpon)', 'FontSize', 16)
 hold off
 
 
+
+
 %% ====================
-% Plot spontaneous events info with func [plot_event_info] instead of [plot_spon_event_info]
-close all
-plot_combined_data = true;
-parNames = {'rise_duration','peak_mag_delta','freq'...
-	'events_interval_time_mean'};
-        % {'sponNorm_rise_duration', 'sponNorm_peak_delta_norm_hpstd', 'sponNorm_peak_slope_norm_hpstd'}; 
-		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
-		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
-		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
-save_fig = false; % true/false
-save_dir = ins_analysis_ventral_fig_folder;
-stat = true; % true if want to run anova when plotting bars
-stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
-
-% grouped_event_info = grouped_event_info_bk;
-[save_dir, plot_info] = plot_event_info(grouped_spon_event_info,...
-	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
-	'save_fig', save_fig, 'save_dir', save_dir);
-if save_dir~=0
-	ins_analysis_ventral_fig_folder = save_dir;
-end
-
-if save_fig
-	plot_stat_info.grouped_event_info_option = grouped_event_info_option;
-	plot_stat_info.grouped_event_info = grouped_event_info;
-	plot_stat_info.plot_info = plot_info;
-	dt = datestr(now, 'yyyymmdd');
-	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
-end
-
+% Using data from alignedData and calculate the freq and mean event interval time of spontaneous event of each ROI
