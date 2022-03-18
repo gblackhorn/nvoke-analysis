@@ -53,19 +53,26 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	close all
 
 	group_num = numel(event_info_struct);
-
+	par_num = numel(parNames);
 
 	event_info_fieldnames = fieldnames(event_info_struct(1).event_info);
 	mean_val_idx = find(contains(event_info_fieldnames, 'mean'));
 	if ~isempty(mean_val_idx)
 		dataType = 'roi'; % event propertes from each single roi are stored in a single entry in struct. mean values were calculated
-		parNames = cellfun(@(x) [x, '_mean'], parNames, 'UniformOutput',false);
+		for pn = 1:par_num
+			idx_par = find(contains(event_info_fieldnames, parNames{pn})); 
+			[C] = intersect(idx_par, mean_val_idx);
+			if ~isempty(C)
+				parNames{pn} = event_info_fieldnames{C};
+			end
+		end
+		% parNames = cellfun(@(x) [x, '_mean'], parNames, 'UniformOutput',false);
 	else
 		dataType = 'event'; % 1 entry in a struct only contains 1 event. No mean value
 	end
 
 	%% histogram plot
-	par_num = numel(parNames);
+	% par_num = numel(parNames);
 	for pn = 1:par_num
 		par = parNames{pn};
 

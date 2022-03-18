@@ -35,12 +35,15 @@ function [spont_event_info,varargout] = get_spontaneous_event_info_roi(peak_prop
     % starts and ends of windows (exclude stimulation and rebound period) 
     if ~isempty(peak_properties_table)
         if ~isempty(stimulation_win)
-            stimulation_win(:, 1) = stimulation_win(:, 1)-setting.stim_time_error;
-            stimulation_win(:, 2) = stimulation_win(:, 1)+setting.stim_winT+setting.stim_time_error;
+            [stimulation_win,spont_win,~,stimulation_duration,spont_duration] = get_condition_win(stimulation_win,recording_time,...
+                'err_duration',setting.stim_time_error,'exclude_duration',setting.rebound_winT);
 
-            spont_win(:, 1) = [recording_time(1); (stimulation_win(:, 2)+setting.rebound_winT)]; % starts of windows
-            spont_win(:, 2) = [stimulation_win(:, 1); recording_time(end)]; % ends of windows
-            spont_duration = sum(spont_win(:, 2)-spont_win(:, 1)); % full duration of spont windows 
+            % stimulation_win(:, 1) = stimulation_win(:, 1)-setting.stim_time_error;
+            % stimulation_win(:, 2) = stimulation_win(:, 1)+setting.stim_winT+setting.stim_time_error;
+
+            % spont_win(:, 1) = [recording_time(1); (stimulation_win(:, 2)+setting.rebound_winT)]; % starts of windows
+            % spont_win(:, 2) = [stimulation_win(:, 1); recording_time(end)]; % ends of windows
+            % spont_duration = sum(spont_win(:, 2)-spont_win(:, 1)); % full duration of spont windows 
         else % if no stimulation was applied
             spont_win(1, 1) = recording_time(1);
             spont_win(1, 2) = recording_time(end);

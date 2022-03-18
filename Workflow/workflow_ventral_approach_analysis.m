@@ -301,7 +301,7 @@ category_names = {'fovID'}; % options: 'fovID', 'stim_name', 'peak_category'
 close all
 plot_combined_data = true;
 stat = true;
-save_fig = true;
+save_fig = false; % true/false
 save_dir = ins_analysis_ventral_fig_folder;
 [fig_dir, stat_info] = plot_spon_event_info(grouped_spon_event_info,...
 	'plot_combined_data', plot_combined_data, 'stat', stat,...
