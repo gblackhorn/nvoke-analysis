@@ -62,8 +62,8 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 	data_all = [data_cell{:}]; % data_all and data_all_group will be used for annova 
 	data_all_group = [data_cell_group{:}];
 	data_struct(1).group = 'all';
-	data_struct(1).mean_value = mean(data_all);
-	data_struct(1).std = std(data_all);
+	data_struct(1).mean_value = mean(data_all, 'omitnan');
+	data_struct(1).std = std(data_all, 'omitnan');
 	data_struct(1).ste = data_struct(1).std/sqrt(numel(data_all));
 	data_struct(1).data.val = data_all;
 	data_struct(1).data.group = data_all_group;
@@ -74,8 +74,8 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 		group_data = data_cell{n};
 		data_struct(n+1).group = event_info_struct(n).group;
 
-		data_struct(n+1).mean_value = mean(group_data);
-		data_struct(n+1).std = std(group_data)/sqrt(numel(group_data));
+		data_struct(n+1).mean_value = mean(group_data, 'omitnan');
+		data_struct(n+1).std = std(group_data, 'omitnan');
 		data_struct(n+1).ste = data_struct(n+1).std/sqrt(numel(group_data));
 		data_struct(n+1).n_num = numel(group_data);
 

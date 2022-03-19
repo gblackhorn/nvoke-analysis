@@ -26,7 +26,7 @@ function [stimEffectInfo,varargout] = get_stimEffectInfo_all_roi(alignedData,var
 
 	effectInfo_cell = cell(1, num_trial);
 	for tn = 1:num_trial
-		trialData = alignedData_allTrials(tn);
+		trialData = alignedData(tn);
 		trialName = trialData.trialName;
 		timeInfo = trialData.fullTime;
 		stimName = trialData.stim_name;

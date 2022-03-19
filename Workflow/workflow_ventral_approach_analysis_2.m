@@ -236,7 +236,7 @@ end
 % modify the peak category names
 if modify_eventType_name % Note: when style is 'roi', there will be more data number, if noStim and interval are categorized as spon
 	dis_extra = true;
-	[eventProp_all_norm] = mod_cat_name(eventProp_all_norm,'dis_extra', dis_extra,'seperate_spon',true);
+	[eventProp_all_norm] = mod_cat_name(eventProp_all_norm,'dis_extra', dis_extra,'seperate_spon',false);
 end
 
 category_names = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'
@@ -270,9 +270,22 @@ grouped_event_info_bk = grouped_event_info;
 % 
 disIdx = [];
 for n = 1:group_num
-	tag = grouped_event_info(n).tag;
+    % fprintf('n=%d\n', n)
+    % if n==7
+    % 	pause
+    % end
+	group = grouped_event_info(n).group;
 	for kn = 1:k_num
-		if find(strfind(tag, keywords{kn}))
+		% fprintf(' kn=%d\n', kn)
+		% discard 'opto-delay [ap]' and 'rebound [ap]' 
+		if ~isempty(strfind(group, 'ap')) 
+			if ~isempty(strfind(group, 'delay')) || ~isempty(strfind(group, 'rebound'))
+				dis_tf = true;
+				break
+			end
+		end
+
+		if ~isempty(strfind(group, keywords{kn}))
 			dis_tf = false;
 			break
 		else

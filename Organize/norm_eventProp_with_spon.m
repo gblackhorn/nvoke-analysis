@@ -110,5 +110,5 @@ function [eventProp_all_norm,varargout] = norm_eventProp_with_spon(eventProp_all
 		eventProp_trial_norm{tn} = [eventProp_roi_norm{:}];
 	end
 	eventProp_all_norm = [eventProp_trial_norm{:}];
-	eventProp_all_norm = orderfields(eventProp_all_norm);
+	% eventProp_all_norm = orderfields(eventProp_all_norm);
 end
