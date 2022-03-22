@@ -12,12 +12,13 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	event_align_point = 'rise'; % options: 'rise', 'peak'
 	pre_event_time = 1; % unit: s. event trace starts at 1s before event onset
 	post_event_time = 2; % unit: s. event trace ends at 2s after event onset
+	stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 	scale_data = false; % only work if [event_type] is detected_events
 	align_on_y = true; % subtract data with the values at the align points
 	% win_range = []; 
 	cat_keywords =[]; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 	mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
-	debug_mode = false; 
+	debug_mode = true; 
 
 
 	% Optionals
@@ -40,12 +41,16 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	        pre_event_time = varargin{ii+1};
 	    elseif strcmpi('post_event_time', varargin{ii})
 	        post_event_time = varargin{ii+1};
+	    elseif strcmpi('stim_time_error', varargin{ii})
+	        stim_time_error = varargin{ii+1};
 	    elseif strcmpi('align_on_y', varargin{ii})
 	        align_on_y = varargin{ii+1};
 	    elseif strcmpi('scale_data', varargin{ii})
 	        scale_data = varargin{ii+1};
         elseif strcmpi('mod_pcn', varargin{ii})
-        mod_pcn = varargin{ii+1};
+        	mod_pcn = varargin{ii+1};
+        elseif strcmpi('debug_mode', varargin{ii})
+        	debug_mode = varargin{ii+1};
 	    end
 	end
 
@@ -66,8 +71,8 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 		[data_cell{n}] = get_event_trace_trial(trialData, 'event_type', event_type,...
 		'traceData_type', traceData_type, 'event_data_group', event_data_group,...
 		'event_filter', event_filter, 'event_align_point', event_align_point, 'cat_keywords', cat_keywords,...
-		'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
-		'mod_pcn', mod_pcn);
+		'pre_event_time', pre_event_time, 'post_event_time', post_event_time,'stim_time_error',stim_time_error,...
+		'mod_pcn', mod_pcn,'debug_mode',debug_mode);
 	end
 
 	alignedData_allTrials = [data_cell{:}];
