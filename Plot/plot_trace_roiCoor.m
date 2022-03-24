@@ -16,6 +16,7 @@ function [varargout] = plot_trace_roiCoor(alignedData,varargin)
 	label = 'text'; % 'shape'/'text'. lables of rois. Default color: ex-magenta, in-cyan, other-yellow
 
 	fig_position = [0.1 0.1 0.85 0.8];
+	save_fig = false;
 
 	% Optionals
 	for ii = 1:2:(nargin-1)
@@ -33,6 +34,10 @@ function [varargout] = plot_trace_roiCoor(alignedData,varargin)
 	        stimEffect = varargin{ii+1}; 
 	    elseif strcmpi('label', varargin{ii})
 	        label = varargin{ii+1}; 
+	    elseif strcmpi('save_fig', varargin{ii})
+	        save_fig = varargin{ii+1}; 
+	    elseif strcmpi('save_dir', varargin{ii})
+	        save_dir = varargin{ii+1}; 
 	    end
 	end	
 
@@ -95,5 +100,10 @@ function [varargout] = plot_trace_roiCoor(alignedData,varargin)
 		ax = nexttile(tlo, [1 4]);
 		plot_roi_coor_alignedData(alignedData,ax,'label',label);
 		title('roi map')
+
+		if save_fig
+			fname = sprintf('trace_roimap_%s_%d',alignedData.trialName(1:15),fn);
+			savePlot(f(fn),'save_dir',save_dir,'fname',fname);
+		end
 	end
 end

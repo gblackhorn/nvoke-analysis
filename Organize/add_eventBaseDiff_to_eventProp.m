@@ -8,13 +8,14 @@ function [eventProp_new,varargout] = add_eventBaseDiff_to_eventProp(eventProp,st
 
 	% Defaults
 	base_timeRange = 2; % default 2s. 
+    stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 
 	% Optionals
 	for ii = 1:2:(nargin-4)
 	    if strcmpi('base_timeRange', varargin{ii})
 	        base_timeRange = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
-        % elseif strcmpi('timeInfo', varargin{ii})
-	       %  timeInfo = varargin{ii+1};
+        elseif strcmpi('stim_time_error', varargin{ii})
+	        stim_time_error = varargin{ii+1};
 	    end
 	end	
 

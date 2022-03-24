@@ -25,6 +25,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 
 	rebound_duration = 1; % default 1s. Used to extend events screen window when 'stimWin' is used for 'event_type'
 	mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
+	stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 
 	% Defaults for [get_stimEffect]
 	base_timeRange = 1; % default 2s. 
@@ -55,6 +56,8 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	        pre_event_time = varargin{ii+1};
 	    elseif strcmpi('post_event_time', varargin{ii})
 	        post_event_time = varargin{ii+1};
+	    elseif strcmpi('stim_time_error', varargin{ii})
+	        stim_time_error = varargin{ii+1};
 	    elseif strcmpi('align_on_y', varargin{ii})
 	        align_on_y = varargin{ii+1};
 	    elseif strcmpi('scale_data', varargin{ii})
@@ -92,6 +95,8 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	gpio_info = trialData{gpio_col}(3:end);
 	if ~isempty(gpio_info)
 		[alignedData.stimInfo,combine_stimRange,combine_stimDuration] = get_stimInfo(gpio_info);
+		combine_stimRange(:,1) = combine_stimRange(:,1)-stim_time_error;
+		combine_stimRange(:,2) = combine_stimRange(:,2)+stim_time_error;
 		if strcmpi(event_type, 'stimWin')
 			stimStart = combine_stimRange(:, 1);
 			post_event_time = post_event_time+combine_stimDuration;

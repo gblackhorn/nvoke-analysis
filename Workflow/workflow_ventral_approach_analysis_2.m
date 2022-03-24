@@ -40,9 +40,9 @@ recdata_organized = select_grouped_data(recdata_group);
 
 %% ====================
 % 9.1 Examine peak detection with plots 
-PauseTrial = true; % true or false
+PauseTrial = false; % true or false
 traceNum_perFig = 10; % number of traces/ROIs per figure
-SavePlot = false; % true or false
+SavePlot = true; % true or false
 SaveTo = ins_analysis_ventral_fig_folder;
 vis = 'on'; % on/off. set the 'visible' of figures
 decon = true; % true/false plot decon trace
@@ -90,7 +90,7 @@ recdata_organized_bk = recdata_organized;
 [recdata_organized] = discard_recData_roi(recdata_organized,'stims',stims,'eventCats',eventCats,'debug_mode',debug_mode);
 %% ====================
 % 9.2 Align traces from all trials. Also collect the properties of events
-event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
+event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
 traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 event_data_group = 'peak_lowpass';
 event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
@@ -99,6 +99,7 @@ cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger',
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
 pre_event_time = 5; % unit: s. event trace starts at 1s before event onset
 post_event_time = 5; % unit: s. event trace ends at 2s after event onset
+stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
 debug_mode = false; % true/false
@@ -106,7 +107,8 @@ debug_mode = false; % true/false
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', event_type,...
 	'traceData_type', traceData_type, 'event_data_group', event_data_group,...
 	'event_filter', event_filter, 'event_align_point', event_align_point, 'cat_keywords', cat_keywords,...
-	'pre_event_time',pre_event_time,'post_event_time',post_event_time,'mod_pcn',mod_pcn,'debug_mode',debug_mode);
+	'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
+	'stim_time_error',stim_time_error,'mod_pcn', mod_pcn,'debug_mode',false);
 
 %% ====================
 % 9.2.0.1 Check trace aligned to stim window
@@ -181,11 +183,11 @@ if save_dir_event~=0
 	ins_analysis_ventral_fig_folder = save_dir_event;
 end
 if save_fig
-	% plot_stat_info.grouped_event_info_option = grouped_event_info_option;
-	plot_spon_stat_info.grouped_spon_event_info = grouped_spon_event_info;
-	plot_spon_stat_info.plot_info_event = plot_info_event;
+% 	plot_stat_info.grouped_event_info_option = grouped_event_info_option;
+	plot_stat_info_spon.grouped_event_info = grouped_spon_event_info;
+	plot_stat_info_spon.plot_info = plot_info_event;
 	dt = datestr(now, 'yyyymmdd');
-	save(fullfile(save_dir_event, [dt, '_plot_spon_stat_info']), 'plot_spon_stat_info');
+	save(fullfile(save_dir, [dt, '_plot_stat_info_spon']), 'plot_stat_info_spon');
 end
 
 %% ====================
@@ -205,10 +207,10 @@ if save_dir_roi~=0
 end
 if save_fig
 	% plot_stat_info.grouped_event_info_option = grouped_event_info_option;
-	plot_freq_info.grouped_event_info = grouped_spon_roi_info;
-	plot_freq_info.plot_info_roi = plot_info_roi;
+	plot_sponfreq_info.grouped_event_info = grouped_spon_roi_info;
+	plot_sponfreq_info.plot_info = plot_info_roi;
 	dt = datestr(now, 'yyyymmdd');
-	save(fullfile(save_dir_roi, [dt, '_plot_spon_freq_info']), 'plot_freq_info');
+	save(fullfile(save_dir, [dt, '_plot_sponfreq_info']), 'plot_sponfreq_info');
 end
 
 
@@ -331,7 +333,7 @@ if save_dir~=0
 end
 
 if save_fig
-	plot_stat_info.grouped_event_info_option = grouped_event_info_option;
+	% plot_stat_info.grouped_event_info_option = grouped_event_info_option;
 	plot_stat_info.grouped_event_info = grouped_event_info;
 	plot_stat_info.plot_info = plot_info;
 	dt = datestr(now, 'yyyymmdd');
@@ -364,7 +366,7 @@ for gn = 1:num_groups
 	end
 	h(gn) = scatter(meanTrace_stim.(groups{gn}), logRatio_SponStim.(groups{gn}),...
 		mSize, 'filled', 'MarkerFaceColor', colorGroup{gn},...
-		'MarkerFaceAlpha', 0.5, 'MarkerEdgeAlpha', 0);
+		'MarkerFaceAlpha', 0.8, 'MarkerEdgeAlpha', 0);
 end
 legend(h(1:num_groups), groups, 'Location', 'northeastoutside', 'FontSize', 16);
 xlabel('meanTraceDiff during stimulation', 'FontSize', 16)
@@ -382,21 +384,28 @@ end
 %% ====================
 % 9.2.0.3 Plot traces, aligned traces and roi map
 close all
+save_fig = true; % true/false
+if save_fig
+	save_dir = uigetdir(ins_analysis_ventral_fig_folder,'Choose a folder to save plots');
+	if save_dir~=0
+		ins_analysis_ventral_fig_folder = save_dir;
+	end 
+end
 trial_num = numel(alignedData_allTrials);
 tn = 1;
 while tn <= trial_num
 	close all
 	alignedData = alignedData_allTrials(tn);
-	plot_trace_roiCoor(alignedData)
+	plot_trace_roiCoor(alignedData,'save_fig',save_fig,'save_dir',save_dir);
 	fprintf('- %d/%d: %s', tn, trial_num, alignedData.trialName);
 	direct_input = input(sprintf('\n(c)continue  (b)back to previous or input the trial number [default-c]:\n'), 's');
 	if isempty(direct_input)
 		direct_input = 'c';
 	end
 	if strcmpi(direct_input, 'c')
-	    tn = tn+1; 
+		tn = tn+1; 
 	elseif strcmpi(direct_input, 'b')
-	    tn = tn-1; 
+		tn = tn-1; 
 	else
 		tn = str2num(direct_input);
 	end
