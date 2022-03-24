@@ -85,8 +85,9 @@ stims = {'GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s GPIO-1-1s'};
 eventCats = {{'trigger'},...
 		{'trigger', 'rebound'},...
 		{'trigger-beforeStim', 'trigger-interval', 'delay-trigger', 'rebound-interval'}};
+debug_mode = false; % true/false
 recdata_organized_bk = recdata_organized;
-[recdata_organized] = discard_recData_roi(recdata_organized,'stims',stims,'eventCats',eventCats);
+[recdata_organized] = discard_recData_roi(recdata_organized,'stims',stims,'eventCats',eventCats,'debug_mode',debug_mode);
 %% ====================
 % 9.2 Align traces from all trials. Also collect the properties of events
 event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
@@ -100,11 +101,12 @@ pre_event_time = 5; % unit: s. event trace starts at 1s before event onset
 post_event_time = 5; % unit: s. event trace ends at 2s after event onset
 mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
+debug_mode = false; % true/false
 
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', event_type,...
 	'traceData_type', traceData_type, 'event_data_group', event_data_group,...
 	'event_filter', event_filter, 'event_align_point', event_align_point, 'cat_keywords', cat_keywords,...
-	'pre_event_time', pre_event_time, 'post_event_time', post_event_time, 'mod_pcn', mod_pcn);
+	'pre_event_time',pre_event_time,'post_event_time',post_event_time,'mod_pcn',mod_pcn,'debug_mode',debug_mode);
 
 %% ====================
 % 9.2.0.1 Check trace aligned to stim window
@@ -167,7 +169,7 @@ parNames_event = {'rise_duration','peak_mag_delta'};
 		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
 		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
 		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
-save_fig = false; % true/false
+save_fig = true; % true/false
 save_dir = ins_analysis_ventral_fig_folder;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
@@ -175,15 +177,15 @@ stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 [save_dir_event, plot_info_event] = plot_event_info(grouped_spon_event_info,...
 	'plot_combined_data', plot_combined_data, 'parNames', parNames_event, 'stat', stat,...
 	'save_fig', save_fig, 'save_dir', save_dir);
-if save_dir~=0
-	ins_analysis_ventral_fig_folder = save_dir;
+if save_dir_event~=0
+	ins_analysis_ventral_fig_folder = save_dir_event;
 end
 if save_fig
-	plot_stat_info.grouped_event_info_option = grouped_event_info_option;
-	plot_stat_info.grouped_event_info = grouped_event_info;
-	plot_stat_info.plot_info = plot_info;
+	% plot_stat_info.grouped_event_info_option = grouped_event_info_option;
+	plot_spon_stat_info.grouped_spon_event_info = grouped_spon_event_info;
+	plot_spon_stat_info.plot_info_event = plot_info_event;
 	dt = datestr(now, 'yyyymmdd');
-	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
+	save(fullfile(save_dir_event, [dt, '_plot_spon_stat_info']), 'plot_spon_stat_info');
 end
 
 %% ====================
@@ -191,39 +193,40 @@ end
 close all
 plot_combined_data = true;
 parNames_roi = {'sponfq', 'sponInterval'};
-save_fig = false; % true/false
+save_fig = true; % true/false
 save_dir = ins_analysis_ventral_fig_folder;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 [save_dir_roi, plot_info_roi] = plot_event_info(grouped_spon_roi_info,...
 	'plot_combined_data', plot_combined_data, 'parNames', parNames_roi, 'stat', stat,...
 	'save_fig', save_fig, 'save_dir', save_dir);
-if save_dir~=0
-	ins_analysis_ventral_fig_folder = save_dir;
+if save_dir_roi~=0
+	ins_analysis_ventral_fig_folder = save_dir_roi;
 end
 if save_fig
-	plot_stat_info.grouped_event_info_option = grouped_event_info_option;
-	plot_stat_info.grouped_event_info = grouped_event_info;
-	plot_stat_info.plot_info = plot_info;
+	% plot_stat_info.grouped_event_info_option = grouped_event_info_option;
+	plot_freq_info.grouped_event_info = grouped_spon_roi_info;
+	plot_freq_info.plot_info_roi = plot_info_roi;
 	dt = datestr(now, 'yyyymmdd');
-	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
+	save(fullfile(save_dir_roi, [dt, '_plot_spon_freq_info']), 'plot_freq_info');
 end
 
 
 %% ====================
 % 9.5.1.1 Collect and group events from 'eventProp_all' according to stimulation and category 
 % Rename stim name for opto if opto-5s exhibited excitation effect
+seperate_spon = true; % true/false. Whether to seperated spon according to stimualtion
 if screenEventProp 
 	tag_check = {'opto', 'opto-ap'};
 	idx_check = cell(1, numel(tag_check));
 	for n = 1:numel(tag_check)
-		[~,idx_check{n}] = filter_structData(eventProp_all,'stim_name',tag_check{n},[]);
+		[~,idx_check{n}] = filter_structData(eventProp_all,'stim_name',tag_check{n},[]); % accquire the idx of all opto-trial events
 	end
 	idxAll_check = [idx_check{:}];
 	eventProp_check = eventProp_all(idxAll_check);
 	eventProp_uncheck = eventProp_all;
 	eventProp_uncheck(idxAll_check) = [];
-	[~,idx_optoEx] = filter_structData(eventProp_check,'stimTrig',1,[]);
+	[~,idx_optoEx] = filter_structData(eventProp_check,'stimTrig',1,[]); % accquire the idx of opto triggered events
 	cat_setting.cat_type = 'stim_name';
 	cat_setting.cat_names = {'EXopto', 'EXopto-ap'};
 	cat_setting.cat_merge = {{'opto'}, {'opto-ap'}};
@@ -236,7 +239,7 @@ end
 % modify the peak category names
 if modify_eventType_name % Note: when style is 'roi', there will be more data number, if noStim and interval are categorized as spon
 	dis_extra = true;
-	[eventProp_all_norm] = mod_cat_name(eventProp_all_norm,'dis_extra', dis_extra,'seperate_spon',false);
+	[eventProp_all_norm] = mod_cat_name(eventProp_all_norm,'dis_extra', dis_extra,'seperate_spon',seperate_spon);
 end
 
 category_names = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'
@@ -253,6 +256,11 @@ for gn = 1:numel(grouped_event_info)
 		'fn_1', 'trialName', 'fn_2', 'roiName');
 end
 
+% Sort group 
+strCells = {'spon', 'trig', 'rebound', 'delay'};
+strCells_plus = {'ap', 'EXopto'};
+[grouped_event_info] = sort_struct_with_str(grouped_event_info,'group',strCells,'strCells_plus',strCells_plus);
+
 grouped_event_info_option.event_type = event_type;
 grouped_event_info_option.traceData_type = traceData_type;
 grouped_event_info_option.event_data_group = event_data_group;
@@ -262,7 +270,7 @@ grouped_event_info_option.cat_keywords = cat_keywords;
 
 %% ====================
 % 9.5.1.2 screen groups based on tags. Delete unwanted groups
-keywords = {'spon', 'trig', 'delay', 'rebound'}; % options: spon, trig, delay, rebound
+keywords = {'spon', 'trig', 'delay', 'rebound'}; % Keep groups with these words. options: spon, trig, delay, rebound
 k_num = numel(keywords);
 group_num = numel(grouped_event_info);
 % grouped_event_info = grouped_event_info_bk;
@@ -309,7 +317,7 @@ parNames = {'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
 		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
 		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
 		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
-save_fig = false; % true/false
+save_fig = true; % true/false
 save_dir = ins_analysis_ventral_fig_folder;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
@@ -338,6 +346,7 @@ stim = 'OG-LED'; % data will be collected from trials applied with this stimulat
 [stimEffectInfo,meanTrace_stim,logRatio_SponStim] = get_stimEffectInfo_all_roi(alignedData_allTrials,'stim',stim);
 
 % plot
+save_fig = true; % true/false
 close all
 colorGroup = {'#3FF5E6', '#F55E58', '#F5A427', '#4CA9F5', '#33F577',...
 	'#408F87', '#8F4F7A', '#798F7D', '#8F7832', '#28398F', '#000000'};
@@ -361,6 +370,14 @@ legend(h(1:num_groups), groups, 'Location', 'northeastoutside', 'FontSize', 16);
 xlabel('meanTraceDiff during stimulation', 'FontSize', 16)
 ylabel('log(freqStim/freqSpon)', 'FontSize', 16)
 hold off
+
+if save_fig
+	fname = 'opto_inhibition_effect';
+	[save_dir] = savePlot(gcf, 'guiSave', 'on', 'save_dir', ins_analysis_ventral_fig_folder, 'fname', fname);
+	if save_dir~=0
+		ins_analysis_ventral_fig_folder = save_dir;
+	end
+end
 
 %% ====================
 % 9.2.0.3 Plot traces, aligned traces and roi map

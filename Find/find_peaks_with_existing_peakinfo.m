@@ -89,7 +89,8 @@ function [peak_par,varargout] = find_peaks_with_existing_peakinfo(roi_trace,exis
     	[roi_trace_window] = organize_multiple_range_data_from_one_vector_in_matrix(roi_trace_processed,...
     		eventWin_idx);
 
-    	[peak_par.peakMag, peak_par.peakLoc] = find_peaks_in_windows(roi_trace_window,window_start_time_index);
+    	[peak_par.peakMag, peak_par.peakLoc] = find_peaks_in_windows(roi_trace_window,window_start_time_index,...
+            'existing_peakLoc', existing_peakInfo.peak_loc);
 
         % if merge_peaks == true
         %     [peak_par.peakMag, peak_par.peakLoc] = organize_merge_peaks(peak_par.peakMag,...

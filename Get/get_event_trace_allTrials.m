@@ -45,7 +45,9 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	    elseif strcmpi('scale_data', varargin{ii})
 	        scale_data = varargin{ii+1};
         elseif strcmpi('mod_pcn', varargin{ii})
-        mod_pcn = varargin{ii+1};
+        	mod_pcn = varargin{ii+1};
+        elseif strcmpi('debug_mode', varargin{ii})
+        	debug_mode = varargin{ii+1};
 	    end
 	end
 
@@ -57,7 +59,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	for n = 1:trial_num
 		if debug_mode
 			fprintf('trial %d: %s\n', n, allTrialsData{n, 1})
-			if n == 3
+			if n == 13
 				pause
 			end
 		end
@@ -67,7 +69,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 		'traceData_type', traceData_type, 'event_data_group', event_data_group,...
 		'event_filter', event_filter, 'event_align_point', event_align_point, 'cat_keywords', cat_keywords,...
 		'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
-		'mod_pcn', mod_pcn);
+		'mod_pcn', mod_pcn, 'debug_mode',debug_mode);
 	end
 
 	alignedData_allTrials = [data_cell{:}];

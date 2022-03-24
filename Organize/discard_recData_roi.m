@@ -21,14 +21,16 @@ function [recData_filtered] = discard_recData_roi(recData,varargin)
 		error('func discard_recData_roi: \nNumber of compnents in stims and eventCats must be same')
 	end
 
+	debug_mode = false; % true/false
+
 	% Optionals
 	for ii = 1:2:(nargin-1)
 	    if strcmpi('stims', varargin{ii})
 	        stims = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
         elseif strcmpi('eventCats', varargin{ii})
 	        eventCats = varargin{ii+1};
-        % elseif strcmpi('stimStart_err', varargin{ii})
-        %     stimStart_err = varargin{ii+1};
+        elseif strcmpi('debug_mode', varargin{ii})
+            debug_mode = varargin{ii+1};
         % elseif strcmpi('nonstimMean_pos', varargin{ii})
         %     nonstimMean_pos = varargin{ii+1};
 	    end
@@ -40,6 +42,14 @@ function [recData_filtered] = discard_recData_roi(recData,varargin)
 	num_trials = size(recData_filtered, 1);
 	disIdx_trial = [];
 	for nt = 1:num_trials
+
+		if debug_mode
+			fprintf('trial %d/%d \n', nt, num_trials)
+			if nt==13
+				pause
+			end
+		end
+
 		% ad_trial = alignedData_filtered(nt);
 		recData_trial = recData(nt, :);
 		stim_name = recData_trial{3};
@@ -52,14 +62,23 @@ function [recData_filtered] = discard_recData_roi(recData,varargin)
 			% num_rois = numel(roiData);
 			disIdx_roi = [];
 			for nr = 1:num_rois
+
+				if debug_mode
+					fprintf(' roi %d/%d \n', nr, num_rois)
+				end
+
 				eventProp_roi_table = eventProp_trial(eventPropGroup, nr); % this is a table var
 				eventProp_roi = eventProp_roi_table{:, :}{:}; % table var
-				eventCats_roi = eventProp_roi{:, 'peak_category'};
+				if ~isempty(eventProp_roi)
+					eventCats_roi = eventProp_roi{:, 'peak_category'};
 
-				% eventProp_roi = roiData(nr).eventProp_roi;
-				% eventCats_roi = {eventProp_roi.peak_category};
-				[C,ia,ib] = intersect(eventCats_roi, eventCats{stimIdx}, 'stable');
-				if isempty(C)
+					% eventProp_roi = roiData(nr).eventProp_roi;
+					% eventCats_roi = {eventProp_roi.peak_category};
+					[C,ia,ib] = intersect(eventCats_roi, eventCats{stimIdx}, 'stable');
+					if isempty(C)
+						disIdx_roi = [disIdx_roi; nr];
+					end
+				else
 					disIdx_roi = [disIdx_roi; nr];
 				end
 			end
