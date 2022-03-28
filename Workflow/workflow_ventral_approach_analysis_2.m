@@ -89,7 +89,7 @@ recdata_organized_bk = recdata_organized;
 [recdata_organized] = discard_recData_roi(recdata_organized,'stims',stims,'eventCats',eventCats);
 %% ====================
 % 9.2 Align traces from all trials. Also collect the properties of events
-event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
+event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
 traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 event_data_group = 'peak_lowpass';
 event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
@@ -109,14 +109,41 @@ mod_pcn = true; % true/false modify the peak category names with func [mod_cat_n
 	'stim_time_error',stim_time_error,'mod_pcn', mod_pcn,'debug_mode',false);
 
 %% ====================
-% 9.2.0.1 Check trace aligned to stim window
+% 9.2.1 Check trace aligned to stim window
 % note: 'event_type' for alignedData_allTrials must be 'stimWin'
-plot_combined_data = true;
+close all
+plot_combined_data = false;
 plot_stim_shade = true;
 y_range = [-20 30];
 stimEffectType = 'excitation'; % options: 'excitation', 'inhibition', 'rebound'
+sponNorm = true; % true/false
+save_fig = false;
+save_dir = ins_analysis_ventral_fig_folder;
+
 fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedData_allTrials,...
-	'plot_combined_data',plot_combined_data,'plot_stim_shade',plot_stim_shade,'y_range',y_range,'stimEffectType',stimEffectType);
+	'plot_combined_data',plot_combined_data,'plot_stim_shade',plot_stim_shade,'y_range',y_range,'stimEffectType',stimEffectType,'sponNorm',sponNorm);
+if save_fig
+	fname = sprintf('stimWin_aligned_traces');
+	ins_analysis_ventral_fig_folder = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',save_dir,'fname',fname);
+end
+
+%% ====================
+% 9.2.2 Check aligned trace of events belong to the same category
+% note: 'event_type' for alignedData_allTrials must be 'detected_events'
+close all
+plot_combined_data = true;
+y_range = [-20 30];
+eventCat = 'trig'; % options: 'trig', 'spon', 'rebound'
+sponNorm = true; % true/false
+save_fig = false;
+save_dir = ins_analysis_ventral_fig_folder;
+
+fHandle_stimAlignedTrace = plot_aligned_catTraces(alignedData_allTrials,...
+	'plot_combined_data',plot_combined_data,'eventCat',eventCat,'y_range',y_range,'sponNorm',sponNorm);
+if save_fig
+	fname = sprintf('aligned_catTraces_%s',eventCat);
+	ins_analysis_ventral_fig_folder = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',save_dir,'fname',fname);
+end
 
 %% ====================
 % 9.3 Collect event properties from alignedData_allTrials
@@ -193,7 +220,7 @@ end
 close all
 plot_combined_data = true;
 parNames_roi = {'sponfq', 'sponInterval'};
-save_fig = true; % true/false
+save_fig = false; % true/false
 save_dir = ins_analysis_ventral_fig_folder;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
@@ -264,7 +291,7 @@ grouped_event_info_option.cat_keywords = cat_keywords;
 
 %% ====================
 % 9.5.1.2 screen groups based on tags. Delete unwanted groups
-keywords = {'spon', 'trig', 'delay', 'rebound'}; % options: spon, trig, delay, rebound
+keywords = {'trig','rebound'}; % options: spon, trig, delay, rebound
 k_num = numel(keywords);
 group_num = numel(grouped_event_info);
 % grouped_event_info = grouped_event_info_bk;
@@ -311,7 +338,7 @@ parNames = {'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
 		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
 		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
 		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
-save_fig = true; % true/false
+save_fig = false; % true/false
 save_dir = ins_analysis_ventral_fig_folder;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not

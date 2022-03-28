@@ -80,6 +80,16 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 			par, 'plot_combined_data', plot_combined_data,...
 			'save_fig', save_fig, 'save_dir', save_dir, 'nbins', 200);
 	end
+
+	%% histfit plot
+	% par_num = numel(parNames);
+	for pn = 1:par_num
+		par = parNames{pn};
+
+		[histFit_info.(par)] = plot_event_info_histfit(event_info_struct,...
+			par, 'save_fig', save_fig, 'save_dir', save_dir, 'xRange',[-0.2 2]); % 'nbins', 20,
+	end
+
 	%% bar plot
 	f_bar = figure('Name', 'bar plots');
 	if par_num == 1
@@ -282,6 +292,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	if exist('hist_data', 'var')
 		plot_info.hist_data = hist_data;
 		plot_info.hist_setting = hist_setting;
+		plot_info.histFit_info = histFit_info;
 	end
 	if exist('bar_data', 'var')
 		plot_info.bar_data = bar_data;

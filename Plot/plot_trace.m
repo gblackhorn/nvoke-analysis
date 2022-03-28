@@ -56,8 +56,8 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	hold on
 
 	if plot_combined_data
-		h_m = plot(time_info, mean_trace,...
-			'Color', mean_line_color, 'LineWidth', line_mean_width);
+		% h_m = plot(time_info, mean_trace,...
+		% 	'Color', mean_line_color, 'LineWidth', line_mean_width);
 
 
 		shade_x = [time_info; flip(time_info)];
@@ -67,6 +67,9 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 		shade_y = [shade_upperline; flip(shade_lowerline)];
 		h_s = patch('XData',shade_x, 'YData', shade_y,...
 			'FaceColor', shade_color, 'FaceAlpha', shade_alpha, 'EdgeColor', 'none');
+
+		h_m = plot(time_info, mean_trace,...
+			'Color', mean_line_color, 'LineWidth', line_mean_width);
 	end
 
 	if isa(trace_data, 'double')

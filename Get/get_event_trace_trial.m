@@ -207,13 +207,25 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			{alignedData.traces(n).eventProp.peak_category},'ex_eventCat',ex_eventCat,...
 			'rb_eventCat',rb_eventCat,'in_thresh_stdScale',in_thresh_stdScale,...
 			'in_calLength',in_calLength,'freq_spon_stim', [sponfq stimfq]); % find the stimulation effect. stimEffect is a struct var
-		
+
+		% Get the amplitude of spontaneous events
+		[category_idx] = get_category_idx({alignedData.traces(n).eventProp.peak_category});
+		spon_idx = find(contains({category_idx.name},'spon')); % index of spon category in category_idx
+		if ~isempty(spon_idx)
+			sponEvent_idx = category_idx(spon_idx).idx;
+			sponAmp_data = [alignedData.traces(n).eventProp(sponEvent_idx).peak_mag_delta];
+			sponAmp = mean(sponAmp_data);
+		else
+			sponAmp = NaN;
+		end
+
 		alignedData.traces(n).sponfq = sponfq;
 		alignedData.traces(n).sponInterval = sponInterval;
 		alignedData.traces(n).stimfq = stimfq;
 		alignedData.traces(n).sponEventNum = sponEventNum;
 		alignedData.traces(n).stimEventNum = stimEventNum;
 		alignedData.traces(n).exepEventNum = exepEventNum;
+		alignedData.traces(n).sponAmp = sponAmp;
 
 	end
 	[~,alignedData.num_exROI] = get_struct_entry_idx(alignedData.traces,'stimEffect','excitation','req',true);

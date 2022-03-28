@@ -9,7 +9,7 @@ function [peak_properties_tables_with_cat,varargout] = organize_category_peaks_m
     
     % Defaults
     stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
-    criteria_trig = 2; % triggered peak: peak start to rise in 2s from onset of stim
+    criteria_excitated = 2; % triggered peak: peak start to rise in 2s from onset of stim
     criteria_rebound = 1; % rebound peak: peak start to rise in 1s from end of stim
     % peak_cat_str = {'noStim', 'noStimFar', 'triggered', 'triggered_delay', 'rebound', 'interval'};
     % [peak_cat_str] = event_category_names;
@@ -18,6 +18,10 @@ function [peak_properties_tables_with_cat,varargout] = organize_category_peaks_m
     for ii = 1:2:(nargin-2)
     	if strcmpi('stim_time_error', varargin{ii})
     		stim_time_error = varargin{ii+1};
+        elseif strcmpi('criteria_excitated', varargin{ii})
+            criteria_excitated = varargin{ii+1};
+        elseif strcmpi('criteria_rebound', varargin{ii})
+            criteria_rebound = varargin{ii+1};
     	end
     end
 
@@ -39,7 +43,8 @@ function [peak_properties_tables_with_cat,varargout] = organize_category_peaks_m
     	    	peak_category = cell(length(peak_properties_table_single.rise_time), stim_ch_num);
     	    	for sn = 1:stim_ch_num
     	    		[peak_category(:, sn)] = organize_category_peaks(peak_properties_table_single,...
-    	    			gpio_info_table(sn, :), 'stim_time_error', stim_time_error);
+    	    			gpio_info_table(sn, :), 'stim_time_error', stim_time_error,...
+                        'criteria_excitated',criteria_excitated,'criteria_rebound',criteria_rebound);
     	    	end
     	    	if stim_ch_num == 2
                     if strcmp(peak_category(:, 1), peak_category(:, 2))

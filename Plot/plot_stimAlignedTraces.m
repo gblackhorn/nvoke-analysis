@@ -9,6 +9,7 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 	plot_stim_shade = true;
 	y_range = [-20 30];
 	stimEffectType = 'excitation'; % options: 'excitation', 'inhibition', 'rebound'
+	sponNorm = false; % true/false
 
 	% Optionals
 	for ii = 1:2:(nargin-1)
@@ -20,14 +21,17 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 	        y_range = varargin{ii+1};
         elseif strcmpi('stimEffectType', varargin{ii})
 	        stimEffectType = varargin{ii+1};
-        % elseif strcmpi('in_calLength', varargin{ii})
-	       %  in_calLength = varargin{ii+1};
+        elseif strcmpi('sponNorm', varargin{ii})
+	        sponNorm = varargin{ii+1};
 	    end
 	end	
 
 	%% Content
 	% Plot alignedData. Group traces according to stimulation
 	% event_type of alignedData is stimWin
+	if sponNorm
+		y_range = [-5 5]; % overwrite the y range of plot if sponNorm data is used
+	end
 
 	[C, ia, ic] = unique({alignedData.stim_name});
 	num_C = numel(C);
@@ -65,6 +69,11 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 					else
 						traceData_cell_rois_g2{nr} = traceInfo_trial(nr).value;
 					end
+				end
+				if sponNorm
+					sponAmp = traceInfo_trial(nr).sponAmp;
+					traceData_cell_rois_g1{nr} = traceData_cell_rois_g1{nr}/sponAmp;
+					traceData_cell_rois_g2{nr} = traceData_cell_rois_g2{nr}/sponAmp;
 				end
 			end
 			traceData_cell_trials_g1{nst} = [traceData_cell_rois_g1{:}];
