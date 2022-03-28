@@ -234,3 +234,9 @@ hold off
 
 %% ====================
 % Using data from alignedData and calculate the freq and mean event interval time of spontaneous event of each ROI
+structData = grouped_event_info;
+fieldName = 'group';
+strCells = {'spon', 'trig', 'rebound', 'delay'};
+strCells_plus = {'ap', 'EXopto'};
+[structData_sorted] = sort_struct_with_str(structData,fieldName,strCells,...
+	'strCells_plus', strCells_plus)

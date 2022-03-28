@@ -34,7 +34,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	in_thresh_stdScale = 2; % n times of std lower than baseline level. Last n s during stimulation is used
 	in_calLength = 1; % calculate the last n s trace level during stimulation to 
 
-	debug_mode = true; % true/false
+	debug_mode = false; % true/false
 
 	% Optionals
 	for ii = 1:2:(nargin-1)
@@ -115,6 +115,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	alignedData.traces =  struct('roi', cell(1, roi_num), 'value', cell(1, roi_num),...
 		'mean_val', cell(1, roi_num), 'std_val', cell(1, roi_num),...
 		'roi_coor', cell(1, roi_num), 'eventProp', cell(1, roi_num));
+	empty_idx = []; % roi idx in alignedData.traces does not contain any event info
 	for n = 1:roi_num
 		% roiName = full_traces_data.Properties.VariableNames{n};
 		roiName = event_spec_fulltable.Properties.VariableNames{n};
@@ -124,68 +125,68 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 
 		if debug_mode
 			fprintf(' - roi %d/%d %s\n', n, roi_num, roiName)
-			if n == 18
-				pause
+			if n == 15
+% 				pause
 			end
 		end
 
-		switch event_type
-			case 'detected_events'
-				if ~isempty(roi_event_spec_table)
-					[aligned_time,traceValue,traceMean_val,traceStd_val,eventProp,events_idx] = get_event_trace_roi(full_time,roi_trace_data,roi_event_spec_table,...
-						'event_align_point', event_align_point, 'event_filter', event_filter,...
-						'cat_keywords', cat_keywords,...
-						'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
-						'align_on_y', align_on_y, 'scale_data', scale_data);
-					alignedData.traces(n).value = traceValue; 
-					alignedData.traces(n).mean_val = traceMean_val; 
-					alignedData.traces(n).std_val = traceStd_val; 
-					alignedData.traces(n).eventProp = eventProp; 
-					alignedData.traces(n).roi_coor = trialData{traceData_col}.roi_center(n,:); % coordinate of roi (unit: pixel)
-				else
-					% aligned_time = [];
-				end
-
-			case 'stimWin'
-				if ~isempty(stimStart)
-					[aligned_time,traceValue,traceMean_val,traceStd_val] = get_event_trace(stimStart,full_time,roi_trace_data,...
-						'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
-						'align_on_y', align_on_y, 'scale_data', scale_data);
-					alignedData.traces(n).value = traceValue; 
-					alignedData.traces(n).mean_val = traceMean_val; 
-					alignedData.traces(n).std_val = traceStd_val;
-
-					condition_win = combine_stimRange;
-					condition_win(:, 2) = condition_win(:, 2)+rebound_duration;
-					events_time = roi_event_spec_table.rise_time;
-					if ~isempty(events_time)
-						% [eventProp] = get_events_info(events_time,condition_win,roi_event_spec_table,'style','event');
-						[eventProp] = get_events_info(events_time,[],roi_event_spec_table,'style','event');
-                        alignedData.traces(n).eventProp = eventProp;
-                        alignedData.traces(n).roi_coor = trialData{traceData_col}.roi_center(n,:); 
-                    else
-                        alignedData.traces(n).eventProp = [];
+		if ~isempty(roi_event_spec_table)
+			switch event_type
+				case 'detected_events'
+					if ~isempty(roi_event_spec_table)
+						[aligned_time,traceValue,traceMean_val,traceStd_val,eventProp,events_idx] = get_event_trace_roi(full_time,roi_trace_data,roi_event_spec_table,...
+							'event_align_point', event_align_point, 'event_filter', event_filter,...
+							'cat_keywords', cat_keywords,...
+							'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
+							'align_on_y', align_on_y, 'scale_data', scale_data);
+						alignedData.traces(n).value = traceValue; 
+						alignedData.traces(n).mean_val = traceMean_val; 
+						alignedData.traces(n).std_val = traceStd_val; 
+						alignedData.traces(n).eventProp = eventProp; 
+						alignedData.traces(n).roi_coor = trialData{traceData_col}.roi_center(n,:); % coordinate of roi (unit: pixel)
+					else
+						% aligned_time = [];
 					end
-					
-				else
-					% aligned_time = [];
-				end
-			otherwise
-				fprintf('Warning: only use [detected_events] or [stimWin] for var [event_type]\n')
-		end
-		alignedData.traces(n).fullTrace = roi_trace_data;
 
-		% modify the names of peak catigories 
-		if ~isempty(alignedData.traces(n).eventProp) && mod_pcn 
-			[alignedData.traces(n).eventProp] = mod_cat_name(alignedData.traces(n).eventProp,'dis_extra',false);
-			[alignedData.traces(n).eventProp] = add_eventBaseDiff_to_eventProp(alignedData.traces(n).eventProp,...
-				combine_stimRange,full_time,roi_trace_data,varargin);
-			[alignedData.traces(n).eventProp] = add_tfTag_to_eventProp(alignedData.traces(n).eventProp,...
-				'peak_category','trig','newFieldName','stimTrig');
-			[alignedData.traces(n).eventProp] = add_riseDelay_to_eventProp(alignedData.traces(n).eventProp,...
-				combine_stimRange,'errCali',0);
-		end
+				case 'stimWin'
+					if ~isempty(stimStart)
+						[aligned_time,traceValue,traceMean_val,traceStd_val] = get_event_trace(stimStart,full_time,roi_trace_data,...
+							'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
+							'align_on_y', align_on_y, 'scale_data', scale_data);
+						alignedData.traces(n).value = traceValue; 
+						alignedData.traces(n).mean_val = traceMean_val; 
+						alignedData.traces(n).std_val = traceStd_val;
 
+						condition_win = combine_stimRange;
+						condition_win(:, 2) = condition_win(:, 2)+rebound_duration;
+						events_time = roi_event_spec_table.rise_time;
+						if ~isempty(events_time)
+							% [eventProp] = get_events_info(events_time,condition_win,roi_event_spec_table,'style','event');
+							[eventProp] = get_events_info(events_time,[],roi_event_spec_table,'style','event');
+	                        alignedData.traces(n).eventProp = eventProp;
+	                        alignedData.traces(n).roi_coor = trialData{traceData_col}.roi_center(n,:); 
+	                    else
+	                        alignedData.traces(n).eventProp = [];
+						end
+						
+					else
+						% aligned_time = [];
+					end
+				otherwise
+					fprintf('Warning: only use [detected_events] or [stimWin] for var [event_type]\n')
+			end
+			alignedData.traces(n).fullTrace = roi_trace_data;
+
+			% modify the names of peak catigories 
+			if ~isempty(alignedData.traces(n).eventProp) && mod_pcn 
+				[alignedData.traces(n).eventProp] = mod_cat_name(alignedData.traces(n).eventProp,'dis_extra',false);
+				[alignedData.traces(n).eventProp] = add_eventBaseDiff_to_eventProp(alignedData.traces(n).eventProp,...
+					combine_stimRange,full_time,roi_trace_data,varargin);
+				[alignedData.traces(n).eventProp] = add_tfTag_to_eventProp(alignedData.traces(n).eventProp,...
+					'peak_category','trig','newFieldName','stimTrig');
+				[alignedData.traces(n).eventProp] = add_riseDelay_to_eventProp(alignedData.traces(n).eventProp,...
+					combine_stimRange,'errCali',0);
+			end
 		% get the event number and frequency (spontaneous events and event during stimulation)
 		events_time = [alignedData.traces(n).eventProp.rise_time];
 		if contains(alignedData.stim_name, 'GPIO-1', 'IgnoreCase',true)
@@ -226,8 +227,11 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 		alignedData.traces(n).stimEventNum = stimEventNum;
 		alignedData.traces(n).exepEventNum = exepEventNum;
 		alignedData.traces(n).sponAmp = sponAmp;
-
+	else
+		empty_idx = [empty_idx n];
 	end
+	alignedData.traces(empty_idx) = [];
+
 	[~,alignedData.num_exROI] = get_struct_entry_idx(alignedData.traces,'stimEffect','excitation','req',true);
 	[~,alignedData.num_inROI] = get_struct_entry_idx(alignedData.traces,'stimEffect','inhibition','req',true);
 	alignedData.time = aligned_time;

@@ -65,8 +65,8 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
    	RecInfoTable_processed = RecInfoTable; % allocate ram for RecInfoTable_processed
     for n = 1:roi_num % go through every roi
 
-        % Debugging
-        % disp(['roi_num: ', num2str(n)])
+%         Debugging
+%         disp(['roi_num: ', num2str(n)])
 
 
     	roi_trace = RecInfoTable{:, (n+1)};

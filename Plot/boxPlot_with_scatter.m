@@ -125,6 +125,12 @@ function [varargout] = boxPlot_with_scatter(CellArrayData,varargin)
 		c(:, 1:2) = cellfun(@(x) gnames{x}, c(:, 1:2), 'UniformOutput',false);
 		c = cell2table(c,...
 			'variableNames', {'g1', 'g2', 'lower-confi-int', 'estimate', 'upper-confi-int', 'p'});
+		h = NaN(size(c, 1), 1);
+		idx_sig = find(c.p < 0.05);
+		idx_nonsig = find(c.p >= 0.05);
+		h(idx_sig) = 1;
+		h(idx_nonsig) = 0;
+		c.h = h;
 	else
 		p = NaN;
 		tbl = NaN;
