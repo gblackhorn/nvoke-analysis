@@ -90,15 +90,15 @@ recdata_organized_bk = recdata_organized;
 [recdata_organized] = discard_recData_roi(recdata_organized,'stims',stims,'eventCats',eventCats,'debug_mode',debug_mode);
 %% ====================
 % 9.2 Align traces from all trials. Also collect the properties of events
-event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
+event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
 traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 event_data_group = 'peak_lowpass';
 event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
 event_align_point = 'rise';
 cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
-pre_event_time = 5; % unit: s. event trace starts at 1s before event onset
-post_event_time = 5; % unit: s. event trace ends at 2s after event onset
+pre_event_time = 10; % unit: s. event trace starts at 1s before event onset
+post_event_time = 10; % unit: s. event trace ends at 2s after event onset
 stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
@@ -108,7 +108,7 @@ debug_mode = false; % true/false
 	'traceData_type', traceData_type, 'event_data_group', event_data_group,...
 	'event_filter', event_filter, 'event_align_point', event_align_point, 'cat_keywords', cat_keywords,...
 	'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
-	'stim_time_error',stim_time_error,'mod_pcn', mod_pcn,'debug_mode',false);
+	'stim_time_error',stim_time_error,'mod_pcn', mod_pcn,'debug_mode',debug_mode);
 
 %% ====================
 % 9.2.1 Check trace aligned to stim window

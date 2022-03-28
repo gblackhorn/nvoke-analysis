@@ -187,48 +187,49 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 				[alignedData.traces(n).eventProp] = add_riseDelay_to_eventProp(alignedData.traces(n).eventProp,...
 					combine_stimRange,'errCali',0);
 			end
-		% get the event number and frequency (spontaneous events and event during stimulation)
-		events_time = [alignedData.traces(n).eventProp.rise_time];
-		if contains(alignedData.stim_name, 'GPIO-1', 'IgnoreCase',true)
-			[stimWin,sponWin,~,stimDuration,sponDuration] = get_condition_win(combine_stimRange,full_time,...
-				'err_duration', 0, 'exclude_duration', 0); % get the window for spon and air-puff related events
-			[~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
-				combine_stimRange,duration_full_time,'exepWinDur',0);
-			[sponfq,sponInterval,sponIdx,sponEventTime,sponEventNum] = get_event_freq_interval(events_time,sponWin);
+			% get the event number and frequency (spontaneous events and event during stimulation)
+			events_time = [alignedData.traces(n).eventProp.rise_time];
+			if contains(alignedData.stim_name, 'GPIO-1', 'IgnoreCase',true)
+				[stimWin,sponWin,~,stimDuration,sponDuration] = get_condition_win(combine_stimRange,full_time,...
+					'err_duration', 0, 'exclude_duration', 0); % get the window for spon and air-puff related events
+				[~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
+					combine_stimRange,duration_full_time,'exepWinDur',0);
+				[sponfq,sponInterval,sponIdx,sponEventTime,sponEventNum] = get_event_freq_interval(events_time,sponWin);
+			else
+				[stimWin,sponWin,~,stimDuration,sponDuration] = get_condition_win(combine_stimRange,full_time,...
+					'err_duration', 0, 'exclude_duration', 1); % add 1s exclude duration after opto stimulation
+				[~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
+					combine_stimRange,duration_full_time,'exepWinDur',rebound_duration);
+				[sponfq,sponInterval,sponIdx,sponEventTime,sponEventNum] = get_event_freq_interval(events_time,sponWin);
+			end
+
+			% Get the effect of stimulation on each ROI
+			[alignedData.traces(n).stimEffect] = get_stimEffect(full_time,roi_trace_data,combine_stimRange,...
+				{alignedData.traces(n).eventProp.peak_category},'ex_eventCat',ex_eventCat,...
+				'rb_eventCat',rb_eventCat,'in_thresh_stdScale',in_thresh_stdScale,...
+				'in_calLength',in_calLength,'freq_spon_stim', [sponfq stimfq]); % find the stimulation effect. stimEffect is a struct var
+
+			% Get the amplitude of spontaneous events
+			[category_idx] = get_category_idx({alignedData.traces(n).eventProp.peak_category});
+			spon_idx = find(contains({category_idx.name},'spon')); % index of spon category in category_idx
+			if ~isempty(spon_idx)
+				sponEvent_idx = category_idx(spon_idx).idx;
+				sponAmp_data = [alignedData.traces(n).eventProp(sponEvent_idx).peak_mag_delta];
+				sponAmp = mean(sponAmp_data);
+			else
+				sponAmp = NaN;
+			end
+
+			alignedData.traces(n).sponfq = sponfq;
+			alignedData.traces(n).sponInterval = sponInterval;
+			alignedData.traces(n).stimfq = stimfq;
+			alignedData.traces(n).sponEventNum = sponEventNum;
+			alignedData.traces(n).stimEventNum = stimEventNum;
+			alignedData.traces(n).exepEventNum = exepEventNum;
+			alignedData.traces(n).sponAmp = sponAmp;
 		else
-			[stimWin,sponWin,~,stimDuration,sponDuration] = get_condition_win(combine_stimRange,full_time,...
-				'err_duration', 0, 'exclude_duration', 1); % add 1s exclude duration after opto stimulation
-			[~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
-				combine_stimRange,duration_full_time,'exepWinDur',rebound_duration);
-			[sponfq,sponInterval,sponIdx,sponEventTime,sponEventNum] = get_event_freq_interval(events_time,sponWin);
+			empty_idx = [empty_idx n];
 		end
-
-		% Get the effect of stimulation on each ROI
-		[alignedData.traces(n).stimEffect] = get_stimEffect(full_time,roi_trace_data,combine_stimRange,...
-			{alignedData.traces(n).eventProp.peak_category},'ex_eventCat',ex_eventCat,...
-			'rb_eventCat',rb_eventCat,'in_thresh_stdScale',in_thresh_stdScale,...
-			'in_calLength',in_calLength,'freq_spon_stim', [sponfq stimfq]); % find the stimulation effect. stimEffect is a struct var
-
-		% Get the amplitude of spontaneous events
-		[category_idx] = get_category_idx({alignedData.traces(n).eventProp.peak_category});
-		spon_idx = find(contains({category_idx.name},'spon')); % index of spon category in category_idx
-		if ~isempty(spon_idx)
-			sponEvent_idx = category_idx(spon_idx).idx;
-			sponAmp_data = [alignedData.traces(n).eventProp(sponEvent_idx).peak_mag_delta];
-			sponAmp = mean(sponAmp_data);
-		else
-			sponAmp = NaN;
-		end
-
-		alignedData.traces(n).sponfq = sponfq;
-		alignedData.traces(n).sponInterval = sponInterval;
-		alignedData.traces(n).stimfq = stimfq;
-		alignedData.traces(n).sponEventNum = sponEventNum;
-		alignedData.traces(n).stimEventNum = stimEventNum;
-		alignedData.traces(n).exepEventNum = exepEventNum;
-		alignedData.traces(n).sponAmp = sponAmp;
-	else
-		empty_idx = [empty_idx n];
 	end
 	alignedData.traces(empty_idx) = [];
 
