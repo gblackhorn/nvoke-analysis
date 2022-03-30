@@ -199,7 +199,7 @@ opt.criteria_slope = [3 2000]; % default: slice-[50 2000]
 							% slice default: [50 2000]
 % criteria_mag = 3; % default: 3. peak_mag_normhp
 opt.criteria_pnr = 3; % default: 3. peak-noise-ration (PNR): relative-peak-signal/std. std is calculated from highpassed data.
-opt.criteria_excitated = 0.2; % If a peak starts to rise in 0.5 sec since stimuli, it's a excitated peak
+opt.criteria_excitated = 1; % If a peak starts to rise in 0.5 sec since stimuli, it's a excitated peak
 opt.criteria_rebound = 1; % a peak is concidered as rebound if it starts to rise within 2s after stimulation end
 opt.stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 % use_criteria = true; % true or false. choose to use criteria or not for picking peaks

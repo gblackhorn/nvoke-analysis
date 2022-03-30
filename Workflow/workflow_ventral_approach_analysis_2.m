@@ -340,8 +340,10 @@ grouped_event_info(disIdx) = [];
 % 9.5.2 Plot event parameters. Grouped according to categories
 close all
 plot_combined_data = true;
-parNames = {'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
-	'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise','rise_delay'};
+parNames = {'rise_delay'};
+        % 'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
+        % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
+    
         % {'sponNorm_rise_duration', 'sponNorm_peak_delta_norm_hpstd', 'sponNorm_peak_slope_norm_hpstd'}; 
 		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
 		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'

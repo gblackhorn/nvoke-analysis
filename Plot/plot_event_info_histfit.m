@@ -20,13 +20,16 @@ function [histFit_info,varargout] = plot_event_info_histfit(event_info_struct,pa
 	save_dir = '';
 
 	sp_colNum = 3; % subplot column number
+	FontSize = 18;
+	show_legend = false;
+	dist_type = 'normal'; % 'beta', 'gamma'. read description about func histfit.
 
 	% Optionals
 	for ii = 1:2:(nargin-2)
 	    if strcmpi('nbins', varargin{ii})
 	        nbins = varargin{ii+1};
-	    % elseif strcmpi('plot_combined_data', varargin{ii})
-	    %     plot_combined_data = varargin{ii+1};
+	    elseif strcmpi('dist_type', varargin{ii})
+	        dist_type = varargin{ii+1};
 	    elseif strcmpi('save_fig', varargin{ii})
 	        save_fig = varargin{ii+1};
 	    elseif strcmpi('save_dir', varargin{ii})
@@ -90,14 +93,15 @@ function [histFit_info,varargout] = plot_event_info_histfit(event_info_struct,pa
 			group_data = data_cell{n};
 			histFit_info(n+1).group = event_info_struct(n).group;
 			histFit_info(n+1).data = group_data(:);
-			histFit_info(n+1).pd = fitdist(histFit_info(n+1).data,'Normal');
+			histFit_info(n+1).pd = fitdist(histFit_info(n+1).data,dist_type);
 
-            subplot(sp_rowNum, sp_colNum, n+1)			
-            if ~isempty(nbins)
-				histfit(histFit_info(n+1).data,nbins);
-			else
-				histfit(histFit_info(n+1).data);
-			end
+            subplot(sp_rowNum, sp_colNum, n+1)	
+            histfit(histFit_info(n+1).data,nbins,dist_type);		
+   %          if ~isempty(nbins)
+			% 	histfit(histFit_info(n+1).data,nbins,dist_type);
+			% else
+			% 	histfit(histFit_info(n+1).data);
+			% end
 
 			% [histFit_info(n+1).N, histFit_info(n+1).edges] = histcounts(group_data, edges);
 
@@ -109,9 +113,16 @@ function [histFit_info,varargout] = plot_event_info_histfit(event_info_struct,pa
 
 			% h(n+1) = histogram('BinEdges',histFit_info(n+1).edges,'BinCounts',histFit_info(n+1).N);
 			% h(n+1).Normalization = 'probability';
-			legend(histFit_info(n+1).group)
+			
+			if show_legend
+				legend(histFit_info(n+1).group)
+				legend('boxoff')
+			end
+			title(histFit_info(n+1).group)
 			xlim(xRange)
 			% ylim(yRange)
+			set(gca,'box','off')
+			set(gca, 'FontSize', FontSize)
 		end
 	end
 
