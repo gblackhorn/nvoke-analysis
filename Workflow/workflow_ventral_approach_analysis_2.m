@@ -9,11 +9,15 @@
 % 2022.03.18 Some sections are deleted. Some are reorganized to facilitate the workflow
 
 %% ====================
+PC_name = getenv('COMPUTERNAME'); 
 % set folders for different situation
 inscopix_folder = 'G:\Workspace\Inscopix_Seagate';
 
-% ins_analysis_folder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
-ins_analysis_folder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
+if strcmp(PC_name, 'GD-AW-OFFICE')
+	ins_analysis_folder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
+elseif strcmp(PC_name, 'LAPTOP-84IERS3H')
+	ins_analysis_folder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
+end
 
 ins_projects_folder = fullfile(inscopix_folder, 'Projects'); % processed imaging data, including isxd, gpio, tiff, and csv files 
 ins_recordings_folder = fullfile(inscopix_folder, 'recordings'); % processed imaging data, including isxd, gpio, tiff, and csv files 
@@ -40,13 +44,14 @@ recdata_organized = select_grouped_data(recdata_group);
 
 %% ====================
 % 9.1 Examine peak detection with plots 
-PauseTrial = false; % true or false
+close all
+PauseTrial = true; % true or false
 traceNum_perFig = 10; % number of traces/ROIs per figure
-SavePlot = true; % true or false
+SavePlot = false; % true or false
 SaveTo = ins_analysis_ventral_fig_folder;
 vis = 'on'; % on/off. set the 'visible' of figures
-decon = true; % true/false plot decon trace
-marker = true; % true/false plot markers
+decon = false; % true/false plot decon trace
+marker = false; % true/false plot markers
 
 [SaveTo] = plotTracesFromAllTrials (recdata_organized,...
 	'PauseTrial', PauseTrial,...
@@ -118,12 +123,14 @@ plot_combined_data = false;
 plot_stim_shade = true;
 y_range = [-20 30];
 stimEffectType = 'excitation'; % options: 'excitation', 'inhibition', 'rebound'
+section = 2; % n/[]. specify the n-th repeat of stimWin. Set it to [] to plot all stimWin 
 sponNorm = true; % true/false
 save_fig = false;
 save_dir = ins_analysis_ventral_fig_folder;
 
 fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedData_allTrials,...
-	'plot_combined_data',plot_combined_data,'plot_stim_shade',plot_stim_shade,'y_range',y_range,'stimEffectType',stimEffectType,'sponNorm',sponNorm);
+	'plot_combined_data',plot_combined_data,'plot_stim_shade',plot_stim_shade,'section',section,...
+	'y_range',y_range,'stimEffectType',stimEffectType,'sponNorm',sponNorm);
 if save_fig
 	fname = sprintf('stimWin_aligned_traces');
 	ins_analysis_ventral_fig_folder = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',save_dir,'fname',fname);
@@ -222,7 +229,7 @@ end
 close all
 plot_combined_data = true;
 parNames_roi = {'sponfq', 'sponInterval'};
-save_fig = false; % true/false
+save_fig = true; % true/false
 save_dir = ins_analysis_ventral_fig_folder;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
@@ -340,7 +347,8 @@ grouped_event_info(disIdx) = [];
 % 9.5.2 Plot event parameters. Grouped according to categories
 close all
 plot_combined_data = true;
-parNames = {'rise_delay'};
+parNames = {'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
+    'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise','rise_delay'};
         % 'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
         % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
     
@@ -348,7 +356,7 @@ parNames = {'rise_delay'};
 		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
 		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
 		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
-save_fig = false; % true/false
+save_fig = true; % true/false
 save_dir = ins_analysis_ventral_fig_folder;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not

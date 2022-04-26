@@ -87,7 +87,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 		par = parNames{pn};
 
 		[histFit_info.(par)] = plot_event_info_histfit(event_info_struct,par,...
-			'dist_type','beta','save_fig', save_fig, 'save_dir', save_dir, 'xRange',[-0.2 2],'nbins', 10); % 'nbins', 20,
+			'dist_type','normal','save_fig', save_fig, 'save_dir', save_dir, 'xRange',[-0.2 2],'nbins', 20); % 'nbins', 20,
 	end
 
 	%% bar plot
