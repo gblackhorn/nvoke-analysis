@@ -95,11 +95,12 @@ recdata_organized_bk = recdata_organized;
 [recdata_organized] = discard_recData_roi(recdata_organized,'stims',stims,'eventCats',eventCats,'debug_mode',debug_mode);
 %% ====================
 % 9.2 Align traces from all trials. Also collect the properties of events
-event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
+event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
 traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 event_data_group = 'peak_lowpass';
 event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
 event_align_point = 'rise';
+rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes
 cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
 pre_event_time = 10; % unit: s. event trace starts at 1s before event onset
@@ -113,7 +114,8 @@ debug_mode = false; % true/false
 	'traceData_type', traceData_type, 'event_data_group', event_data_group,...
 	'event_filter', event_filter, 'event_align_point', event_align_point, 'cat_keywords', cat_keywords,...
 	'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
-	'stim_time_error',stim_time_error,'mod_pcn', mod_pcn,'debug_mode',debug_mode);
+	'stim_time_error',stim_time_error,'rebound_duration',rebound_duration,...
+	'mod_pcn', mod_pcn,'debug_mode',debug_mode);
 
 %% ====================
 % 9.2.1 Check trace aligned to stim window
@@ -251,7 +253,8 @@ end
 %% ====================
 % 9.5.1.1 Collect and group events from 'eventProp_all' according to stimulation and category 
 % Rename stim name for opto if opto-5s exhibited excitation effect
-seperate_spon = true; % true/false. Whether to seperated spon according to stimualtion
+seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
+dis_spon = false; % true/false
 if screenEventProp 
 	tag_check = {'opto', 'opto-ap'};
 	idx_check = cell(1, numel(tag_check));
@@ -293,7 +296,7 @@ for gn = 1:numel(grouped_event_info)
 end
 
 % Sort group 
-strCells = {'spon', 'trig', 'rebound', 'delay'};
+strCells = {'trig', 'rebound', 'delay'}; % 'spon', 
 strCells_plus = {'ap', 'EXopto'};
 [grouped_event_info] = sort_struct_with_str(grouped_event_info,'group',strCells,'strCells_plus',strCells_plus);
 
@@ -306,7 +309,7 @@ grouped_event_info_option.cat_keywords = cat_keywords;
 
 %% ====================
 % 9.5.1.2 screen groups based on tags. Delete unwanted groups
-keywords = {'trig','rebound'}; % options: spon, trig, delay, rebound
+keywords = {'spon','trig','rebound'}; % options: spon, trig, delay, rebound
 k_num = numel(keywords);
 group_num = numel(grouped_event_info);
 % grouped_event_info = grouped_event_info_bk;

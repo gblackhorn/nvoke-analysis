@@ -56,6 +56,8 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	        pre_event_time = varargin{ii+1};
 	    elseif strcmpi('post_event_time', varargin{ii})
 	        post_event_time = varargin{ii+1};
+	    elseif strcmpi('rebound_duration', varargin{ii})
+	        rebound_duration = varargin{ii+1};
 	    elseif strcmpi('stim_time_error', varargin{ii})
 	        stim_time_error = varargin{ii+1};
 	    elseif strcmpi('align_on_y', varargin{ii})
