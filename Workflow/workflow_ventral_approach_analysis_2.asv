@@ -162,9 +162,10 @@ entry = 'roi'; % options: 'roi' or 'event'
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 dis_spon = false; % true/false
+screenEventProp = true;
 
 modify_eventType_name = true; % true/false
-[eventProp_all] = collect_event_prop(alignedData_allTrials, 'style', entry); % only use 'event' for 'style'
+[eventProp_all] = collect_event_prop(alignedData_allTrials, 'style', 'event'); % only use 'event' for 'style'
 
 % modify the stimulation name in eventProp_all
 cat_setting.cat_type = 'stim_name';
@@ -251,10 +252,9 @@ end
 
 %% ====================
 % 9.5.1.1 Collect and group events from 'eventProp_all' according to stimulation and category 
-% Rename stim name of opto to EXopto if opto-5s exhibited excitation effect
+% Rename stim name for opto if opto-5s exhibited excitation effect
 seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
 dis_spon = false; % true/false
-screenEventProp = true;
 if screenEventProp 
 	tag_check = {'opto', 'opto-ap'};
 	idx_check = cell(1, numel(tag_check));
