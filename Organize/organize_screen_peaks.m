@@ -32,7 +32,7 @@ function [peak_properties_table_screened, varargout] = organize_screen_peaks(pea
 
 	idx_fail_rise_time = find(peak_properties_table.rise_duration>=criteria_rise_time(2) & peak_properties_table.rise_duration<=criteria_rise_time(1));
 	idx_fail_slope = find(peak_properties_table.peak_slope>=criteria_slope(2) & peak_properties_table.peak_slope<=criteria_slope(1));
-	idx_fail_pnr = find(peak_noise_ratio>=criteria_pnr & peak_noise_ratio<=criteria_pnr);
+	idx_fail_pnr = find(peak_noise_ratio<=criteria_pnr); % find(peak_noise_ratio>=criteria_pnr & peak_noise_ratio<=criteria_pnr)
 
 	idx_combine = [idx_fail_rise_time; idx_fail_slope; idx_fail_pnr];
 	idx_discard = unique(idx_combine);

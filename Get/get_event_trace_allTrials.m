@@ -13,6 +13,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	pre_event_time = 1; % unit: s. event trace starts at 1s before event onset
 	post_event_time = 2; % unit: s. event trace ends at 2s after event onset
 	stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
+	rebound_duration = 1;
 	scale_data = false; % only work if [event_type] is detected_events
 	align_on_y = true; % subtract data with the values at the align points
 	% win_range = []; 
@@ -72,7 +73,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 		'traceData_type', traceData_type, 'event_data_group', event_data_group,...
 		'event_filter', event_filter, 'event_align_point', event_align_point, 'cat_keywords', cat_keywords,...
 		'pre_event_time', pre_event_time, 'post_event_time', post_event_time,'stim_time_error',stim_time_error,...
-		'mod_pcn', mod_pcn,'debug_mode',debug_mode);
+		'rebound_duration', rebound_duration, 'mod_pcn', mod_pcn,'debug_mode',debug_mode);
 	end
 
 	alignedData_allTrials = [data_cell{:}];

@@ -92,37 +92,39 @@ function [histFit_info,varargout] = plot_event_info_histfit(event_info_struct,pa
 		for n = 1:group_num
 			group_data = data_cell{n};
 			histFit_info(n+1).group = event_info_struct(n).group;
-			histFit_info(n+1).data = group_data(:);
-			histFit_info(n+1).pd = fitdist(histFit_info(n+1).data,dist_type);
+			if ~isempty(group_data(:))
+				histFit_info(n+1).data = group_data(:);
+				histFit_info(n+1).pd = fitdist(histFit_info(n+1).data,dist_type);
 
-            subplot(sp_rowNum, sp_colNum, n+1)	
-            histfit(histFit_info(n+1).data,nbins,dist_type);		
-   %          if ~isempty(nbins)
-			% 	histfit(histFit_info(n+1).data,nbins,dist_type);
-			% else
-			% 	histfit(histFit_info(n+1).data);
-			% end
+	            subplot(sp_rowNum, sp_colNum, n+1)	
+	            histfit(histFit_info(n+1).data,nbins,dist_type);		
+	   %          if ~isempty(nbins)
+				% 	histfit(histFit_info(n+1).data,nbins,dist_type);
+				% else
+				% 	histfit(histFit_info(n+1).data);
+				% end
 
-			% [histFit_info(n+1).N, histFit_info(n+1).edges] = histcounts(group_data, edges);
+				% [histFit_info(n+1).N, histFit_info(n+1).edges] = histcounts(group_data, edges);
 
-			% if plot_combined_data
-			% 	histogram('BinEdges',histFit_info(1).edges,'BinCounts',histFit_info(1).N,...
-			% 		'Normalization', 'probability', 'FaceAlpha',0.1);
-			% 	hold on
-			% end
+				% if plot_combined_data
+				% 	histogram('BinEdges',histFit_info(1).edges,'BinCounts',histFit_info(1).N,...
+				% 		'Normalization', 'probability', 'FaceAlpha',0.1);
+				% 	hold on
+				% end
 
-			% h(n+1) = histogram('BinEdges',histFit_info(n+1).edges,'BinCounts',histFit_info(n+1).N);
-			% h(n+1).Normalization = 'probability';
-			
-			if show_legend
-				legend(histFit_info(n+1).group)
-				legend('boxoff')
+				% h(n+1) = histogram('BinEdges',histFit_info(n+1).edges,'BinCounts',histFit_info(n+1).N);
+				% h(n+1).Normalization = 'probability';
+				
+				if show_legend
+					legend(histFit_info(n+1).group)
+					legend('boxoff')
+				end
+				title(histFit_info(n+1).group)
+				xlim(xRange)
+				% ylim(yRange)
+				set(gca,'box','off')
+				set(gca, 'FontSize', FontSize)
 			end
-			title(histFit_info(n+1).group)
-			xlim(xRange)
-			% ylim(yRange)
-			set(gca,'box','off')
-			set(gca, 'FontSize', FontSize)
 		end
 	end
 

@@ -23,6 +23,8 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 	        stimEffectType = varargin{ii+1};
         elseif strcmpi('sponNorm', varargin{ii})
 	        sponNorm = varargin{ii+1};
+        elseif strcmpi('section', varargin{ii})
+	        section = varargin{ii+1}; % double/vector. specify the n-th repeat of stimulation
 	    end
 	end	
 
@@ -61,13 +63,18 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 			traceData_cell_rois_g1 = cell(1, num_roi);
 			traceData_cell_rois_g2 = cell(1, num_roi);
 			for nr = 1:num_roi
+				if exist('section','var')
+					traceVal = traceInfo_trial(nr).value(:,section);
+				else
+					traceVal = traceInfo_trial(nr).value;
+				end
 				if isempty(stimEffectType)
-					traceData_cell_rois_g1{nr} = traceInfo_trial(nr).value;
+					traceData_cell_rois_g1{nr} = traceVal;
 				else
 					if traceInfo_trial(nr).stimEffect.(stimEffectType)
-						traceData_cell_rois_g1{nr} = traceInfo_trial(nr).value;
+						traceData_cell_rois_g1{nr} = traceVal;
 					else
-						traceData_cell_rois_g2{nr} = traceInfo_trial(nr).value;
+						traceData_cell_rois_g2{nr} = traceVal;
 					end
 				end
 				if sponNorm

@@ -28,7 +28,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 
 	% Defaults for [get_stimEffect]
-	base_timeRange = 1; % default 2s. 
+	base_timeRange = 2; % default 2s. 
 	ex_eventCat = {'trig'}; % event category string used to define excitation. May contain multiple strings
 	rb_eventCat = {'rebound'}; % event category string used to define rebound. May contain multiple strings
 	in_thresh_stdScale = 2; % n times of std lower than baseline level. Last n s during stimulation is used
@@ -56,6 +56,8 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	        pre_event_time = varargin{ii+1};
 	    elseif strcmpi('post_event_time', varargin{ii})
 	        post_event_time = varargin{ii+1};
+	    elseif strcmpi('rebound_duration', varargin{ii})
+	        rebound_duration = varargin{ii+1};
 	    elseif strcmpi('stim_time_error', varargin{ii})
 	        stim_time_error = varargin{ii+1};
 	    elseif strcmpi('align_on_y', varargin{ii})
@@ -182,7 +184,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 				[alignedData.traces(n).eventProp] = mod_cat_name(alignedData.traces(n).eventProp,'dis_extra',false);
 				[alignedData.traces(n).eventProp] = add_eventBaseDiff_to_eventProp(alignedData.traces(n).eventProp,...
 					combine_stimRange,full_time,roi_trace_data,varargin);
-				[alignedData.traces(n).eventProp] = add_tfTag_to_eventProp(alignedData.traces(n).eventProp,...
+				[alignedData.traces(n).eventProp,newFieldName,NFNtag] = add_tfTag_to_eventProp(alignedData.traces(n).eventProp,...
 					'peak_category','trig','newFieldName','stimTrig');
 				[alignedData.traces(n).eventProp] = add_riseDelay_to_eventProp(alignedData.traces(n).eventProp,...
 					combine_stimRange,'errCali',0);
@@ -220,13 +222,26 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 				sponAmp = NaN;
 			end
 
+			% Get the baseline change 
+			[baseChange,baseChangeTrace] = get_baseline_change(combine_stimRange,full_time,roi_trace_data,...
+				'base_timeRange',base_timeRange,'postStim_timeRange',base_timeRange,'stim_time_error',stim_time_error);
+
+			alignedData.traces(n).(newFieldName) = NFNtag;
 			alignedData.traces(n).sponfq = sponfq;
 			alignedData.traces(n).sponInterval = sponInterval;
 			alignedData.traces(n).stimfq = stimfq;
+			alignedData.traces(n).stimfqNorm = stimfq/sponfq;
+			alignedData.traces(n).stimfqDelta = (stimfq-sponfq)/sponfq;
 			alignedData.traces(n).sponEventNum = sponEventNum;
 			alignedData.traces(n).stimEventNum = stimEventNum;
 			alignedData.traces(n).exepEventNum = exepEventNum;
 			alignedData.traces(n).sponAmp = sponAmp;
+			alignedData.traces(n).baseChangeNorm = baseChange.Change_norm;
+			alignedData.traces(n).baseChangeDelta = baseChange.Change_delta;
+			alignedData.traces(n).baseChangeMinNorm = baseChange.ChangeMin_norm;
+			alignedData.traces(n).baseChangeMinDelta = baseChange.ChangeMin_delta;
+			alignedData.traces(n).baseChangeTrace.timeInfo = baseChangeTrace.timeInfo;
+			alignedData.traces(n).baseChangeTrace.yAlign = baseChangeTrace.yAlign;
 		else
 			empty_idx = [empty_idx n];
 		end

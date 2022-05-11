@@ -94,6 +94,8 @@ function [eventProp_all_norm,varargout] = norm_eventProp_with_spon(eventProp_all
 							eventProp_other_merge{pcn}.entryStyle = entry;
 
 							eventProp_other_merge{pcn}.eventPropData = eventProp_other_merge_peakCat;
+
+							
 							for pn = 1:props_num
 								eventProp_other_merge{pcn}.(propNames{pn}) = mean([eventProp_other_merge_peakCat.(propNames{pn})]);
 								eventProp_other_merge{pcn}.(normPropNames{pn}) = mean([eventProp_other_merge_peakCat.(normPropNames{pn})]);
