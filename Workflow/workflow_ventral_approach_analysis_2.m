@@ -90,15 +90,15 @@ recdata_organized_bk = recdata_organized;
 [recdata_organized] = discard_recData_roi(recdata_organized,'stims',stims,'eventCats',eventCats,'debug_mode',debug_mode);
 %% ====================
 % 9.2 Align traces from all trials. Also collect the properties of events
-event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
+event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
 traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 event_data_group = 'peak_lowpass';
 event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
 event_align_point = 'rise';
 cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
-pre_event_time = 10; % unit: s. event trace starts at 1s before event onset
-post_event_time = 10; % unit: s. event trace ends at 2s after event onset
+pre_event_time = 5; % unit: s. event trace starts at 1s before event onset
+post_event_time = 5; % unit: s. event trace ends at 2s after event onset
 stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
@@ -135,7 +135,7 @@ end
 close all
 plot_combined_data = true;
 y_range = [-20 30];
-eventCat = 'trig'; % options: 'trig', 'spon', 'rebound'
+eventCat = 'rebound'; % options: 'trig', 'spon', 'rebound'
 sponNorm = true; % true/false
 save_fig = false;
 save_dir = ins_analysis_ventral_fig_folder;
@@ -377,7 +377,7 @@ stim = 'OG-LED'; % data will be collected from trials applied with this stimulat
 [stimEffectInfo,meanTrace_stim,logRatio_SponStim] = get_stimEffectInfo_all_roi(alignedData_allTrials,'stim',stim);
 
 % plot
-save_fig = true; % true/false
+save_fig = false; % true/false
 close all
 colorGroup = {'#3FF5E6', '#F55E58', '#F5A427', '#4CA9F5', '#33F577',...
 	'#408F87', '#8F4F7A', '#798F7D', '#8F7832', '#28398F', '#000000'};
