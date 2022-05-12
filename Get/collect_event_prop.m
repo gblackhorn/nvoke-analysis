@@ -7,13 +7,14 @@ function [eventProp_all,varargout] = collect_event_prop(alignedData,varargin)
 	style = 'roi'; % options: 'roi' or 'event'
                     % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                     % 'event': events are seperated (struct length = events_num). mean values were not calculated
+    debug_mode = false; % true/false
 
     % Optionals
     for ii = 1:2:(nargin-1)
         if strcmpi('style', varargin{ii})
             style = varargin{ii+1}; % options: 'roi' or 'event'
-        % elseif strcmpi('cal_interval', varargin{ii})
-        %     cal_interval = varargin{ii+1}; 
+        elseif strcmpi('debug_mode', varargin{ii})
+            debug_mode = varargin{ii+1}; 
         end
     end
 
@@ -30,14 +31,16 @@ function [eventProp_all,varargout] = collect_event_prop(alignedData,varargin)
     	trialName = alignedData_trial.trialName;
         fovID = alignedData_trial.fovID;
 
-        % fprintf('trial %d: %s\n', tn, trialName)
-        % if tn == 36
-        %     pause
-        % end
+        if debug_mode
+            fprintf('trial %d: %s\n', tn, trialName)
+            if tn == 36
+                pause
+            end
+        end
 
     	if ~isempty(alignedData_trial.time)
     		stim_name = alignedData_trial.stim_name;
-    		space_in_stim_name = strfind(stim_name, ' '); % "space" between various stimulation names
+    		space_in_stim_name = strfind(stim_name, ' '); % "space" between various stimulation names, such as 'OG-LED-5s GPIO-1-1s'
     		if  ~isempty(space_in_stim_name)
     			combine_stim = true;
     		else
@@ -86,33 +89,24 @@ function [eventProp_all,varargout] = collect_event_prop(alignedData,varargin)
                                 eventProp_trial_roi{pcn}.entryStyle = style;
 
                                 eventProp_trial_roi{pcn}.eventPropData = eventProp_roi_peakCat;
+                                eventProp_trial_roi{pcn}.stimTrig = alignedData_trial.traces(rn).stimTrig;
+                                eventProp_trial_roi{pcn}.sponfq = alignedData_trial.traces(rn).sponfq;
+                                eventProp_trial_roi{pcn}.sponInterval = alignedData_trial.traces(rn).sponInterval;
+                                eventProp_trial_roi{pcn}.stimfq = alignedData_trial.traces(rn).stimfq;
+                                eventProp_trial_roi{pcn}.stimfqNorm = alignedData_trial.traces(rn).stimfqNorm;
+                                eventProp_trial_roi{pcn}.stimfqDeltaNorm = alignedData_trial.traces(rn).stimfqDeltaNorm;
                                 eventProp_trial_roi{pcn}.rise_duration = mean([eventProp_roi_peakCat.rise_duration]);
                                 eventProp_trial_roi{pcn}.peak_mag_delta = mean([eventProp_roi_peakCat.peak_mag_delta]);
                                 eventProp_trial_roi{pcn}.peak_delta_norm_hpstd = mean([eventProp_roi_peakCat.peak_delta_norm_hpstd]);
                                 eventProp_trial_roi{pcn}.peak_slope = mean([eventProp_roi_peakCat.peak_slope]);
                                 eventProp_trial_roi{pcn}.peak_slope_norm_hpstd = mean([eventProp_roi_peakCat.peak_slope_norm_hpstd]);
+                                % eventProp_trial_roi{pcn}.baseChangeNorm = alignedData_trial.traces(rn).baseChangeNorm;
+                                eventProp_trial_roi{pcn}.CaLevelDelta = alignedData_trial.traces(rn).CaLevelDelta;
+                                % eventProp_trial_roi{pcn}.baseChangeMinNorm = alignedData_trial.traces(rn).baseChangeMinNorm;
+                                eventProp_trial_roi{pcn}.CaLevelMinDelta = alignedData_trial.traces(rn).CaLevelMinDelta;
                             end
 
                             eventProp_trial{rn} = [eventProp_trial_roi{:}];
-        					% eventProp_trial{rn}.trialName = trialName;
-        					% eventProp_trial{rn}.roiName = roiName;
-             %                eventProp_trial{rn}.fovID = fovID;
-        					% eventProp_trial{rn}.stim_name = stim_name;
-        					% eventProp_trial{rn}.combine_stim = combine_stim; % multiple stimuli combined in single recordings
-        					% eventProp_trial{rn}.stim_repeats = stim_repeats;
-             %                eventProp_trial{rn}.roi_coor = roi_coor;
-        					% eventProp_trial{rn}.event_num = event_num;
-
-        					% fieldNames = fieldnames(eventProp_roi);
-        					% fn = numel(fieldNames);
-        					% for ii = 1:fn
-        					% 	eventProp_trial{rn}.(fieldNames{ii}) = [eventProp_roi(:).(fieldNames{ii})];
-        					% end
-             %                eventProp_trial{rn}.rise_duration_mean = mean([eventProp_roi.rise_duration]);
-             %                eventProp_trial{rn}.peak_mag_delta_mean = mean([eventProp_roi.peak_mag_delta]);
-             %                eventProp_trial{rn}.peak_delta_norm_hpstd_mean = mean([eventProp_roi.peak_delta_norm_hpstd]);
-             %                eventProp_trial{rn}.peak_slope_mean = mean([eventProp_roi.peak_slope]);
-             %                eventProp_trial{rn}.peak_slope_norm_hpstd_mean = mean([eventProp_roi.peak_slope_norm_hpstd]);
 
         				case 'event'
         					prop_trialName = cell(1, event_num);
@@ -139,7 +133,7 @@ function [eventProp_all,varargout] = collect_event_prop(alignedData,varargin)
                             eventProp_trial{rn} = eventProp_roi;
 
         			end
-                    eventProp_trial{rn} = orderfields(eventProp_trial{rn});
+                    % eventProp_trial{rn} = orderfields(eventProp_trial{rn});
                 else
                     eventProp_trial{rn} = [];
                 end

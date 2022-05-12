@@ -12,12 +12,16 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	event_align_point = 'rise'; % options: 'rise', 'peak'
 	pre_event_time = 1; % unit: s. event trace starts at 1s before event onset
 	post_event_time = 2; % unit: s. event trace ends at 2s after event onset
+	stim_section = false; % true: use a specific section of stimulation. For example the last 1s
+	ss_range = 2; % single number (last n second) or a 2-element array (start and end. 0s is stimulation onset)
+	stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
+	rebound_duration = 1;
 	scale_data = false; % only work if [event_type] is detected_events
 	align_on_y = true; % subtract data with the values at the align points
 	% win_range = []; 
 	cat_keywords =[]; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 	mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
-	debug_mode = false; 
+	debug_mode = true; 
 
 
 	% Optionals
@@ -40,12 +44,20 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	        pre_event_time = varargin{ii+1};
 	    elseif strcmpi('post_event_time', varargin{ii})
 	        post_event_time = varargin{ii+1};
+	    elseif strcmpi('stim_section', varargin{ii}) % used for calcium level delta calculation. True: use specific seciton
+	        stim_section = varargin{ii+1};
+	    elseif strcmpi('ss_range', varargin{ii}) % used for calcium level delta calculation. True: use specific seciton
+	        ss_range = varargin{ii+1};
+	    elseif strcmpi('stim_time_error', varargin{ii})
+	        stim_time_error = varargin{ii+1};
 	    elseif strcmpi('align_on_y', varargin{ii})
 	        align_on_y = varargin{ii+1};
 	    elseif strcmpi('scale_data', varargin{ii})
 	        scale_data = varargin{ii+1};
         elseif strcmpi('mod_pcn', varargin{ii})
-        mod_pcn = varargin{ii+1};
+        	mod_pcn = varargin{ii+1};
+        elseif strcmpi('debug_mode', varargin{ii})
+        	debug_mode = varargin{ii+1};
 	    end
 	end
 
@@ -57,7 +69,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	for n = 1:trial_num
 		if debug_mode
 			fprintf('trial %d: %s\n', n, allTrialsData{n, 1})
-			if n == 3
+			if n == 2
 				pause
 			end
 		end
@@ -67,7 +79,8 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 		'traceData_type', traceData_type, 'event_data_group', event_data_group,...
 		'event_filter', event_filter, 'event_align_point', event_align_point, 'cat_keywords', cat_keywords,...
 		'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
-		'mod_pcn', mod_pcn);
+		'stim_section',stim_section,'ss_range',ss_range,'stim_time_error',stim_time_error,...
+		'rebound_duration', rebound_duration, 'mod_pcn', mod_pcn,'debug_mode',debug_mode);
 	end
 
 	alignedData_allTrials = [data_cell{:}];

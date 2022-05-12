@@ -190,18 +190,18 @@ opt.highpass_fpass = 4;
 opt.smooth_method = 'loess';
 opt.smooth_span = 0.1;
 opt.prominence_factor = 4; % prominence_factor doesn't influence peak finding in decon data
-opt.existing_peak_duration_extension_time_pre  = 0; % duration in second, before existing peak rise 
+opt.existing_peak_duration_extension_time_pre  = 1; % duration in second, before existing peak rise 
 opt.existing_peak_duration_extension_time_post = 1; % duration in second, after decay
-opt.criteria_rise_time = [0 2]; % unit: second. filter to keep peaks with rise time in the range of [min max]
+opt.criteria_rise_time = [0 1]; % unit: second. filter to keep peaks with rise time in the range of [min max]
 opt.criteria_slope = [3 2000]; % default: slice-[50 2000]
 							% calcium(a.u.)/rise_time(s). filter to keep peaks with rise time in the range of [min max]
 							% ventral approach default: [3 80]
 							% slice default: [50 2000]
 % criteria_mag = 3; % default: 3. peak_mag_normhp
 opt.criteria_pnr = 3; % default: 3. peak-noise-ration (PNR): relative-peak-signal/std. std is calculated from highpassed data.
-opt.criteria_excitated = 0.5; % If a peak starts to rise in 2 sec since stimuli, it's a excitated peak
-opt.criteria_rebound = 1; % a peak is concidered as rebound if it starts to rise within 2s after stimulation end
-opt.stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
+opt.criteria_excitated = 1; % If a peak starts to rise in 0.5 sec since stimuli, it's a excitated peak
+opt.criteria_rebound = 2; % a peak is concidered as rebound if it starts to rise within 2s after stimulation end
+opt.stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 % use_criteria = true; % true or false. choose to use criteria or not for picking peaks
 opt.stim_pre_time = 10; % time (s) before stimuli start
 opt.stim_post_time = 10; % time (s) after stimuli end
@@ -211,6 +211,9 @@ opt.discard_noisy_roi = false;
 opt.std_fold = 10; % used as criteria to discard noisy_rois
 plot_traces = 0; % 0: do not plot. 1: plot. 2: plot with pause
 save_traces = 0; % 0: do not save. 1: save
+
+% recdata=recdata_organized;
+
 [recdata_organized] = organize_add_peak_gpio_to_recdata(recdata,...
 	'lowpass_fpass', opt.lowpass_fpass, 'highpass_fpass', opt.highpass_fpass,...
 	'smooth_method', opt.smooth_method, 'smooth_span', opt.smooth_span,...

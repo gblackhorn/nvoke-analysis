@@ -5,6 +5,7 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	plotWhere = [];
 	plot_combined_data = true; % mean trace for each single group. std・ste value can be used as mean_trace_shade to plot shade
 	plot_stim_shade = false; % true/false
+	plot_raw_races = true; % true: plot the traces in the trace_data
 	% save_fig = false;
 	% save_dir = '';
 	mean_trace = [];
@@ -28,6 +29,8 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	        mean_trace = varargin{ii+1};
 	    elseif strcmpi('mean_trace_shade', varargin{ii})
 	        mean_trace_shade = varargin{ii+1};
+	    elseif strcmpi('plot_raw_races', varargin{ii})
+	        plot_raw_races = varargin{ii+1};
 	    elseif strcmpi('save_fig', varargin{ii})
 	        save_fig = varargin{ii+1};
 	    elseif strcmpi('save_dir', varargin{ii})
@@ -56,8 +59,8 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	hold on
 
 	if plot_combined_data
-		h_m = plot(time_info, mean_trace,...
-			'Color', mean_line_color, 'LineWidth', line_mean_width);
+		% h_m = plot(time_info, mean_trace,...
+		% 	'Color', mean_line_color, 'LineWidth', line_mean_width);
 
 
 		shade_x = [time_info; flip(time_info)];
@@ -67,17 +70,21 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 		shade_y = [shade_upperline; flip(shade_lowerline)];
 		h_s = patch('XData',shade_x, 'YData', shade_y,...
 			'FaceColor', shade_color, 'FaceAlpha', shade_alpha, 'EdgeColor', 'none');
+
+		h_m = plot(time_info, mean_trace,...
+			'Color', mean_line_color, 'LineWidth', line_mean_width);
 	end
 
-	if isa(trace_data, 'double')
-		h = plot(time_info, trace_data, 'LineWidth', line_width, 'Color', line_color);
-	elseif isa(trace_data, 'cell')
-		group_num = numel(trace_data);
-		for n = 1:group_num
-			h(n) = plot(time_info, trace_data{n}, 'LineWidth', line_width, 'Color', line_color);
+	if plot_raw_races
+		if isa(trace_data, 'double')
+			h = plot(time_info, trace_data, 'LineWidth', line_width, 'Color', line_color);
+		elseif isa(trace_data, 'cell')
+			group_num = numel(trace_data);
+			for n = 1:group_num
+				h(n) = plot(time_info, trace_data{n}, 'LineWidth', line_width, 'Color', line_color);
+			end
 		end
 	end
-	box off
 
 	if exist('y_range', 'var')
 		ylim(y_range);
@@ -95,6 +102,7 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 			return
 	end
 
+	box off
 	chi=get(gca, 'Children');
 	set(gca, 'Children',flipud(chi));
 	set(gca,'Xtick',[time_info(1):1:time_info(end)])

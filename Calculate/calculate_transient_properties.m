@@ -5,23 +5,32 @@ function [transient_properties,varargout] = calculate_transient_properties(roi_t
     % Defaults
     slope_per_low  = 0.1; % percentage of peak value (low) to calculate slope
     slope_per_high = 0.9; % percentage of peak value (high) to calculate slope
+    extension_time_pre = 0.5; % extend the time window by subtracting rise_time with this
+    extension_time_post = 1; % extend the time window by adding decay_time with this
 
     % Optionals
-    for ii = 1:2:(nargin-5)
+    for ii = 1:2:(nargin-4)
     	if strcmpi('slope_per_low', varargin{ii})
     		slope_per_low = varargin{ii+1};
     	elseif strcmpi('slope_per_high', varargin{ii})
     		slope_per_high = varargin{ii+1};
     	elseif strcmpi('existing_peakInfo', varargin{ii})
             existing_peakInfo = varargin{ii+1};
+        elseif strcmpi('extension_time_pre', varargin{ii})
+            extension_time_pre = varargin{ii+1};
+        elseif strcmpi('extension_time_post', varargin{ii})
+            extension_time_post = varargin{ii+1};
         end
     end
 
+    recFreq = 1/(time_info(10)-time_info(9)); % recording sampling frequency
+    [eventWin,eventWin_idx] = get_event_win(peakLoc,time_info,'pre_peakTime',2,'post_peakTime',5); % get time windows for each peak
     if ~isempty(peakLoc) % if there are peak(s) in the trace
         if ~exist('existing_peakInfo', 'var')
     	   [rise_decay_loc] = FindRiseandDecay(roi_trace,peakLoc); % find the locations of rise, decay, check_start and check_end for every peak
         else
-            [rise_decay_loc] = FindRiseandDecay_with_existing_peakinfo(roi_trace,peakLoc,existing_peakInfo);    
+            [rise_decay_loc] = FindRiseandDecay_with_existing_peakinfo(roi_trace,peakLoc,existing_peakInfo,...
+                'eventWin_idx',eventWin_idx);    
         end
     	rise_loc = rise_decay_loc.rise_loc;
     	decay_loc = rise_decay_loc.decay_loc;

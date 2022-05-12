@@ -1,10 +1,9 @@
-function [event_info,varargout] = get_events_info(events_time,condition_win,peak_properties_table,varargin)
+function [event_info,varargout] = get_events_info(all_events_time,condition_win,peak_properties_table,varargin)
     % Return sorted event according to condition windows, such as stimulation, rebound windows, etc.
-    %   events_time: a number array containing the time of events. Can be rise_time or peak_time from peak_properties_table
+    %   all_events_time: a number array containing the time of events. Can be rise_time or peak_time from peak_properties_table
     %   condition_win: nx2 array. 1st col is the lower bound, 2nd col is the upper bound
     %   peak_properties_table: a table with vary properties of peaks from a
     %       single roi. 
-    %   event_idx: the idx of events in events_time/peak_properties_table
 
     % Defaults
     style = 'roi'; % options: 'roi' or 'event'
@@ -25,14 +24,16 @@ function [event_info,varargout] = get_events_info(events_time,condition_win,peak
     % ====================
     % Main contents
     if ~isempty(condition_win)
-        events_time = events_time';
+        [freq,events_interval_time,idx_in_peak_table,events_time] = get_event_freq_interval(all_events_time,condition_win);
+
+        all_events_time = all_events_time';
         win_num = size(condition_win, 1);
         idx_in_peak_table_cell = cell(win_num, 1);
         event_time_cell = cell(win_num, 1);
         event_interval_time_cell = cell(win_num, 1);
         for n = 1:win_num
-            idx_in_peak_table_cell{n} = find(events_time>=condition_win(n, 1) & events_time<condition_win(n, 2))';
-            event_time_cell{n} = events_time(idx_in_peak_table_cell{n})';
+            idx_in_peak_table_cell{n} = find(all_events_time>=condition_win(n, 1) & all_events_time<condition_win(n, 2))';
+            event_time_cell{n} = all_events_time(idx_in_peak_table_cell{n})';
             event_interval_time_cell{n} = diff(event_time_cell{n});
         end
 
@@ -40,9 +41,10 @@ function [event_info,varargout] = get_events_info(events_time,condition_win,peak
         events_time = vertcat(event_time_cell{:});
         events_interval_time = vertcat(event_interval_time_cell{:});
     else
-        events_value = peak_properties_table.rise_time;
-        [~, idx_in_peak_table] = intersect(events_value, events_time, 'stable');
-        events_time = events_value;
+        idx_in_peak_table = [1:size(peak_properties_table, 1)];
+        events_time = peak_properties_table.rise_time(idx_in_peak_table);
+        % [~, idx_in_peak_table] = intersect(events_value, events_time, 'stable');
+        % events_time = events_value;
         events_interval_time = diff(events_time);
     end
 
@@ -50,6 +52,7 @@ function [event_info,varargout] = get_events_info(events_time,condition_win,peak
         events_interval_time_mean = mean(events_interval_time);
     else
         clear events_interval_time
+        clear freq
     end
 
     event_num = length(events_time);
@@ -73,6 +76,9 @@ function [event_info,varargout] = get_events_info(events_time,condition_win,peak
             if exist('events_interval_time', 'var')
                 event_info.events_interval_time = events_interval_time;
                 event_info.events_interval_time_mean = events_interval_time_mean;
+            end
+            if exist('freq', 'var')
+            event_info.freq = freq;
             end
 
             event_info.rise_time = rise_time;

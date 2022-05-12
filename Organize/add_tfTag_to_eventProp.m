@@ -33,4 +33,7 @@ function [eventProp_new,varargout] = add_tfTag_to_eventProp(eventProp,fieldName,
 	else
 		[eventProp_new.(newFieldName)] = tagField{:};
 	end
+
+	varargout{1} = newFieldName;
+	varargout{2} = tagField{1};
 end

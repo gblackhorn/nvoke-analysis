@@ -14,7 +14,7 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
     
     % Defaults
     stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
-    criteria_trig = 0.5; % triggered peak: peak start to rise in (criteria_trig)s from onset of stim
+    criteria_excitated = 2; % triggered peak: peak start to rise in 2s from onset of stim
     criteria_rebound = 1; % rebound peak: peak start to rise in 1s from end of stim
     % peak_cat_str = {'noStim', 'noStimFar', 'triggered', 'triggered_delay', 'rebound', 'interval'};
     % peak_cat_str = eventCatStr;
@@ -24,6 +24,10 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
     for ii = 1:2:(nargin-2)
     	if strcmpi('stim_time_error', varargin{ii})
     		stim_time_error = varargin{ii+1}; %
+		elseif strcmpi('criteria_excitated', varargin{ii})
+		    criteria_excitated = varargin{ii+1};
+		elseif strcmpi('criteria_rebound', varargin{ii})
+		    criteria_rebound = varargin{ii+1};
     	end
     end
 
@@ -38,7 +42,7 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
 	    stim_train_num = size(stim_time_range, 1);
 	    stim_train_inter = gpio_info_table.stim_ch_train_inter;
 
-	    trig_duration = min(criteria_trig, stim_train_duration);
+	    trig_duration = min(criteria_excitated, stim_train_duration);
 
 	    % allocate ram
 	    idx_trig = cell(stim_train_num, 1);
@@ -55,8 +59,8 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
 	    inter_end(stim_train_num, 1) = stim_time_range(end, 2)+stim_train_inter;
 	    win_befor_1st_stim = [0, stim_time_range(1, 1)];
 	    win_trig = [stim_time_range(:, 1), stim_time_range(:, 1)+trig_duration];
-	    if stim_train_duration >= criteria_trig
-	    	win_trig_delay = [stim_time_range(:, 1)+criteria_trig, stim_time_range(:, 2)];
+	    if stim_train_duration >= criteria_excitated
+	    	win_trig_delay = [stim_time_range(:, 1)+criteria_excitated, stim_time_range(:, 2)];
 	    end
 	    win_rebound = [stim_time_range(:, 2), stim_time_range(:, 2)+criteria_rebound];
 	    win_inter = [stim_time_range(:, 2)+criteria_rebound, inter_end];
@@ -69,14 +73,14 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
 	    idx_beforeStim = idx_befor_1st_stim;
 	    for wn = 1:stim_train_num
 	    	idx_trig{wn} = find(peak_rise_time>=win_trig(wn, 1) & peak_rise_time<win_trig(wn, 2));
-	    	if stim_train_duration >= criteria_trig
+	    	if stim_train_duration >= criteria_excitated
 		    	idx_delay{wn} = find(peak_rise_time>=win_trig_delay(wn, 1) & peak_rise_time<win_trig_delay(wn, 2));
 		    end
 		    idx_rebound{wn} = find(peak_rise_time>=win_rebound(wn, 1) & peak_rise_time<win_rebound(wn, 2));
 		    idx_inter{wn} = find(peak_rise_time>=win_inter(wn, 1) & peak_rise_time<win_inter(wn, 2));
 	    end
 	    idx_trig = cell2mat(idx_trig);
-	    if stim_train_duration >= criteria_trig
+	    if stim_train_duration >= criteria_excitated
 	    	idx_delay = cell2mat(idx_delay);
 	    else
 	    	idx_delay = [];

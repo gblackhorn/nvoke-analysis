@@ -14,7 +14,7 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 	% Defaults
 	save_fig = false;
 	save_dir = '';
-	marker_size = 40;
+	marker_size = 10;
 	marker_face_alpha = 1;
 	marker_edge_alpha = 0;
 % 	colorGroup = {'#A0DFF0', '#F29665', '#6C80BD', '#BD7C6C', '#27418C',...

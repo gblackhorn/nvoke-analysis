@@ -12,7 +12,7 @@ function [event_info,varargout] = mod_cat_name(event_info,varargin)
 	dis_extra = true; % true/false. If old category name is not found in any cat_merge groups
 
 	% Settings for modifying the category. This can be input with varargin
-	% each cell in cat_merge should pair with one cat_names element haveing the same index
+	% each cell in cat_merge should pair with one cat_names element sharing the same index
 	cat_type = 'peak_category'; % 'fovID', 'peak_category'
 	cat_names = {'spon', 'trig', 'trig-AP', 'opto-delay', 'rebound'}; % new category names
 	cat_num = numel(cat_names);

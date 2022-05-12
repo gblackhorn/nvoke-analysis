@@ -9,6 +9,7 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 	plot_stim_shade = true;
 	y_range = [-20 30];
 	stimEffectType = 'excitation'; % options: 'excitation', 'inhibition', 'rebound'
+	sponNorm = false; % true/false
 
 	% Optionals
 	for ii = 1:2:(nargin-1)
@@ -20,20 +21,25 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 	        y_range = varargin{ii+1};
         elseif strcmpi('stimEffectType', varargin{ii})
 	        stimEffectType = varargin{ii+1};
-        % elseif strcmpi('in_calLength', varargin{ii})
-	       %  in_calLength = varargin{ii+1};
+        elseif strcmpi('sponNorm', varargin{ii})
+	        sponNorm = varargin{ii+1};
+        elseif strcmpi('section', varargin{ii})
+	        section = varargin{ii+1}; % double/vector. specify the n-th repeat of stimulation
 	    end
 	end	
 
 	%% Content
 	% Plot alignedData. Group traces according to stimulation
 	% event_type of alignedData is stimWin
+	if sponNorm
+		y_range = [-5 5]; % overwrite the y range of plot if sponNorm data is used
+	end
 
 	[C, ia, ic] = unique({alignedData.stim_name});
 	num_C = numel(C);
 
 	f_trace_win = figure;
-	fig_position = [0.1 0.1 0.8 0.4];
+	fig_position = [0.1 0.1 0.6 0.7];
 	set(gcf, 'Units', 'normalized', 'Position', fig_position)
 	if isempty(stimEffectType)
 		tile_row_num = 1;
@@ -43,8 +49,6 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 	tlo = tiledlayout(f_trace_win, tile_row_num, num_C);
 
 	for n = 1:num_C
-		
-
 		stimName = C{n};
 		IDX_trial = find(ic == n);
 		timeInfo = alignedData(IDX_trial(1)).time;
@@ -59,14 +63,24 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 			traceData_cell_rois_g1 = cell(1, num_roi);
 			traceData_cell_rois_g2 = cell(1, num_roi);
 			for nr = 1:num_roi
+				if exist('section','var')
+					traceVal = traceInfo_trial(nr).value(:,section);
+				else
+					traceVal = traceInfo_trial(nr).value;
+				end
 				if isempty(stimEffectType)
-					traceData_cell_rois_g1{nr} = traceInfo_trial(nr).value;
+					traceData_cell_rois_g1{nr} = traceVal;
 				else
 					if traceInfo_trial(nr).stimEffect.(stimEffectType)
-						traceData_cell_rois_g1{nr} = traceInfo_trial(nr).value;
+						traceData_cell_rois_g1{nr} = traceVal;
 					else
-						traceData_cell_rois_g2{nr} = traceInfo_trial(nr).value;
+						traceData_cell_rois_g2{nr} = traceVal;
 					end
+				end
+				if sponNorm
+					sponAmp = traceInfo_trial(nr).sponAmp;
+					traceData_cell_rois_g1{nr} = traceData_cell_rois_g1{nr}/sponAmp;
+					traceData_cell_rois_g2{nr} = traceData_cell_rois_g2{nr}/sponAmp;
 				end
 			end
 			traceData_cell_trials_g1{nst} = [traceData_cell_rois_g1{:}];
@@ -83,11 +97,11 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 			'plot_stim_shade', plot_stim_shade, 'stim_range', stim_range,...
 	        'y_range', y_range); % 'y_range', y_range
 		if ~isempty(stimEffectType)
-			titleName_g1 = sprintf('%s - %s', stimName, stimEffectType);
+			titleName_g1 = sprintf('%s: %s', stimName, stimEffectType);
 		else
 			titleName_g1 = stimName;
 		end
-		title(stimName)
+		title(titleName_g1)
 
 		traceData_trials_g2 = [traceData_cell_trials_g2{:}];
 		if ~isempty(traceData_trials_g2)
@@ -100,7 +114,7 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 				'mean_trace', traceData_trials_g2_mean, 'mean_trace_shade', traceData_trials_g2_shade,...
 				'plot_stim_shade', plot_stim_shade, 'stim_range', stim_range,...
 		        'y_range', y_range); % 'y_range', y_range
-			titleName_g2 = sprintf('%s - (negative)%s ', stimName, stimEffectType);
+			titleName_g2 = sprintf('%s: %s-negative ', stimName, stimEffectType);
 			title(titleName_g2)
 		end
 	end

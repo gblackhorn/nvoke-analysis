@@ -19,6 +19,7 @@ function [varargout] = cumulative_distr_plot(CellArrayData,varargin)
 	plotCombine = true; % true/false. Combine data from all the groups and plot
 	combineDataName = 'All';
 	plotWhere = [];
+	FontSize = 18;
 
 	% save_fig = false;
 	% save_dir = '';
@@ -87,6 +88,8 @@ function [varargout] = cumulative_distr_plot(CellArrayData,varargin)
 
 	legend(legendStr, 'Location', lcn);
 	legend('boxoff')
+	set(gca,'box','off')
+	set(gca, 'FontSize', FontSize)
 
 	varargout{1} = data_struct; 
 	varargout{2} = data_struct_combine; 

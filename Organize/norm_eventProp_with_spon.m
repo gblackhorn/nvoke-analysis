@@ -1,6 +1,6 @@
 function [eventProp_all_norm,varargout] = norm_eventProp_with_spon(eventProp_all,varargin)
-	% Normalize event properties with spontaneous event properties of the same ROI. Discard spon entries
-	% Categories other than 'spon' can be also used. Specify it with varargin
+	% Normalize event properties with spontaneous event properties of the same ROI. Discard spon entries is optional
+	% Categories other than 'spon' can be also used. Specify it with varargin ('peakCat_denorm')
 
 	% If sponoutaneous event not found in the ROI, discard the ROI 
 
@@ -94,6 +94,8 @@ function [eventProp_all_norm,varargout] = norm_eventProp_with_spon(eventProp_all
 							eventProp_other_merge{pcn}.entryStyle = entry;
 
 							eventProp_other_merge{pcn}.eventPropData = eventProp_other_merge_peakCat;
+
+							
 							for pn = 1:props_num
 								eventProp_other_merge{pcn}.(propNames{pn}) = mean([eventProp_other_merge_peakCat.(propNames{pn})]);
 								eventProp_other_merge{pcn}.(normPropNames{pn}) = mean([eventProp_other_merge_peakCat.(normPropNames{pn})]);
@@ -110,5 +112,5 @@ function [eventProp_all_norm,varargout] = norm_eventProp_with_spon(eventProp_all
 		eventProp_trial_norm{tn} = [eventProp_roi_norm{:}];
 	end
 	eventProp_all_norm = [eventProp_trial_norm{:}];
-	eventProp_all_norm = orderfields(eventProp_all_norm);
+	% eventProp_all_norm = orderfields(eventProp_all_norm);
 end

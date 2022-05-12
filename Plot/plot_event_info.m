@@ -53,19 +53,26 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	close all
 
 	group_num = numel(event_info_struct);
-
+	par_num = numel(parNames);
 
 	event_info_fieldnames = fieldnames(event_info_struct(1).event_info);
 	mean_val_idx = find(contains(event_info_fieldnames, 'mean'));
 	if ~isempty(mean_val_idx)
 		dataType = 'roi'; % event propertes from each single roi are stored in a single entry in struct. mean values were calculated
-		parNames = cellfun(@(x) [x, '_mean'], parNames, 'UniformOutput',false);
+		for pn = 1:par_num
+			idx_par = find(contains(event_info_fieldnames, parNames{pn})); 
+			[C] = intersect(idx_par, mean_val_idx);
+			if ~isempty(C)
+				parNames{pn} = event_info_fieldnames{C};
+			end
+		end
+		% parNames = cellfun(@(x) [x, '_mean'], parNames, 'UniformOutput',false);
 	else
 		dataType = 'event'; % 1 entry in a struct only contains 1 event. No mean value
 	end
 
 	%% histogram plot
-	par_num = numel(parNames);
+	% par_num = numel(parNames);
 	for pn = 1:par_num
 		par = parNames{pn};
 
@@ -73,6 +80,16 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 			par, 'plot_combined_data', plot_combined_data,...
 			'save_fig', save_fig, 'save_dir', save_dir, 'nbins', 200);
 	end
+
+	%% histfit plot
+	% par_num = numel(parNames);
+	for pn = 1:par_num
+		par = parNames{pn};
+
+		[histFit_info.(par)] = plot_event_info_histfit(event_info_struct,par,...
+			'dist_type','normal','save_fig', save_fig, 'save_dir', save_dir, 'xRange',[-0.2 2],'nbins', 20); % 'nbins', 20,
+	end
+
 	%% bar plot
 	f_bar = figure('Name', 'bar plots');
 	if par_num == 1
@@ -275,6 +292,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	if exist('hist_data', 'var')
 		plot_info.hist_data = hist_data;
 		plot_info.hist_setting = hist_setting;
+		plot_info.histFit_info = histFit_info;
 	end
 	if exist('bar_data', 'var')
 		plot_info.bar_data = bar_data;

@@ -55,36 +55,42 @@ function [peak_par,varargout] = find_peaks_with_existing_peakinfo(roi_trace,exis
 
 
     if ~isempty(existing_peakInfo)
-    	% calculate ideal time for window starts and ends
-        rise_time = existing_peakInfo.rise_loc;
-        peak_time = existing_peakInfo.peak_loc;
-    	window_start_time_ideal = time_info(rise_time)-existing_peak_duration_extension_time_pre;
-    	window_end_time_ideal   = time_info(peak_time)+existing_peak_duration_extension_time_post;
+        [eventWin,eventWin_idx] = get_event_win(existing_peakInfo.peak_loc,...
+            time_info,'riseLoc', existing_peakInfo.rise_loc);
 
-    	% If window start time is smaller than timeinfo start or if window end time is bigger than timeinfo end
-    	% set them to timeinfo start and end
-    	ideal_min_idx = find(window_start_time_ideal<time_info(1));
-    	ideal_max_idx = find(window_end_time_ideal>time_info(end));
-    	window_start_time_ideal(ideal_min_idx) = time_info(1);
-    	window_end_time_ideal(ideal_max_idx) = time_info(end);
+        window_start_time_index = eventWin_idx(:, 1);
+        window_end_time_index = eventWin_idx(:, 2);
 
-        % compare win_end and following peak location. if win_end>=peak, assign win_end with following event win_start
-        if length(window_start_time_ideal) > 1
-            CompareWinMatrix = [window_end_time_ideal(1:end-1) peak_time(2:end) window_start_time_ideal(2:end)];
-            idx_mod_win = CompareWinMatrix(:, 1)>=CompareWinMatrix(:, 2);
-            CompareWinMatrix(idx_mod_win, 1) = CompareWinMatrix(idx_mod_win, 3);
-            window_end_time_ideal(1:end-1) = CompareWinMatrix(:, 1);
-        end
+    	% % calculate ideal time for window starts and ends
+     %    rise_loc = existing_peakInfo.rise_loc;
+     %    peak_loc = existing_peakInfo.peak_loc;
+    	% window_start_time_ideal = time_info(rise_loc)-existing_peak_duration_extension_time_pre;
+    	% window_end_time_ideal   = time_info(peak_loc)+existing_peak_duration_extension_time_post;
 
+    	% % If window start time is smaller than timeinfo start or if window end time is bigger than timeinfo end
+    	% % set them to timeinfo start and end
+    	% ideal_min_idx = find(window_start_time_ideal<time_info(1));
+    	% ideal_max_idx = find(window_end_time_ideal>time_info(end));
+    	% window_start_time_ideal(ideal_min_idx) = time_info(1);
+    	% window_end_time_ideal(ideal_max_idx) = time_info(end);
 
-    	[window_start_time, window_start_time_index] = find_closest_in_array(window_start_time_ideal,time_info);
-    	[window_end_time, window_end_time_index] = find_closest_in_array(window_end_time_ideal,time_info);
+     %    % compare win_end and following peak location. if win_end>=peak, assign win_end with following event win_start
+     %    if length(window_start_time_ideal) > 1
+     %        CompareWinMatrix = [window_end_time_ideal(1:end-1) peak_time(2:end) window_start_time_ideal(2:end)];
+     %        idx_mod_win = CompareWinMatrix(:, 1)>=CompareWinMatrix(:, 2);
+     %        CompareWinMatrix(idx_mod_win, 1) = CompareWinMatrix(idx_mod_win, 3);
+     %        window_end_time_ideal(1:end-1) = CompareWinMatrix(:, 1);
+     %    end
+
+    	% [window_start_time, window_start_time_index] = find_closest_in_array(window_start_time_ideal,time_info);
+    	% [window_end_time, window_end_time_index] = find_closest_in_array(window_end_time_ideal,time_info);
 
 
     	[roi_trace_window] = organize_multiple_range_data_from_one_vector_in_matrix(roi_trace_processed,...
-    		[window_start_time_index window_end_time_index]);
+    		eventWin_idx);
 
-    	[peak_par.peakMag, peak_par.peakLoc] = find_peaks_in_windows(roi_trace_window,window_start_time_index);
+    	[peak_par.peakMag, peak_par.peakLoc] = find_peaks_in_windows(roi_trace_window,window_start_time_index,...
+            'existing_peakLoc', existing_peakInfo.peak_loc);
 
         % if merge_peaks == true
         %     [peak_par.peakMag, peak_par.peakLoc] = organize_merge_peaks(peak_par.peakMag,...
