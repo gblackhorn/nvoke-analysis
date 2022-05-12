@@ -196,17 +196,25 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			% get the event number and frequency (spontaneous events and event during stimulation)
 			events_time = [alignedData.traces(n).eventProp.rise_time];
 			if contains(alignedData.stim_name, 'GPIO-1', 'IgnoreCase',true)
-				[stimWin,sponWin,~,stimDuration,sponDuration] = get_condition_win(combine_stimRange,full_time,...
-					'err_duration', 0, 'exclude_duration', 0); % get the window for spon and air-puff related events
-				[~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
-					combine_stimRange,duration_full_time,'exepWinDur',0);
-				[sponfq,sponInterval,sponIdx,sponEventTime,sponEventNum] = get_event_freq_interval(events_time,sponWin);
+				exclude_duration = 0;
+				exepWinDur = 0;
+
+
+				% [stimWin,sponWin,~,stimDuration,sponDuration] = get_condition_win(combine_stimRange,full_time,...
+				% 	'err_duration', 0, 'exclude_duration', 0); % get the window for spon and air-puff related events
+				% [~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
+				% 	combine_stimRange,duration_full_time,'exepWinDur',0);
+				% [sponfq,sponInterval,sponIdx,sponEventTime,sponEventNum] = get_event_freq_interval(events_time,sponWin);
 			else
-				[stimWin,sponWin,~,stimDuration,sponDuration] = get_condition_win(combine_stimRange,full_time,...
-					'err_duration', 0, 'exclude_duration', 1); % add 1s exclude duration after opto stimulation
-				[~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
-					combine_stimRange,duration_full_time,'exepWinDur',rebound_duration);
-				[sponfq,sponInterval,sponIdx,sponEventTime,sponEventNum] = get_event_freq_interval(events_time,sponWin);
+				exclude_duration = 1;
+				exepWinDur = rebound_duration;
+
+
+				% [stimWin,sponWin,~,stimDuration,sponDuration] = get_condition_win(combine_stimRange,full_time,...
+				% 	'err_duration', 0, 'exclude_duration', 1); % add 1s exclude duration after opto stimulation
+				% [~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
+				% 	combine_stimRange,duration_full_time,'exepWinDur',rebound_duration);
+				% [sponfq,sponInterval,sponIdx,sponEventTime,sponEventNum] = get_event_freq_interval(events_time,sponWin);
 			end
 
 			% Get the effect of stimulation on each ROI
