@@ -56,6 +56,10 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	        pre_event_time = varargin{ii+1};
 	    elseif strcmpi('post_event_time', varargin{ii})
 	        post_event_time = varargin{ii+1};
+	    elseif strcmpi('stim_section', varargin{ii}) % used for calcium level delta calculation. True: use specific seciton
+	        stim_section = varargin{ii+1};
+	    elseif strcmpi('ss_range', varargin{ii}) % used for calcium level delta calculation. True: use specific seciton
+	        ss_range = varargin{ii+1};
 	    elseif strcmpi('rebound_duration', varargin{ii})
 	        rebound_duration = varargin{ii+1};
 	    elseif strcmpi('stim_time_error', varargin{ii})
@@ -223,25 +227,30 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			end
 
 			% Get the baseline change 
-			[baseChange,baseChangeTrace] = get_baseline_change(combine_stimRange,full_time,roi_trace_data,...
-				'base_timeRange',base_timeRange,'postStim_timeRange',base_timeRange,'stim_time_error',stim_time_error);
+			[CaLevel,CaLevelTrace] = get_baseline_change(combine_stimRange,full_time,roi_trace_data,...
+				'base_timeRange',base_timeRange,'postStim_timeRange',base_timeRange,...
+				'stim_section',stim_section,'ss_range',ss_range,'stim_time_error',stim_time_error);
 
 			alignedData.traces(n).(newFieldName) = NFNtag;
 			alignedData.traces(n).sponfq = sponfq;
 			alignedData.traces(n).sponInterval = sponInterval;
 			alignedData.traces(n).stimfq = stimfq;
 			alignedData.traces(n).stimfqNorm = stimfq/sponfq;
-			alignedData.traces(n).stimfqDelta = (stimfq-sponfq)/sponfq;
+			alignedData.traces(n).stimfqDeltaNorm = (stimfq-sponfq)/sponfq;
 			alignedData.traces(n).sponEventNum = sponEventNum;
 			alignedData.traces(n).stimEventNum = stimEventNum;
 			alignedData.traces(n).exepEventNum = exepEventNum;
 			alignedData.traces(n).sponAmp = sponAmp;
-			alignedData.traces(n).baseChangeNorm = baseChange.Change_norm;
-			alignedData.traces(n).baseChangeDelta = baseChange.Change_delta;
-			alignedData.traces(n).baseChangeMinNorm = baseChange.ChangeMin_norm;
-			alignedData.traces(n).baseChangeMinDelta = baseChange.ChangeMin_delta;
-			alignedData.traces(n).baseChangeTrace.timeInfo = baseChangeTrace.timeInfo;
-			alignedData.traces(n).baseChangeTrace.yAlign = baseChangeTrace.yAlign;
+			% alignedData.traces(n).baseChangeNorm = baseChange.Change_norm;
+			alignedData.traces(n).CaLevelDelta = CaLevel.delta;
+			alignedData.traces(n).CaLevelDeltaData = CaLevel.delta_data;
+			% alignedData.traces(n).baseChangeMinNorm = baseChange.ChangeMin_norm;
+			alignedData.traces(n).CaLevelMinDelta = CaLevel.min_delta;
+			alignedData.traces(n).CaLevelMinDeltaData = CaLevel.min_delta_data;
+			% alignedData.traces(n).CaLevelTrace.timeInfo = CaLevelTrace.timeInfo;
+			% alignedData.traces(n).CaLevelTrace.yAlign = CaLevelTrace.yAlign;
+			aligned_time_CaLevel = CaLevelTrace.timeInfo;;
+			alignedData.traces(n).CaLevelTrace = CaLevelTrace.yAlign;
 		else
 			empty_idx = [empty_idx n];
 		end
@@ -251,6 +260,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	[~,alignedData.num_exROI] = get_struct_entry_idx(alignedData.traces,'stimEffect','excitation','req',true);
 	[~,alignedData.num_inROI] = get_struct_entry_idx(alignedData.traces,'stimEffect','inhibition','req',true);
 	alignedData.time = aligned_time;
+	alignedData.timeCaLevel = aligned_time_CaLevel;
 	alignedData.fullTime = full_time;
 end
 

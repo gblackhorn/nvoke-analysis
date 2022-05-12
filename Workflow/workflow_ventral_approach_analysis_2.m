@@ -36,7 +36,7 @@ ins_rec_ventral_folder = fullfile(ins_recordings_folder, 'IO_virus_ventral appro
 % Save processed data
 save_dir = uigetdir(ins_analysis_folder);
 dt = datestr(now, 'yyyymmdd');
-save(fullfile(save_dir, [dt, '_ProcessedData_optoEx']), 'recdata_organized','alignedData_allTrials','grouped_event_info');
+save(fullfile(save_dir, [dt, '_ProcessedData_ogEx']), 'recdata_organized','alignedData_allTrials','grouped_event_info');
 
 %% ====================
 % 8.4 Select a specific group of data from recdata_group for further analysis
@@ -103,8 +103,10 @@ event_align_point = 'rise';
 rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes
 cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
-pre_event_time = 5; % unit: s. event trace starts at 1s before event onset
-post_event_time = 5; % unit: s. event trace ends at 2s after event onset
+pre_event_time = 10; % unit: s. event trace starts at 1s before event onset
+post_event_time = 10; % unit: s. event trace ends at 2s after event onset
+stim_section = true; % true: use a specific section of stimulation. For example the last 1s
+ss_range = 1; % single number (last n second) or a 2-element array (start and end. 0s is stimulation onset)
 stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
@@ -114,18 +116,19 @@ debug_mode = false; % true/false
 	'traceData_type', traceData_type, 'event_data_group', event_data_group,...
 	'event_filter', event_filter, 'event_align_point', event_align_point, 'cat_keywords', cat_keywords,...
 	'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
+	'stim_section',stim_section,'ss_range',ss_range,...
 	'stim_time_error',stim_time_error,'rebound_duration',rebound_duration,...
 	'mod_pcn', mod_pcn,'debug_mode',debug_mode);
 
 %% ====================
-% 9.2.1 Check trace aligned to stim window
+% 9.2.1.1 Check trace aligned to stim window
 % note: 'event_type' for alignedData_allTrials must be 'stimWin'
 close all
 plot_combined_data = false;
 plot_stim_shade = true;
 y_range = [-20 30];
 stimEffectType = 'excitation'; % options: 'excitation', 'inhibition', 'rebound'
-section = 2; % n/[]. specify the n-th repeat of stimWin. Set it to [] to plot all stimWin 
+section = []; % n/[]. specify the n-th repeat of stimWin. Set it to [] to plot all stimWin 
 sponNorm = true; % true/false
 save_fig = false;
 save_dir = ins_analysis_ventral_fig_folder;
@@ -139,18 +142,44 @@ if save_fig
 end
 
 %% ====================
-% 9.2.2 Check aligned trace of events belong to the same category
-% note: 'event_type' for alignedData_allTrials must be 'detected_events'
+% 9.2.1.2 Check trace aligned to stim window for calcium level change. 
+% On y-axis, traces are aligned the the average of baseline before stimulation
 close all
 plot_combined_data = true;
-y_range = [-20 30];
-eventCat = 'rebound'; % options: 'trig', 'spon', 'rebound'
-sponNorm = true; % true/false
+plot_stim_shade = true;
+y_range = [-20 10];
+stimEffectType = 'excitation'; % options: 'excitation', 'inhibition', 'rebound'
+section = []; % n/[]. specify the n-th repeat of stimWin. Set it to [] to plot all stimWin 
+sponNorm = false; % true/false
+FN_trace = 'CaLevelTrace'; % field in alignedData.traces where the traces are stored
+FN_time = 'timeCaLevel'; % default field in alignedData where the timeinfo is stored
 save_fig = false;
 save_dir = ins_analysis_ventral_fig_folder;
 
+fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedData_allTrials,...
+	'plot_combined_data',plot_combined_data,'plot_stim_shade',plot_stim_shade,'section',section,...
+	'y_range',y_range,'stimEffectType',stimEffectType,'sponNorm',sponNorm,...
+	'FN_trace',FN_trace,'FN_time',FN_time);
+if save_fig
+	fname = sprintf('stimWin_aligned_traces');
+	ins_analysis_ventral_fig_folder = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',save_dir,'fname',fname);
+end
+
+%% ====================
+% 9.2.2 Check aligned trace of events belong to the same category
+% note: 'event_type' for alignedData_allTrials must be 'detected_events'
+close all
+plot_combined_data = true; % mean value and std of all traces
+plot_raw_races = false; % true/false. true: plot every single trace
+y_range = [-20 30];
+eventCat = 'trig'; % options: 'trig', 'spon', 'rebound'
+sponNorm = true; % true/false
+save_fig = true;
+save_dir = ins_analysis_ventral_fig_folder;
+
 fHandle_stimAlignedTrace = plot_aligned_catTraces(alignedData_allTrials,...
-	'plot_combined_data',plot_combined_data,'eventCat',eventCat,'y_range',y_range,'sponNorm',sponNorm);
+	'plot_combined_data',plot_combined_data,'plot_raw_races',plot_raw_races,...
+	'eventCat',eventCat,'y_range',y_range,'sponNorm',sponNorm);
 if save_fig
 	fname = sprintf('aligned_catTraces_%s',eventCat);
 	ins_analysis_ventral_fig_folder = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',save_dir,'fname',fname);
@@ -168,7 +197,7 @@ modify_eventType_name = true; % true/false
 
 % modify the stimulation name in eventProp_all
 cat_setting.cat_type = 'stim_name';
-cat_setting.cat_names = {'opto', 'ap', 'opto-ap'};
+cat_setting.cat_names = {'og', 'ap', 'og-ap'};
 cat_setting.cat_merge = {{'OG-LED-5s'}, {'GPIO-1-1s'}, {'OG-LED-5s GPIO-1-1s'}};
 [eventProp_all] = mod_cat_name(eventProp_all,...
 	'cat_setting',cat_setting,'dis_extra', false,'stimType',false);
@@ -251,24 +280,24 @@ end
 
 %% ====================
 % 9.5.1.1 Collect and group events from 'eventProp_all' according to stimulation and category 
-% Rename stim name of opto to EXopto if opto-5s exhibited excitation effect
+% Rename stim name of og to EXog if og-5s exhibited excitation effect
 seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
 dis_spon = false; % true/false
 screenEventProp = true;
 if screenEventProp 
-	tag_check = {'opto', 'opto-ap'};
+	tag_check = {'og', 'og-ap'};
 	idx_check = cell(1, numel(tag_check));
 	for n = 1:numel(tag_check)
-		[~,idx_check{n}] = filter_structData(eventProp_all,'stim_name',tag_check{n},[]); % accquire the idx of all opto-trial events
+		[~,idx_check{n}] = filter_structData(eventProp_all,'stim_name',tag_check{n},[]); % accquire the idx of all og-trial events
 	end
 	idxAll_check = [idx_check{:}];
 	eventProp_check = eventProp_all(idxAll_check);
 	eventProp_uncheck = eventProp_all;
 	eventProp_uncheck(idxAll_check) = [];
-	[~,idx_optoEx] = filter_structData(eventProp_check,'stimTrig',1,[]); % accquire the idx of opto triggered events
+	[~,idx_ogEx] = filter_structData(eventProp_check,'stimTrig',1,[]); % accquire the idx of og triggered events
 	cat_setting.cat_type = 'stim_name';
-	cat_setting.cat_names = {'EXopto', 'EXopto-ap'};
-	cat_setting.cat_merge = {{'opto'}, {'opto-ap'}};
+	cat_setting.cat_names = {'EXog', 'EXog-ap'};
+	cat_setting.cat_merge = {{'og'}, {'og-ap'}};
 	[eventProp_check(idx_optoEx)] = mod_cat_name(eventProp_check(idx_optoEx),...
 		'cat_setting',cat_setting,'dis_extra', false,'stimType',false);
 	eventProp_all = [eventProp_uncheck eventProp_check];
@@ -296,7 +325,7 @@ for gn = 1:numel(grouped_event_info)
 end
 
 % Sort group 
-strCells = {'trig', 'rebound', 'delay'}; % 'spon', 
+strCells = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', 'rebound', 'delay'
 strCells_plus = {'ap', 'EXopto'};
 [grouped_event_info] = sort_struct_with_str(grouped_event_info,'group',strCells,'strCells_plus',strCells_plus);
 
@@ -307,51 +336,22 @@ grouped_event_info_option.event_filter = event_filter;
 grouped_event_info_option.event_align_point = event_align_point;
 grouped_event_info_option.cat_keywords = cat_keywords;
 
+
 %% ====================
-% 9.5.1.2 screen groups based on tags. Delete unwanted groups
-keywords = {'spon','trig','rebound'}; % options: spon, trig, delay, rebound
-k_num = numel(keywords);
-group_num = numel(grouped_event_info);
-% grouped_event_info = grouped_event_info_bk;
-grouped_event_info_bk = grouped_event_info;
-% 
-disIdx = [];
-for n = 1:group_num
-    % fprintf('n=%d\n', n)
-    % if n==7
-    % 	pause
-    % end
-	group = grouped_event_info(n).group;
-	for kn = 1:k_num
-		% fprintf(' kn=%d\n', kn)
-		% discard 'opto-delay [ap]' and 'rebound [ap]' 
-		if ~isempty(strfind(group, 'ap')) 
-			if ~isempty(strfind(group, 'delay')) || ~isempty(strfind(group, 'rebound'))
-				dis_tf = true;
-				break
-			end
-		end
-
-		if ~isempty(strfind(group, keywords{kn}))
-			dis_tf = false;
-			break
-		else
-			dis_tf = true;
-		end
-	end
-	if dis_tf
-		disIdx = [disIdx; n];
-	end
-end
-grouped_event_info(disIdx) = [];
-
+% 9.5.1.2 screen groups based on tags. Delete unwanted groups for event analysis
+words_discard = {'og-delay'}; % Discard groups containing these words. 'EXog',
+words_keep = {'spon','trig','trig [EXog]','rebound'}; % Keep groups containing these words
+clean_ap_group = true; % true: discard delay and rebound categories from airpuff experiments
+[grouped_event_info_filtered] = filter_groups_in_structure(grouped_event_info,'group',...
+	'words_discard',words_discard,'words_keep',words_keep,'clean_ap_group',clean_ap_group);
 
 %% ====================
 % 9.5.2 Plot event parameters. Grouped according to categories
+% alignedData_allTrials: entry is 'events'
 close all
 plot_combined_data = true;
 parNames = {'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
-    'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise','rise_delay'};
+    'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise','rise_delay'}; % entry: event
         % 'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
         % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
     
@@ -359,13 +359,13 @@ parNames = {'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
 		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
 		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
 		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
-save_fig = true; % true/false
+save_fig = false; % true/false
 save_dir = ins_analysis_ventral_fig_folder;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 
 % grouped_event_info = grouped_event_info_bk;
-[save_dir, plot_info] = plot_event_info(grouped_event_info,...
+[save_dir, plot_info] = plot_event_info(grouped_event_info_filtered,...
 	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
 	'save_fig', save_fig, 'save_dir', save_dir);
 if save_dir~=0
@@ -374,12 +374,47 @@ end
 
 if save_fig
 	% plot_stat_info.grouped_event_info_option = grouped_event_info_option;
-	plot_stat_info.grouped_event_info = grouped_event_info;
+	plot_stat_info.grouped_event_info_filtered = grouped_event_info_filtered;
 	plot_stat_info.plot_info = plot_info;
 	dt = datestr(now, 'yyyymmdd');
 	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
 end
 % bar_data.data can be used to run one-way anova. bar_stat contains results of anova and the following multi-comparison 
+
+%% ====================
+% 9.5.1.2 screen groups based on tags. Delete unwanted groups for event analysis
+words_discard = {'spon','trig-AP','og-delay'}; % Discard groups containing these words. 'spon','EXopto',
+words_keep = {'trig [ap]','trig [EXog]','rebound'}; % Keep groups containing these words
+clean_ap_group = true; % true: discard delay and rebound categories from airpuff experiments
+[grouped_event_info_filtered] = filter_groups_in_structure(grouped_event_info,'group',...
+	'words_discard',words_discard,'words_keep',words_keep,'clean_ap_group',clean_ap_group);
+
+%% ====================
+% 9.5.4 Plot roi parameters. Grouped according to categories
+% alignedData_allTrials: entry is 'roi'
+close all
+plot_combined_data = true;
+parNames = {'sponfq','stimfq','stimfqNorm','stimfqDeltaNorm','CaLevelDelta','CaLevelMinDelta'}; % entry: roi
+save_fig = true; % true/false
+save_dir = ins_analysis_ventral_fig_folder;
+stat = true; % true if want to run anova when plotting bars
+stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
+
+% grouped_event_info = grouped_event_info_bk;
+[save_dir, plot_info] = plot_event_info(grouped_event_info_filtered,...
+	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
+	'save_fig', save_fig, 'save_dir', save_dir);
+if save_dir~=0
+	ins_analysis_ventral_fig_folder = save_dir;
+end
+
+if save_fig
+	% plot_stat_info.grouped_event_info_option = grouped_event_info_option;
+	plot_stat_info.grouped_event_info_filtered = grouped_event_info_filtered;
+	plot_stat_info.plot_info = plot_info;
+	dt = datestr(now, 'yyyymmdd');
+	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
+end
 
 %% ====================
 % 9.6.1 Get the stimulation effect info, such as inhibition, excitation for each ROI
@@ -388,7 +423,7 @@ stim = 'OG-LED'; % data will be collected from trials applied with this stimulat
 [stimEffectInfo,meanTrace_stim,logRatio_SponStim] = get_stimEffectInfo_all_roi(alignedData_allTrials,'stim',stim);
 
 % plot
-save_fig = false; % true/false
+save_fig = true; % true/false
 close all
 colorGroup = {'#3FF5E6', '#F55E58', '#F5A427', '#4CA9F5', '#33F577',...
 	'#408F87', '#8F4F7A', '#798F7D', '#8F7832', '#28398F', '#000000'};
@@ -414,7 +449,7 @@ ylabel('log(freqStim/freqSpon)', 'FontSize', 16)
 hold off
 
 if save_fig
-	fname = 'opto_inhibition_effect';
+	fname = 'og_inhibition_effect';
 	[save_dir] = savePlot(gcf, 'guiSave', 'on', 'save_dir', ins_analysis_ventral_fig_folder, 'fname', fname);
 	if save_dir~=0
 		ins_analysis_ventral_fig_folder = save_dir;

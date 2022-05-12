@@ -3,9 +3,9 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	% Note: 'event_type' for alignedData must be 'detected_events'
 
 	% Defaults
-	eventCat = 'spon'
+	eventCat = 'spon';
 	plot_combined_data = true; % plot the mean value of all trace and add a shade using std
-	% plot_trace = true; % plot every single event
+	plot_raw_races = true; % true: plot the traces in the trace_data
 	y_range = [-20 30];
 	sponNorm = false; % true/false
 
@@ -13,8 +13,8 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	for ii = 1:2:(nargin-1)
 	    if strcmpi('plot_combined_data', varargin{ii})
 	        plot_combined_data = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
-	    % if strcmpi('plot_trace', varargin{ii})
-	    %     plot_trace = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
+	    elseif strcmpi('plot_raw_races', varargin{ii})
+	        plot_raw_races = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
         elseif strcmpi('eventCat', varargin{ii})
 	        eventCat = varargin{ii+1};
         elseif strcmpi('y_range', varargin{ii})
@@ -55,7 +55,7 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 			num_roi = numel(traceInfo_trial);
 			traceData_cell_rois = cell(1, num_roi);
 			for nr = 1:num_roi
-				eventCat_info = {traceInfo_trial(nr).eventProp.peak_category}
+				eventCat_info = {traceInfo_trial(nr).eventProp.peak_category};
 				event_idx = find(contains(eventCat_info,eventCat));
 				if ~isempty(event_idx)
 					traceData_cell_rois{nr} = traceInfo_trial(nr).value(:,event_idx);
@@ -76,7 +76,7 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 		plot_trace(timeInfo, traceData_trials, 'plotWhere', ax,...
 			'plot_combined_data', plot_combined_data,...
 			'mean_trace', traceData_trials_mean, 'mean_trace_shade', traceData_trials_shade,...
-	        'y_range', y_range); % 'y_range', y_range
+	        'plot_raw_races',plot_raw_races,'y_range', y_range); % 'y_range', y_range
 		titleName = sprintf('%s-%s',stimName,eventCat);
 		title(titleName)
 
