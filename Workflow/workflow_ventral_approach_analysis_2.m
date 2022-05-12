@@ -11,30 +11,18 @@
 %% ====================
 PC_name = getenv('COMPUTERNAME'); 
 % set folders for different situation
-inscopix_folder = 'G:\Workspace\Inscopix_Seagate';
+DataFolder = 'G:\Workspace\Inscopix_Seagate';
 
 if strcmp(PC_name, 'GD-AW-OFFICE')
-	ins_analysis_folder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
+	AnalysisFolder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
 elseif strcmp(PC_name, 'LAPTOP-84IERS3H')
-	ins_analysis_folder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
+	AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
 end
 
-ins_projects_folder = fullfile(inscopix_folder, 'Projects'); % processed imaging data, including isxd, gpio, tiff, and csv files 
-ins_recordings_folder = fullfile(inscopix_folder, 'recordings'); % processed imaging data, including isxd, gpio, tiff, and csv files 
-
-ins_analysis_ventral_folder = fullfile(ins_analysis_folder, 'nVoke_ventral_approach'); % processed imaging data, including isxd, gpio, tiff, and csv files 
-ins_analysis_ventral_fig_folder = fullfile(ins_analysis_ventral_folder, 'figures'); % figure folder for ventral approach analysis
-ins_analysis_invitro_folder = fullfile(ins_analysis_folder, 'Kevin_calcium_imaging_slice'); % processed imaging data, including isxd, gpio, tiff, and csv files 
-
-ins_tiff_folder = fullfile(ins_projects_folder, 'Exported_tiff'); % motion corrected recordings in tiff format
-ins_tiff_invivo_folder = fullfile(ins_tiff_folder, 'IO_ventral_approach'); % motion corrected recordings in tiff format
-ins_cnmfe_result_folder = fullfile(ins_projects_folder, 'Processed_files_for_matlab_analysis'); % cnmfe result files, gpio and roi csv files etc.
-
-ins_rec_ventral_folder = fullfile(ins_recordings_folder, 'IO_virus_ventral approach'); % processed imaging data, including isxd, gpio, tiff, and csv files 
-
+[FolderPathVA] = set_folder_path_ventral_approach(DataFolder,AnalysisFolder);
 %% ====================
 % Save processed data
-save_dir = uigetdir(ins_analysis_folder);
+save_dir = uigetdir(AnalysisFolder);
 dt = datestr(now, 'yyyymmdd');
 save(fullfile(save_dir, [dt, '_ProcessedData_ogEx']), 'recdata_organized','alignedData_allTrials','grouped_event_info');
 
@@ -48,7 +36,7 @@ close all
 PauseTrial = true; % true or false
 traceNum_perFig = 10; % number of traces/ROIs per figure
 SavePlot = false; % true or false
-SaveTo = ins_analysis_ventral_fig_folder;
+SaveTo = FolderPathVA.fig;
 vis = 'on'; % on/off. set the 'visible' of figures
 decon = false; % true/false plot decon trace
 marker = false; % true/false plot markers
@@ -59,7 +47,7 @@ marker = false; % true/false plot markers
 	'SavePlot', SavePlot, 'SaveTo', SaveTo,...
 	'vis', vis);
 if SaveTo~=0
-	ins_analysis_ventral_fig_folder = SaveTo;
+	FolderPathVA.fig = SaveTo;
 end
 
 %% ====================
@@ -111,6 +99,7 @@ stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed d
 mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
 debug_mode = false; % true/false
+caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
 
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', event_type,...
 	'traceData_type', traceData_type, 'event_data_group', event_data_group,...
@@ -119,6 +108,15 @@ debug_mode = false; % true/false
 	'stim_section',stim_section,'ss_range',ss_range,...
 	'stim_time_error',stim_time_error,'rebound_duration',rebound_duration,...
 	'mod_pcn', mod_pcn,'debug_mode',debug_mode);
+
+if caDeclineOnly
+	stimNames = {alignedData_allTrials.stim_name};
+	[ogIDX] = judge_array_content(stimNames,{'OG-LED'},'IgnoreCase',true); % index of trials using optogenetics stimulation 
+	caDe_og = [alignedData_allTrials(ogIDX).CaDecline]; % calcium decaline logical value of og trials
+	[disIDX_og] = judge_array_content(caDe_og,false); % og trials without significant calcium decline
+	disIDX = ogIDX(disIDX_og); 
+	alignedData_allTrials(disIDX) = [];
+end
 
 %% ====================
 % 9.2.1.1 Check trace aligned to stim window
@@ -131,14 +129,14 @@ stimEffectType = 'excitation'; % options: 'excitation', 'inhibition', 'rebound'
 section = []; % n/[]. specify the n-th repeat of stimWin. Set it to [] to plot all stimWin 
 sponNorm = true; % true/false
 save_fig = false;
-save_dir = ins_analysis_ventral_fig_folder;
+save_dir = FolderPathVA.fig;
 
 fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedData_allTrials,...
 	'plot_combined_data',plot_combined_data,'plot_stim_shade',plot_stim_shade,'section',section,...
 	'y_range',y_range,'stimEffectType',stimEffectType,'sponNorm',sponNorm);
 if save_fig
 	fname = sprintf('stimWin_aligned_traces');
-	ins_analysis_ventral_fig_folder = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',save_dir,'fname',fname);
+	FolderPathVA.fig = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',save_dir,'fname',fname);
 end
 
 %% ====================
@@ -154,7 +152,7 @@ sponNorm = false; % true/false
 FN_trace = 'CaLevelTrace'; % field in alignedData.traces where the traces are stored
 FN_time = 'timeCaLevel'; % default field in alignedData where the timeinfo is stored
 save_fig = false;
-save_dir = ins_analysis_ventral_fig_folder;
+save_dir = FolderPathVA.fig;
 
 fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedData_allTrials,...
 	'plot_combined_data',plot_combined_data,'plot_stim_shade',plot_stim_shade,'section',section,...
@@ -162,7 +160,7 @@ fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedData_allTrials,...
 	'FN_trace',FN_trace,'FN_time',FN_time);
 if save_fig
 	fname = sprintf('stimWin_aligned_traces');
-	ins_analysis_ventral_fig_folder = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',save_dir,'fname',fname);
+	FolderPathVA.fig = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',save_dir,'fname',fname);
 end
 
 %% ====================
@@ -175,14 +173,14 @@ y_range = [-20 30];
 eventCat = 'trig'; % options: 'trig', 'spon', 'rebound'
 sponNorm = true; % true/false
 save_fig = true;
-save_dir = ins_analysis_ventral_fig_folder;
+save_dir = FolderPathVA.fig;
 
 fHandle_stimAlignedTrace = plot_aligned_catTraces(alignedData_allTrials,...
 	'plot_combined_data',plot_combined_data,'plot_raw_races',plot_raw_races,...
 	'eventCat',eventCat,'y_range',y_range,'sponNorm',sponNorm);
 if save_fig
 	fname = sprintf('aligned_catTraces_%s',eventCat);
-	ins_analysis_ventral_fig_folder = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',save_dir,'fname',fname);
+	FolderPathVA.fig = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',save_dir,'fname',fname);
 end
 
 %% ====================
@@ -236,7 +234,7 @@ parNames_event = {'rise_duration','peak_mag_delta'};
 		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
 		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
 save_fig = true; % true/false
-save_dir = ins_analysis_ventral_fig_folder;
+save_dir = FolderPathVA.fig;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 
@@ -244,7 +242,7 @@ stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 	'plot_combined_data', plot_combined_data, 'parNames', parNames_event, 'stat', stat,...
 	'save_fig', save_fig, 'save_dir', save_dir);
 if save_dir_event~=0
-	ins_analysis_ventral_fig_folder = save_dir_event;
+	FolderPathVA.fig = save_dir_event;
 end
 if save_fig
 % 	plot_stat_info.grouped_event_info_option = grouped_event_info_option;
@@ -260,14 +258,14 @@ close all
 plot_combined_data = true;
 parNames_roi = {'sponfq', 'sponInterval'};
 save_fig = true; % true/false
-save_dir = ins_analysis_ventral_fig_folder;
+save_dir = FolderPathVA.fig;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 [save_dir_roi, plot_info_roi] = plot_event_info(grouped_spon_roi_info,...
 	'plot_combined_data', plot_combined_data, 'parNames', parNames_roi, 'stat', stat,...
 	'save_fig', save_fig, 'save_dir', save_dir);
 if save_dir_roi~=0
-	ins_analysis_ventral_fig_folder = save_dir_roi;
+	FolderPathVA.fig = save_dir_roi;
 end
 if save_fig
 	% plot_stat_info.grouped_event_info_option = grouped_event_info_option;
@@ -339,11 +337,11 @@ grouped_event_info_option.cat_keywords = cat_keywords;
 
 %% ====================
 % 9.5.1.2 screen groups based on tags. Delete unwanted groups for event analysis
-words_discard = {'og-delay'}; % Discard groups containing these words. 'EXog',
-words_keep = {'spon','trig','trig [EXog]','rebound'}; % Keep groups containing these words
-clean_ap_group = true; % true: discard delay and rebound categories from airpuff experiments
-[grouped_event_info_filtered] = filter_groups_in_structure(grouped_event_info,'group',...
-	'words_discard',words_discard,'words_keep',words_keep,'clean_ap_group',clean_ap_group);
+tags_discard = {'og-delay'}; % Discard groups containing these words. 'EXog',
+tags_keep = {'spon','trig','trig [EXog]','rebound'}; % Keep groups containing these words
+clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
+[grouped_event_info_filtered] = filter_entries_in_structure(grouped_event_info,'group',...
+	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);
 
 %% ====================
 % 9.5.2 Plot event parameters. Grouped according to categories
@@ -360,7 +358,7 @@ parNames = {'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
 		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
 		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
 save_fig = false; % true/false
-save_dir = ins_analysis_ventral_fig_folder;
+save_dir = FolderPathVA.fig;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 
@@ -369,7 +367,7 @@ stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
 	'save_fig', save_fig, 'save_dir', save_dir);
 if save_dir~=0
-	ins_analysis_ventral_fig_folder = save_dir;
+	FolderPathVA.fig = save_dir;
 end
 
 if save_fig
@@ -383,11 +381,11 @@ end
 
 %% ====================
 % 9.5.1.2 screen groups based on tags. Delete unwanted groups for event analysis
-words_discard = {'spon','trig-AP','og-delay'}; % Discard groups containing these words. 'spon','EXopto',
-words_keep = {'trig [ap]','trig [EXog]','rebound'}; % Keep groups containing these words
-clean_ap_group = true; % true: discard delay and rebound categories from airpuff experiments
-[grouped_event_info_filtered] = filter_groups_in_structure(grouped_event_info,'group',...
-	'words_discard',words_discard,'words_keep',words_keep,'clean_ap_group',clean_ap_group);
+tags_discard = {'spon','trig-AP','og-delay'}; % Discard groups containing these words. 'spon','EXopto',
+tags_keep = {'trig [ap]','trig [EXog]','rebound'}; % Keep groups containing these words
+clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
+[grouped_event_info_filtered] = filter_entries_in_structure(grouped_event_info,'group',...
+	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);
 
 %% ====================
 % 9.5.4 Plot roi parameters. Grouped according to categories
@@ -396,7 +394,7 @@ close all
 plot_combined_data = true;
 parNames = {'sponfq','stimfq','stimfqNorm','stimfqDeltaNorm','CaLevelDelta','CaLevelMinDelta'}; % entry: roi
 save_fig = true; % true/false
-save_dir = ins_analysis_ventral_fig_folder;
+save_dir = FolderPathVA.fig;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 
@@ -405,7 +403,7 @@ stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
 	'save_fig', save_fig, 'save_dir', save_dir);
 if save_dir~=0
-	ins_analysis_ventral_fig_folder = save_dir;
+	FolderPathVA.fig = save_dir;
 end
 
 if save_fig
@@ -450,9 +448,9 @@ hold off
 
 if save_fig
 	fname = 'og_inhibition_effect';
-	[save_dir] = savePlot(gcf, 'guiSave', 'on', 'save_dir', ins_analysis_ventral_fig_folder, 'fname', fname);
+	[save_dir] = savePlot(gcf, 'guiSave', 'on', 'save_dir', FolderPathVA.fig, 'fname', fname);
 	if save_dir~=0
-		ins_analysis_ventral_fig_folder = save_dir;
+		FolderPathVA.fig = save_dir;
 	end
 end
 
@@ -461,9 +459,9 @@ end
 close all
 save_fig = true; % true/false
 if save_fig
-	save_dir = uigetdir(ins_analysis_ventral_fig_folder,'Choose a folder to save plots');
+	save_dir = uigetdir(FolderPathVA.fig,'Choose a folder to save plots');
 	if save_dir~=0
-		ins_analysis_ventral_fig_folder = save_dir;
+		FolderPathVA.fig = save_dir;
 	end 
 end
 trial_num = numel(alignedData_allTrials);

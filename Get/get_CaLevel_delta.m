@@ -14,6 +14,7 @@ function [varargout] = get_CaLevel_delta(stimRange,timeInfo,roiTrace,varargin)
     stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
     stim_section = false; % true: use a specific section of stimulation. For example the last 1s
     ss_range = 2; % single number (last n second) or a 2-element array (start and end. 0s is stimulation onset)
+    decline_per = 0.25; % percentage of stimulation repeats with declined calcium during stimulation
     % ss_direction = 'last'; % direction of stim_section
 
 	% Optionals
@@ -103,7 +104,7 @@ function [varargout] = get_CaLevel_delta(stimRange,timeInfo,roiTrace,varargin)
 		meanVal.postStimVal(rn) = mean(alignedTrace_raw(range_postStim(1):range_postStim(2),rn)); 
 		alignedTrace_yAlign(:,rn) = alignedTrace_raw(:,rn)-meanVal.baseVal(rn);
 
-		if meanVal.stimVal_delta(rn) < meanVal.baseVal(rn)-meanVal.baseValstd(rn)*2 % delta is beyond the base_mean-2*base_std
+		if meanVal.stimVal(rn) < meanVal.baseVal(rn)-meanVal.baseValstd(rn)*2 % delta is beyond the base_mean-2*base_std
 			meanVal.meanVal_CaDecline(rn) = true; % calcium level declines
 		else
 			meanVal.meanVal_CaDecline(rn) = false;
@@ -121,11 +122,18 @@ function [varargout] = get_CaLevel_delta(stimRange,timeInfo,roiTrace,varargin)
 	CaLevel.min_delta = mean(meanVal.stimMinVal_delta);
 	CaLevel.min_delta_data = meanVal.stimMinVal_delta;
 
-	if ~isempty(find(meanVal.meanVal_CaDecline==true)) % if significant calcium decline can be found 
+
+	CaDecline_num = numel(find(meanVal.meanVal_CaDecline==true));
+	if CaDecline_num/repeatNum>=decline_per
 		CaLevel.decline = true;
 	else
 		CaLevel.decline = false;
 	end
+	% if ~isempty(find(meanVal.meanVal_CaDecline==true)) % if significant calcium decline can be found 
+	% 	CaLevel.decline = true;
+	% else
+	% 	CaLevel.decline = false;
+	% end
 
 	CaLevel.stimInfo.freq = freq;
 	CaLevel.stimInfo.baseDur = base_timeRange;

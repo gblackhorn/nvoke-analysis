@@ -26,6 +26,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	rebound_duration = 1; % default 1s. Used to extend events screen window when 'stimWin' is used for 'event_type'
 	mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 	stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
+	decline_per = 0.5; % percentage of neurons (ROIs) with declined calcium during stimulation
 
 	% Defaults for [get_stimEffect]
 	base_timeRange = 2; % default 2s. 
@@ -198,24 +199,15 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			if contains(alignedData.stim_name, 'GPIO-1', 'IgnoreCase',true)
 				exclude_duration = 0;
 				exepWinDur = 0;
-
-
-				% [stimWin,sponWin,~,stimDuration,sponDuration] = get_condition_win(combine_stimRange,full_time,...
-				% 	'err_duration', 0, 'exclude_duration', 0); % get the window for spon and air-puff related events
-				% [~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
-				% 	combine_stimRange,duration_full_time,'exepWinDur',0);
-				% [sponfq,sponInterval,sponIdx,sponEventTime,sponEventNum] = get_event_freq_interval(events_time,sponWin);
 			else
 				exclude_duration = 1;
 				exepWinDur = rebound_duration;
-
-
-				% [stimWin,sponWin,~,stimDuration,sponDuration] = get_condition_win(combine_stimRange,full_time,...
-				% 	'err_duration', 0, 'exclude_duration', 1); % add 1s exclude duration after opto stimulation
-				% [~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
-				% 	combine_stimRange,duration_full_time,'exepWinDur',rebound_duration);
-				% [sponfq,sponInterval,sponIdx,sponEventTime,sponEventNum] = get_event_freq_interval(events_time,sponWin);
 			end
+			[stimWin,sponWin,~,stimDuration,sponDuration] = get_condition_win(combine_stimRange,full_time,...
+				'err_duration', 0, 'exclude_duration', exclude_duration); % add 1s exclude duration after opto stimulation
+			[~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
+				combine_stimRange,duration_full_time,'exepWinDur',exepWinDur);
+			[sponfq,sponInterval,sponIdx,sponEventTime,sponEventNum] = get_event_freq_interval(events_time,sponWin);
 
 			% Get the effect of stimulation on each ROI
 			[alignedData.traces(n).stimEffect] = get_stimEffect(full_time,roi_trace_data,combine_stimRange,...
@@ -266,10 +258,17 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	end
 	alignedData.traces(empty_idx) = [];
 
+	neuronNum = length(alignedData.traces);
+	CaDecline_neuronNum = numel(find([alignedData.traces.CaLevelDecline]));
+	if CaDecline_neuronNum/neuronNum>=decline_per
+		alignedData.CaDecline = true;
+	else
+		alignedData.CaDecline = false;
+	end
+
 	[~,alignedData.num_exROI] = get_struct_entry_idx(alignedData.traces,'stimEffect','excitation','req',true);
 	[~,alignedData.num_inROI] = get_struct_entry_idx(alignedData.traces,'stimEffect','inhibition','req',true);
 	alignedData.time = aligned_time;
 	alignedData.timeCaLevel = aligned_time_CaLevel;
 	alignedData.fullTime = full_time;
 end
-
