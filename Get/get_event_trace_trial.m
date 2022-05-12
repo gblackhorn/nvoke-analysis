@@ -227,7 +227,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			end
 
 			% Get the baseline change 
-			[CaLevel,CaLevelTrace] = get_baseline_change(combine_stimRange,full_time,roi_trace_data,...
+			[CaLevel,CaLevelTrace] = get_CaLevel_delta(combine_stimRange,full_time,roi_trace_data,...
 				'base_timeRange',base_timeRange,'postStim_timeRange',base_timeRange,...
 				'stim_section',stim_section,'ss_range',ss_range,'stim_time_error',stim_time_error);
 
@@ -247,6 +247,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			% alignedData.traces(n).baseChangeMinNorm = baseChange.ChangeMin_norm;
 			alignedData.traces(n).CaLevelMinDelta = CaLevel.min_delta;
 			alignedData.traces(n).CaLevelMinDeltaData = CaLevel.min_delta_data;
+			alignedData.traces(n).CaLevelDecline = CaLevel.decline; % Logical val. True if CaLevelDelta is beyond the base_mean-2*base_std
 			% alignedData.traces(n).CaLevelTrace.timeInfo = CaLevelTrace.timeInfo;
 			% alignedData.traces(n).CaLevelTrace.yAlign = CaLevelTrace.yAlign;
 			aligned_time_CaLevel = CaLevelTrace.timeInfo;;

@@ -93,17 +93,17 @@ function [eventProp_all,varargout] = collect_event_prop(alignedData,varargin)
                                 eventProp_trial_roi{pcn}.sponfq = alignedData_trial.traces(rn).sponfq;
                                 eventProp_trial_roi{pcn}.sponInterval = alignedData_trial.traces(rn).sponInterval;
                                 eventProp_trial_roi{pcn}.stimfq = alignedData_trial.traces(rn).stimfq;
-                                eventProp_trial_roi{pcn}.stimfqNorm = eventProp_trial_roi{pcn}.stimfq/eventProp_trial_roi{pcn}.sponfq;
-                                eventProp_trial_roi{pcn}.stimfqDelta = (eventProp_trial_roi{pcn}.stimfq-eventProp_trial_roi{pcn}.sponfq)/eventProp_trial_roi{pcn}.sponfq;
+                                eventProp_trial_roi{pcn}.stimfqNorm = alignedData_trial.traces(rn).stimfqNorm;
+                                eventProp_trial_roi{pcn}.stimfqDeltaNorm = alignedData_trial.traces(rn).stimfqDeltaNorm;
                                 eventProp_trial_roi{pcn}.rise_duration = mean([eventProp_roi_peakCat.rise_duration]);
                                 eventProp_trial_roi{pcn}.peak_mag_delta = mean([eventProp_roi_peakCat.peak_mag_delta]);
                                 eventProp_trial_roi{pcn}.peak_delta_norm_hpstd = mean([eventProp_roi_peakCat.peak_delta_norm_hpstd]);
                                 eventProp_trial_roi{pcn}.peak_slope = mean([eventProp_roi_peakCat.peak_slope]);
                                 eventProp_trial_roi{pcn}.peak_slope_norm_hpstd = mean([eventProp_roi_peakCat.peak_slope_norm_hpstd]);
-                                eventProp_trial_roi{pcn}.baseChangeNorm = alignedData_trial.traces(rn).baseChangeNorm;
-                                eventProp_trial_roi{pcn}.baseChangeDelta = alignedData_trial.traces(rn).baseChangeDelta;
-                                eventProp_trial_roi{pcn}.baseChangeMinNorm = alignedData_trial.traces(rn).baseChangeMinNorm;
-                                eventProp_trial_roi{pcn}.baseChangeMinDelta = alignedData_trial.traces(rn).baseChangeMinDelta;
+                                % eventProp_trial_roi{pcn}.baseChangeNorm = alignedData_trial.traces(rn).baseChangeNorm;
+                                eventProp_trial_roi{pcn}.CaLevelDelta = alignedData_trial.traces(rn).CaLevelDelta;
+                                % eventProp_trial_roi{pcn}.baseChangeMinNorm = alignedData_trial.traces(rn).baseChangeMinNorm;
+                                eventProp_trial_roi{pcn}.CaLevelMinDelta = alignedData_trial.traces(rn).CaLevelMinDelta;
                             end
 
                             eventProp_trial{rn} = [eventProp_trial_roi{:}];
