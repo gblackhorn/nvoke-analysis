@@ -37,11 +37,11 @@ PauseTrial = true; % true or false
 traceNum_perFig = 10; % number of traces/ROIs per figure
 SavePlot = false; % true or false
 SaveTo = FolderPathVA.fig;
-vis = 'on'; % on/off. set the 'visible' of figures
+vis = 'off'; % on/off. set the 'visible' of figures
 decon = false; % true/false plot decon trace
-marker = false; % true/false plot markers
+marker = true; % true/false plot markers
 
-[SaveTo] = plotTracesFromAllTrials (recdata_organized,...
+[SaveTo] = plotTracesFromAllTrials(recdata_organized,...
 	'PauseTrial', PauseTrial,...
 	'traceNum_perFig', traceNum_perFig, 'decon', decon, 'marker', marker,...
 	'SavePlot', SavePlot, 'SaveTo', SaveTo,...
@@ -87,19 +87,19 @@ event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
 traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 event_data_group = 'peak_lowpass';
 event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
-event_align_point = 'rise';
+event_align_point = 'rise'; % options: 'rise', 'peak'
 rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes
 cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
-pre_event_time = 10; % unit: s. event trace starts at 1s before event onset
-post_event_time = 10; % unit: s. event trace ends at 2s after event onset
+pre_event_time = 2; % unit: s. event trace starts at 1s before event onset
+post_event_time = 4; % unit: s. event trace ends at 2s after event onset
 stim_section = true; % true: use a specific section of stimulation. For example the last 1s
 ss_range = 1; % single number (last n second) or a 2-element array (start and end. 0s is stimulation onset)
 stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
 debug_mode = false; % true/false
-caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
+caDeclineOnly = true; % true/false. Only keep the calcium decline trials (og group)
 
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', event_type,...
 	'traceData_type', traceData_type, 'event_data_group', event_data_group,...
@@ -146,6 +146,7 @@ close all
 plot_combined_data = true;
 plot_stim_shade = true;
 y_range = [-20 10];
+tickInt_time = 1;
 stimEffectType = 'excitation'; % options: 'excitation', 'inhibition', 'rebound'
 section = []; % n/[]. specify the n-th repeat of stimWin. Set it to [] to plot all stimWin 
 sponNorm = false; % true/false
@@ -156,7 +157,7 @@ save_dir = FolderPathVA.fig;
 
 fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedData_allTrials,...
 	'plot_combined_data',plot_combined_data,'plot_stim_shade',plot_stim_shade,'section',section,...
-	'y_range',y_range,'stimEffectType',stimEffectType,'sponNorm',sponNorm,...
+	'y_range',y_range,'tickInt_time',tickInt_time,'stimEffectType',stimEffectType,'sponNorm',sponNorm,...
 	'FN_trace',FN_trace,'FN_time',FN_time);
 if save_fig
 	fname = sprintf('stimWin_aligned_traces');
@@ -169,23 +170,31 @@ end
 close all
 plot_combined_data = true; % mean value and std of all traces
 plot_raw_races = false; % true/false. true: plot every single trace
-y_range = [-20 30];
-eventCat = 'trig'; % options: 'trig', 'spon', 'rebound'
-sponNorm = true; % true/false
-save_fig = true;
+y_range = [-3 7];
+eventCat = {'spon','rebound','trig'}; % options: 'trig', 'spon', 'rebound'
+sponNorm = false; % true/false
+save_fig = true; % true/false
 save_dir = FolderPathVA.fig;
 
-fHandle_stimAlignedTrace = plot_aligned_catTraces(alignedData_allTrials,...
-	'plot_combined_data',plot_combined_data,'plot_raw_races',plot_raw_races,...
-	'eventCat',eventCat,'y_range',y_range,'sponNorm',sponNorm);
-if save_fig
-	fname = sprintf('aligned_catTraces_%s',eventCat);
-	FolderPathVA.fig = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',save_dir,'fname',fname);
+for cn = 1:numel(eventCat)
+	fname = sprintf('aligned_catTraces_%s',eventCat{cn});
+	fHandle_stimAlignedTrace = plot_aligned_catTraces(alignedData_allTrials,...
+		'plot_combined_data',plot_combined_data,'plot_raw_races',plot_raw_races,...
+		'eventCat',eventCat{cn},'y_range',y_range,'sponNorm',sponNorm); % 'fname',fname,
+	if save_fig
+		if cn == 1
+			guiSave = 'on';
+		elseif cn > 1
+			save_dir = FolderPathVA.fig;
+			guiSave = 'off';
+		end
+		FolderPathVA.fig = savePlot(fHandle_stimAlignedTrace,'guiSave',guiSave,'save_dir',save_dir,'fname',fname);
+	end
 end
 
 %% ====================
 % 9.3 Collect event properties from alignedData_allTrials
-entry = 'roi'; % options: 'roi' or 'event'
+entry = 'event'; % options: 'roi' or 'event'
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 dis_spon = false; % true/false
@@ -296,7 +305,7 @@ if screenEventProp
 	cat_setting.cat_type = 'stim_name';
 	cat_setting.cat_names = {'EXog', 'EXog-ap'};
 	cat_setting.cat_merge = {{'og'}, {'og-ap'}};
-	[eventProp_check(idx_optoEx)] = mod_cat_name(eventProp_check(idx_optoEx),...
+	[eventProp_check(idx_ogEx)] = mod_cat_name(eventProp_check(idx_ogEx),...
 		'cat_setting',cat_setting,'dis_extra', false,'stimType',false);
 	eventProp_all = [eventProp_uncheck eventProp_check];
 end
@@ -337,7 +346,7 @@ grouped_event_info_option.cat_keywords = cat_keywords;
 
 %% ====================
 % 9.5.1.2 screen groups based on tags. Delete unwanted groups for event analysis
-tags_discard = {'og-delay'}; % Discard groups containing these words. 'EXog',
+tags_discard = {'og-delay','trig-AP','trig [EXog]'}; % Discard groups containing these words. 'EXog',
 tags_keep = {'spon','trig','trig [EXog]','rebound'}; % Keep groups containing these words
 clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
 [grouped_event_info_filtered] = filter_entries_in_structure(grouped_event_info,'group',...
@@ -357,7 +366,7 @@ parNames = {'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
 		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
 		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
 		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
-save_fig = false; % true/false
+save_fig = true; % true/false
 save_dir = FolderPathVA.fig;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
@@ -483,14 +492,5 @@ while tn <= trial_num
 		tn = str2num(direct_input);
 	end
 end
-
-
-
-
-
-
-
-
-
 
 

@@ -51,8 +51,9 @@ function [peak_properties_tables_screened,varargout] = organize_screen_peaks_mul
             end
         else
             if isempty(peak_properties_table_single)
-                peak_properties_tables_screened{1, rn}{:}{:,:} = NaN(size(peak_properties_tables_screened{1, rn}));
-%             peak_properties_tables_screened{1, rn}{:} = [];
+                % peak_properties_tables_screened{1, rn}{:}{:,:} = NaN(size(peak_properties_tables_screened{1, rn}));
+
+                peak_properties_tables_screened{1, rn}{:} = peak_properties_table_single;
             else
                 peak_properties_tables_screened{1, rn}{:} = peak_properties_table_single;
             end

@@ -211,6 +211,7 @@ opt.discard_noisy_roi = false;
 opt.std_fold = 10; % used as criteria to discard noisy_rois
 plot_traces = 0; % 0: do not plot. 1: plot. 2: plot with pause
 save_traces = 0; % 0: do not save. 1: save
+debug_mode = true; % true/false.
 
 % recdata=recdata_organized;
 
@@ -225,7 +226,7 @@ save_traces = 0; % 0: do not save. 1: save
 	'stim_time_error', opt.stim_time_error, 'stim_pre_time', opt.stim_pre_time, 'stim_post_time', opt.stim_post_time,...
 	'merge_peaks', opt.merge_peaks, 'merge_time_interval', opt.merge_time_interval,...
 	'discard_noisy_roi', opt.discard_noisy_roi, 'std_fold', opt.std_fold,...
-	'plot_traces', plot_traces, 'save_traces', save_traces); 
+	'plot_traces', plot_traces, 'save_traces', save_traces,'debug_mode',debug_mode); 
 
 
 %% ====================

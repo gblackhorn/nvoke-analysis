@@ -23,6 +23,7 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
     % pack_singlerow_table_in_cell = 0;
     [transient_prop_var_names] = transient_properties_variable_names('peak', [1:17]);
 	% transient_properties_col_names_highpass = {'std'};
+    debug_mode = false; % true/false
 
 	% Optionals for inputs
     for ii = 1:2:(nargin-1)
@@ -50,6 +51,8 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
             merge_peaks = varargin{ii+1};
         elseif strcmpi('merge_time_interval', varargin{ii})
             merge_time_interval = varargin{ii+1};
+        elseif strcmpi('debug_mode', varargin{ii})
+            debug_mode = varargin{ii+1};
         end
     end
 
@@ -65,8 +68,15 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
    	RecInfoTable_processed = RecInfoTable; % allocate ram for RecInfoTable_processed
     for n = 1:roi_num % go through every roi
 
-%         Debugging
-%         disp(['roi_num: ', num2str(n)])
+        % Debugging
+        % disp(['roi_num: ', num2str(n)])
+        if debug_mode
+            fprintf('  roi_num: %d/%d\n', n, roi_num);
+            if n == 21
+                disp('pause for debugging')
+                pause
+            end
+        end
 
 
     	roi_trace = RecInfoTable{:, (n+1)};
@@ -82,17 +92,21 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
                 else
                     peakInfo = existing_peakInfo{1, n}{:,:};
                 end
-                [peak_par, processed_data_and_info] = find_peaks_with_existing_peakinfo(roi_trace,...
-                    peakInfo, 'filter', filter_chosen, 'filter_par', filter_par,...
-                    'recording_fq', rec_fq, 'decon', decon, 'time_info', time_info,...
-                    'extension_time_pre', existing_peak_duration_extension_time_pre,...
-                    'extension_time_post', existing_peak_duration_extension_time_post,...
-                    'merge_peaks', merge_peaks, 'merge_time_interval', merge_time_interval);
-                transient_properties{n} = calculate_transient_properties(processed_data_and_info.processed_trace,...
-                    time_info, peak_par.peakMag, peak_par.peakLoc,...
-                    'slope_per_low', 0.1, 'slope_per_high', 0.9, 'existing_peakInfo', peakInfo,...
-                    'extension_time_pre', existing_peak_duration_extension_time_pre,...
-                    'extension_time_post', existing_peak_duration_extension_time_post);
+                if ~isempty(peakInfo)
+                    [peak_par, processed_data_and_info] = find_peaks_with_existing_peakinfo(roi_trace,...
+                        peakInfo, 'filter', filter_chosen, 'filter_par', filter_par,...
+                        'recording_fq', rec_fq, 'decon', decon, 'time_info', time_info,...
+                        'extension_time_pre', existing_peak_duration_extension_time_pre,...
+                        'extension_time_post', existing_peak_duration_extension_time_post,...
+                        'merge_peaks', merge_peaks, 'merge_time_interval', merge_time_interval);
+                    transient_properties{n} = calculate_transient_properties(processed_data_and_info.processed_trace,...
+                        time_info, peak_par.peakMag, peak_par.peakLoc,...
+                        'slope_per_low', 0.1, 'slope_per_high', 0.9, 'existing_peakInfo', peakInfo,...
+                        'extension_time_pre', existing_peak_duration_extension_time_pre,...
+                        'extension_time_post', existing_peak_duration_extension_time_post);
+                else
+                    transient_properties{n} = peakInfo;
+                end
             else
                 [peak_par,processed_data_and_info] = findpeaks_after_filter(roi_trace,...
                     'decon', decon, 'filter', filter_chosen, 'filter_par', filter_par,...

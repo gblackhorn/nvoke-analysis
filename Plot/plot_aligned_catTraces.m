@@ -8,6 +8,8 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	plot_raw_races = true; % true: plot the traces in the trace_data
 	y_range = [-20 30];
 	sponNorm = false; % true/false
+	tile_row_num = 1;
+	tickInt_time = 1; % interval of tick for timeInfo (x axis)
 
 	% Optionals
 	for ii = 1:2:(nargin-1)
@@ -17,10 +19,14 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	        plot_raw_races = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
         elseif strcmpi('eventCat', varargin{ii})
 	        eventCat = varargin{ii+1};
+        elseif strcmpi('fname', varargin{ii})
+	        fname = varargin{ii+1};
         elseif strcmpi('y_range', varargin{ii})
 	        y_range = varargin{ii+1};
-        % elseif strcmpi('stimEffectType', varargin{ii})
-	       %  stimEffectType = varargin{ii+1};
+        elseif strcmpi('tickInt_time', varargin{ii})
+	        tickInt_time = varargin{ii+1};
+        elseif strcmpi('tile_row_num', varargin{ii})
+	        tile_row_num = varargin{ii+1};
         elseif strcmpi('sponNorm', varargin{ii})
 	        sponNorm = varargin{ii+1};
 	    end
@@ -30,18 +36,22 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	% Main contents
 	% Plot alignedData. Group traces according to stimulation
 	% event_type of alignedData is stimWin
-	if sponNorm
-		y_range = [-5 5]; % overwrite the y range of plot if sponNorm data is used
-	end
+	% if sponNorm
+	% 	y_range = [-5 5]; % overwrite the y range of plot if sponNorm data is used
+	% end
 
 	[C, ia, ic] = unique({alignedData.stim_name});
 	num_C = numel(C);
 
-	f_trace_win = figure;
-	fig_position = [0.1 0.1 0.6 0.7];
+	if ~exist('fname','var')
+		fname = sprintf('aligned_catTraces_%s',eventCat);
+	end
+	f_trace_win = figure('Name',fname);
+	fig_position = [0.1 0.1 0.9 0.6];
 	set(gcf, 'Units', 'normalized', 'Position', fig_position)
-	tile_row_num = 1;
-	tlo = tiledlayout(f_trace_win, tile_row_num, num_C);
+	
+	tile_col_num = ceil(num_C/tile_row_num);
+	tlo = tiledlayout(f_trace_win, tile_row_num, tile_col_num);
 
 	for n = 1:num_C
 		stimName = C{n};
@@ -76,7 +86,7 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 		plot_trace(timeInfo, traceData_trials, 'plotWhere', ax,...
 			'plot_combined_data', plot_combined_data,...
 			'mean_trace', traceData_trials_mean, 'mean_trace_shade', traceData_trials_shade,...
-	        'plot_raw_races',plot_raw_races,'y_range', y_range); % 'y_range', y_range
+	        'plot_raw_races',plot_raw_races,'y_range', y_range,'tickInt_time',tickInt_time); % 'y_range', y_range
 		titleName = sprintf('%s-%s',stimName,eventCat);
 		title(titleName)
 

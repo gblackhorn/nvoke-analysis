@@ -30,6 +30,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     plot_traces = 0; % 0: do not plot. 1: plot. 2: plot with pause
     save_traces = 0; % 0: do not save. 1: save
     [peak_properties_variable_names] = transient_properties_variable_names('peak', [1:17]);
+    debug_mode = false; % true/false
 
     % Optionals for inputs
     for ii = 1:2:(nargin-1)
@@ -77,6 +78,8 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 			plot_traces = varargin{ii+1};
 		elseif strcmpi('save_traces', varargin{ii}) % needed for smooth process
 			save_traces = varargin{ii+1};
+        elseif strcmpi('debug_mode', varargin{ii}) % needed for smooth process
+            debug_mode = varargin{ii+1};
     	end
     end
 
@@ -97,11 +100,12 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 
         % Debugging
         fprintf(' - recording_num: %d/%d (%s)\n', rn, recording_num, recording_name);
-        % disp(['recording_num: ', num2str(rn), '/', num2str(recording_num)])
-        % if rn == 38
-        %     disp('pause for debugging')
-        %     pause
-        % end
+        if debug_mode
+            if rn == 5
+                disp('pause for debugging')
+                pause
+            end
+        end
 
     	rec_data_decon = recdata_organized{rn, col_trace}.decon; % deconvoluted data processed by CNMFe
     	rec_data_raw = recdata_organized{rn, col_trace}.raw; % data after removing background, neuropil, and demixing 
@@ -135,14 +139,14 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     	% Get peak properties from decon data
     	[peak_properties_decon, data_table_processed_decon] = organize_transient_properties(rec_data_decon,...
 			'decon', 1, 'prom_par', prominence_factor,...
-			'peakProperties_names', peak_properties_variable_names);
+			'peakProperties_names', peak_properties_variable_names); % , 'debug_mode',debug_mode
 		% lowpass
 		[peak_properties_lowpass, rec_data_lowpass] = organize_transient_properties(rec_data_raw,...
 			'decon', 0, 'filter', 'lowpass', 'filter_par', lowpass_fpass,...
 			'prom_par', prominence_factor,...
             'use_existing_peakInfo', true, 'existing_peakInfo', peak_properties_decon,...
 			'peakProperties_names', peak_properties_variable_names,...
-            'merge_peaks', merge_peaks, 'merge_time_interval', merge_time_interval); 
+            'merge_peaks', merge_peaks, 'merge_time_interval', merge_time_interval); % ,'debug_mode',debug_mode
         recdata_organized{rn, col_trace}.lowpass = rec_data_lowpass.processed_data;
 
 		% smooth

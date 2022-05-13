@@ -182,7 +182,9 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	norm_slope_val_idx = find(contains(parNames, 'peak_slope_norm_hpstd')); % idx of slope calculated using norm data, such as peak_slope_norm_hpstd
 	slope_val_idx = setdiff(all_slope_val_idx, norm_slope_val_idx); % idx of slope calculated with non-normalized data
 	baseDiff_idx = find(contains(parNames, 'baseDiff')); 
+	% baseDiffWin_idx = find(contains(parNames, 'baseDiff_stimWin')); % difference between lowest value during stimulation and baseline 
 	val_rise_idx = find(contains(parNames, 'val_rise')); 
+	riseDelay_idx = find(contains(parNames, 'rise_delay')); 
 	% sponNorm_peak_mag_delta_idx = find(contains(parNames, 'sponNorm_peak_mag_delta')); 
 
 	% mag_num = numel(mag_val_idx);
@@ -287,6 +289,35 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 		end
 	end
 
+	% rise_delay vs amplitude
+	if ~isempty(riseDelay_idx)
+		% riseDelay_num = numel(riseDelay_idx);
+		par_riseDelay = parNames{riseDelay_idx};
+
+		if ~isempty(duration_val_idx)
+			duration_val_num = numel(duration_val_idx);
+			% par_mag_norm = numel(norm_slope_val_idx);
+			for dvn = 1:duration_val_num
+				par_duration_val = parNames{duration_val_idx(dvn)};
+
+				[scatter_data.([par_riseDelay, '_vs_' par_duration_val])] = plot_event_info_scatter(event_info_struct,...
+					par_riseDelay, par_duration_val,...
+					'save_fig', save_fig, 'save_dir', save_dir);
+			end
+		end
+
+		if ~isempty(mag_val_idx)
+			mag_val_num = numel(mag_val_idx);
+			% par_mag_norm = numel(norm_slope_val_idx);
+			for mvn = 1:mag_val_num
+				par_mag_val = parNames{mag_val_idx(mvn)};
+
+				[scatter_data.([par_riseDelay, '_vs_' par_mag_val])] = plot_event_info_scatter(event_info_struct,...
+					par_riseDelay, par_mag_val,...
+					'save_fig', save_fig, 'save_dir', save_dir);
+			end
+		end
+	end
 
 	%% plot data and stat
 	if exist('hist_data', 'var')

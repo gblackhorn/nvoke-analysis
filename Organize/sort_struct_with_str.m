@@ -35,8 +35,9 @@ function [structData_sorted,varargout] = sort_struct_with_str(structData,fieldNa
 		if exist('strCells_plus', 'var')
 			sort_subgroup_num = numel(strCells_plus);
 			sort_subgroup = cell(1, sort_subgroup_num);
-			unsorted_sub_idx = [1:sort_subgroup_num];
 			contents_subgroup = {structData(idx).(fieldName)};
+			% unsorted_sub_idx = [1:sort_subgroup_num];
+			unsorted_sub_idx = [1:length(contents_subgroup)];
 			for sn = 1:sort_subgroup_num
 				pattern_sub = strCells_plus{sn};
 				tf_sub = contains(contents_subgroup, pattern_sub);
