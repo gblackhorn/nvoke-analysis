@@ -13,16 +13,6 @@ recdata_organized_bk = recdata_organized;
 [recdata_organized] = discard_recData_roi(recdata_organized,'stims',stims,'eventCats',eventCats,'debug_mode',debug_mode);
 
 %% ====================
-% Discard empty ROIs. At the end recordings belong to one single series should have the same ROIs
-eventTypes = 'trigger'; % Find event categories with func "[event_category_str] = event_category_names"
-stimName = 'GPIO-1-1s'; % 'OG-LED-5s', 'GPIO-1-1s', 'OG-LED-5s GPIO-1-1s'
-series_trials = true; % true/false. delete ROI in the trials from the same series
-
-recdata_bk = recdata_organized;
-[recdata_organized] = discard_stim_silent_roi(recdata_organized,stimName,...
-	'eventTypes', eventTypes, 'stimName', stimName, 'series_trials', series_trials);
-
-%% ====================
 % Get the alignedData from the recdata_organized after tidying up
 % 9.2 Align traces from all trials. Also collect the properties of events
 event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
@@ -59,3 +49,6 @@ if caDeclineOnly
 	disIDX = ogIDX(disIDX_og); 
 	alignedData_allTrials(disIDX) = [];
 end 
+
+%% ====================
+[alignedData_allTrials_sync] = sync_rois_multiseries(alignedData_allTrials);

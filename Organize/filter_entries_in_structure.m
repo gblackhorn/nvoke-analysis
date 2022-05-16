@@ -1,5 +1,6 @@
 function [filtered_struct_var,varargout] = filter_entries_in_structure(struct_var,fieldName,varargin)
 	% Filter the entries in a structure varible.
+    % Keep and/or discard certain entries using the inputs of varargin
     % Note: originally coded for filtering var "grouped_event_info" output by func [group_event_info_multi_category]
     % Note: "tags_keep" and "tags_discard". At least one of them should be input to use this function
 

@@ -37,15 +37,29 @@ function [recdata_series_sync,varargout] = discard_empty_roi_series(recdata_seri
 		for tn = 1:sTrialNum
 			trial_row = trial_idx(tn);
 			trialEventsAll = recdata_series{trial_row, event_col};
-			trialEvents = trialEventsAll{eventRow, :};
-			sDisNeuron{tn} = find(cellfun(@isempty, trialEvents));
+
+			[EventProp_structVar] = convert_table2struct(trialEventsAll,'RowNameField','roi'); % convert peak properties table to a structure var
+
+			[sDisNeuron{tn}] = get_fieldA_if_fieldB_empty(EventProp_structVar,'roi',eventRow);
+
+
+			% EventProp = {EventProp_structVar.(eventRow)};
+			% roiNames = {EventProp_structVar.('roi')};
+			% IDX_empty = find(cellfun(@isempty, EventProp));
+			% sDisNeuron{tn} = roiNames(IDX_empty);
+
+			% trialEvents = trialEventsAll{eventRow, :};
+			% sDisNeuron{tn} = find(cellfun(@isempty, trialEvents));
 		end
 		sDisNeuron_array = unique([sDisNeuron{:}]); % Index of ROIs without events 
 
 		% discard ROIs without events
 		for tn = 1:sTrialNum
-			trial_row = trial_idx(tn);
-			recdata_series_sync{trial_row, event_col}(:, sDisNeuron_array) = [];
+			trial_row = trial_idx(tn); % row of a single trial
+			trialEvents = recdata_series_sync{trial_row, event_col}; % table of event properties of all rois from one trial
+			trialROIs = trialEvents.Properties.VariableNames; % ROI names 
+			[C, ia, ib]=intersect(trialROIs,sDisNeuron_array);
+			recdata_series_sync{trial_row, event_col}(:, ia) = [];
 		end
 	end
 end
