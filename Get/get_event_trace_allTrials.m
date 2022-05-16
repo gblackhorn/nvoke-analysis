@@ -21,7 +21,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	% win_range = []; 
 	cat_keywords =[]; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 	mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
-	debug_mode = true; 
+	debug_mode = false; % true/false
 
 
 	% Optionals

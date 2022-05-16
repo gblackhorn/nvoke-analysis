@@ -93,13 +93,13 @@ cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger',
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
 pre_event_time = 2; % unit: s. event trace starts at 1s before event onset
 post_event_time = 4; % unit: s. event trace ends at 2s after event onset
-stim_section = true; % true: use a specific section of stimulation. For example the last 1s
+stim_section = true; % true: use a specific section of stimulation to calculate the calcium level delta. For example the last 1s
 ss_range = 1; % single number (last n second) or a 2-element array (start and end. 0s is stimulation onset)
 stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
 debug_mode = false; % true/false
-caDeclineOnly = true; % true/false. Only keep the calcium decline trials (og group)
+caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
 
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', event_type,...
 	'traceData_type', traceData_type, 'event_data_group', event_data_group,...
