@@ -26,6 +26,8 @@ function [event_info,varargout] = mod_cat_name(event_info,varargin)
 
 	cat_setting = '';
 
+	debug_mode = false;
+
 	% Optionals
 	for ii = 1:2:(nargin-1)
 	    if strcmpi('cat_setting', varargin{ii})
@@ -52,6 +54,11 @@ function [event_info,varargout] = mod_cat_name(event_info,varargin)
 	dis_idx = zeros(event_num);
 
 	for n = 1:event_num
+
+		if debug_mode
+			fprintf('func [mod_cat_name] processing event %d\n', n)
+		end
+
 		mod_name = false; % mark if the cat name has been modified
 		old_name = event_info(n).(cat_type);
 		tf_newName = strcmpi(old_name, cat_names); % check if the category name is already modified

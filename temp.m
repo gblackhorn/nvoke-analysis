@@ -51,4 +51,14 @@ if caDeclineOnly
 end 
 
 %% ====================
-[alignedData_allTrials_sync] = sync_rois_multiseries(alignedData_allTrials);
+ref_stim = 'GPIO-1-1s';
+[seriesData_sync] = sync_rois_multiseries(alignedData_allTrials,'ref_stim',ref_stim);
+
+
+
+
+
+
+
+
+

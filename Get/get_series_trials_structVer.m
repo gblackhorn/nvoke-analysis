@@ -13,6 +13,7 @@ function [sNum,sTrialIDX,varargout] = get_series_trials_structVer(alignedData,va
 	% FieldName_stim = 'stim_name'; % this field must be different among series trials
 	FieldName_fov = 'fovID'; % this field must be the same among series trials
 
+
 	% Optionals
 	for ii = 1:2:(nargin-1)
 	    if strcmpi('FieldName_date', varargin{ii})
@@ -55,6 +56,9 @@ function [sNum,sTrialIDX,varargout] = get_series_trials_structVer(alignedData,va
 			sNum = sNum+1;
 			% sTrialIDX(seriesIDX) = sNum;
 			sTrialIDX{sNum} = seriesIDX;
+			sTrialName{sNum} = sprintf('%s[%s]', trialDate,fovID);
 		end
 	end
+
+	varargout{1} = sTrialName; % names of series: 'date[fovID]'
 end

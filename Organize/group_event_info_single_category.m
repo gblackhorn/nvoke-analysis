@@ -5,6 +5,8 @@ function [grouped_event_info, varargout] = group_event_info_single_category(even
 	filter_field = {}; % some values, such as "freq", can be used as threshold to filter data
     filter_par = {};
 	groupname_prefix = '';
+    f_groupname = 'group'; % fieldname for group names
+    f_event_info = 'event_info'; % fieldname for group names
 
 	% Optionals
     for ii = 1:2:(nargin-2)
@@ -14,6 +16,10 @@ function [grouped_event_info, varargout] = group_event_info_single_category(even
             filter_par = varargin{ii+1}; % {[min1, max1], [min2, max2],...} use NaN for inf value
         elseif strcmpi('groupname_prefix', varargin{ii})
         	groupname_prefix = varargin{ii+1};
+        elseif strcmpi('f_groupname', varargin{ii})
+            f_groupname = varargin{ii+1}; % {[min1, max1], [min2, max2],...} use NaN for inf value
+        elseif strcmpi('f_event_info', varargin{ii})
+            f_event_info = varargin{ii+1};
         end
     end
 
@@ -39,8 +45,8 @@ function [grouped_event_info, varargout] = group_event_info_single_category(even
 
     	idx_logic = [cellfun(@(x) strcmpi(x, keyword), category_content,  'UniformOutput',false)];
     	idx{n} = find([idx_logic{:}]);
-        grouped_event_info(n).group = groupname;
-    	grouped_event_info(n).event_info = event_info(idx{n});
+        grouped_event_info(n).(f_groupname) = groupname;
+    	grouped_event_info(n).(f_event_info) = event_info(idx{n});
         grouped_event_info(n).tag = keyword;
     end
 
