@@ -130,32 +130,33 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 		saveas(gcf, [fig_path, '.svg']);
 	end
 
-	if stat % run one-way anova or not
+	p = NaN;
+	tbl = NaN;
+	stats = NaN; 
+	c = NaN;
+	gnames = NaN;
+	if stat && group_num>1% run one-way anova or not
 		[p,tbl,stats] = anova1(data_all, data_all_group, stat_fig);
-		[c,~,~,gnames] = multcompare(stats, 'Display', stat_fig); % multiple comparison test. Check if the difference between groups are significant
-		% 'tukey-kramer'
-		% The first two columns of c show the groups that are compared. 
-		% The fourth column shows the difference between the estimated group means. 
-		% The third and fifth columns show the lower and upper limits for 95% confidence intervals for the true mean difference. 
-		% The sixth column contains the p-value for a hypothesis test that the corresponding mean difference is equal to zero. 
+		if stats.df~=0
+			[c,~,~,gnames] = multcompare(stats, 'Display', stat_fig); % multiple comparison test. Check if the difference between groups are significant
+			% 'tukey-kramer'
+			% The first two columns of c show the groups that are compared. 
+			% The fourth column shows the difference between the estimated group means. 
+			% The third and fifth columns show the lower and upper limits for 95% confidence intervals for the true mean difference. 
+			% The sixth column contains the p-value for a hypothesis test that the corresponding mean difference is equal to zero. 
 
-		% convert c to a table
-        c = num2cell(c);
-		c(:, 1:2) = cellfun(@(x) gnames{x}, c(:, 1:2), 'UniformOutput',false);
-		c = cell2table(c,...
-			'variableNames', {'g1', 'g2', 'lower-confi-int', 'estimate', 'upper-confi-int', 'p'});
-		h = NaN(size(c, 1), 1);
-		idx_sig = find(c.p < 0.05);
-		idx_nonsig = find(c.p >= 0.05);
-		h(idx_sig) = 1;
-		h(idx_nonsig) = 0;
-		c.h = h;
-	else
-		p = NaN;
-		tbl = NaN;
-		stats = NaN; 
-		c = NaN;
-		gnames = NaN;
+			% convert c to a table
+	        c = num2cell(c);
+			c(:, 1:2) = cellfun(@(x) gnames{x}, c(:, 1:2), 'UniformOutput',false);
+			c = cell2table(c,...
+				'variableNames', {'g1', 'g2', 'lower-confi-int', 'estimate', 'upper-confi-int', 'p'});
+			h = NaN(size(c, 1), 1);
+			idx_sig = find(c.p < 0.05);
+			idx_nonsig = find(c.p >= 0.05);
+			h(idx_sig) = 1;
+			h(idx_nonsig) = 0;
+			c.h = h;
+		end
 	end
 
 	statInfo.anova_p = p; % p-value of anova test

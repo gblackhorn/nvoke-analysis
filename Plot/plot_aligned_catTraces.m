@@ -10,6 +10,7 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	sponNorm = false; % true/false
 	tile_row_num = 1;
 	tickInt_time = 1; % interval of tick for timeInfo (x axis)
+	fig_position = [0.1 0.1 0.9 0.6]; % [left bottom width height]
 
 	% Optionals
 	for ii = 1:2:(nargin-1)
@@ -47,7 +48,6 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 		fname = sprintf('aligned_catTraces_%s',eventCat);
 	end
 	f_trace_win = figure('Name',fname);
-	fig_position = [0.1 0.1 0.9 0.6];
 	set(gcf, 'Units', 'normalized', 'Position', fig_position)
 	
 	tile_col_num = ceil(num_C/tile_row_num);

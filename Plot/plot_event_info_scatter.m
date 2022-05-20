@@ -14,6 +14,7 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 	% Defaults
 	save_fig = false;
 	save_dir = '';
+	fname_suffix = '';
 	marker_size = 10;
 	marker_face_alpha = 1;
 	marker_edge_alpha = 0;
@@ -31,6 +32,8 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 	        save_fig = varargin{ii+1};
 	    elseif strcmpi('save_dir', varargin{ii})
 	        save_dir = varargin{ii+1};
+	    elseif strcmpi('fname_suffix', varargin{ii})
+	        fname_suffix = varargin{ii+1};
 	    elseif strcmpi('linearFit', varargin{ii})
 	        linearFit = varargin{ii+1};
 	    end
@@ -72,7 +75,7 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 	data_struct(1).(par_name_2) = data_all_2;
 
 	
-	title_str = sprintf('Scatter-plot: %s vs %s', par_name_1, par_name_2); 
+	title_str = sprintf('Scatter-plot: %s vs %s - %s', par_name_1, par_name_2, fname_suffix); 
 	title_str = replace(title_str, '_', '-');
 	figure('Name', title_str);
 	hold on

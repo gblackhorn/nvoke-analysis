@@ -21,9 +21,9 @@ function [trueIDX,varargout] = judge_array_content(arrayVar,tag,varargin)
 
     %% Main content
     arrayVarType = class(arrayVar);
-    if ~isa(tag, arrayVarType)
-        error('The 1st input (arrayVar) and the 2nd input (tag) should be the same class:\n cell, numeric or logical');
-    end
+    % if ~isa(tag, arrayVarType)
+    %     error('The 1st input (arrayVar) and the 2nd input (tag) should be the same class:\n cell, numeric or logical');
+    % end
 
     trueIDX = [];
     if isa(arrayVar, 'cell')

@@ -18,6 +18,8 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
 	save_fig = false;
 	save_dir = '';
+	savepath_nogui = '';
+	fname_suffix = '';
 
 	stat = false; % true if want to run anova when plotting bars
 	stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
@@ -32,6 +34,10 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
             save_fig = varargin{ii+1};
         elseif strcmpi('save_dir', varargin{ii})
             save_dir = varargin{ii+1};
+        elseif strcmpi('savepath_nogui', varargin{ii})
+            savepath_nogui = varargin{ii+1};
+        elseif strcmpi('fname_suffix', varargin{ii})
+            fname_suffix = varargin{ii+1};
 	    elseif strcmpi('stat', varargin{ii})
             stat = varargin{ii+1};
 	    elseif strcmpi('stat_fig', varargin{ii})
@@ -40,17 +46,26 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	end
 
 	if save_fig 
-		save_dir = uigetdir(save_dir,...
-			'Choose a folder to save plots');
-		varargout{1} = save_dir;
-		if save_dir == 0
-			disp('Folder for saving plots not chosen. Choose one or set "save_fig" to false')
+		if isempty(savepath_nogui)
+			save_dir = uigetdir(save_dir,...
+				'Choose a folder to save plots');
 			varargout{1} = save_dir;
-			return
+			if save_dir == 0
+				disp('Folder for saving plots not chosen. Choose one or set "save_fig" to false')
+				varargout{1} = save_dir;
+				return
+			end
+		else
+			save_dir = savepath_nogui;
 		end
 	end
 
 	close all
+
+	% find and delete the empty entries in event_info_struct
+	tf_empty = cellfun(@isempty, {event_info_struct.event_info});
+	idx_empty = find(tf_empty);
+	event_info_struct(idx_empty) = [];
 
 	group_num = numel(event_info_struct);
 	par_num = numel(parNames);
@@ -78,7 +93,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 
 		[hist_data.(par), hist_setting.(par)] = plot_event_info_hist(event_info_struct,...
 			par, 'plot_combined_data', plot_combined_data,...
-			'save_fig', save_fig, 'save_dir', save_dir, 'nbins', 200);
+			'save_fig', save_fig, 'save_dir', save_dir, 'fname_suffix',fname_suffix,'nbins', 200);
 	end
 
 	%% histfit plot
@@ -86,8 +101,9 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	for pn = 1:par_num
 		par = parNames{pn};
 
-		[histFit_info.(par)] = plot_event_info_histfit(event_info_struct,par,...
-			'dist_type','normal','save_fig', save_fig, 'save_dir', save_dir, 'xRange',[-0.2 2],'nbins', 20); % 'nbins', 20,
+		[histFit_info.(par)] = plot_event_info_histfit(event_info_struct,par,'dist_type','normal',...
+			'save_fig', save_fig, 'save_dir', save_dir, 'fname_suffix',fname_suffix,...
+			'xRange',[-0.2 2],'nbins', 20); % 'nbins', 20,
 	end
 
 	%% bar plot
@@ -112,7 +128,8 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 		end
 	end
 	if save_fig
-		fname = 'bar_plots';
+		% fname = 'bar_plots';
+		fname = sprintf('bar_plots-%s',fname_suffix);
 		savePlot(f_bar,...
 			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
 	end
@@ -140,7 +157,8 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 		title(replace(par, '_', '-'));
 	end
 	if save_fig
-		fname = 'box_plots';
+		% fname = 'box_plots';
+		fname = sprintf('box_plots-%s',fname_suffix);
 		savePlot(f_box,...
 			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
 	end
@@ -168,7 +186,8 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 		title(replace(par, '_', '-'));
 	end
 	if save_fig
-		fname = 'cd_plots';
+		% fname = 'cd_plots';
+		fname = sprintf('cd_plots-%s',fname_suffix);
 		savePlot(f_cd,...
 			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
 	end
@@ -205,7 +224,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 
 					[scatter_data.([par_duration, '_vs_' par_mag])] = plot_event_info_scatter(event_info_struct,...
 						par_duration, par_mag,...
-						'save_fig', save_fig, 'save_dir', save_dir);
+						'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 				end
 			end
 
@@ -216,7 +235,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 
 					[scatter_data.([par_duration, '_vs_' par_slope])] = plot_event_info_scatter(event_info_struct,...
 						par_duration, par_slope,...
-						'save_fig', save_fig, 'save_dir', save_dir);
+						'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 				end
 			end
 		end
@@ -235,7 +254,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 
 					[scatter_data.([par_mag, '_vs_' par_slope])] = plot_event_info_scatter(event_info_struct,...
 						par_mag, par_slope,...
-						'save_fig', save_fig, 'save_dir', save_dir);
+						'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 				end
 			end
 		end
@@ -253,7 +272,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 
 					[scatter_data.([par_mag_norm, '_vs_' par_slope_norm])] = plot_event_info_scatter(event_info_struct,...
 						par_mag_norm, par_slope_norm,...
-						'save_fig', save_fig, 'save_dir', save_dir);
+						'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 				end
 			end
 		end
@@ -269,7 +288,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 				par_mag = parNames{mag_val_idx(mn)};
 				[scatter_data.([par_baseDiff, '_vs_' par_mag])] = plot_event_info_scatter(event_info_struct,...
 					par_baseDiff, par_mag,...
-					'save_fig', save_fig, 'save_dir', save_dir);
+					'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 			end
 		end
 	end
@@ -284,7 +303,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 				par_duration = parNames{duration_val_idx(dn)};
 				[scatter_data.([par_baseDiff, '_vs_' par_duration])] = plot_event_info_scatter(event_info_struct,...
 					par_baseDiff, par_duration,...
-					'save_fig', save_fig, 'save_dir', save_dir);
+					'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 			end
 		end
 	end
@@ -302,7 +321,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 
 				[scatter_data.([par_riseDelay, '_vs_' par_duration_val])] = plot_event_info_scatter(event_info_struct,...
 					par_riseDelay, par_duration_val,...
-					'save_fig', save_fig, 'save_dir', save_dir);
+					'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 			end
 		end
 
@@ -314,7 +333,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 
 				[scatter_data.([par_riseDelay, '_vs_' par_mag_val])] = plot_event_info_scatter(event_info_struct,...
 					par_riseDelay, par_mag_val,...
-					'save_fig', save_fig, 'save_dir', save_dir);
+					'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 			end
 		end
 	end

@@ -14,6 +14,10 @@ function [seriesData_sync,varargout] = sync_rois_multiseries(alignedData,varargi
     modify_stim_name = true; % true/false. Change the stimulation name, 
                                 % such as GPIOxxx and OG-LEDxxx (output from nVoke), to simpler ones (ap, og, etc.)
 
+    ref_SpikeCat = {''}; % category of spikes will be kept in ref stim group
+    nonref_SpikeCat = {''}; % category of spikes will be kept in non-ref stim group
+    [cat_setting] = set_CatNames_for_mod_cat_name('stimulation'); % Get the settings to modify the stimulation names in ca_events 
+
     debug_mode = false;
 
     % Optionals for inputs
@@ -22,6 +26,10 @@ function [seriesData_sync,varargout] = sync_rois_multiseries(alignedData,varargi
     		ref_stim = varargin{ii+1};
     	elseif strcmpi('del_empty_trial', varargin{ii})
     		del_empty_trial = varargin{ii+1};
+        elseif strcmpi('ref_SpikeCat', varargin{ii})
+            ref_SpikeCat = varargin{ii+1};
+        elseif strcmpi('nonref_SpikeCat', varargin{ii})
+            nonref_SpikeCat = varargin{ii+1};
         end
     end
 
@@ -46,7 +54,7 @@ function [seriesData_sync,varargout] = sync_rois_multiseries(alignedData,varargi
         seriesData_sync(sn).seriesName = sTrialName{sn};
         seriesData_sync(sn).ref_stim = ref_stim;
         [seriesData_sync(sn).SeriesData,seriesData_sync(sn).ROIs,seriesData_sync(sn).ROIs_num] = sync_rois(series_data,...
-            'ref_stim',ref_stim);
+            'ref_stim',ref_stim,'ref_SpikeCat',ref_SpikeCat,'nonref_SpikeCat',nonref_SpikeCat);
 
         seriesData_sync(sn).ca_events=collect_events_from_alignedData(seriesData_sync(sn).SeriesData,...
             'entry',ca_event_entry,'modify_stim_name',modify_stim_name);
@@ -55,11 +63,14 @@ function [seriesData_sync,varargout] = sync_rois_multiseries(alignedData,varargi
             % series_cell{sn}=[];
             del_series_idx = [del_series_idx, sn];
         end
+        cat_setting_alignedData = cat_setting;
+        cat_setting_alignedData.cat_type = 'stim_name';
+        [seriesData_sync(sn).SeriesData] = mod_cat_name(seriesData_sync(sn).SeriesData,...
+            'cat_setting',cat_setting_alignedData,'dis_extra', false,'stimType',false);
     end
     seriesData_sync(del_series_idx) = [];
 
     % Modify the ref_stim name and make it consistent with content in ca_event field
-    [cat_setting] = set_CatNames_for_mod_cat_name('stimulation'); % Get the settings to modify the stimulation names in ca_events 
     cat_setting.cat_type = 'ref_stim';
     [seriesData_sync] = mod_cat_name(seriesData_sync,...
             'cat_setting',cat_setting,'dis_extra', false,'stimType',false);

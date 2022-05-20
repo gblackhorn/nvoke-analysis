@@ -4,6 +4,7 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	% Defaults
 	plotWhere = [];
 	plot_combined_data = true; % mean trace for each single group. std・ste value can be used as mean_trace_shade to plot shade
+	plot_combined_data_shade = true; % std・ste value for plot_combined_data
 	plot_stim_shade = false; % true/false
 	plot_raw_races = true; % true: plot the traces in the trace_data
 	% save_fig = false;
@@ -27,6 +28,8 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	        plotWhere = varargin{ii+1};
 	    elseif strcmpi('plot_combined_data', varargin{ii})
 	        plot_combined_data = varargin{ii+1};
+	    elseif strcmpi('plot_combined_data_shade', varargin{ii})
+	        plot_combined_data_shade = varargin{ii+1};
 	    elseif strcmpi('mean_trace', varargin{ii})
 	        mean_trace = varargin{ii+1};
 	    elseif strcmpi('mean_trace_shade', varargin{ii})
@@ -75,8 +78,10 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 
 		h_m = plot(time_info, mean_trace,...
 			'Color', mean_line_color, 'LineWidth', line_mean_width);
-		h_s = patch('XData',shade_x, 'YData', shade_y,...
-			'FaceColor', shade_color, 'FaceAlpha', shade_alpha, 'EdgeColor', 'none');
+		if plot_combined_data_shade
+			h_s = patch('XData',shade_x, 'YData', shade_y,...
+				'FaceColor', shade_color, 'FaceAlpha', shade_alpha, 'EdgeColor', 'none');
+		end
 	end
 
 	if plot_raw_races

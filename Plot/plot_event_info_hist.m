@@ -19,6 +19,7 @@ function [hist_info,varargout] = plot_event_info_hist(event_info_struct,par_name
 	plot_combined_data = false;
 	save_fig = false;
 	save_dir = '';
+	fname_suffix = '';
 
 	sp_colNum = 3; % subplot column number
 
@@ -34,6 +35,8 @@ function [hist_info,varargout] = plot_event_info_hist(event_info_struct,par_name
 	        save_fig = varargin{ii+1};
 	    elseif strcmpi('save_dir', varargin{ii})
 	        save_dir = varargin{ii+1};
+	    elseif strcmpi('fname_suffix', varargin{ii})
+	        fname_suffix = varargin{ii+1};
 	    end
 	end
 
@@ -69,7 +72,8 @@ function [hist_info,varargout] = plot_event_info_hist(event_info_struct,par_name
 	% Plot
 	% legendstr ={event_info_struct.group}';
 
-	title_str = ['Histogram: ', par_name]; 
+	% title_str = ['Histogram: ', par_name]; 
+	title_str = sprintf('Histogram-%s-%s', par_name,fname_suffix); 
 	title_str = replace(title_str, '_', '-');
 	figure('Name', title_str);
     set(gcf,'units','Normalized','position',[0.1, 0.1, 0.8, 0.8])

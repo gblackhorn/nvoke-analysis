@@ -111,32 +111,39 @@ function [varargout] = boxPlot_with_scatter(CellArrayData,varargin)
 		end
 	end
 
-	if stat
+	p = NaN;
+	tbl = NaN;
+	stats = NaN; 
+	c = NaN;
+	gnames = NaN;
+	if stat && groupNum>1
 		[p,tbl,stats] = anova1(boxPlot_data, boxPlot_group, stat_fig);
-		[c,~,~,gnames] = multcompare(stats, 'Display', stat_fig); % multiple comparison test. Check if the difference between groups are significant
-		% 'tukey-kramer'
-		% The first two columns of c show the groups that are compared. 
-		% The fourth column shows the difference between the estimated group means. 
-		% The third and fifth columns show the lower and upper limits for 95% confidence intervals for the true mean difference. 
-		% The sixth column contains the p-value for a hypothesis test that the corresponding mean difference is equal to zero. 
+		if stats.df~=0
+			[c,~,~,gnames] = multcompare(stats, 'Display', stat_fig); % multiple comparison test. Check if the difference between groups are significant
+			% 'tukey-kramer'
+			% The first two columns of c show the groups that are compared. 
+			% The fourth column shows the difference between the estimated group means. 
+			% The third and fifth columns show the lower and upper limits for 95% confidence intervals for the true mean difference. 
+			% The sixth column contains the p-value for a hypothesis test that the corresponding mean difference is equal to zero. 
 
-		% convert c to a table
-        c = num2cell(c);
-		c(:, 1:2) = cellfun(@(x) gnames{x}, c(:, 1:2), 'UniformOutput',false);
-		c = cell2table(c,...
-			'variableNames', {'g1', 'g2', 'lower-confi-int', 'estimate', 'upper-confi-int', 'p'});
-		h = NaN(size(c, 1), 1);
-		idx_sig = find(c.p < 0.05);
-		idx_nonsig = find(c.p >= 0.05);
-		h(idx_sig) = 1;
-		h(idx_nonsig) = 0;
-		c.h = h;
-	else
-		p = NaN;
-		tbl = NaN;
-		stats = NaN; 
-		c = NaN;
-		gnames = NaN;
+			% convert c to a table
+	        c = num2cell(c);
+			c(:, 1:2) = cellfun(@(x) gnames{x}, c(:, 1:2), 'UniformOutput',false);
+			c = cell2table(c,...
+				'variableNames', {'g1', 'g2', 'lower-confi-int', 'estimate', 'upper-confi-int', 'p'});
+			h = NaN(size(c, 1), 1);
+			idx_sig = find(c.p < 0.05);
+			idx_nonsig = find(c.p >= 0.05);
+			h(idx_sig) = 1;
+			h(idx_nonsig) = 0;
+			c.h = h;
+		end
+	% else
+	% 	p = NaN;
+	% 	tbl = NaN;
+	% 	stats = NaN; 
+	% 	c = NaN;
+	% 	gnames = NaN;
 	end
 	statInfo.anova_p = p; % p-value of anova test
 	statInfo.tbl = tbl; % anova table

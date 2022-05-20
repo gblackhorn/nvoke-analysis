@@ -197,17 +197,11 @@ end
 entry = 'event'; % options: 'roi' or 'event'
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
-dis_spon = false; % true/false
+modify_stim_name = true; % true/false. Change the stimulation name, 
+                            % such as GPIOxxx and OG-LEDxxx (output from nVoke), to simpler ones (ap, og, etc.)
 
-modify_eventType_name = true; % true/false
-[eventProp_all] = collect_event_prop(alignedData_allTrials, 'style', entry); % only use 'event' for 'style'
-
-% modify the stimulation name in eventProp_all
-cat_setting.cat_type = 'stim_name';
-cat_setting.cat_names = {'og', 'ap', 'og-ap'};
-cat_setting.cat_merge = {{'OG-LED-5s'}, {'GPIO-1-1s'}, {'OG-LED-5s GPIO-1-1s'}};
-[eventProp_all] = mod_cat_name(eventProp_all,...
-	'cat_setting',cat_setting,'dis_extra', false,'stimType',false);
+[eventProp_all]=collect_events_from_alignedData(alignedData_allTrials,...
+	'entry',entry,'modify_stim_name',modify_stim_name);
 
 %% ====================
 % 9.4.1 Collect spontaneous events from 'eventProp_all' for comparison among FOVs

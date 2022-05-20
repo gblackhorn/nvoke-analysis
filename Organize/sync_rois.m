@@ -7,15 +7,17 @@ function [alignedData_TrialSeries_sync,varargout] = sync_rois(alignedData_TrialS
     % Defaults
     ref_stim = ''; % stimulation used as the reference. If it is not empty, trials 
                     % using the same ROI set will all synced to the specified stimulation trial
+    ref_SpikeCat = {''}; % category of spikes will be kept in ref stim group
+    nonref_SpikeCat = {''}; % category of spikes will be kept in non-ref stim group
 
     % Optionals for inputs
     for ii = 1:2:(nargin-1)
     	if strcmpi('ref_stim', varargin{ii})
     		ref_stim = varargin{ii+1}; % GPIO-1-1s is usually used
-    % 	elseif strcmpi('keep_rowNames', varargin{ii})
-    % 		keep_rowNames = varargin{ii+1};
-    % 	elseif strcmpi('keep_colNames', varargin{ii})
-    % 		keep_colNames = varargin{ii+1};
+    	elseif strcmpi('ref_SpikeCat', varargin{ii})
+    		ref_SpikeCat = varargin{ii+1};
+    	elseif strcmpi('nonref_SpikeCat', varargin{ii})
+    		nonref_SpikeCat = varargin{ii+1};
     %   elseif strcmpi('RowNameField', varargin{ii})
     %         RowNameField = varargin{ii+1};
       end
@@ -63,6 +65,23 @@ function [alignedData_TrialSeries_sync,varargout] = sync_rois(alignedData_TrialS
     for tn = 1:trial_num
         [C, ia, ib] = intersect(roi_cells{tn}, ROI_intersect);
         alignedData_TrialSeries_sync(tn).traces = alignedData_TrialSeries(tn).traces(ia);
+
+        % filter events according to settings: ref_SpikeCat and nonref_SpikeCat
+        if isempty(ref_stim)
+            if ~isempty(nonref_SpikeCat)
+                SpikeCat_keep = nonref_SpikeCat;
+                % [alignedData_eventInfo_filtered] = filter_event_and_trace_in_alignedData(alignedData_TrialSeries_sync(tn).traces,...
+                %     'peak_category','tags_keep',nonref_SpikeCat);
+            end
+        else
+            if tn == ref_idx
+                SpikeCat_keep = ref_SpikeCat;
+            else
+                SpikeCat_keep = nonref_SpikeCat;
+            end
+        end
+        [alignedData_TrialSeries_sync(tn).traces] = filter_event_and_trace_in_alignedData(alignedData_TrialSeries_sync(tn).traces,...
+            'peak_category','tags_keep',SpikeCat_keep);
     end
 
     varargout{1} = ROI_intersect; % names of ROIs exsisting in all series trials

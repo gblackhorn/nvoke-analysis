@@ -11,26 +11,37 @@ function [filtered_struct_var,varargout] = filter_entries_in_structure(struct_va
 	% category_names = {};
 	% filter_field = {}; % some values, such as "freq", can be used as threshold to filter data
     % filter_par = {};
-    clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
+    clean_ap_entry = false; % true: discard delay and rebound categories from airpuff experiments
     IgnoreCase = true; % ignore case if arrayVar and tag contain strings
     airpuff_tag = {'[ap]'}; % tag used to find airpuff entries
     apDis_tag = {'delay', 'rebound'}; % airpuff group entries containing these tags will be discarded if 'clean_ap_entry' is true
 
+    tags_keep = {''};
+    tags_discard = {''};
+
 	% Optionals
     for ii = 1:2:(nargin-2)
         if strcmpi('tags_keep', varargin{ii})
-            tags_keep = varargin{ii+1}; % cell array containing strings. Keep groups containing these words
+            tags_keep = varargin{ii+1}; % cell/char. Keep groups containing these words
         elseif strcmpi('tags_discard', varargin{ii})
-            tags_discard = varargin{ii+1}; % cell array containing strings. Discard groups containing these words
+            tags_discard = varargin{ii+1}; % cell/char. Discard groups containing these words
         elseif strcmpi('clean_ap_entry', varargin{ii})
             clean_ap_entry = varargin{ii+1}; % true: discard delay and rebound categories from airpuff experiments
         elseif strcmpi('IgnoreCase', varargin{ii})
-            IgnoreCase = varargin{ii+1}; % true: discard delay and rebound categories from airpuff experiments
+            IgnoreCase = varargin{ii+1}; 
         end
     end
 
     %% Main content
-    if ~exist('tags_keep','var') && ~exist('tags_discard','var') 
+    % Convert tags_keep and tags_discard from 'char' type to 'cell'. 
+    if isa(tags_keep,'char')
+        tags_keep = {tags_keep};
+    end
+    if isa(tags_discard,'char')
+        tags_discard = {tags_discard};
+    end
+
+    if isempty([tags_keep{:}]) && isempty([tags_discard{:}]) 
         error('At least one of the varargin (tags_keep, tags_discard) should be inputted');
     end
 
@@ -49,20 +60,20 @@ function [filtered_struct_var,varargout] = filter_entries_in_structure(struct_va
     end
 
     % discard tags containing tags_discard
-    if exist('tags_discard','var')
+    if ~isempty([tags_discard{:}])
         [disIDX_td] = judge_array_content(fieldContent,tags_discard,'IgnoreCase',IgnoreCase);
     else
         disIDX_td = [];
     end
 
     % discard tags without tags_keep
-    if exist('tags_keep','var')
+    if ~isempty([tags_keep{:}])
         [keepIDX_tk] = judge_array_content(fieldContent,tags_keep,'IgnoreCase',IgnoreCase);
     else
         keepIDX_tk = [];
     end
     allIDX = [1:numel(struct_var)]';
-    disIDX_tk = setdiff(allIDX, keepIDX_tk);
+    disIDX_tk = setdiff(allIDX, keepIDX_tk); % index to be discarded according to keepIDX_tk
 
     if clean_ap_entry % discard delay and rebound categories from airpuff experiments
         [apIDX] = judge_array_content(fieldContent,airpuff_tag,'IgnoreCase',IgnoreCase);
@@ -76,4 +87,5 @@ function [filtered_struct_var,varargout] = filter_entries_in_structure(struct_va
     disIDX = unique([disIDX_td;disIDX_tk;disIDX_ap]);
     filtered_struct_var = struct_var;
     filtered_struct_var(disIDX) = [];
+    varargout{1} = disIDX; 
 end
