@@ -1,4 +1,4 @@
-function [grouped_event_info, varargout] = group_event_info_multi_category(event_info, varargin)
+function [grouped_event_info, varargout] = group_event_info_multi_category(event_info,varargin)
 	% Group event info with given category_names.
 	% For example: fovID, mouseID, stim, etc.
 	% Note: when multiple category_names were given, event_info will be sorted in a nested way according to

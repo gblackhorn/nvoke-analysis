@@ -1,3 +1,15 @@
+clearvars -except recdata_organized alignedData_allTrials seriesData_sync
+PC_name = getenv('COMPUTERNAME'); 
+% set folders for different situation
+DataFolder = 'G:\Workspace\Inscopix_Seagate';
+
+if strcmp(PC_name, 'GD-AW-OFFICE')
+	AnalysisFolder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
+elseif strcmp(PC_name, 'LAPTOP-84IERS3H')
+	AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
+end
+
+[FolderPathVA] = set_folder_path_ventral_approach(DataFolder,AnalysisFolder);
 
 %% ====================
 % Get recData for series recordings (recording sharing the same ROI sets but using different stimulations)
@@ -15,33 +27,33 @@ recdata_organized_bk = recdata_organized;
 %% ====================
 % Get the alignedData from the recdata_organized after tidying up
 % 9.2 Align traces from all trials. Also collect the properties of events
-event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
-traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
-event_data_group = 'peak_lowpass';
-event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
-event_align_point = 'rise'; % options: 'rise', 'peak'
-rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes
-cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
+ad.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
+ad.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
+ad.event_data_group = 'peak_lowpass';
+ad.event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
+ad.event_align_point = 'rise'; % options: 'rise', 'peak'
+ad.rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes
+ad.cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
-pre_event_time = 2; % unit: s. event trace starts at 1s before event onset
-post_event_time = 4; % unit: s. event trace ends at 2s after event onset
-stim_section = true; % true: use a specific section of stimulation to calculate the calcium level delta. For example the last 1s
-ss_range = 1; % single number (last n second) or a 2-element array (start and end. 0s is stimulation onset)
-stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
-mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
+ad.pre_event_time = 2; % unit: s. event trace starts at 1s before event onset
+ad.post_event_time = 4; % unit: s. event trace ends at 2s after event onset
+ad.stim_section = true; % true: use a specific section of stimulation to calculate the calcium level delta. For example the last 1s
+ad.ss_range = 1; % single number (last n second) or a 2-element array (start and end. 0s is stimulation onset)
+ad.stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
+ad.mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
-debug_mode = false; % true/false
-caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
+ad.debug_mode = false; % true/false
+ad.caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
 
-[alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', event_type,...
-	'traceData_type', traceData_type, 'event_data_group', event_data_group,...
-	'event_filter', event_filter, 'event_align_point', event_align_point, 'cat_keywords', cat_keywords,...
-	'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
-	'stim_section',stim_section,'ss_range',ss_range,...
-	'stim_time_error',stim_time_error,'rebound_duration',rebound_duration,...
-	'mod_pcn', mod_pcn,'debug_mode',debug_mode);
+[alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', ad.event_type,...
+	'traceData_type', ad.traceData_type, 'event_data_group', ad.event_data_group,...
+	'event_filter', ad.event_filter, 'event_align_point', ad.event_align_point, 'cat_keywords', ad.cat_keywords,...
+	'pre_event_time', ad.pre_event_time, 'post_event_time', ad.post_event_time,...
+	'stim_section',ad.stim_section,'ss_range',ad.ss_range,...
+	'stim_time_error',ad.stim_time_error,'rebound_duration',ad.rebound_duration,...
+	'mod_pcn', ad.mod_pcn,'debug_mode',ad.debug_mode);
 
-if caDeclineOnly
+if ad.caDeclineOnly % Keep the trials in which og-led can induce the calcium decline, and discard others
 	stimNames = {alignedData_allTrials.stim_name};
 	[ogIDX] = judge_array_content(stimNames,{'OG-LED'},'IgnoreCase',true); % index of trials using optogenetics stimulation 
 	caDe_og = [alignedData_allTrials(ogIDX).CaDecline]; % calcium decaline logical value of og trials
@@ -52,107 +64,129 @@ end
 
 %% ====================
 % Sync ROIs across trials in the same series (same FOV, same ROI set) 
-ref_stim = 'GPIO-1-1s'; % ROIs are synced to the trial applied with this stimulation
-ref_SpikeCat = {'spon','trig'}; % spike/peak/event categories kept during the syncing in ref trials
-nonref_SpikeCat = {'spon','rebound'}; % spike/peak/event categories kept during the syncing in non-ref trials
+sd.ref_stim = 'GPIO-1-1s'; % ROIs are synced to the trial applied with this stimulation
+sd.ref_SpikeCat = {'spon','trig'}; % spike/peak/event categories kept during the syncing in ref trials
+sd.nonref_SpikeCat = {'spon','rebound'}; % spike/peak/event categories kept during the syncing in non-ref trials
 [seriesData_sync] = sync_rois_multiseries(alignedData_allTrials,...
-	'ref_stim',ref_stim,'ref_SpikeCat',ref_SpikeCat,'nonref_SpikeCat',nonref_SpikeCat);
+	'ref_stim',sd.ref_stim,'ref_SpikeCat',sd.ref_SpikeCat,'nonref_SpikeCat',sd.nonref_SpikeCat);
 
 %% ====================
 % Group series data using ROI. Each ROI group contains events from trials using various stimulation
-ref_stim = 'ap'; % reference stimulation
-ref_SpikeCat = 'trig'; % reference spike/peak/event category 
-other_SpikeCat = 'rebound'; % spike/peak/event category in other trial will be plot
-debug_mode = false;
+ngd.ref_stim = 'ap'; % reference stimulation
+ngd.ref_SpikeCat = 'trig'; % reference spike/peak/event category 
+ngd.other_SpikeCat = 'rebound'; % spike/peak/event category in other trial will be plot
+ngd.debug_mode = false;
 
 series_num = numel(seriesData_sync);
 for sn = 1:series_num
 	alignedData_series = seriesData_sync(sn).SeriesData;
 	[seriesData_sync(sn).NeuronGroup_data] = group_aligned_trace_series_ROIpaired(alignedData_series,...
-		'ref_stim',ref_stim,'ref_SpikeCat',ref_SpikeCat,'other_SpikeCat',other_SpikeCat,...
-		'debug_mode', debug_mode);
+		'ref_stim',ngd.ref_stim,'ref_SpikeCat',ngd.ref_SpikeCat,'other_SpikeCat',ngd.other_SpikeCat,...
+		'debug_mode', ngd.debug_mode);
 end
 
 %% ====================
 % Plot spikes of each ROI recorded in trials received various stimulation
 close all
-plot_raw = true; % true/false.
-plot_norm = true; % true/false. plot the ref_trial normalized data
-plot_mean = true; % true/false. plot a mean trace on top of raw traces
-plot_std = true; % true/false. plot the std as a shade on top of raw traces. If this is true, "plot_mean" will be turn on automatically
-y_range = [-10 10];
-tickInt_time = 1; % interval of tick for timeInfo (x axis)
-fig_row_num = 3; % number of rows (ROIs) in each figure
-save_fig = false; % true/false
-fig_position = [0.1 0.1 0.85 0.85]; % [left bottom width height]
+psnt.plot_raw = true; % true/false.
+psnt.plot_norm = true; % true/false. plot the ref_trial normalized data
+psnt.plot_mean = true; % true/false. plot a mean trace on top of raw traces
+psnt.plot_std = true; % true/false. plot the std as a shade on top of raw traces. If this is true, "plot_mean" will be turn on automatically
+psnt.y_range = [-10 10];
+psnt.tickInt_time = 1; % interval of tick for timeInfo (x axis)
+psnt.fig_row_num = 3; % number of rows (ROIs) in each figure
+psnt.save_fig = false; % true/false
+psnt.fig_position = [0.1 0.1 0.85 0.85]; % [left bottom width height]
 
-if save_fig
-	save_path = uigetdir(FolderPathVA.fig,'Choose a folder to save spikes from series trials');
-	if save_path~=0
-		FolderPathVA.fig = save_path;
+if psnt.save_fig
+	psnt.save_path = uigetdir(FolderPathVA.fig,'Choose a folder to save spikes from series trials');
+	if psnt.save_path~=0
+		FolderPathVA.fig = psnt.save_path;
 	end 
 else
-	save_path = '';
+	psnt.save_path = '';
 end
 
 series_num = numel(seriesData_sync);
 for sn = 1:series_num
 	series_name = seriesData_sync(sn).seriesName;
-	NeuronGroup_data = seriesData_sync(sn).NeuronGroup_data;
-	plot_series_neuron_paired_trace(NeuronGroup_data,'plot_raw',plot_raw,'plot_norm',plot_norm,...
-		'plot_mean',plot_mean,'plot_std',plot_std,'y_range',y_range,'tickInt_time',tickInt_time,...
-		'fig_row_num',fig_row_num,'fig_position',fig_position,'save_fig',save_path);
+	% NeuronGroup_data = seriesData_sync(sn).NeuronGroup_data;
+	plot_series_neuron_paired_trace(seriesData_sync(sn).NeuronGroup_data,'plot_raw',psnt.plot_raw,'plot_norm',psnt.plot_norm,...
+		'plot_mean',psnt.plot_mean,'plot_std',psnt.plot_std,'y_range',psnt.y_range,'tickInt_time',psnt.tickInt_time,...
+		'fig_row_num',psnt.fig_row_num,'fig_position',psnt.fig_position,'save_fig',psnt.save_path);
 end
 
 %% ====================
 % Plot the spike/event properties for each neuron
 close all
-plot_combined_data = true;
-parNames = {'rise_duration','peak_mag_delta','rise_duration_refNorm','peak_mag_delta_refNorm','rise_delay'}; % entry: event
-save_fig = true; % true/false
-save_dir = FolderPathVA.fig;
-stat = true; % true if want to run anova when plotting bars
-stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
+pei.plot_combined_data = true;
+pei.parNames = {'rise_duration','peak_mag_delta','rise_duration_refNorm','peak_mag_delta_refNorm','rise_delay'}; % entry: event
+pei.save_fig = true; % true/false
+pei.save_dir = FolderPathVA.fig;
+pei.stat = true; % true if want to run anova when plotting bars
+% stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 
-if save_fig
-	savepath_nogui = uigetdir(FolderPathVA.fig,'Choose a folder to save plot for spike/event prop analysis');
-	if savepath_nogui~=0
-		FolderPathVA.fig = savepath_nogui;
+if pei.save_fig
+	pei.savepath_nogui = uigetdir(FolderPathVA.fig,'Choose a folder to save plot for spike/event prop analysis');
+	if pei.savepath_nogui~=0
+		FolderPathVA.fig = pei.savepath_nogui;
 	else
-		error('savepath_nogui for saving plots is not selected')
+		error('pei.savepath_nogui for saving plots is not selected')
 	end 
 else
-	savepath_nogui = '';
+	pei.savepath_nogui = '';
 end
 
 series_num = numel(seriesData_sync);
 for sn = 1:series_num
 	series_name = seriesData_sync(sn).seriesName;
-	NeuronGroup_data = seriesData_sync(sn).NeuronGroup_data;
-	roi_num = numel(NeuronGroup_data);
+	% NeuronGroup_data = seriesData_sync(sn).NeuronGroup_data;
+	roi_num = numel(seriesData_sync(sn).NeuronGroup_data);
 	for rn = 1:roi_num
 		close all
-		fname_suffix = sprintf('%s-%s', series_name, NeuronGroup_data(rn).roi);
-		[~, plot_info] = plot_event_info(NeuronGroup_data(rn).eventPropData,...
-			'plot_combined_data',plot_combined_data,'parNames',parNames,'stat',stat,...
-			'save_fig',save_fig,'save_dir',save_dir,'savepath_nogui',savepath_nogui,'fname_suffix',fname_suffix);
+		fname_suffix = sprintf('%s-%s', series_name, seriesData_sync(sn).NeuronGroup_data(rn).roi);
+		[~, plot_info] = plot_event_info(seriesData_sync(sn).NeuronGroup_data(rn).eventPropData,...
+			'plot_combined_data',pei.plot_combined_data,'parNames',pei.parNames,'stat',pei.stat,...
+			'save_fig',pei.save_fig,'save_dir',pei.save_dir,'savepath_nogui',pei.savepath_nogui,'fname_suffix',fname_suffix);
 		seriesData_sync(sn).NeuronGroup_data(rn).stat = plot_info;
-		fprintf('Spike/event properties are from %s - %s\n', series_name, NeuronGroup_data(rn).roi);
-
-		% pause
-		% if save_fig
-		% 	% plot_stat_info.grouped_event_info_option = grouped_event_info_option;
-		% 	plot_stat_info.grouped_event_info_filtered = grouped_event_info_filtered;
-		% 	plot_stat_info.plot_info = plot_info;
-		% 	dt = datestr(now, 'yyyymmdd');
-		% 	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
-		% end
+		fprintf('Spike/event properties are from %s - %s\n', series_name, seriesData_sync(sn).NeuronGroup_data(rn).roi);
 	end
 end
 
 %% ====================
+% Collect all events from series and plot their REFnorm data
+[all_series_eventProp] = collect_AllEventProp_from_seriesData(seriesData_sync);
+[grouped_all_series_eventProp, varargout] = group_event_info_multi_category(all_series_eventProp,...
+	'category_names', {'group'});
+
+close all
+pgase.plot_combined_data = true;
+pgase.parNames = {'rise_duration_refNorm','peak_mag_delta_refNorm'}; % entry: event
+pgase.save_fig = false; % true/false
+pgase.save_dir = FolderPathVA.fig;
+pgase.stat = true; % true if want to run anova when plotting bars
+pgase.stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
+
+% grouped_event_info = grouped_event_info_bk;
+[pgase.save_dir, pgase.plot_info] = plot_event_info(grouped_all_series_eventProp,...
+	'plot_combined_data', pgase.plot_combined_data, 'parNames', pgase.parNames, 'stat', pgase.stat,...
+	'save_fig', pgase.save_fig, 'save_dir', pgase.save_dir);
+if pgase.save_dir~=0
+	FolderPathVA.fig = pgase.save_dir;
+end
+
+% if pgase.save_fig
+% 	% plot_stat_info.grouped_event_info_option = grouped_event_info_option;
+% 	plot_stat_info.grouped_event_info_filtered = grouped_all_series_eventProp;
+% 	plot_stat_info.plot_info = plot_info;
+% 	dt = datestr(now, 'yyyymmdd');
+% 	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
+% end
+
+
+%% ====================
 % Save processed data
-save_dir = uigetdir(AnalysisFolder);
+save_dir = uigetdir(FolderPath.analysis);
 dt = datestr(now, 'yyyymmdd');
 save(fullfile(save_dir, [dt, '_seriesData_sync']), 'seriesData_sync');
 
