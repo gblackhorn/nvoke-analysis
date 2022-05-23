@@ -21,7 +21,8 @@ function [varargout] = boxPlot_with_scatter(CellArrayData,varargin)
 	scatterColor_2 = '#BD6F00'; 
 
 	TickAngle = 45; 
-	fontsize = 18;
+	FontSize = 18;
+	FontWeight = 'bold';
 
 	save_fig = false; % true/false
 	save_dir = '';
@@ -40,6 +41,10 @@ function [varargout] = boxPlot_with_scatter(CellArrayData,varargin)
 	        plotScatter = varargin{ii+1}; % output of stim_effect_compare_trace_mean_alltrial
 	    elseif strcmpi('plotWhere', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
 	        plotWhere = varargin{ii+1}; % output of stim_effect_compare_trace_mean_alltrial
+	    elseif strcmpi('FontSize', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
+	        FontSize = varargin{ii+1}; % output of stim_effect_compare_trace_mean_alltrial
+	    elseif strcmpi('FontWeight', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
+	        FontWeight = varargin{ii+1}; % output of stim_effect_compare_trace_mean_alltrial
 	    elseif strcmpi('stat', varargin{ii})
             stat = varargin{ii+1};
 	    elseif strcmpi('stat_fig', varargin{ii})
@@ -75,7 +80,8 @@ function [varargout] = boxPlot_with_scatter(CellArrayData,varargin)
     end
 	boxplot(boxPlot_data, boxPlot_group, 'Notch', notchMode, 'Colors', boxColor);
 	set(gca, 'box', 'off')
-	set(gca, 'FontSize', fontsize)
+	set(gca, 'FontSize', FontSize)
+	set(gca, 'FontWeight', FontWeight)
 	xtickangle(TickAngle)
 	xt = xticks(gca);
 	hold on

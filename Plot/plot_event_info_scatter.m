@@ -18,6 +18,9 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 	marker_size = 10;
 	marker_face_alpha = 1;
 	marker_edge_alpha = 0;
+	FontSize = 18;
+	FontWeight = 'bold';
+
 % 	colorGroup = {'#A0DFF0', '#F29665', '#6C80BD', '#BD7C6C', '#27418C',...
 % 		'#B1F0C7', '#F276A5', '#79BDB7', '#BD79B5', '#318C85'};
     
@@ -36,6 +39,10 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 	        fname_suffix = varargin{ii+1};
 	    elseif strcmpi('linearFit', varargin{ii})
 	        linearFit = varargin{ii+1};
+	    elseif strcmpi('FontSize', varargin{ii})
+	        FontSize = varargin{ii+1};
+	    elseif strcmpi('FontWeight', varargin{ii})
+	        FontWeight = varargin{ii+1};
 	    end
 	end
 
@@ -100,6 +107,10 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 
 	legendstr = {data_struct(2:end).group}';
 	legend(h(1:group_num), legendstr);
+	set(gca, 'box', 'off')
+	set(gca, 'FontSize', FontSize)
+	set(gca, 'FontWeight', FontWeight)
+
 	par_name_1 = replace(par_name_1, '_', '-');
 	par_name_2 = replace(par_name_2, '_', '-');
 	xlabel(par_name_1);

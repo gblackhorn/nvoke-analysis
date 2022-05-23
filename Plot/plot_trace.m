@@ -19,6 +19,8 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	shade_alpha = 0.3;
 	line_width = 0.2;
 	line_mean_width = 1.5; % width of the mean-value trace
+	FontSize = 18;
+	FontWeight = 'bold';
 
 	tickInt_time = 1; % interval of tick for timeInfo (x axis)
 
@@ -52,6 +54,10 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	        stim_range = varargin{ii+1}; % cell array. Each cell contains the start(s) and end(s) ([start end]) of one type of shade
 	    elseif strcmpi('y_range', varargin{ii})
 	        y_range = varargin{ii+1};
+	    elseif strcmpi('FontSize', varargin{ii})
+	        FontSize = varargin{ii+1};
+	    elseif strcmpi('FontWeight', varargin{ii})
+	        FontWeight = varargin{ii+1};
 	    elseif strcmpi('tickInt_time', varargin{ii})
 	        tickInt_time = varargin{ii+1};
 	    end
@@ -78,10 +84,10 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 
 		h_m = plot(time_info, mean_trace,...
 			'Color', mean_line_color, 'LineWidth', line_mean_width);
-		if plot_combined_data_shade
-			h_s = patch('XData',shade_x, 'YData', shade_y,...
-				'FaceColor', shade_color, 'FaceAlpha', shade_alpha, 'EdgeColor', 'none');
-		end
+		% if plot_combined_data_shade
+		% 	h_s = patch('XData',shade_x, 'YData', shade_y,...
+		% 		'FaceColor', shade_color, 'FaceAlpha', shade_alpha, 'EdgeColor', 'none');
+		% end
 	end
 
 	if plot_raw_races
@@ -93,6 +99,11 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 				h(n) = plot(time_info, trace_data{n}, 'LineWidth', line_width, 'Color', line_color);
 			end
 		end
+	end
+
+	if plot_combined_data && plot_combined_data_shade
+		h_s = patch('XData',shade_x, 'YData', shade_y,...
+			'FaceColor', shade_color, 'FaceAlpha', shade_alpha, 'EdgeColor', 'none');
 	end
 
 	if exist('y_range', 'var')
@@ -115,5 +126,8 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	box off
 	chi=get(gca, 'Children');
 	set(gca, 'Children',flipud(chi));
+	set(gca, 'box', 'off')
+	set(gca, 'FontSize', FontSize)
+	set(gca, 'FontWeight', FontWeight)
 	set(gca,'Xtick',[time_info(1):tickInt_time:time_info(end)])
 end

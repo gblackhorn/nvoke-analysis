@@ -20,6 +20,7 @@ function [varargout] = cumulative_distr_plot(CellArrayData,varargin)
 	combineDataName = 'All';
 	plotWhere = [];
 	FontSize = 18;
+	FontWeight = 'bold';
 
 	% save_fig = false;
 	% save_dir = '';
@@ -32,6 +33,10 @@ function [varargout] = cumulative_distr_plot(CellArrayData,varargin)
 	        plotWhere = varargin{ii+1};
 	    elseif strcmpi('plotCombine', varargin{ii})
 	        plotCombine = varargin{ii+1};
+	    elseif strcmpi('FontSize', varargin{ii})
+	        FontSize = varargin{ii+1};
+	    elseif strcmpi('FontWeight', varargin{ii})
+	        FontWeight = varargin{ii+1};
 	    end
 	end
 
@@ -53,9 +58,9 @@ function [varargout] = cumulative_distr_plot(CellArrayData,varargin)
 	for n = 1:num_group
 		data_struct(n).group = groupNames{n};
 		data_struct(n).data = CellArrayData{n};
+		legendStr = groupNames;
 		if ~isempty(data_struct(n).data)
 			[data_struct(n).f, data_struct(n).x]= ecdf(data_struct(n).data); % Get the cumulative distribution f at x
-			legendStr = groupNames;
 		else
 			dis_idx = [dis_idx n];
 		end
@@ -90,6 +95,7 @@ function [varargout] = cumulative_distr_plot(CellArrayData,varargin)
 	legend('boxoff')
 	set(gca,'box','off')
 	set(gca, 'FontSize', FontSize)
+	set(gca, 'FontWeight', FontWeight)
 
 	varargout{1} = data_struct; 
 	varargout{2} = data_struct_combine; 

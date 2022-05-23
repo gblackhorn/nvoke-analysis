@@ -9,6 +9,8 @@
 % 2022.03.18 Some sections are deleted. Some are reorganized to facilitate the workflow
 
 %% ====================
+clearvars -except recdata_organized alignedData_allTrials seriesData_sync
+
 PC_name = getenv('COMPUTERNAME'); 
 % set folders for different situation
 DataFolder = 'G:\Workspace\Inscopix_Seagate';

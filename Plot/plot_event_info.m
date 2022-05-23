@@ -24,6 +24,9 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	stat = false; % true if want to run anova when plotting bars
 	stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 
+	FontSize = 18;
+	FontWeight = 'bold';
+
 	% Optionals
 	for ii = 1:2:(nargin-1)
 	    if strcmpi('plot_combined_data', varargin{ii})
@@ -42,6 +45,10 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
             stat = varargin{ii+1};
 	    elseif strcmpi('stat_fig', varargin{ii})
             stat_fig = varargin{ii+1};
+	    elseif strcmpi('FontSize', varargin{ii})
+            FontSize = varargin{ii+1};
+	    elseif strcmpi('FontWeight', varargin{ii})
+            FontWeight = varargin{ii+1};
 	    end
 	end
 
@@ -92,7 +99,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 		par = parNames{pn};
 
 		[hist_data.(par), hist_setting.(par)] = plot_event_info_hist(event_info_struct,...
-			par, 'plot_combined_data', plot_combined_data,...
+			par, 'plot_combined_data', plot_combined_data,'FontSize',FontSize,'FontWeight',FontWeight,...
 			'save_fig', save_fig, 'save_dir', save_dir, 'fname_suffix',fname_suffix,'nbins', 200);
 	end
 
@@ -103,7 +110,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 
 		[histFit_info.(par)] = plot_event_info_histfit(event_info_struct,par,'dist_type','normal',...
 			'save_fig', save_fig, 'save_dir', save_dir, 'fname_suffix',fname_suffix,...
-			'xRange',[-0.2 2],'nbins', 20); % 'nbins', 20,
+			'xRange',[-0.2 2],'nbins', 20,'FontSize',FontSize,'FontWeight',FontWeight); % 'nbins', 20,
 	end
 
 	%% bar plot
@@ -120,7 +127,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 		par = parNames{pn};
 		if group_num >1
 			[bar_data.(par), bar_stat.(par)] = plot_event_info_bar(event_info_struct,par,...
-				'plotWhere', ax, 'stat', stat, 'stat_fig', stat_fig);
+				'plotWhere',ax,'stat',stat,'stat_fig',stat_fig,'FontSize',FontSize,'FontWeight',FontWeight);
 			% 'save_fig', save_fig, 'save_dir', save_dir,
 			% title_str = ['Bar-plot: ', par_name]; 
 			% title_str = replace(title_str, '_', '-');
@@ -153,7 +160,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 			event_info_cell{gn} = [event_info_struct(gn).event_info.(par)]';
 		end
 		[~, box_stat.(par)] = boxPlot_with_scatter(event_info_cell, 'groupNames', groupNames,...
-			'plotWhere', ax, 'stat', true);
+			'plotWhere', ax, 'stat', true, 'FontSize', FontSize,'FontWeight',FontWeight);
 		title(replace(par, '_', '-'));
 	end
 	if save_fig
@@ -182,7 +189,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 			event_info_cell{gn} = [event_info_struct(gn).event_info.(par)]';
 		end
 		[data_cd, data_cdCombine] = cumulative_distr_plot(event_info_cell, 'groupNames', groupNames,...
-			'plotWhere', ax, 'stat', true);
+			'plotWhere', ax, 'stat', true, 'FontSize', FontSize,'FontWeight',FontWeight);
 		title(replace(par, '_', '-'));
 	end
 	if save_fig
@@ -223,7 +230,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 					par_mag = parNames{all_mag_val_idx(mn)};
 
 					[scatter_data.([par_duration, '_vs_' par_mag])] = plot_event_info_scatter(event_info_struct,...
-						par_duration, par_mag,...
+						par_duration, par_mag,'FontSize', FontSize,'FontWeight',FontWeight,...
 						'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 				end
 			end
@@ -234,7 +241,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 					par_slope = parNames{all_slope_val_idx(sn)};
 
 					[scatter_data.([par_duration, '_vs_' par_slope])] = plot_event_info_scatter(event_info_struct,...
-						par_duration, par_slope,...
+						par_duration, par_slope,'FontSize', FontSize,'FontWeight',FontWeight,...
 						'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 				end
 			end
@@ -253,7 +260,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 					par_slope = parNames{slope_val_idx(sn)};
 
 					[scatter_data.([par_mag, '_vs_' par_slope])] = plot_event_info_scatter(event_info_struct,...
-						par_mag, par_slope,...
+						par_mag, par_slope,'FontSize', FontSize,'FontWeight',FontWeight,...
 						'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 				end
 			end
@@ -271,7 +278,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 					par_slope_norm = parNames{norm_slope_val_idx(sn)};
 
 					[scatter_data.([par_mag_norm, '_vs_' par_slope_norm])] = plot_event_info_scatter(event_info_struct,...
-						par_mag_norm, par_slope_norm,...
+						par_mag_norm, par_slope_norm,'FontSize', FontSize,'FontWeight',FontWeight,...
 						'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 				end
 			end
@@ -287,7 +294,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 			for mn = 1:mag_par_num
 				par_mag = parNames{mag_val_idx(mn)};
 				[scatter_data.([par_baseDiff, '_vs_' par_mag])] = plot_event_info_scatter(event_info_struct,...
-					par_baseDiff, par_mag,...
+					par_baseDiff, par_mag,'FontSize', FontSize,'FontWeight',FontWeight,...
 					'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 			end
 		end
@@ -302,7 +309,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 			for dn = 1:duration_par_num
 				par_duration = parNames{duration_val_idx(dn)};
 				[scatter_data.([par_baseDiff, '_vs_' par_duration])] = plot_event_info_scatter(event_info_struct,...
-					par_baseDiff, par_duration,...
+					par_baseDiff, par_duration,'FontSize', FontSize,'FontWeight',FontWeight,...
 					'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 			end
 		end
@@ -320,7 +327,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 				par_duration_val = parNames{duration_val_idx(dvn)};
 
 				[scatter_data.([par_riseDelay, '_vs_' par_duration_val])] = plot_event_info_scatter(event_info_struct,...
-					par_riseDelay, par_duration_val,...
+					par_riseDelay, par_duration_val,'FontSize', FontSize,'FontWeight',FontWeight,...
 					'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 			end
 		end
@@ -332,7 +339,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 				par_mag_val = parNames{mag_val_idx(mvn)};
 
 				[scatter_data.([par_riseDelay, '_vs_' par_mag_val])] = plot_event_info_scatter(event_info_struct,...
-					par_riseDelay, par_mag_val,...
+					par_riseDelay, par_mag_val,'FontSize', FontSize,'FontWeight',FontWeight,...
 					'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 			end
 		end

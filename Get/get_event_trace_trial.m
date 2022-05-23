@@ -25,8 +25,11 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 
 	rebound_duration = 1; % default 1s. Used to extend events screen window when 'stimWin' is used for 'event_type'
 	mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
+	stim_section = false; % true: use a specific section of stimulation. For example the last 1s
+	ss_range = 2; % single number (last n second) or a 2-element array (start and end. 0s is stimulation onset)
 	stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 	decline_per = 0.5; % percentage of neurons (ROIs) with declined calcium during stimulation
+	spon_norm_field = {'rise_duration','peak_mag_delta'}; % calculate the normalized data to spon spikes of given field in "eventProp" 
 
 	% Defaults for [get_stimEffect]
 	base_timeRange = 2; % default 2s. 
@@ -220,11 +223,15 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			spon_idx = find(contains({category_idx.name},'spon')); % index of spon category in category_idx
 			if ~isempty(spon_idx)
 				sponEvent_idx = category_idx(spon_idx).idx;
-				sponAmp_data = [alignedData.traces(n).eventProp(sponEvent_idx).peak_mag_delta];
-				sponAmp = mean(sponAmp_data);
-			else
+				[sponAmp] = CollectAndAverage_fielddata(alignedData.traces(n).eventProp(sponEvent_idx),'peak_mag_delta');
+            else
+                sponEvent_idx = [];
 				sponAmp = NaN;
 			end
+
+			% Calculate the data normalized to spon spikes and store them in new fields
+			[alignedData.traces(n).eventProp] = add_norm_fields(alignedData.traces(n).eventProp,spon_norm_field,...
+				'ref_idx',sponEvent_idx,'newF_prefix','sponnorm');
 
 			% Get the baseline change 
 			[CaLevel,CaLevelTrace] = get_CaLevel_delta(combine_stimRange,full_time,roi_trace_data,...

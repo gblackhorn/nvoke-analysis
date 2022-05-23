@@ -22,6 +22,7 @@ function [histFit_info,varargout] = plot_event_info_histfit(event_info_struct,pa
 
 	sp_colNum = 3; % subplot column number
 	FontSize = 18;
+	FontWeight = 'bold';
 	show_legend = false;
 	dist_type = 'normal'; % 'beta', 'gamma'. read description about func histfit.
 
@@ -39,6 +40,10 @@ function [histFit_info,varargout] = plot_event_info_histfit(event_info_struct,pa
 	        fname_suffix = varargin{ii+1};
 	    elseif strcmpi('xRange', varargin{ii})
 	        xRange = varargin{ii+1}; % a 2-element vector to set the xlim of plot
+	    elseif strcmpi('FontSize', varargin{ii})
+	        FontSize = varargin{ii+1}; % a 2-element vector to set the xlim of plot
+	    elseif strcmpi('FontWeight', varargin{ii})
+	        FontWeight = varargin{ii+1}; % a 2-element vector to set the xlim of plot
 	    end
 	end
 
@@ -91,10 +96,11 @@ function [histFit_info,varargout] = plot_event_info_histfit(event_info_struct,pa
 		if exist('xRange','var')
 			xlim([xRange])
 		end
-		set(gca,'box','off')
-		set(gca, 'FontSize', FontSize)
 		xRange = xlim(gca);
 		yRange = ylim(gca);
+		set(gca,'box','off')
+		set(gca, 'FontSize', FontSize)
+		set(gca, 'FontWeight', FontWeight)
 
 		if group_num > 1
 			for n = 1:group_num

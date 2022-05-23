@@ -20,6 +20,8 @@ function [hist_info,varargout] = plot_event_info_hist(event_info_struct,par_name
 	save_fig = false;
 	save_dir = '';
 	fname_suffix = '';
+	FontSize = 18;
+	FontWeight = 'bold';
 
 	sp_colNum = 3; % subplot column number
 
@@ -37,6 +39,10 @@ function [hist_info,varargout] = plot_event_info_hist(event_info_struct,par_name
 	        save_dir = varargin{ii+1};
 	    elseif strcmpi('fname_suffix', varargin{ii})
 	        fname_suffix = varargin{ii+1};
+	    elseif strcmpi('FontSize', varargin{ii})
+	        FontSize = varargin{ii+1};
+	    elseif strcmpi('FontWeight', varargin{ii})
+	        FontWeight = varargin{ii+1};
 	    end
 	end
 
@@ -112,6 +118,9 @@ function [hist_info,varargout] = plot_event_info_hist(event_info_struct,par_name
 			legend(h(n+1), hist_info(n+1).group)
 			xlim(xRange)
 			ylim(yRange)
+			set(gca, 'box', 'off')
+			set(gca, 'FontSize', FontSize)
+			set(gca, 'FontWeight', FontWeight)
 		end
 	end
 

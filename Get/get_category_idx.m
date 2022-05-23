@@ -16,17 +16,17 @@ function [category_idx,varargout] = get_category_idx(categories,varargin)
 	% end	
 
 	%% Content
-	pc_unique = unique(categories);
-	groupNum = numel(pc_unique);
+	cat_unique = unique(categories);
+	groupNum = numel(cat_unique);
 
 	category_idx = struct('name', cell(1, groupNum), 'idx', cell(1, groupNum));
 
 	for n = 1:groupNum
-		category_idx(n).name = pc_unique{n};
+		category_idx(n).name = cat_unique{n};
 		tf_pc = strcmpi(category_idx(n).name, categories);
 		category_idx(n).idx = find(tf_pc);
 	end
 
 	varargout{1} = groupNum;
-	varargout{2} = pc_unique;
+	varargout{2} = cat_unique;
 end

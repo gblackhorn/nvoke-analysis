@@ -18,7 +18,7 @@ function [seriesData_sync,varargout] = sync_rois_multiseries(alignedData,varargi
     nonref_SpikeCat = {''}; % category of spikes will be kept in non-ref stim group
     [cat_setting] = set_CatNames_for_mod_cat_name('stimulation'); % Get the settings to modify the stimulation names in ca_events 
 
-    debug_mode = false;
+    debug_mode = false; % true/false
 
     % Optionals for inputs
     for ii = 1:2:(nargin-1)
@@ -47,26 +47,35 @@ function [seriesData_sync,varargout] = sync_rois_multiseries(alignedData,varargi
     for sn = 1:sNum
         if debug_mode
             fprintf('Processing series %d: %s\n', sn, sTrialName{sn})
+            if sn == 3
+                pause
+            end
         end
 
         series_data = alignedData(sTrialIDX{sn});
+        trail_stims = {series_data.stim_name}; % stimulation names of trials in (sn)th series
+        ref_trial_idx = find(strcmpi(ref_stim, trail_stims)); % index of reference trial in (sn)th series
 
         seriesData_sync(sn).seriesName = sTrialName{sn};
         seriesData_sync(sn).ref_stim = ref_stim;
-        [seriesData_sync(sn).SeriesData,seriesData_sync(sn).ROIs,seriesData_sync(sn).ROIs_num] = sync_rois(series_data,...
-            'ref_stim',ref_stim,'ref_SpikeCat',ref_SpikeCat,'nonref_SpikeCat',nonref_SpikeCat);
-
-        seriesData_sync(sn).ca_events=collect_events_from_alignedData(seriesData_sync(sn).SeriesData,...
-            'entry',ca_event_entry,'modify_stim_name',modify_stim_name);
-
-        if seriesData_sync(sn).ROIs_num==0 && del_empty_trial % if no intersection of ROIs found 
-            % series_cell{sn}=[];
+        if ~isempty(ref_stim) && isempty(ref_trial_idx)
             del_series_idx = [del_series_idx, sn];
+        else
+            [seriesData_sync(sn).SeriesData,seriesData_sync(sn).ROIs,seriesData_sync(sn).ROIs_num] = sync_rois(series_data,...
+                'ref_stim',ref_stim,'ref_SpikeCat',ref_SpikeCat,'nonref_SpikeCat',nonref_SpikeCat);
+
+            seriesData_sync(sn).ca_events=collect_events_from_alignedData(seriesData_sync(sn).SeriesData,...
+                'entry',ca_event_entry,'modify_stim_name',modify_stim_name);
+
+            if seriesData_sync(sn).ROIs_num==0 && del_empty_trial % if no intersection of ROIs found 
+                % series_cell{sn}=[];
+                del_series_idx = [del_series_idx, sn];
+            end
+            cat_setting_alignedData = cat_setting;
+            cat_setting_alignedData.cat_type = 'stim_name';
+            [seriesData_sync(sn).SeriesData] = mod_cat_name(seriesData_sync(sn).SeriesData,...
+                'cat_setting',cat_setting_alignedData,'dis_extra', false,'stimType',false);
         end
-        cat_setting_alignedData = cat_setting;
-        cat_setting_alignedData.cat_type = 'stim_name';
-        [seriesData_sync(sn).SeriesData] = mod_cat_name(seriesData_sync(sn).SeriesData,...
-            'cat_setting',cat_setting_alignedData,'dis_extra', false,'stimType',false);
     end
     seriesData_sync(del_series_idx) = [];
 

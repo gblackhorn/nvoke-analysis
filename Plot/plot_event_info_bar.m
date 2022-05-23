@@ -20,6 +20,8 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 	TickAngle = 45;
 	EdgeColor = 'none';
 	FaceColor = '#4D4D4D';
+	FontSize = 18;
+	FontWeight = 'bold';
 
 	plotWhere = [];
 
@@ -35,6 +37,10 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 	        stat_fig = varargin{ii+1};
 	    elseif strcmpi('plotWhere', varargin{ii})
 	        plotWhere = varargin{ii+1};
+	    elseif strcmpi('FontSize', varargin{ii})
+	        FontSize = varargin{ii+1};
+	    elseif strcmpi('FontWeight', varargin{ii})
+	        FontWeight = varargin{ii+1};
 	    end
 	end
 
@@ -111,7 +117,8 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 
 	ax.XTick = x;
 	set(gca, 'box', 'off')
-	set(gca, 'FontSize', 18)
+	set(gca, 'FontSize', FontSize)
+	set(gca, 'FontWeight', FontWeight)
 	xtickangle(TickAngle)
 	set(gca, 'XTick', [1:1:group_num]);
 	set(gca, 'xticklabel', group_names);
