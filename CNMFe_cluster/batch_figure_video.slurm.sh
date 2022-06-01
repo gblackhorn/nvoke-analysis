@@ -1,8 +1,12 @@
 #!/bin/bash
 #SBATCH -p compute
 #SBATCH -t 1-0
-#SBATCH --mem=256G
-#SBATCH -c 32
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem-per-cpu=8G
+#SBATCH --mail-user=da.guo@oist.jp
+
 
 # Load matlab
 module load matlab 

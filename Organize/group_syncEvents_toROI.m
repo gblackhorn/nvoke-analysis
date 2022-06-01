@@ -8,7 +8,7 @@ function [grouped_ca_events,varargout] = group_syncEvents_toROI(seriesData_sync,
     %       - entries: trials with different stimulations
 
     
-    % Defaults
+    % Defaults 
     ref_event_type = ''; % Calcium event/spike type: trig/rebound/spon... 
     other_trial_event_type = '';
 
