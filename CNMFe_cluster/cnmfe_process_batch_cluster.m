@@ -2,7 +2,8 @@ function [varargout] = cnmfe_process_batch_cluster(varargin)
 	% Process tif/tiff files in subfolders of selected directory with CNMFe  
 
 	% Defaults
-	opt = [];
+	opt.Fs = 20; % default frequency 20 Hz
+	opt.video = true; % whether to creat a video
 	folder = ['G:\Workspace\Inscopix_Seagate\Projects\Exported_tiff'];
 	% cnmfe_script_path = fullfile('D:\guoda\Documents\MATLAB\Codes\nvoke-analysis\Process',...
 	% 	'cnmfe_large_data_script'); % script used to process tif/tiff file with cnmfe 
@@ -13,6 +14,8 @@ function [varargout] = cnmfe_process_batch_cluster(varargin)
 			folder = varargin{ii+1};
 		elseif strcmpi('Fs', varargin{ii})
 			opt.Fs = varargin{ii+1}; % recording frequency
+		elseif strcmpi('video', varargin{ii})
+			opt.video = varargin{ii+1}; % recording frequency
 		% elseif strcmpi('cnmfe_script_path', varargin{ii})
 		% 	cnmfe_script_path = varargin{ii+1}; % recording frequency
 		end

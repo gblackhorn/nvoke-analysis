@@ -258,17 +258,23 @@ if ~isempty(neuron.ids)
         % results = neuron.obj2struct(); 
         % eval(sprintf('save %s%s%s_results.mat results', subfolder, filesep, filename_stem));
 
+        if ~isfield(opt, 'video')
+            opt.video = true;
+        end
+        if opt.video
+            % create a video for displaying the
+            amp_ac = 140;
+            range_ac = 5+[0, amp_ac];
+            multi_factor = 10;
+            range_Y = 1300+[0, amp_ac*multi_factor];
 
-        %% create a video for displaying the
-        % amp_ac = 140;
-        % range_ac = 5+[0, amp_ac];
-        % multi_factor = [];
-        % range_Y = [];
+            avi_filename = neuron.show_demixed_video(save_demixed, kt, [], amp_ac, range_ac, range_Y, multi_factor);
 
-        % avi_filename = neuron.show_demixed_video(save_demixed, kt, [], amp_ac, range_ac, range_Y, multi_factor);
-
-        % let show_demixed_video generate the vars above
-        avi_filename = neuron.show_demixed_video(save_demixed, kt)
+            %% save neurons shapes
+            neuron.save_neurons();
+        end
+        % % let show_demixed_video generate the vars above
+        % avi_filename = neuron.show_demixed_video(save_demixed, kt)
     end
 else
     fprintf('No neuron seed was found in the initialization step.\n Skip recording: %s', filename_stem)
