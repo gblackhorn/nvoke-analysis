@@ -1,4 +1,12 @@
+# Login the cluster 
+# Note: Set up the direct access to the deigo cluster from outside. It also works when your device is in the OIST network
+ssh deigo-ext
+
+# Go to the personal folder
 cd /flash/UusisaariU/GD/
+
+# Quickly read the cluster task report (slurm-xxxxxxxx.out) and bash files containing commands and tasks (.sh)
+less slurm-xxxxxxxx.out
 
 # update codes
 cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMFe_cluster/*.sh /flash/UusisaariU/GD/
