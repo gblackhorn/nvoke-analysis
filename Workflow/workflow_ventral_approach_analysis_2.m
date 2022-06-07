@@ -238,7 +238,7 @@ parNames_event = {'rise_duration','peak_mag_delta'};
 		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
 		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
 		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
-save_fig = true; % true/false
+save_fig = false; % true/false
 save_dir = FolderPathVA.fig;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
@@ -287,6 +287,7 @@ end
 seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
 dis_spon = false; % true/false
 screenEventProp = true;
+modify_eventType_name = false;
 if screenEventProp 
 	tag_check = {'og', 'og-ap'};
 	idx_check = cell(1, numel(tag_check));
@@ -362,7 +363,7 @@ parNames = {'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
 		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
 		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
 		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
-save_fig = true; % true/false
+save_fig = false; % true/false
 save_dir = FolderPathVA.fig;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not

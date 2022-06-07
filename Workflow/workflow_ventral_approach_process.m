@@ -6,25 +6,39 @@
 % All files are stored on bucket
 
 
-% 1. set folders for different situation
-inscopix_folder = 'G:\Workspace\Inscopix_Seagate';
+% % 1. set folders for different situation
+% inscopix_folder = 'G:\Workspace\Inscopix_Seagate';
 
-% ins_analysis_folder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
-ins_analysis_folder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
+% % ins_analysis_folder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
+% ins_analysis_folder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
 
-ins_projects_folder = fullfile(inscopix_folder, 'Projects'); % processed imaging data, including isxd, gpio, tiff, and csv files 
-ins_recordings_folder = fullfile(inscopix_folder, 'recordings'); % processed imaging data, including isxd, gpio, tiff, and csv files 
+% ins_projects_folder = fullfile(inscopix_folder, 'Projects'); % processed imaging data, including isxd, gpio, tiff, and csv files 
+% ins_recordings_folder = fullfile(inscopix_folder, 'recordings'); % processed imaging data, including isxd, gpio, tiff, and csv files 
 
-ins_analysis_ventral_folder = fullfile(ins_analysis_folder, 'nVoke_ventral_approach'); % processed imaging data, including isxd, gpio, tiff, and csv files 
-ins_analysis_ventral_fig_folder = fullfile(ins_analysis_ventral_folder, 'figures'); % figure folder for ventral approach analysis
-ins_analysis_invitro_folder = fullfile(ins_analysis_folder, 'Kevin_calcium_imaging_slice'); % processed imaging data, including isxd, gpio, tiff, and csv files 
+% FolderPathVA.ventralApproach = fullfile(ins_analysis_folder, 'nVoke_ventral_approach'); % processed imaging data, including isxd, gpio, tiff, and csv files 
+% ins_analysis_ventral_fig_folder = fullfile(FolderPathVA.ventralApproach, 'figures'); % figure folder for ventral approach analysis
+% ins_analysis_invitro_folder = fullfile(ins_analysis_folder, 'Kevin_calcium_imaging_slice'); % processed imaging data, including isxd, gpio, tiff, and csv files 
 
-ins_tiff_folder = fullfile(ins_projects_folder, 'Exported_tiff'); % motion corrected recordings in tiff format
-ins_tiff_invivo_folder = fullfile(ins_tiff_folder, 'IO_ventral_approach'); % motion corrected recordings in tiff format
-ins_cnmfe_result_folder = fullfile(ins_projects_folder, 'Processed_files_for_matlab_analysis'); % cnmfe result files, gpio and roi csv files etc.
+% FolderPathVA.ExportTiff = fullfile(ins_projects_folder, 'Exported_tiff'); % motion corrected recordings in tiff format
+% FolderPathVA.ExportTiff = fullfile(FolderPathVA.ExportTiff, 'IO_ventral_approach'); % motion corrected recordings in tiff format
+% FolderPathVA.cnmfe = fullfile(ins_projects_folder, 'Processed_files_for_matlab_analysis'); % cnmfe result files, gpio and roi csv files etc.
 
-ins_rec_ventral_folder = fullfile(ins_recordings_folder, 'IO_virus_ventral approach'); % processed imaging data, including isxd, gpio, tiff, and csv files 
+% ins_rec_ventral_folder = fullfile(ins_recordings_folder, 'IO_virus_ventral approach'); % processed imaging data, including isxd, gpio, tiff, and csv files 
 
+%% ====================
+clearvars -except recdata_organized alignedData_allTrials seriesData_sync
+
+PC_name = getenv('COMPUTERNAME'); 
+% set folders for different situation
+DataFolder = 'G:\Workspace\Inscopix_Seagate';
+
+if strcmp(PC_name, 'GD-AW-OFFICE')
+	AnalysisFolder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
+elseif strcmp(PC_name, 'LAPTOP-84IERS3H')
+	AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
+end
+
+[FolderPathVAVA] = set_folder_path_ventral_approach(DataFolder,AnalysisFolder);
 
 
 %% ==================== 
@@ -60,10 +74,10 @@ input_isxd_folder = uigetdir(project_dir,...
 	'Select a folder (project folder) containing processed recording files (.isxd)');
 if input_isxd_folder ~= 0
 	project_dir = input_isxd_folder;
-	output_tiff_folder = uigetdir(ins_tiff_folder,...
+	output_tiff_folder = uigetdir(FolderPathVA.ExportTiff,...
 		'Select a folder to save the exported tiff files');
 	if output_tiff_folder ~= 0
-		ins_tiff_folder = output_tiff_folder;
+		FolderPathVA.ExportTiff = output_tiff_folder;
 		export_nvoke_movie_to_tiff(input_isxd_folder, output_tiff_folder,...
 			'keyword', keywords, 'overwrite', overwrite);
 	end
@@ -74,10 +88,10 @@ end
 key_string = 'video'; % Key_string is used to locate the end of string used for nameing subfolder
 num_idx_correct = -2; % key_string idx + num_idx_correct = idx of the end of string for subfolder name
 
-organize_folder = uigetdir(ins_tiff_invivo_folder,...
+organize_folder = uigetdir(FolderPathVA.ExportTiff,...
 	'Select a folder containing exported tiff files');
 if organize_folder ~= 0
-	ins_tiff_invivo_folder = organize_folder;
+	FolderPathVA.ExportTiff = organize_folder;
 	organize_exported_tiff_files(organize_folder,...
 		'key_string', key_string, 'num_idx_correct', num_idx_correct);
 else
@@ -88,14 +102,14 @@ end
 
 %% ==================== 
 % 3.3 Remove cnmfe generated files for a new process
-dir_path_clear = ins_tiff_folder;
+dir_path_clear = FolderPathVA.ExportTiff;
 keywords_file = {'*contours*', '*results.mat'};
 keywords_dir = {'*source_extraction*'};
 
-dir_path_clear = uigetdir(ins_tiff_folder,...
+dir_path_clear = uigetdir(FolderPathVA.ExportTiff,...
 	'Warning: about to delete objects in the subfolders!');
 if dir_path_clear ~= 0
-	ins_tiff_folder = dir_path_clear;
+	FolderPathVA.ExportTiff = dir_path_clear;
 
 	rm_subdir_files('dir_path', dir_path_clear,...
 		'keywords_file', keywords_file, 'keywords_dir', keywords_dir);
@@ -110,7 +124,7 @@ end
 % Better use deigo cluster for this step. Prepare files in the bucket for tranfering them to deigo
 % 4. Process recordings with CNMFe to extract ROI traces
 % NOTE: This step can be done with VDI, but it is way slower than deigo cluster
-organized_tiff_folder = ins_tiff_invivo_folder; % This is a parent folder. Each recording has its own subfolder
+organized_tiff_folder = FolderPathVA.ExportTiff; % This is a parent folder. Each recording has its own subfolder
 Fs = 20; % Hz. recording frequency
 cnmfe_process_batch('folder',  organized_tiff_folder, 'Fs', Fs);
 
@@ -122,19 +136,19 @@ cnmfe_process_batch('folder',  organized_tiff_folder, 'Fs', Fs);
 % 5. Copy *results.mat, *gpio.csv, and *ROI.csv files in each subfolders to another folder
 % So recording information in each subfolder can be integrated into a single mat file later。
 % Export *gpio.csv and *ROI.csv from Inscopix Data processing (ISDP) software
-input_folder = uigetdir(ins_tiff_invivo_folder,...
+input_folder = uigetdir(FolderPathVA.ExportTiff,...
 	'Select a folder containing processed recording files organized in subfolders');
 if input_folder ~= 0
-	ins_tiff_invivo_folder = input_folder;
+	FolderPathVA.ExportTiff = input_folder;
 else
 	disp('Input folder not selected')
 	return
 end
 
-output_folder = uigetdir(ins_cnmfe_result_folder,...
+output_folder = uigetdir(FolderPathVA.cnmfe,...
 	'Select a folder to save *results.mat, *gpio.csv, and *ROI.csv files from subfolders of input location');
 if output_folder ~= 0
-	ins_cnmfe_result_folder = output_folder;
+	FolderPathVA.cnmfe = output_folder;
 else
 	disp('Output folder not selected')
 	return
@@ -151,8 +165,8 @@ end
 % Place results.m from CNMFe, ROI info (csv files) and GPIO info (csv) from IDPS to the same folder, and run this
 % function
 % [ROIdata, recording_num, cell_num] = ROIinfo2matlab; % for data without CNMFe process
-input_dir = ins_cnmfe_result_folder;
-output_dir = ins_analysis_ventral_folder;
+input_dir = FolderPathVA.cnmfe;
+output_dir = FolderPathVA.ventralApproach;
 
 [recdata, recording_num, cell_num] = ROI_matinfo2matlab('input_dir', input_dir,...
 	'output_dir', output_dir); % for CNMFe processed data
@@ -178,7 +192,7 @@ recdata_backup = recdata;
 
 %% ====================
 % 6.3 Save recdata before applying further processes
-uisave('recdata', fullfile(ins_analysis_ventral_folder, 'recdata'));
+uisave('recdata', fullfile(FolderPathVA.ventralApproach, 'recdata'));
 
 
 %% ====================
@@ -231,10 +245,11 @@ debug_mode = false; % true/false.
 
 %% ====================
 % 8.1.1 Copy the FOV_loc struct-field from a sourceData, if exists, to a newly formed recdata_organized
-recdata_target = recdata_organized_new;
-recdata_source = recdata_organized;
+recdata_target = recdata_organized;
+recdata_source = recdata_old;
 
 [recdata_target_with_fov,trial_list_wo_fov] = copy_fovInfo(recdata_source,recdata_target);
+recdata_organized = recdata_target_with_fov;
 
 
 %% ====================
@@ -301,13 +316,13 @@ end
 
 
 % Save organized and calculate data 
-data_fullpath = fullfile(ins_analysis_ventral_folder, '*.mat');
-[data_filename, ins_analysis_ventral_folder] = uiputfile(data_fullpath,...
+data_fullpath = fullfile(FolderPathVA.ventralApproach, '*.mat');
+[data_filename, FolderPathVA.ventralApproach] = uiputfile(data_fullpath,...
             'Select a folder to save data');
 if isequal(data_filename, 0)
 	disp('User selected Cancel')
 else
-	data_fullpath = fullfile(ins_analysis_ventral_folder, data_filename);
+	data_fullpath = fullfile(FolderPathVA.ventralApproach, data_filename);
 	disp(['User selected ', data_fullpath]);
 	% save(data_fullpath, 'recdata_organized', 'opt')
 	save(data_fullpath, 'recdata_group', 'opt')

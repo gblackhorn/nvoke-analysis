@@ -189,13 +189,19 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 
 			% modify the names of peak catigories 
 			if ~isempty(alignedData.traces(n).eventProp) && mod_pcn 
-				[alignedData.traces(n).eventProp] = mod_cat_name(alignedData.traces(n).eventProp,'dis_extra',false);
+				[cat_setting] = set_CatNames_for_mod_cat_name('event');
+				[alignedData.traces(n).eventProp] = mod_cat_name(alignedData.traces(n).eventProp,'cat_setting',cat_setting,'dis_extra',false);
 				[alignedData.traces(n).eventProp] = add_eventBaseDiff_to_eventProp(alignedData.traces(n).eventProp,...
 					combine_stimRange,full_time,roi_trace_data,varargin);
 				[alignedData.traces(n).eventProp,newFieldName,NFNtag] = add_tfTag_to_eventProp(alignedData.traces(n).eventProp,...
 					'peak_category','trig','newFieldName','stimTrig');
 				[alignedData.traces(n).eventProp] = add_riseDelay_to_eventProp(alignedData.traces(n).eventProp,...
 					combine_stimRange,'errCali',0);
+
+				% Get the possibility of stimulation related events: spike_num/stimulation number
+				% Each category of spikes is calculated separately.
+				[alignedData.traces(n).stimEvent_possi] = get_stimEvent_possibility({alignedData.traces(n).eventProp.peak_category},...
+					alignedData.stimInfo.repeats,'cat_exclude','spon');
 			end
 			% get the event number and frequency (spontaneous events and event during stimulation)
 			events_time = [alignedData.traces(n).eventProp.rise_time];
@@ -211,6 +217,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			[~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
 				combine_stimRange,duration_full_time,'exepWinDur',exepWinDur);
 			[sponfq,sponInterval,sponIdx,sponEventTime,sponEventNum] = get_event_freq_interval(events_time,sponWin);
+
 
 			% Get the effect of stimulation on each ROI
 			[alignedData.traces(n).stimEffect] = get_stimEffect(full_time,roi_trace_data,combine_stimRange,...
@@ -257,7 +264,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			alignedData.traces(n).CaLevelDecline = CaLevel.decline; % Logical val. True if CaLevelDelta is beyond the base_mean-2*base_std
 			% alignedData.traces(n).CaLevelTrace.timeInfo = CaLevelTrace.timeInfo;
 			% alignedData.traces(n).CaLevelTrace.yAlign = CaLevelTrace.yAlign;
-			aligned_time_CaLevel = CaLevelTrace.timeInfo;;
+			aligned_time_CaLevel = CaLevelTrace.timeInfo;
 			alignedData.traces(n).CaLevelTrace = CaLevelTrace.yAlign;
 		else
 			empty_idx = [empty_idx n];

@@ -25,7 +25,7 @@ function [subfolder_path, varargout] = get_subfolder_content(folder,varargin)
 
 		[subfolders, subfolders_num] = get_subfolders(folder);
 
-		if length(subfolders) > 1
+		if length(subfolders) >= 1
 			[~, idx] = sort([subfolders.datenum], sort_direction); 
 			sorted_idx = idx(end);
 			% [~, sorted_idx] = max(idx);

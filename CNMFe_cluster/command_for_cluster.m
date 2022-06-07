@@ -1,6 +1,7 @@
 # Login the cluster 
 # Note: Set up the direct access to the deigo cluster from outside. It also works when your device is in the OIST network
 ssh deigo-ext
+ssh -X da-guo@deigo.oist.jp
 
 # Go to the personal folder
 cd /flash/UusisaariU/GD/
@@ -31,15 +32,19 @@ cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/Organize/ /fl
 module load matlab
 srun -p short -t 0-1 --mem=10G -c8 --x11 --pty matlab
 srun -p compute -t 1-0 --mem=256G -c16 --x11 --pty matlab
+srun -p compute -t 1-0 --mem=256G -c16 --x11 --pty bash
 srun -p compute -t 1-0 --nodes=1 --ntasks=1 --cpus-per-task=32 --mem-per-cpu=8G --x11 --pty matlab
+
+srun matlab -nosplash 
+srun matlab -nosplash "cluster_interactive_matlab_bash;quit"
 
 
 # sync process data back to bucket
 flashdatadir='/flash/UusisaariU/GD/data_folder.qNDugf'
 bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach_cluster_trial/'
 
-flashdatadir='/flash/UusisaariU/GD/data_folder.tvyDSm/'
-bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2021-10-08_aav9_20hz/'
+flashdatadir='/flash/UusisaariU/GD/data_folder.reprocess_recordings/'
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2022.05-06_reprocess_recordings/'
 rsync -av --no-group --no-perms $flashdatadir/ deigo:$bucketdatadir/
 
 

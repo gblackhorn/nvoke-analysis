@@ -31,7 +31,7 @@ function [cat_setting,varargout] = set_CatNames_for_mod_cat_name(CatType,varargi
     case 'event'
         cat_setting.cat_type = 'peak_category'; % 'fovID', 'peak_category'
         cat_setting.cat_names = {'spon', 'trig', 'trig-AP', 'opto-delay', 'rebound'}; % new category names
-        % cat_num = numel(cat_names);
+        cat_num = numel(cat_setting.cat_names);
         cat_setting.cat_merge = cell(cat_num, 1); % each cell contains old categories which will be grouped together
         cat_setting.cat_merge{1} = {'noStim', 'beforeStim', 'interval',...
             'beforeStim-beforeStim', 'interval-interval'}; % spon

@@ -16,7 +16,7 @@ module load matlab
 mlab_cmd="matlab -nosplash -nodisplay -nodesktop"
 
 # set inputs
-folder_to_process=/flash/UusisaariU/GD/data_folder.9mHEqf/
+folder_to_process=/flash/UusisaariU/GD/data_folder.reprocess_recordings/
 plot_contour=true
 plot_roi_traces=true
 creat_video=true
