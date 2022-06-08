@@ -200,8 +200,10 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 
 				% Get the possibility of stimulation related events: spike_num/stimulation number
 				% Each category of spikes is calculated separately.
-				[alignedData.traces(n).stimEvent_possi] = get_stimEvent_possibility({alignedData.traces(n).eventProp.peak_category},...
-					alignedData.stimInfo.repeats,'cat_exclude','spon');
+				eventProp_stim = dis_struct_entry(alignedData.traces(n).eventProp,'peak_category',...
+					'spon','discard');
+				[alignedData.traces(n).stimEvent_possi] = get_stimEvent_possibility({eventProp_stim.peak_category},...
+					alignedData.stimInfo.repeats);
 			end
 			% get the event number and frequency (spontaneous events and event during stimulation)
 			events_time = [alignedData.traces(n).eventProp.rise_time];

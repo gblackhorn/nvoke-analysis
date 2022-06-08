@@ -1,11 +1,12 @@
 function [structVar_new,varargout] = dis_struct_entry(structVar,field_name,keywords,keywords_type,varargin)
 	% Delete entries in structVar according to keywords
 	% Find the entries containing keywords. 'discard' or 'keep' the entries according to the keywords_type
+	% Note: set "keywords_type" to 'do_nothing' and use varargout{1} to collect index of entries containing the keywords
 
 	% structVar: structure var
 	% field_name: name of a field containing 'char' in each entry
 	% keywords: one 'char' or a cell array containing multiple 'char' 
-	% keywords_type: 'discard'/'keep'
+	% keywords_type: 'discard'/'keep'/'do_nothing'
 
 	% Defaults
 
@@ -37,13 +38,16 @@ function [structVar_new,varargout] = dis_struct_entry(structVar,field_name,keywo
 	end
 
 	switch keywords_type
-		case 'discard'
+		case 'discard' % discard entries containing keywords
 			structVar_new = structVar;
 			structVar_new(idx) = [];
-		case 'keep'
+		case 'keep' % keep entries containing keywords and discard all others
 			structVar_new = structVar(idx);
+		case 'do_nothing' % do nothing
 		otherwise
 			error('Error in [dis_struct_entry]: input %s or %s for keywords_type',...
 				'discard', 'keep')
 	end
+
+	varargout{1} = idx; % index of entries containing the keywords
 end
