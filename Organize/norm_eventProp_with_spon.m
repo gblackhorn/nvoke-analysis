@@ -92,6 +92,13 @@ function [eventProp_all_norm,varargout] = norm_eventProp_with_spon(eventProp_all
 							eventProp_other_merge{pcn}.peak_category = eventProp_other_merge_peakCat(1).peak_category;
 							eventProp_other_merge{pcn}.event_num = event_num_peakCat;
 							eventProp_other_merge{pcn}.entryStyle = entry;
+							eventProp_other_merge{pcn}.sponfq = eventProp_other_merge_peakCat(1).sponfq;
+							eventProp_other_merge{pcn}.sponInterval = eventProp_other_merge_peakCat(1).sponInterval;
+							eventProp_other_merge{pcn}.stimfq = eventProp_other_merge_peakCat(1).stimfq;
+							eventProp_other_merge{pcn}.stimfqNorm = eventProp_other_merge_peakCat(1).stimfqNorm;
+							eventProp_other_merge{pcn}.stimfqDeltaNorm = eventProp_other_merge_peakCat(1).stimfqDeltaNorm;
+							eventProp_other_merge{pcn}.CaLevelDelta = eventProp_other_merge_peakCat(1).CaLevelDelta;
+							eventProp_other_merge{pcn}.CaLevelMinDelta = eventProp_other_merge_peakCat(1).CaLevelMinDelta;
 
 							eventProp_other_merge{pcn}.eventPropData = eventProp_other_merge_peakCat;
 

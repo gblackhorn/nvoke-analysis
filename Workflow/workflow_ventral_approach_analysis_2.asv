@@ -196,7 +196,7 @@ end
 
 %% ====================
 % 9.3 Collect event properties from alignedData_allTrials
-entry = 'roi'; % options: 'roi' or 'event'
+entry = 'event'; % options: 'roi' or 'event'
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 modify_stim_name = true; % true/false. Change the stimulation name, 
@@ -286,10 +286,10 @@ end
 % Rename stim name of og to EXog if og-5s exhibited excitation effect
 seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
 dis_spon = false; % true/false
-screenEventProp = true; % if true, rename the og to EXog when field 'stimTrig' is 1
-modify_eventType_name = true;
+screenEventProp = true;
+modify_eventType_name = false;
 if screenEventProp 
-	tag_check = {'og', 'og-ap'}; % 
+	tag_check = {'og', 'og-ap'};
 	idx_check = cell(1, numel(tag_check));
 	for n = 1:numel(tag_check)
 		[~,idx_check{n}] = filter_structData(eventProp_all,'stim_name',tag_check{n},[]); % accquire the idx of all og-trial events
@@ -344,14 +344,14 @@ grouped_event_info_option.cat_keywords = cat_keywords;
 %% ====================
 % 9.5.1.2 screen groups based on tags. Delete unwanted groups for event analysis
 tags_discard = {'og-delay','trig [EXog]'}; % 'trig-AP',Discard groups containing these words. 'EXog',
-tags_keep = {'spon','trig','trig [EXog]','rebound','trig-AP'}; % Keep groups containing these words
+tags_keep = {'spon','trig','trig [EXog]','rebound'}; % Keep groups containing these words
 clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
 [grouped_event_info_filtered] = filter_entries_in_structure(grouped_event_info,'group',...
 	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);
 
 %% ====================
 % 9.5.2 Plot event parameters. Grouped according to categories
-% [9.3] eventProp_all: entry is 'events'
+% alignedData_allTrials: entry is 'events'
 close all
 plot_combined_data = true;
 parNames = {'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
@@ -395,11 +395,11 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 
 %% ====================
 % 9.5.4 Plot roi parameters. Grouped according to categories
-% [9.3] eventProp_all: entry is 'roi'
+% alignedData_allTrials: entry is 'roi'
 close all
 plot_combined_data = true;
 parNames = {'sponfq','stimfq','stimfqNorm','stimfqDeltaNorm','CaLevelDelta','CaLevelMinDelta'}; % entry: roi
-save_fig = false; % true/false
+save_fig = true; % true/false
 save_dir = FolderPathVA.fig;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
