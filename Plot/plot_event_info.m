@@ -125,14 +125,14 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	for pn = 1:par_num
 		ax = nexttile(tlo);
 		par = parNames{pn};
-		if group_num >1
+		% if group_num >1
 			[bar_data.(par), bar_stat.(par)] = plot_event_info_bar(event_info_struct,par,...
 				'plotWhere',ax,'stat',stat,'stat_fig',stat_fig,'FontSize',FontSize,'FontWeight',FontWeight);
 			% 'save_fig', save_fig, 'save_dir', save_dir,
 			% title_str = ['Bar-plot: ', par_name]; 
 			% title_str = replace(title_str, '_', '-');
 			title(replace(par, '_', '-'));
-		end
+		% end
 	end
 	if save_fig
 		% fname = 'bar_plots';
