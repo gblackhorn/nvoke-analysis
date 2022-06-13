@@ -196,7 +196,7 @@ end
 
 %% ====================
 % 9.3 Collect event properties from alignedData_allTrials
-entry = 'roi'; % options: 'roi' or 'event'
+entry = 'event'; % options: 'roi' or 'event'
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 modify_stim_name = true; % true/false. Change the stimulation name, 
@@ -286,7 +286,7 @@ end
 % Rename stim name of og to EXog if og-5s exhibited excitation effect
 seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
 dis_spon = false; % true/false
-screenEventProp = true; % if true, rename the og to EXog when field 'stimTrig' is 1
+screenEventProp = false; % if true, rename the og to EXog when field 'stimTrig' is 1
 modify_eventType_name = true;
 if screenEventProp 
 	tag_check = {'og', 'og-ap'}; % 

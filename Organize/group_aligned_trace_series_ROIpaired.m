@@ -73,6 +73,7 @@ function [grouped_data,varargout] = group_aligned_trace_series_ROIpaired(aligned
 
         % Go through trials. Collect data if a trial has the ROI in the ref/first trial
         for tn = 1:trial_num
+            trial_name = alignedData_series(trial_order(tn)).trialName;
             trial_roi = {alignedData_series(trial_order(tn)).traces.roi};
             roi_idx = find(strcmp(grouped_data(rn).roi, trial_roi));
             if ~isempty(roi_idx) % if roi is present in this trial
@@ -109,6 +110,8 @@ function [grouped_data,varargout] = group_aligned_trace_series_ROIpaired(aligned
                     grouped_data(rn).plot_trace_data(tn).trace_mean = mean(trialData.value, 2, 'omitnan');
                     grouped_data(rn).plot_trace_data(tn).trace_std = std(trialData.value, 0, 2, 'omitnan');
                     grouped_data(rn).eventPropData(tn).event_info = trialData.eventProp;
+                    [grouped_data(rn).eventPropData(tn).event_info.trial] = deal(trial_name(1:8));
+                    [grouped_data(rn).eventPropData(tn).event_info.roi] = deal(grouped_data(rn).roi);
 
                     if use_ref 
                         grouped_data(rn).plot_trace_data(tn).ref_amp_mean = ref_amp_mean;

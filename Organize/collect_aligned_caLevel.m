@@ -65,6 +65,7 @@ function [all_caLevel_data,varargout] = collect_aligned_caLevel(alignedData,vara
 		stat.std_base_all = std(stat.mean_base);
 		stat.mean_stim_all = mean(stat.mean_stim);
 		stat.std_stim_all = std(stat.mean_stim);
+		stat.ste_stim_all = stat.std_stim_all/sqrt(length(stat.mean_stim));
 
 		[stat.h,stat.p,stat.ci,stat.stats] = ttest(stat.mean_base,stat.mean_stim);
 		all_caLevel_data(sn).stat = stat;

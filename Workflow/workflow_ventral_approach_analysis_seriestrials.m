@@ -129,7 +129,7 @@ pei.plot_combined_data = true;
 pei.parNames = {'rise_duration','peak_mag_delta','rise_duration_refNorm','peak_mag_delta_refNorm',...
     'sponnorm_rise_duration','sponnorm_peak_mag_delta'}; % entry: event
 % 					,'rise_delay'
-pei.save_fig = true; % true/false
+pei.save_fig = false; % true/false
 pei.save_dir = FolderPathVA.fig;
 pei.stat = true; % true if want to run anova when plotting bars
 pei.FontSize = 22;
@@ -177,10 +177,10 @@ sort_keywords = {'[ap]','[og]','trig','rebound'};
 
 close all
 pgase.plot_combined_data = true;
-pgase.parNames = {'rise_duration_refNorm','peak_mag_delta_refNorm',...
+pgase.parNames = {'rise_duration','peak_mag_delta','rise_duration_refNorm','peak_mag_delta_refNorm',...
 'sponnorm_rise_duration','sponnorm_peak_mag_delta'}; % entry: event
 % 					,'rise_delay'
-pgase.save_fig = true; % true/false
+pgase.save_fig = false; % true/false
 pgase.save_dir = FolderPathVA.fig;
 pgase.stat = true; % true if want to run anova when plotting bars
 pgase.stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
