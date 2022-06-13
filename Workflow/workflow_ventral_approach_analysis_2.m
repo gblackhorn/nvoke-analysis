@@ -387,7 +387,7 @@ end
 
 %% ====================
 % 9.5.1.2 screen groups based on tags. Delete unwanted groups for event analysis
-tags_discard = {'spon','trig-AP','og-delay'}; % Discard groups containing these words. 'spon','EXopto',
+tags_discard = {'trig-AP','og-delay'}; % Discard groups containing these words. 'spon','EXopto',
 tags_keep = {'trig [ap]','trig [EXog]','rebound'}; % Keep groups containing these words
 clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
 [grouped_event_info_filtered] = filter_entries_in_structure(grouped_event_info,'group',...

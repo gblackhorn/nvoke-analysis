@@ -20,7 +20,7 @@ function [new_struct] = empty_content_struct(field_names,entry_num)
             new_struct = struct(cellVar{:});
         else
             fn_num = numel(field_names);
-            cellarray = cell(entry_num,fn_num);
+            cellarray = cell(fn_num,entry_num);
             new_struct = cell2struct(cellarray,field_names);
         end
     end

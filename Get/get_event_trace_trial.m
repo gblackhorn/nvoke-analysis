@@ -243,7 +243,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 				'ref_idx',sponEvent_idx,'newF_prefix','sponnorm');
 
 			% Get the baseline change 
-			[CaLevel,CaLevelTrace] = get_CaLevel_delta(combine_stimRange,full_time,roi_trace_data,...
+			[CaLevel,CaLevelTrace,CaLevel_cal_range] = get_CaLevel_delta(combine_stimRange,full_time,roi_trace_data,...
 				'base_timeRange',base_timeRange,'postStim_timeRange',base_timeRange,...
 				'stim_section',stim_section,'ss_range',ss_range,'stim_time_error',stim_time_error);
 
@@ -286,5 +286,6 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	[~,alignedData.num_inROI] = get_struct_entry_idx(alignedData.traces,'stimEffect','inhibition','req',true);
 	alignedData.time = aligned_time;
 	alignedData.timeCaLevel = aligned_time_CaLevel;
+	alignedData.CaLevel_cal_range = CaLevel_cal_range;
 	alignedData.fullTime = full_time;
 end

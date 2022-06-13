@@ -144,6 +144,12 @@ function [varargout] = get_CaLevel_delta(stimRange,timeInfo,roiTrace,varargin)
 	alignedTrace.raw = alignedTrace_raw;
 	alignedTrace.yAlign = alignedTrace_yAlign; % subtrace baseVal(s) from trace(s). 
 
+	% data in index ranges are used for calculating the calcium level
+	CaLevel_cal_range.rang_base = range_base;
+	CaLevel_cal_range.range_stimSec = range_stimSec;
+	CaLevel_cal_range.range_postStim = range_postStim;
+
 	varargout{1} = CaLevel; 
 	varargout{2} = alignedTrace; % 
+	varargout{3} = CaLevel_cal_range; % 
 end
