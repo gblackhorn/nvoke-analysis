@@ -193,7 +193,75 @@ save(fullfile(save_dir, [dt, '_seriesData_sync']), 'seriesData_sync');
 
 
 
+%% ====================
+% Get the neuron number from a eventProp var
+eventProp_temp = grouped_event_info_filtered(7).event_info;
+trial_names = {eventProp_temp.trialName};
+trial_unique = unique(trial_names);
+trial_num = numel(trial_unique);
+neuron_num = 0;
+trial_roi_list = empty_content_struct({'trialName','roi_list','roi_num','neg_roi_list','neg_roi_num'},trial_num);
+for tn = 1:trial_num
+	tf_trial = strcmp(trial_names,trial_unique{tn});
+	idx_trial = find(tf_trial);
+	trial_eventProp = eventProp_temp(idx_trial);
+	roi_unique = unique({trial_eventProp.roiName});
+	roi_num = numel(roi_unique);
+	neuron_num = neuron_num+roi_num;
+
+	trial_roi_list(tn).trialName = trial_unique{tn};
+	trial_roi_list(tn).roi_list = roi_unique;
+	trial_roi_list(tn).roi_num = roi_num;
+end
+
+%% ====================
+% Get the stim event possibility
+roilist = trial_roi_list_rb;
+alignedData = alignedData_allTrials;
+
+rbPoss_trial = cell(1,numel(roilist));
+
+for tn = 1:numel(roilist)
+	trial_idx = find(strcmp({alignedData_allTrials.trialName},roilist(tn).trialName));
+	alignedData_rois = {alignedData(trial_idx).traces.roi};
+
+	roilist_trial_roi = roilist(tn).roi_list;
+
+	rbPoss_roi = cell(1, numel(roilist_trial_roi));
+	for rn = 1:numel(roilist_trial_roi)
+		possiStruct = alignedData(trial_idx).traces(rn).stimEvent_possi;
+		possiidx = find(strcmp({possiStruct.cat_name},'rebound'));
+		rbPoss_roi{rn} = alignedData(trial_idx).traces(rn).stimEvent_possi(possiidx);
+	end
+	rbPoss_trial{tn} = [rbPoss_roi{:}];
+
+	roilist(tn).neg_roi_list = setdiff(alignedData_rois,roilist_trial_roi);
+	roilist(tn).neg_roi_num = numel(roilist(tn).neg_roi_list);
+
+	neg_roi_num = neg_roi_num+roilist(tn).neg_roi_num;
+end
+all_possi = [rbPoss_trial{:}];
 
 
+% rb_neuron_num = 52;
+% rbex_neuron_num = 20;
 
 
+%% ====================
+% Choose a trial_roi_list and compare the rois in it with the ones in alignedData_allTrials to find difference
+roilist = trial_roi_list_rb_all;
+alignedData = alignedData_allTrials;
+
+neg_roi_num = 0;
+for tn = 1:numel(roilist)
+	trial_idx = find(strcmp({alignedData_allTrials.trialName},roilist(tn).trialName));
+	alignedData_rois = {alignedData(trial_idx).traces.roi};
+
+	roilist_trial_roi = roilist(tn).roi_list;
+	roilist(tn).neg_roi_list = setdiff(alignedData_rois,roilist_trial_roi);
+	roilist(tn).neg_roi_num = numel(roilist(tn).neg_roi_list);
+
+	neg_roi_num = neg_roi_num+roilist(tn).neg_roi_num;
+end
+
+% 
