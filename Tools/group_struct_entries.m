@@ -3,7 +3,8 @@ function [structGroup,varargout] = group_struct_entries(structVar,condition_fiel
     % Entries sharing the same numeric/char in the specified field will be grouped together
 
     % structVar: a structure variable with multiple entries.
-    % structGroup: a structure. Each field contains a group. Field names are the contents in the condition_field
+    % condition_field: name of a field in structVar
+    % structGroup: a structure. Each entry contains a group. 
 
     
     % % Defaults
