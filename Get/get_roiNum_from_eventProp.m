@@ -13,7 +13,7 @@ function [TrialRoiList,varargout] = get_roiNum_from_eventProp(eventProp,varargin
     % end
 
     %% main contents
-    trial_names = {eventProp_temp.trialName};
+    trial_names = {eventProp.trialName};
     trial_unique = unique(trial_names);
     trial_num = numel(trial_unique);
     neuron_num = 0;
@@ -21,7 +21,7 @@ function [TrialRoiList,varargout] = get_roiNum_from_eventProp(eventProp,varargin
     for tn = 1:trial_num
     	tf_trial = strcmp(trial_names,trial_unique{tn});
     	idx_trial = find(tf_trial);
-    	trial_eventProp = eventProp_temp(idx_trial);
+    	trial_eventProp = eventProp(idx_trial);
     	roi_unique = unique({trial_eventProp.roiName});
     	roi_num = numel(roi_unique);
     	neuron_num = neuron_num+roi_num;

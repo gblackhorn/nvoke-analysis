@@ -23,7 +23,7 @@ function [grouped_event,grouped_event_setting,varargout] = mod_and_group_eventPr
     mgSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', 'rebound', 'delay'
     mgSetting.sort_order_plus = {'ap', 'EXopto'};
 
-
+    mgSetting.sponOnly = false;
     % % ref_group = 1;
     % par = {'rise_duration','peak_mag_delta'}; % fields will be normalized in grouped_event_info.event_info
     % norm_par_suffix = 'refNorm'; % added to the end of names of new fields containing the normalized pars
@@ -37,6 +37,13 @@ function [grouped_event,grouped_event_setting,varargout] = mod_and_group_eventPr
     end
 
     %% main contents
+    % if the eventType is roi, only keep the "spon" entries
+    if strcmp(eventType,'roi') && mgSetting.sponOnly
+        [eventProp_all] = filter_structData(eventProp_all,...
+            'peak_category','spon',1);
+    end
+
+
     if mgSetting.mark_EXog 
         mgSetting.og_tag = {'og', 'og-ap'}; % 
         idx_check = cell(1, numel(mgSetting.og_tag));
@@ -62,7 +69,7 @@ function [grouped_event,grouped_event_setting,varargout] = mod_and_group_eventPr
         [eventProp_all_norm] = mod_cat_name(eventProp_all_norm,'dis_extra', true,'seperate_spon',mgSetting.seperate_spon);
     end
 
-    mgSetting.groupField = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'
+    % mgSetting.groupField = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'
     % [grouped_event_info, grouped_event_setting] = group_event_info_multi_category(eventProp_all,...
     %   'category_names', category_names);
     [grouped_event, grouped_event_setting] = group_event_info_multi_category(eventProp_all_norm,...

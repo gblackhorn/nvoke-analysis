@@ -102,6 +102,9 @@ adata.mod_pcn = true; % true/false modify the peak category names with func [mod
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
 debug_mode = false; % true/false
 adata.caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
+adata.disROI = true; % true/false. If true, Keep ROIs using the setting below, and delete the rest
+adata.disROI_setting.stims = {'GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s GPIO-1-1s'};
+adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
 
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
 	'traceData_type', adata.traceData_type, 'event_data_group', adata.event_data_group,...
@@ -118,6 +121,11 @@ if adata.caDeclineOnly
 	[adata.disIDX_og] = judge_array_content(adata.caDe_og,false); % og trials without significant calcium decline
 	adata.disIDX = adata.ogIDX(adata.disIDX_og); 
 	alignedData_allTrials(adata.disIDX) = [];
+end
+
+if adata.disROI
+	alignedData_allTrials = discard_alignedData_roi(alignedData_allTrials,...
+		'stims',adata.disROI_setting.stims,'eventCats',adata.disROI_setting.eventCats);
 end
 
 %% ====================
@@ -285,13 +293,14 @@ end
 % 9.5.1.1 Collect and group events from 'eventProp_all' according to stimulation and category 
 % Rename stim name of og to EXog if og-5s exhibited excitation effect
 eventType = eprop.entry; % 'roi' or 'event'. The entry type in eventProp
+mgSetting.sponOnly = false; % If eventType is 'roi', and mgSetting.sponOnly is true. Only keep spon entries
 mgSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
 mgSetting.dis_spon = false; % true/false. Discard spontaneous events
 mgSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
 mgSetting.groupField = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
 
 % rename the stimulation tag if og evokes spike at the onset of stimulation
-mgSetting.mark_EXog = false; % if true, rename the og to EXog if the value of field 'stimTrig' is 1
+mgSetting.mark_EXog = false; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
 mgSetting.og_tag = {'og', 'og-ap'}; % find og events with these strings. 'og' to 'Exog', 'og-ap' to 'EXog-ap'
 
 % arrange the order of group entries using function [sort_struct_with_str] with settings below. 
@@ -304,8 +313,8 @@ mgSetting.sort_order_plus = {'ap', 'EXopto'};
 
 %% ====================
 % 9.5.1.2 screen groups based on tags. Delete unwanted groups for event analysis
-tags_discard = {'og-delay','trig [EXog]'}; % 'trig-AP',Discard groups containing these words. 'EXog',
-tags_keep = {'spon','trig','trig [EXog]','rebound','trig-AP'}; % Keep groups containing these words
+tags_discard = {'spon','og-delay','trig [EXog]','[og-ap]'}; % 'trig-AP',Discard groups containing these words. 'EXog',
+tags_keep = {'trig','trig [EXog]','rebound','trig-AP'}; % Keep groups containing these words
 clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
 [grouped_event_info_filtered] = filter_entries_in_structure(grouped_event,'group',...
 	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);
