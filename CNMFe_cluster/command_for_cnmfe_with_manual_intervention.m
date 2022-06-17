@@ -38,7 +38,7 @@ ii = 1;
 %% ====================
 % run this section for each recordings.
 
-nam = file_names{ii};
+nam = file_names{ii}
 ii = ii+1;
 % Run "cnmfe_large_data_script_cluster.m"
 % Temprol solution: pause at line 111 in "viewNeurons.m" make sure the ROI and traces will be plotted

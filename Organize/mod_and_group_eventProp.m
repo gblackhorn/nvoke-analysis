@@ -79,8 +79,12 @@ function [grouped_event,grouped_event_setting,varargout] = mod_and_group_eventPr
     end
 
     for gn = 1:numel(grouped_event)
-        [grouped_event(gn).numTrial,grouped_event(gn).numRoi,grouped_event(gn).numRoiVec] = get_num_fieldUniqueContent(grouped_event(gn).event_info,...
-            'fn_1', 'trialName', 'fn_2', 'roiName');
+        % [grouped_event(gn).numTrial,grouped_event(gn).numRoi,grouped_event(gn).numRoiVec] = get_num_fieldUniqueContent(grouped_event(gn).event_info,...
+        %     'fn_1', 'trialName', 'fn_2', 'roiName');
+        [TrialRoiList] = get_roiNum_from_eventProp(grouped_event(gn).event_info);
+        grouped_event(gn).numTrial = numel(TrialRoiList);
+        grouped_event(gn).numRoi = sum([TrialRoiList.roi_num]);
+        grouped_event(gn).TrialRoiList = TrialRoiList;
     end
 
     % Sort group 

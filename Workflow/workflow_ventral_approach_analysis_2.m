@@ -9,7 +9,7 @@
 % 2022.03.18 Some sections are deleted. Some are reorganized to facilitate the workflow
 
 %% ====================
-clearvars -except recdata_organized alignedData_allTrials seriesData_sync
+clearvars -except recdata_organized alignedData_allTrials seriesData_sync grouped_event adata
 
 PC_name = getenv('COMPUTERNAME'); 
 % set folders for different situation
@@ -26,7 +26,8 @@ end
 % Save processed data
 save_dir = uigetdir(AnalysisFolder);
 dt = datestr(now, 'yyyymmdd');
-save(fullfile(save_dir, [dt, '_ProcessedData_ogEx']), 'recdata_organized','alignedData_allTrials','grouped_event_info');
+save(fullfile(save_dir, [dt, '_ProcessedData_ogEx']),...
+    'recdata_organized','alignedData_allTrials','grouped_event','adata','grouped_event_setting');
 
 %% ====================
 % 8.4 Select a specific group of data from recdata_group for further analysis
@@ -62,7 +63,7 @@ roi_idx = [76:78]; % roi number. 2 for 'neuron2'
 [recdata_organized] = discard_data(recdata_organized,trial_idx,roi_idx);
 %% ====================
 % 9.1.2 discard rec if the fovID number is bigger than fov_max
-fov_max = 6; % 
+fov_max = 6; % fov 1-6 are from the ChrimsonR positive CN axon side
 dis_idx = [];
 recdata_organized_bk = recdata_organized;
 recN = size(recdata_organized, 1);
@@ -75,14 +76,15 @@ for rn = 1:recN
 end
 recdata_organized(dis_idx, :) = [];
 %% ====================
-% 9.1.3 Discard rois (in recdata_organized) if they are lack of certain types of events
-dis.stims = {'GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s GPIO-1-1s'};
-dis.eventCats = {{'trigger'},...
-		{'trigger', 'rebound'},...
-		{'trigger-beforeStim', 'trigger-interval', 'delay-trigger', 'rebound-interval'}};
-debug_mode = false; % true/false
-recdata_organized_bk = recdata_organized;
-[recdata_organized] = discard_recData_roi(recdata_organized,'stims',dis.stims,'eventCats',dis.eventCats,'debug_mode',debug_mode);
+% Discarding certain ROIs according to what calcium spikes they don't have will be executed in the next section on alignedData
+% % 9.1.3 Discard rois (in recdata_organized) if they are lack of certain types of events
+% dis.stims = {'GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s GPIO-1-1s'};
+% dis.eventCats = {{'trigger'},...
+% 		{'trigger', 'rebound'},...
+% 		{'trigger-beforeStim', 'trigger-interval', 'delay-trigger', 'rebound-interval'}};
+% debug_mode = false; % true/false
+% recdata_organized_bk = recdata_organized;
+% [recdata_organized] = discard_recData_roi(recdata_organized,'stims',dis.stims,'eventCats',dis.eventCats,'debug_mode',debug_mode);
 %% ====================
 % 9.2 Align traces from all trials. Also collect the properties of events
 adata.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
@@ -202,8 +204,11 @@ for cn = 1:numel(eventCat)
 	end
 end
 
+
+
 %% ====================
-% 9.3 Collect event properties from alignedData_allTrials
+% 9.5.1.1 Create  'eventProp_all' according to stimulation and category 
+
 eprop.entry = 'event'; % options: 'roi' or 'event'
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
@@ -213,84 +218,6 @@ eprop.modify_stim_name = true; % true/false. Change the stimulation name,
 [eventProp_all]=collect_events_from_alignedData(alignedData_allTrials,...
 	'entry',eprop.entry,'modify_stim_name',eprop.modify_stim_name);
 
-%% ====================
-% 9.4.1 Collect spontaneous events from 'eventProp_all' for comparison among FOVs
-% "entryStyle" field in "eventProp_all" must be 'event'. The field "event_type" in alignedData_allTrials used 
-% to produce eventProp_all must be 'detected_events' 
-[collectSp.category_idx] = get_category_idx({eventProp_all.peak_category}); % get the idex of events belong to various categories
-collectSp.spon_field_idx = find(strcmpi('spon', {collectSp.category_idx.name})); % the location of spon idx in structure category_idx
-collectSp.spon_idx = collectSp.category_idx(collectSp.spon_field_idx).idx;
-collectSp.spon_eventProp = eventProp_all(collectSp.spon_idx); % get properties of all spon events in eventProp_all
-[grouped_spon_event_info, grouped_spon_event_opt] = group_event_info_multi_category(collectSp.spon_eventProp,...
-	'category_names', {'fovID'}); % one entry for one event
-
-% Get the spon frequency and average interval time. Spon events in single ROIs will be used
-collectSp.mod_pcn = false; % true/false modify the peak category names with func [mod_cat_name]
-collectSp.keep_catNames = {'spon'}; % 'spon'. event will be kept if its peak-cat is one of these
-debug_mode = false;
-[alignedData_allTrials_spon] = org_alignData(alignedData_allTrials,'keep_catNames', collectSp.keep_catNames,...
-	'mod_pcn', collectSp.mod_pcn, 'debug_mode', false); % only keep spon events in the event properties
-[eventProp_all_spon] = collect_event_prop(alignedData_allTrials_spon, 'style', 'roi'); % only use 'event' for 'style'
-
-collectSp.category_names = {'fovID'}; % options: 'fovID', 'stim_name', 'peak_category'
-[grouped_spon_roi_info, grouped_spon_roi_opt] = group_event_info_multi_category(eventProp_all_spon,...
-	'category_names', collectSp.category_names);
-
-%% ====================
-% 9.4.2.1 Plot spon event parameters
-close all
-tplot.plot_combined_data = true;
-tplot.parNames_event = {'rise_duration','peak_mag_delta'};
-
-        % {'sponNorm_rise_duration', 'sponNorm_peak_delta_norm_hpstd', 'sponNorm_peak_slope_norm_hpstd'}; 
-		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
-		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
-		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
-tplot.save_fig = false; % true/false
-tplot.save_dir = FolderPathVA.fig;
-tplot.stat = true; % true if want to run anova when plotting bars
-tplot.stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
-
-[tplot.save_dir_event, plot_info_event] = plot_event_info(grouped_spon_event_info,...
-	'plot_combined_data', tplot.plot_combined_data, 'parNames', tplot.parNames_event, 'stat', tplot.stat,...
-	'save_fig', tplot.save_fig, 'save_dir', tplot.save_dir);
-if tplot.save_dir_event~=0
-	FolderPathVA.fig = tplot.save_dir_event;
-end
-if tplot.save_fig
-% 	plot_stat_info.grouped_event_info_option = grouped_event_info_option;
-	plot_stat_info_spon.grouped_event_info = grouped_spon_event_info;
-	plot_stat_info_spon.plot_info = plot_info_event;
-	tplot.dt = datestr(now, 'yyyymmdd');
-	save(fullfile(tplot.save_dir, [tplot.dt, '_plot_stat_info_spon']), 'plot_stat_info_spon');
-end
-
-%% ====================
-% 9.4.2.2 Plot spon freq and event interval
-close all
-tplot.plot_combined_data = true;
-tplot.parNames_roi = {'sponfq', 'sponInterval'};
-tplot.save_fig = true; % true/false
-tplot.save_dir = FolderPathVA.fig;
-tplot.stat = true; % true if want to run anova when plotting bars
-tplot.stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
-[tplot.save_dir_roi, plot_info_roi] = plot_event_info(grouped_spon_roi_info,...
-	'plot_combined_data', tplot.plot_combined_data, 'parNames', tplot.parNames_roi, 'stat', tplot.stat,...
-	'save_fig', tplot.save_fig, 'save_dir', tplot.save_dir);
-if tplot.save_dir_roi~=0
-	FolderPathVA.fig = tplot.save_dir_roi;
-end
-if tplot.save_fig
-	% plot_stat_info.grouped_event_info_option = grouped_event_info_option;
-	plot_sponfreq_info.grouped_event_info = grouped_spon_roi_info;
-	plot_sponfreq_info.plot_info = plot_info_roi;
-	tplot.dt = datestr(now, 'yyyymmdd');
-	save(fullfile(tplot.save_dir, [tplot.dt, '_plot_sponfreq_info']), 'plot_sponfreq_info');
-end
-
-
-%% ====================
-% 9.5.1.1 Collect and group events from 'eventProp_all' according to stimulation and category 
 % Rename stim name of og to EXog if og-5s exhibited excitation effect
 eventType = eprop.entry; % 'roi' or 'event'. The entry type in eventProp
 mgSetting.sponOnly = false; % If eventType is 'roi', and mgSetting.sponOnly is true. Only keep spon entries
@@ -461,3 +388,90 @@ while tn <= trial_num
 end
 
 
+
+% Analysis for spontaneous spikes
+%% ====================
+% 9.3 Collect event properties from alignedData_allTrials
+eprop.entry = 'event'; % options: 'roi' or 'event'
+                % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
+                % 'event': events are seperated (struct length = events_num). mean values were not calculated
+eprop.modify_stim_name = true; % true/false. Change the stimulation name, 
+                            % such as GPIOxxx and OG-LEDxxx (output from nVoke), to simpler ones (ap, og, etc.)
+
+[eventProp_all]=collect_events_from_alignedData(alignedData_allTrials,...
+	'entry',eprop.entry,'modify_stim_name',eprop.modify_stim_name);
+
+%% ====================
+% 9.4.1 Collect spontaneous events from 'eventProp_all' for comparison among FOVs
+% "entryStyle" field in "eventProp_all" must be 'event'. The field "event_type" in alignedData_allTrials used 
+% to produce eventProp_all must be 'detected_events' 
+[collectSp.category_idx] = get_category_idx({eventProp_all.peak_category}); % get the idex of events belong to various categories
+collectSp.spon_field_idx = find(strcmpi('spon', {collectSp.category_idx.name})); % the location of spon idx in structure category_idx
+collectSp.spon_idx = collectSp.category_idx(collectSp.spon_field_idx).idx;
+collectSp.spon_eventProp = eventProp_all(collectSp.spon_idx); % get properties of all spon events in eventProp_all
+[grouped_spon_event_info, grouped_spon_event_opt] = group_event_info_multi_category(collectSp.spon_eventProp,...
+	'category_names', {'fovID'}); % one entry for one event
+
+% Get the spon frequency and average interval time. Spon events in single ROIs will be used
+collectSp.mod_pcn = false; % true/false modify the peak category names with func [mod_cat_name]
+collectSp.keep_catNames = {'spon'}; % 'spon'. event will be kept if its peak-cat is one of these
+debug_mode = false;
+[alignedData_allTrials_spon] = org_alignData(alignedData_allTrials,'keep_catNames', collectSp.keep_catNames,...
+	'mod_pcn', collectSp.mod_pcn, 'debug_mode', false); % only keep spon events in the event properties
+[eventProp_all_spon] = collect_event_prop(alignedData_allTrials_spon, 'style', 'roi'); % only use 'event' for 'style'
+
+collectSp.category_names = {'fovID'}; % options: 'fovID', 'stim_name', 'peak_category'
+[grouped_spon_roi_info, grouped_spon_roi_opt] = group_event_info_multi_category(eventProp_all_spon,...
+	'category_names', collectSp.category_names);
+
+%% ====================
+% 9.4.2.1 Plot spon event parameters
+close all
+tplot.plot_combined_data = true;
+tplot.parNames_event = {'rise_duration','peak_mag_delta'};
+
+        % {'sponNorm_rise_duration', 'sponNorm_peak_delta_norm_hpstd', 'sponNorm_peak_slope_norm_hpstd'}; 
+		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
+		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
+		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
+tplot.save_fig = false; % true/false
+tplot.save_dir = FolderPathVA.fig;
+tplot.stat = true; % true if want to run anova when plotting bars
+tplot.stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
+
+[tplot.save_dir_event, plot_info_event] = plot_event_info(grouped_spon_event_info,...
+	'plot_combined_data', tplot.plot_combined_data, 'parNames', tplot.parNames_event, 'stat', tplot.stat,...
+	'save_fig', tplot.save_fig, 'save_dir', tplot.save_dir);
+if tplot.save_dir_event~=0
+	FolderPathVA.fig = tplot.save_dir_event;
+end
+if tplot.save_fig
+% 	plot_stat_info.grouped_event_info_option = grouped_event_info_option;
+	plot_stat_info_spon.grouped_event_info = grouped_spon_event_info;
+	plot_stat_info_spon.plot_info = plot_info_event;
+	tplot.dt = datestr(now, 'yyyymmdd');
+	save(fullfile(tplot.save_dir, [tplot.dt, '_plot_stat_info_spon']), 'plot_stat_info_spon');
+end
+
+%% ====================
+% 9.4.2.2 Plot spon freq and event interval
+close all
+tplot.plot_combined_data = true;
+tplot.parNames_roi = {'sponfq', 'sponInterval'};
+tplot.save_fig = true; % true/false
+tplot.save_dir = FolderPathVA.fig;
+tplot.stat = true; % true if want to run anova when plotting bars
+tplot.stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
+[tplot.save_dir_roi, plot_info_roi] = plot_event_info(grouped_spon_roi_info,...
+	'plot_combined_data', tplot.plot_combined_data, 'parNames', tplot.parNames_roi, 'stat', tplot.stat,...
+	'save_fig', tplot.save_fig, 'save_dir', tplot.save_dir);
+if tplot.save_dir_roi~=0
+	FolderPathVA.fig = tplot.save_dir_roi;
+end
+if tplot.save_fig
+	% plot_stat_info.grouped_event_info_option = grouped_event_info_option;
+	plot_sponfreq_info.grouped_event_info = grouped_spon_roi_info;
+	plot_sponfreq_info.plot_info = plot_info_roi;
+	tplot.dt = datestr(now, 'yyyymmdd');
+	save(fullfile(tplot.save_dir, [tplot.dt, '_plot_sponfreq_info']), 'plot_sponfreq_info');
+end
