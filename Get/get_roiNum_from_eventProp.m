@@ -30,5 +30,7 @@ function [TrialRoiList,varargout] = get_roiNum_from_eventProp(eventProp,varargin
     	TrialRoiList(tn).roi_list = roi_unique;
     	TrialRoiList(tn).roi_num = roi_num;
     end
+    varargout{1} = trial_num;
+    varargout{2} = sum([TrialRoiList.roi_num]);
 end
 

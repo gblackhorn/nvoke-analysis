@@ -89,21 +89,31 @@ function [eventProp_all,varargout] = collect_event_prop(alignedData,varargin)
                                 eventProp_trial_roi{pcn}.entryStyle = style;
 
                                 eventProp_trial_roi{pcn}.eventPropData = eventProp_roi_peakCat;
-                                eventProp_trial_roi{pcn}.stimTrig = alignedData_trial.traces(rn).stimTrig;
-                                eventProp_trial_roi{pcn}.sponfq = alignedData_trial.traces(rn).sponfq;
-                                eventProp_trial_roi{pcn}.sponInterval = alignedData_trial.traces(rn).sponInterval;
-                                eventProp_trial_roi{pcn}.stimfq = alignedData_trial.traces(rn).stimfq;
-                                eventProp_trial_roi{pcn}.stimfqNorm = alignedData_trial.traces(rn).stimfqNorm;
-                                eventProp_trial_roi{pcn}.stimfqDeltaNorm = alignedData_trial.traces(rn).stimfqDeltaNorm;
+
+                                stim_possi_pc_idx = find(strcmp({roiData.stimEvent_possi.cat_name},peakCat_name)); % get the position of peakCat_name in stimEvent_possi
+                                if ~isempty(stim_possi_pc_idx) % if stimEvent_possi contains the peakCat_name
+                                    eventProp_trial_roi{pcn}.stimEvent_possi_info = roiData.stimEvent_possi(stim_possi_pc_idx); % assign the possibility info of a specific peak cat to eventProp_trial_roi{pcn}
+                                    eventProp_trial_roi{pcn}.stimEvent_possi = roiData.stimEvent_possi(stim_possi_pc_idx).cat_possibility; % assign the possibility info of a specific peak cat to eventProp_trial_roi{pcn}
+                                else % most likely the peakCat_name is "spon"
+                                    eventProp_trial_roi{pcn}.stimEvent_possi_info = [];
+                                    eventProp_trial_roi{pcn}.stimEvent_possi = [];
+                                end
+
+                                eventProp_trial_roi{pcn}.stimTrig = roiData.stimTrig;
+                                eventProp_trial_roi{pcn}.sponfq = roiData.sponfq;
+                                eventProp_trial_roi{pcn}.sponInterval = roiData.sponInterval;
+                                eventProp_trial_roi{pcn}.stimfq = roiData.stimfq;
+                                eventProp_trial_roi{pcn}.stimfqNorm = roiData.stimfqNorm;
+                                eventProp_trial_roi{pcn}.stimfqDeltaNorm = roiData.stimfqDeltaNorm;
                                 eventProp_trial_roi{pcn}.rise_duration = mean([eventProp_roi_peakCat.rise_duration]);
                                 eventProp_trial_roi{pcn}.peak_mag_delta = mean([eventProp_roi_peakCat.peak_mag_delta]);
                                 eventProp_trial_roi{pcn}.peak_delta_norm_hpstd = mean([eventProp_roi_peakCat.peak_delta_norm_hpstd]);
                                 eventProp_trial_roi{pcn}.peak_slope = mean([eventProp_roi_peakCat.peak_slope]);
                                 eventProp_trial_roi{pcn}.peak_slope_norm_hpstd = mean([eventProp_roi_peakCat.peak_slope_norm_hpstd]);
-                                % eventProp_trial_roi{pcn}.baseChangeNorm = alignedData_trial.traces(rn).baseChangeNorm;
-                                eventProp_trial_roi{pcn}.CaLevelDelta = alignedData_trial.traces(rn).CaLevelDelta;
-                                % eventProp_trial_roi{pcn}.baseChangeMinNorm = alignedData_trial.traces(rn).baseChangeMinNorm;
-                                eventProp_trial_roi{pcn}.CaLevelMinDelta = alignedData_trial.traces(rn).CaLevelMinDelta;
+                                % eventProp_trial_roi{pcn}.baseChangeNorm = roiData.baseChangeNorm;
+                                eventProp_trial_roi{pcn}.CaLevelDelta = roiData.CaLevelDelta;
+                                % eventProp_trial_roi{pcn}.baseChangeMinNorm = roiData.baseChangeMinNorm;
+                                eventProp_trial_roi{pcn}.CaLevelMinDelta = roiData.CaLevelMinDelta;
                             end
 
                             eventProp_trial{rn} = [eventProp_trial_roi{:}];

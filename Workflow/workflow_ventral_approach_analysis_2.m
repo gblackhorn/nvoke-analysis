@@ -209,7 +209,7 @@ end
 %% ====================
 % 9.5.1.1 Create  'eventProp_all' according to stimulation and category 
 
-eprop.entry = 'event'; % options: 'roi' or 'event'
+eprop.entry = 'roi'; % options: 'roi' or 'event'
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 eprop.modify_stim_name = true; % true/false. Change the stimulation name, 
@@ -224,10 +224,10 @@ mgSetting.sponOnly = false; % If eventType is 'roi', and mgSetting.sponOnly is t
 mgSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
 mgSetting.dis_spon = false; % true/false. Discard spontaneous events
 mgSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
-mgSetting.groupField = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+mgSetting.groupField = {'stim_name'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
 
 % rename the stimulation tag if og evokes spike at the onset of stimulation
-mgSetting.mark_EXog = false; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
+mgSetting.mark_EXog = true; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
 mgSetting.og_tag = {'og', 'og-ap'}; % find og events with these strings. 'og' to 'Exog', 'og-ap' to 'EXog-ap'
 
 % arrange the order of group entries using function [sort_struct_with_str] with settings below. 
@@ -295,7 +295,7 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 % [9.3] eventProp_all: entry is 'roi'
 close all
 plot_combined_data = true;
-parNames = {'sponfq','stimfq','stimfqNorm','stimfqDeltaNorm','CaLevelDelta','CaLevelMinDelta'}; % entry: roi
+parNames = {'sponfq','stimfq','stimfqNorm','stimfqDeltaNorm','CaLevelDelta','CaLevelMinDelta','stimEvent_possi'}; % entry: roi
 save_fig = false; % true/false
 save_dir = FolderPathVA.fig;
 stat = true; % true if want to run anova when plotting bars

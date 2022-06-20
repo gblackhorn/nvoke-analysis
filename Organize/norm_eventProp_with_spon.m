@@ -69,49 +69,51 @@ function [eventProp_all_norm,varargout] = norm_eventProp_with_spon(eventProp_all
 					normProp = num2cell([eventProp_other.(propNames{pn})]/denormProp.(propNames{pn}));
 					[eventProp_other.(normPropNames{pn})] = deal(normProp{:});
 				end
+				eventProp_roi_norm{rn} = eventProp_other;
 
-				switch entry
-					case 'roi'
-						[peakCatsOther, ia_peakCatOther, ic_peakCatOther] = unique({eventProp_other.peak_category}, 'stable');
-						peakCatsOther_num = numel(peakCatsOther);
-						eventProp_other_merge = cell(peakCatsOther_num, 1);
-						for pcn = 1:peakCatsOther_num
-							pc_idx = find(ic_peakCatOther==pcn); % index of event prop belongs to peak category (pcn)
-							eventProp_other_merge_peakCat = eventProp_other(pc_idx);
-							event_num_peakCat = numel(pc_idx);
+				% switch entry
+				% 	case 'roi'
+				% 		[peakCatsOther, ia_peakCatOther, ic_peakCatOther] = unique({eventProp_other.peak_category}, 'stable');
+				% 		peakCatsOther_num = numel(peakCatsOther);
+				% 		eventProp_other_merge = cell(peakCatsOther_num, 1);
+				% 		for pcn = 1:peakCatsOther_num
+				% 			pc_idx = find(ic_peakCatOther==pcn); % index of event prop belongs to peak category (pcn)
+				% 			eventProp_other_merge_peakCat = eventProp_other(pc_idx);
+				% 			event_num_peakCat = numel(pc_idx);
 
-							% eventProp_other_merge{pcn} = eventProp_other(ia_peakCatOther(pcn));
+				% 			% eventProp_other_merge{pcn} = eventProp_other(ia_peakCatOther(pcn));
 
-							eventProp_other_merge{pcn}.trialName = eventProp_other_merge_peakCat(1).trialName;
-							eventProp_other_merge{pcn}.roiName = eventProp_other_merge_peakCat(1).roiName;
-							eventProp_other_merge{pcn}.fovID = eventProp_other_merge_peakCat(1).fovID;
-							eventProp_other_merge{pcn}.stim_name = eventProp_other_merge_peakCat(1).stim_name;
-							eventProp_other_merge{pcn}.combine_stim = eventProp_other_merge_peakCat(1).combine_stim; % multiple stimuli combined in single recordings
-							eventProp_other_merge{pcn}.stim_repeats = eventProp_other_merge_peakCat(1).stim_repeats;
-							eventProp_other_merge{pcn}.roi_coor = eventProp_other_merge_peakCat(1).roi_coor;
-							eventProp_other_merge{pcn}.peak_category = eventProp_other_merge_peakCat(1).peak_category;
-							eventProp_other_merge{pcn}.event_num = event_num_peakCat;
-							eventProp_other_merge{pcn}.entryStyle = entry;
-							eventProp_other_merge{pcn}.sponfq = eventProp_other_merge_peakCat(1).sponfq;
-							eventProp_other_merge{pcn}.sponInterval = eventProp_other_merge_peakCat(1).sponInterval;
-							eventProp_other_merge{pcn}.stimfq = eventProp_other_merge_peakCat(1).stimfq;
-							eventProp_other_merge{pcn}.stimfqNorm = eventProp_other_merge_peakCat(1).stimfqNorm;
-							eventProp_other_merge{pcn}.stimfqDeltaNorm = eventProp_other_merge_peakCat(1).stimfqDeltaNorm;
-							eventProp_other_merge{pcn}.CaLevelDelta = eventProp_other_merge_peakCat(1).CaLevelDelta;
-							eventProp_other_merge{pcn}.CaLevelMinDelta = eventProp_other_merge_peakCat(1).CaLevelMinDelta;
+				% 			eventProp_other_merge{pcn}.trialName = eventProp_other_merge_peakCat(1).trialName;
+				% 			eventProp_other_merge{pcn}.roiName = eventProp_other_merge_peakCat(1).roiName;
+				% 			eventProp_other_merge{pcn}.fovID = eventProp_other_merge_peakCat(1).fovID;
+				% 			eventProp_other_merge{pcn}.stim_name = eventProp_other_merge_peakCat(1).stim_name;
+				% 			eventProp_other_merge{pcn}.combine_stim = eventProp_other_merge_peakCat(1).combine_stim; % multiple stimuli combined in single recordings
+				% 			eventProp_other_merge{pcn}.stim_repeats = eventProp_other_merge_peakCat(1).stim_repeats;
+				% 			eventProp_other_merge{pcn}.roi_coor = eventProp_other_merge_peakCat(1).roi_coor;
+				% 			eventProp_other_merge{pcn}.peak_category = eventProp_other_merge_peakCat(1).peak_category;
+				% 			eventProp_other_merge{pcn}.event_num = event_num_peakCat;
+				% 			% eventProp_other_merge{pcn}.event_num = eventProp_other_merge_peakCat(1).event_num;
+				% 			eventProp_other_merge{pcn}.entryStyle = entry;
+				% 			eventProp_other_merge{pcn}.sponfq = eventProp_other_merge_peakCat(1).sponfq;
+				% 			eventProp_other_merge{pcn}.sponInterval = eventProp_other_merge_peakCat(1).sponInterval;
+				% 			eventProp_other_merge{pcn}.stimfq = eventProp_other_merge_peakCat(1).stimfq;
+				% 			eventProp_other_merge{pcn}.stimfqNorm = eventProp_other_merge_peakCat(1).stimfqNorm;
+				% 			eventProp_other_merge{pcn}.stimfqDeltaNorm = eventProp_other_merge_peakCat(1).stimfqDeltaNorm;
+				% 			eventProp_other_merge{pcn}.CaLevelDelta = eventProp_other_merge_peakCat(1).CaLevelDelta;
+				% 			eventProp_other_merge{pcn}.CaLevelMinDelta = eventProp_other_merge_peakCat(1).CaLevelMinDelta;
 
-							eventProp_other_merge{pcn}.eventPropData = eventProp_other_merge_peakCat;
+				% 			eventProp_other_merge{pcn}.eventPropData = eventProp_other_merge_peakCat;
 
 							
-							for pn = 1:props_num
-								eventProp_other_merge{pcn}.(propNames{pn}) = mean([eventProp_other_merge_peakCat.(propNames{pn})]);
-								eventProp_other_merge{pcn}.(normPropNames{pn}) = mean([eventProp_other_merge_peakCat.(normPropNames{pn})]);
-							end
-						end
-						eventProp_roi_norm{rn} = [eventProp_other_merge{:}];
-					otherwise
-						eventProp_roi_norm{rn} = eventProp_other;
-				end
+				% 			for pn = 1:props_num
+				% 				eventProp_other_merge{pcn}.(propNames{pn}) = mean([eventProp_other_merge_peakCat.(propNames{pn})]);
+				% 				eventProp_other_merge{pcn}.(normPropNames{pn}) = mean([eventProp_other_merge_peakCat.(normPropNames{pn})]);
+				% 			end
+				% 		end
+				% 		eventProp_roi_norm{rn} = [eventProp_other_merge{:}];
+				% 	otherwise
+				% 		eventProp_roi_norm{rn} = eventProp_other;
+				% end
 			else
 				eventProp_roi_norm{rn} = [];
 			end
