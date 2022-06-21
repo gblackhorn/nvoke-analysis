@@ -224,18 +224,19 @@ mgSetting.sponOnly = false; % If eventType is 'roi', and mgSetting.sponOnly is t
 mgSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
 mgSetting.dis_spon = false; % true/false. Discard spontaneous events
 mgSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
-mgSetting.groupField = {'stim_name'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+mgSetting.groupField = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
 
 % rename the stimulation tag if og evokes spike at the onset of stimulation
-mgSetting.mark_EXog = true; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
+mgSetting.mark_EXog = false; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
 mgSetting.og_tag = {'og', 'og-ap'}; % find og events with these strings. 'og' to 'Exog', 'og-ap' to 'EXog-ap'
 
 % arrange the order of group entries using function [sort_struct_with_str] with settings below. 
 mgSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', 'rebound', 'delay'
 mgSetting.sort_order_plus = {'ap', 'EXopto'};
+debug_mode = false; % true/false
 
 [grouped_event,grouped_event_setting] = mod_and_group_eventProp(eventProp_all,eventType,adata,...
-	'mgSetting',mgSetting);
+	'mgSetting',mgSetting,'debug_mode',debug_mode);
 
 
 %% ====================
@@ -296,7 +297,7 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 close all
 plot_combined_data = true;
 parNames = {'sponfq','stimfq','stimfqNorm','stimfqDeltaNorm','CaLevelDelta','CaLevelMinDelta','stimEvent_possi'}; % entry: roi
-save_fig = false; % true/false
+save_fig = true; % true/false
 save_dir = FolderPathVA.fig;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not

@@ -3,14 +3,15 @@ function [TrialRoiList,varargout] = get_roiNum_from_eventProp(eventProp,varargin
     % The TrialRoiList will be used to count ROI numbers
 
     % eventProp: a structure variable containing event properties 
+    debug_mode = false; % true/false
 
-    % for ii = 1:2:(nargin-2)
-    %     if strcmpi('par', varargin{ii})
-    %         par = varargin{ii+1};
-    %     elseif strcmpi('norm_par_suffix', varargin{ii})
-    %         norm_par_suffix = varargin{ii+1};
-    %     end
-    % end
+    for ii = 1:2:(nargin-2)
+        if strcmpi('debug_mode', varargin{ii})
+            debug_mode = varargin{ii+1};
+        % elseif strcmpi('norm_par_suffix', varargin{ii})
+        %     norm_par_suffix = varargin{ii+1};
+        end
+    end
 
     %% main contents
     trial_names = {eventProp.trialName};
@@ -19,6 +20,10 @@ function [TrialRoiList,varargout] = get_roiNum_from_eventProp(eventProp,varargin
     neuron_num = 0;
     trial_roi_list = empty_content_struct({'trialName','roi_list','roi_num','neg_roi_list','neg_roi_num'},trial_num);
     for tn = 1:trial_num
+    	if debug_mode
+    		fprintf('[get_roiNum_from_eventProp] trial (%d/%d): %s\n',tn,trial_num,trial_unique{tn});
+    	end
+
     	tf_trial = strcmp(trial_names,trial_unique{tn});
     	idx_trial = find(tf_trial);
     	trial_eventProp = eventProp(idx_trial);

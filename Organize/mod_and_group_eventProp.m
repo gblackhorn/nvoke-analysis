@@ -24,6 +24,7 @@ function [grouped_event,grouped_event_setting,varargout] = mod_and_group_eventPr
     mgSetting.sort_order_plus = {'ap', 'EXopto'};
 
     mgSetting.sponOnly = false;
+    debug_mode = true; % true/false
     % % ref_group = 1;
     % par = {'rise_duration','peak_mag_delta'}; % fields will be normalized in grouped_event_info.event_info
     % norm_par_suffix = 'refNorm'; % added to the end of names of new fields containing the normalized pars
@@ -31,8 +32,8 @@ function [grouped_event,grouped_event_setting,varargout] = mod_and_group_eventPr
     for ii = 1:2:(nargin-3)
         if strcmpi('mgSetting', varargin{ii})
             mgSetting = varargin{ii+1};
-        % elseif strcmpi('norm_par_suffix', varargin{ii})
-        %     norm_par_suffix = varargin{ii+1};
+        elseif strcmpi('debug_mode', varargin{ii})
+            debug_mode = varargin{ii+1};
         end
     end
 
@@ -79,6 +80,13 @@ function [grouped_event,grouped_event_setting,varargout] = mod_and_group_eventPr
     end
 
     for gn = 1:numel(grouped_event)
+        group_name = grouped_event(gn).group;
+        if debug_mode
+            fprintf('[mod_and_group_eventProp] group (%d/%d): %s\n',gn,numel(grouped_event),group_name);
+            if gn == 7
+                pause
+            end
+        end
         % [grouped_event(gn).numTrial,grouped_event(gn).numRoi,grouped_event(gn).numRoiVec] = get_num_fieldUniqueContent(grouped_event(gn).event_info,...
         %     'fn_1', 'trialName', 'fn_2', 'roiName');
         [TrialRoiList] = get_roiNum_from_eventProp(grouped_event(gn).event_info);
@@ -86,8 +94,8 @@ function [grouped_event,grouped_event_setting,varargout] = mod_and_group_eventPr
         grouped_event(gn).numRoi = sum([TrialRoiList.roi_num]);
         grouped_event(gn).TrialRoiList = TrialRoiList;
 
-        if strcmp(eventType,'roi')
-            [grouped_event(gn).eventPb,grouped_event(gn).eventPbList] = analyze_roi_event_possibility(grouped_event(gn).event_info);
+        if strcmp(eventType,'roi') && ~contains(group_name,'spon')
+            [grouped_event(gn).eventPb,grouped_event(gn).eventPbList] = analyze_roi_event_possibility(grouped_event(gn).event_info,'debug_mode',debug_mode);
         end
     end
 

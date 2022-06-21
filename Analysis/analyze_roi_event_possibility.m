@@ -11,6 +11,8 @@ function [result,varargout] = analyze_roi_event_possibility(eventProp,varargin)
 	rm_entries = true; % true/false. remove specified entries 
 	rm_entry_field = 'peak_category';
 	rm_entry_content = 'spon';
+	debug_mode = true; % true/false
+
 
 	% Optionals
 	for ii = 1:2:(nargin-1)
@@ -20,6 +22,8 @@ function [result,varargout] = analyze_roi_event_possibility(eventProp,varargin)
 	        rm_entry_field = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
 	    elseif strcmpi('rm_entry_content', varargin{ii})
 	        rm_entry_content = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
+	    elseif strcmpi('debug_mode', varargin{ii})
+	        debug_mode = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
 	    end
 	end	
 
@@ -30,7 +34,7 @@ function [result,varargout] = analyze_roi_event_possibility(eventProp,varargin)
 	end
 	eventProp = filter_structData(eventProp,rm_entry_field,rm_entry_content,0); % removed entries meet the cretieria
 
-	[TrialRoiList,trial_num,all_roi_num] = get_roiNum_from_eventProp(eventProp); % Get the trial and roi information
+	[TrialRoiList,trial_num,all_roi_num] = get_roiNum_from_eventProp(eventProp,'debug_mode',debug_mode); % Get the trial and roi information
 
 	unique_events = unique({eventProp.peak_category}); % Get the event categories 
 	unique_events_num = numel(unique_events);
@@ -40,13 +44,6 @@ function [result,varargout] = analyze_roi_event_possibility(eventProp,varargin)
 		event_fnames{(uen-1)*3+2} = sprintf('event%d_num',uen);
 		event_fnames{(uen-1)*3+3} = sprintf('event%d_pb',uen);
 	end
-
-	% unique_events_possi = cellfun(@(x) [x,'_fq'],unique_events,'UniformOutput',false); % some fieldnames for pb_struct
-	% unique_events_possi = cellfun(@(x) [x,'_num'],unique_events,'UniformOutput',false); % some fieldnames for pb_struct
-
-	% Creat a structure. Each entry contains info of a single ROI
-	% pb_struct_fields = ['trialName','roiName','fovID','stim_repeats','sponfq',...
-	% 	unique_events_possi,unique_events_possi];
 	pb_struct_fields = ['trialName','roiName','fovID','stim_repeats','sponfq',...
 		event_fnames];
 	pb_struct = empty_content_struct(pb_struct_fields,all_roi_num);
@@ -115,12 +112,6 @@ function [result,varargout] = analyze_roi_event_possibility(eventProp,varargin)
 		eventPb_n(uen) = numel(pb_nonzero);
 		eventPb_val{uen} = pb_nonzero;
 		eventPb_data{uen} = pb;
-		% roilist.trialName = pb_struct(non_zero_idx).trialName;
-		% roilist.roiName = pb_struct(non_zero_idx).roiName;
-		% roilist.fovID = pb_struct(non_zero_idx).fovID;
-		% roilist.stim_repeats = pb_struct(non_zero_idx).stim_repeats;
-		% roilist.sponfq = pb_struct(non_zero_idx).sponfq;
-		% roilist.pb = pb(non_zero_idx);
 
 		if uen<unique_events_num
 			for nn = (uen+1):unique_events_num
@@ -137,10 +128,6 @@ function [result,varargout] = analyze_roi_event_possibility(eventProp,varargin)
 	end
 
 	result = table(eventCat,eventPb_mean,eventPb_std,eventPb_ste,eventPb_n,eventPb_val,eventPb_data);
-
-
-
-
 
 	varargout{1} = pb_struct;
  end
