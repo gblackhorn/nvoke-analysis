@@ -18,6 +18,7 @@ function [varargout] = plot_series_neuron_paired_trace(NeuronGroup_data,varargin
     fig_position = [0.1 0.1 0.85 0.85]; % [left bottom width height]
     FontSize = 18;
     FontWeight = 'bold';
+    debug_mode = false; % true/false
 
     % Optionals for inputs
     for ii = 1:2:(nargin-1)
@@ -45,6 +46,8 @@ function [varargout] = plot_series_neuron_paired_trace(NeuronGroup_data,varargin
             FontSize = varargin{ii+1};
         elseif strcmpi('FontWeight', varargin{ii})
             FontWeight = varargin{ii+1};
+        elseif strcmpi('debug_mode', varargin{ii})
+            debug_mode = varargin{ii+1};
         end
     end
 
@@ -70,6 +73,14 @@ function [varargout] = plot_series_neuron_paired_trace(NeuronGroup_data,varargin
     % Plot
     for fn = 1:fig_num
         fname = sprintf('%s-%d', series_name,fn);
+
+        if debug_mode
+            fprintf('plot_series_neuron_paired_trace: figure number %d/%d\n',fn,fig_num);
+            if fn == 5;
+                pause
+            end
+        end
+
         f(fn) = figure('Name', fname);
         set(gcf,'Units', 'normalized', 'Position', fig_position);
         tlo = tiledlayout(f(fn), fig_row_num, fig_col_num);
@@ -85,6 +96,10 @@ function [varargout] = plot_series_neuron_paired_trace(NeuronGroup_data,varargin
             roi_name = NeuronGroup_data(roi_idx).roi;
             trace_data = NeuronGroup_data(roi_idx).plot_trace_data;
 
+            if debug_mode
+                fprintf('   figure roi number %d/%d\n',frn,fig_roi_num);
+            end
+
             % plot raw traces from every trial
             for tn = 1:trial_num
                 ax = nexttile(tlo);
@@ -93,7 +108,7 @@ function [varargout] = plot_series_neuron_paired_trace(NeuronGroup_data,varargin
                         'plot_combined_data', plot_mean,'plot_combined_data_shade',plot_std,...
                         'mean_trace', trace_data(tn).trace_mean, 'mean_trace_shade', trace_data(tn).trace_std,...
                         'plot_raw_races',plot_raw,'y_range', y_range,'tickInt_time',tickInt_time,...
-                        'FontSize',FontSize,'FontWeight',FontWeight,);
+                        'FontSize',FontSize,'FontWeight',FontWeight);
                     tiletitle = sprintf('%s-%s-raw', roi_name, trace_data(tn).spike_stim);
                     if ref_exist && tn==1
                         tiletitle = sprintf('%s (REF)', tiletitle);

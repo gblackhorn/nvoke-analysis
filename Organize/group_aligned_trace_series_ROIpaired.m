@@ -1,6 +1,6 @@
 function [grouped_data,varargout] = group_aligned_trace_series_ROIpaired(alignedData_series,varargin)
     % group aligned event traces. Series data (same FOV, same ROI set) is required.
-    % Traces from the same neuron but different trials will be plot in the same row
+    % Traces of the same neuron applied with different trials will be plot in the same row
     % Each neuron has its own row
 
     % alignedData_series: a struct var. contain only one series 
@@ -9,6 +9,9 @@ function [grouped_data,varargout] = group_aligned_trace_series_ROIpaired(aligned
     ref_stim = ''; % reference stimulation
     ref_SpikeCat = ''; % reference spike/peak/event category 
     other_SpikeCat = ''; % spike/peak/event category in other trial will be plot
+    ref_norm = true; % true/false. normalize data with ref spikes
+    exclude_stim = {''}; % exclude trials applid with specific stimulation
+    contain_ref = true; % if roi event is empty in ref, delete the roi
     % plot_spon = true;
     debug_mode = false;
 
@@ -20,14 +23,31 @@ function [grouped_data,varargout] = group_aligned_trace_series_ROIpaired(aligned
             ref_SpikeCat = varargin{ii+1};
         elseif strcmpi('other_SpikeCat', varargin{ii})
             other_SpikeCat = varargin{ii+1};
+        elseif strcmpi('ref_norm', varargin{ii})
+            ref_norm = varargin{ii+1};
+        elseif strcmpi('exclude_stim', varargin{ii})
+            exclude_stim = varargin{ii+1};
+        elseif strcmpi('contain_ref', varargin{ii})
+            contain_ref = varargin{ii+1};
         elseif strcmpi('debug_mode', varargin{ii})
-          debug_mode = varargin{ii+1};
+            debug_mode = varargin{ii+1};
      %    elseif strcmpi('RowNameField', varargin{ii})
      %        RowNameField = varargin{ii+1};
         end
     end
 
     %% main contents
+    if ~isempty(exclude_stim) 
+        if isa(exclude_stim,'char')
+            exclude_stim = {exclude_stim};
+        end
+        es_idx = [];
+        for esn = 1:numel(exclude_stim)
+            idx = find(strcmpi(exclude_stim{esn},{alignedData_series.stim_name}));
+            es_idx = [es_idx,idx];
+        end
+        alignedData_series(unique(es_idx)) = [];
+    end
     trial_num = numel(alignedData_series);
     if ~isempty(ref_stim)
         % Sort the order of trials. Neurons in reference stim trial will be plotted first
@@ -58,6 +78,7 @@ function [grouped_data,varargout] = group_aligned_trace_series_ROIpaired(aligned
     eventProp_field = struct('group',StructAllo2,'event_info',StructAllo2);
 
     % Go through ROIs. Data will be grouped according to ROI
+    dis_empty_ref_roi = [];
     for rn = 1:roi_num % rn is the index of roi in ref or the first trial
         grouped_data(rn).roi = alignedData_series(trial_order(1)).traces(rn).roi;
         grouped_data(rn).ref = refName;
@@ -99,7 +120,7 @@ function [grouped_data,varargout] = group_aligned_trace_series_ROIpaired(aligned
                     trialData.eventProp(disIDX) = [];
 
                     grouped_data(rn).plot_trace_data(tn).spike_stim = sprintf('%s[%s]', tag_SpikeCat, tag_stim);
-                    grouped_data(rn).eventPropData(tn).group = sprintf('%s[%s]', tag_SpikeCat, tag_stim);;
+                    grouped_data(rn).eventPropData(tn).group = sprintf('%s[%s]', tag_SpikeCat, tag_stim);
 
                     if ref_trial
                         ref_amp_mean = mean([trialData.eventProp.peak_mag_delta]);
@@ -125,11 +146,20 @@ function [grouped_data,varargout] = group_aligned_trace_series_ROIpaired(aligned
             end
         end
 
-        if use_ref
+
+        if isempty([grouped_data(rn).eventPropData.event_info])
+            dis_empty_ref_roi = [dis_empty_ref_roi rn];
+        end
+
+        if use_ref && ref_norm
             [grouped_data(rn).eventPropData] = norm_grouped_event_info(grouped_data(rn).eventPropData,1,...
                 'norm_par_suffix','refNorm');
         end
-    end
 
+        if contain_ref && use_ref && isempty(grouped_data(rn).eventPropData(1).event_info)
+            dis_empty_ref_roi = [dis_empty_ref_roi rn];
+        end
+    end
+    grouped_data(dis_empty_ref_roi) = [];
 end
 

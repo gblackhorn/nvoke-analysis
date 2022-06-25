@@ -115,7 +115,15 @@ function [varargout] = get_CaLevel_delta(stimRange,timeInfo,roiTrace,varargin)
 	% average value of all stim repeats
 	% CaLevel.Change_norm = mean(meanVal.stimVal_norm); 
 	CaLevel.delta = mean(meanVal.stimVal_delta);
-	CaLevel.delta_data = meanVal.stimVal_delta;
+	% CaLevel.delta_data = meanVal.stimVal_delta;
+	delta_data = nan(repeatNum,2);
+	delta_data(:,1) = meanVal.baseVal(:);
+	delta_data(:,2) = meanVal.stimVal(:);
+	CaLevel.delta_data = delta_data;
+	% CaLevel.delta_data{1} = meanVal.baseVal-mean(meanVal.baseVal);
+	% CaLevel.delta_data{2} = meanVal.stimVal-mean(meanVal.baseVal);
+	CaLevel.meanBase = mean(CaLevel.delta_data(:,1));
+	CaLevel.meanStim = mean(CaLevel.delta_data(:,2));
 
 	% average value of all stim repeats (use the minimum value in the stim range)
 	% CaLevel.ChangeMin_norm = mean(meanVal.stimMinVal_norm); % 

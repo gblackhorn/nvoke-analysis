@@ -29,7 +29,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     std_fold = 5;
     plot_traces = 0; % 0: do not plot. 1: plot. 2: plot with pause
     save_traces = 0; % 0: do not save. 1: save
-    [peak_properties_variable_names] = transient_properties_variable_names('peak', [1:17]);
+    [peak_properties_variable_names] = transient_properties_variable_names('peak', [1:18]);
     debug_mode = false; % true/false
 
     % Optionals for inputs
@@ -146,7 +146,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 			'prom_par', prominence_factor,...
             'use_existing_peakInfo', true, 'existing_peakInfo', peak_properties_decon,...
 			'peakProperties_names', peak_properties_variable_names,...
-            'merge_peaks', merge_peaks, 'merge_time_interval', merge_time_interval); % ,'debug_mode',debug_mode
+            'merge_peaks', merge_peaks, 'merge_time_interval', merge_time_interval,'debug_mode',debug_mode); % ,'debug_mode',debug_mode
         recdata_organized{rn, col_trace}.lowpass = rec_data_lowpass.processed_data;
 
 		% smooth

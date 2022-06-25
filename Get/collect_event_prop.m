@@ -111,7 +111,10 @@ function [eventProp_all,varargout] = collect_event_prop(alignedData,varargin)
                                 eventProp_trial_roi{pcn}.peak_slope = mean([eventProp_roi_peakCat.peak_slope]);
                                 eventProp_trial_roi{pcn}.peak_slope_norm_hpstd = mean([eventProp_roi_peakCat.peak_slope_norm_hpstd]);
                                 % eventProp_trial_roi{pcn}.baseChangeNorm = roiData.baseChangeNorm;
+                                eventProp_trial_roi{pcn}.CaLevelDeltaData = roiData.CaLevelDeltaData;
                                 eventProp_trial_roi{pcn}.CaLevelDelta = roiData.CaLevelDelta;
+                                eventProp_trial_roi{pcn}.CaLevelmeanBase = roiData.CaLevelmeanBase;
+                                eventProp_trial_roi{pcn}.CaLevelmeanStim = roiData.CaLevelmeanStim;
                                 % eventProp_trial_roi{pcn}.baseChangeMinNorm = roiData.baseChangeMinNorm;
                                 eventProp_trial_roi{pcn}.CaLevelMinDelta = roiData.CaLevelMinDelta;
                             end

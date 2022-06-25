@@ -1,6 +1,7 @@
 function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	% Plot aligned traces of a certain event category
 	% Note: 'event_type' for alignedData must be 'detected_events'
+	% ste is used to plot the shade
 
 	% Defaults
 	eventCat = 'spon';
@@ -53,6 +54,8 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	tile_col_num = ceil(num_C/tile_row_num);
 	tlo = tiledlayout(f_trace_win, tile_row_num, tile_col_num);
 
+	trace_means_fields = {'group','timeInfo','mean_val','ste_val'};
+	trace_means = empty_content_struct(trace_means_fields,num_C); 
 	for n = 1:num_C
 		stimName = C{n};
 		IDX_trial = find(ic == n);
@@ -79,7 +82,8 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 		end
 		traceData_trials = [traceData_cell_trials{:}];
 		traceData_trials_mean = mean(traceData_trials, 2, 'omitnan');
-		traceData_trials_shade = std(traceData_trials, 0, 2, 'omitnan');
+		% traceData_trials_shade = std(traceData_trials, 0, 2, 'omitnan');
+		traceData_trials_shade = std(traceData_trials, 0, 2, 'omitnan')/sqrt(size(traceData_trials,2));
 
 		ax = nexttile(tlo);
 
@@ -90,6 +94,11 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 		titleName = sprintf('%s-%s',stimName,eventCat);
 		title(titleName)
 
+		trace_means(n).group = titleName;
+		trace_means(n).timeInfo = timeInfo;
+		trace_means(n).mean_val = traceData_trials_mean;
+		trace_means(n).ste_val = traceData_trials_shade;
 	end
 	varargout{1} = gcf;
+	varargout{2} = trace_means;
 end

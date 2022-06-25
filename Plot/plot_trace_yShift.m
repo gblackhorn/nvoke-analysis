@@ -14,7 +14,7 @@ function [varargout] = plot_trace_yShift(timeInfo,traceInfo,plotWhere,varargin)
 	std_trace = []; % used to plot shade 
 
 	LineWidth = 1;
-	LineColor = '#616887';
+	LineColor = '#98A3D4'; % '#98A3D4' '#616887'
 	markers_color = {'#8D73BA', '#BA9973', '#BA9973'};
 	markers_shape = {'ro', 'g>', 'c<'}; % marker shape for scatter plot
 

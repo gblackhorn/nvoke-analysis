@@ -1,5 +1,5 @@
 % 1. Clear variables and set the default folder for saving figures and vars
-clearvars -except recdata_organized alignedData_allTrials seriesData_sync
+clearvars -except recdata_organized alignedData_allTrials seriesData_sync 
 PC_name = getenv('COMPUTERNAME'); 
 % set folders for different situation
 DataFolder = 'G:\Workspace\Inscopix_Seagate';
@@ -33,14 +33,14 @@ ad.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 ad.event_data_group = 'peak_lowpass';
 ad.event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
 ad.event_align_point = 'rise'; % options: 'rise', 'peak'
-ad.rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes
+ad.rebound_duration = 1; % time duration after stimulation to form a window for rebound spikes
 ad.cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
 ad.pre_event_time = 2; % unit: s. event trace starts at 1s before event onset
 ad.post_event_time = 4; % unit: s. event trace ends at 2s after event onset
 ad.stim_section = true; % true: use a specific section of stimulation to calculate the calcium level delta. For example the last 1s
 ad.ss_range = 1; % single number (last n second) or a 2-element array (start and end. 0s is stimulation onset)
-ad.stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
+ad.stim_time_error = 0.2; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 ad.mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
 ad.debug_mode = false; % true/false
@@ -65,9 +65,10 @@ end
 
 %% ====================
 % 3.1 Sync ROIs across trials in the same series (same FOV, same ROI set) 
+% Note: ad.event_type must be "detected_events"
 sd.ref_stim = 'GPIO-1-1s'; % ROIs are synced to the trial applied with this stimulation
-sd.ref_SpikeCat = {'spon','trig'}; % spike/peak/event categories kept during the syncing in ref trials
-sd.nonref_SpikeCat = {'spon','rebound'}; % spike/peak/event categories kept during the syncing in non-ref trials
+sd.ref_SpikeCat = {'spon','trig'}; % {'spon','trig'}. spike/peak/event categories kept during the syncing in ref trials
+sd.nonref_SpikeCat = {'spon','rebound'}; % {'spon','rebound','trig-AP'}. spike/peak/event categories kept during the syncing in non-ref trials
 [seriesData_sync] = sync_rois_multiseries(alignedData_allTrials,...
 	'ref_stim',sd.ref_stim,'ref_SpikeCat',sd.ref_SpikeCat,'nonref_SpikeCat',sd.nonref_SpikeCat);
 
@@ -76,14 +77,17 @@ sd.nonref_SpikeCat = {'spon','rebound'}; % spike/peak/event categories kept duri
 ngd.ref_stim = 'ap'; % 'ap'. reference stimulation
 ngd.ref_SpikeCat = 'trig'; % 'trig','spon'. reference spike/peak/event category 
 ngd.other_SpikeCat = 'rebound'; % 'rebound','spon'. spike/peak/event category in other trial will be plot
+ngd.ref_norm = true; % true/false. normalized data with ref_spike values
+ngd.exclude_stim = 'og-ap';
+ngd.contain_ref = true; % true/false
 ngd.debug_mode = false;
 
 series_num = numel(seriesData_sync);
 for sn = 1:series_num
 	alignedData_series = seriesData_sync(sn).SeriesData;
 	[seriesData_sync(sn).NeuronGroup_data] = group_aligned_trace_series_ROIpaired(alignedData_series,...
-		'ref_stim',ngd.ref_stim,'ref_SpikeCat',ngd.ref_SpikeCat,'other_SpikeCat',ngd.other_SpikeCat,...
-		'debug_mode', ngd.debug_mode);
+		'ref_stim',ngd.ref_stim,'ref_SpikeCat',ngd.ref_SpikeCat,'other_SpikeCat',ngd.other_SpikeCat,'ref_norm',ngd.ref_norm,...
+		'exclude_stim',ngd.exclude_stim,'contain_ref',ngd.contain_ref,'debug_mode', ngd.debug_mode);
 end
 
 %% ====================
@@ -93,13 +97,14 @@ psnt.plot_raw = true; % true/false.
 psnt.plot_norm = true; % true/false. plot the ref_trial normalized data
 psnt.plot_mean = true; % true/false. plot a mean trace on top of raw traces
 psnt.plot_std = true; % true/false. plot the std as a shade on top of raw traces. If this is true, "plot_mean" will be turn on automatically
-psnt.y_range = [-10 10];
+psnt.y_range = [-5 12];
 psnt.tickInt_time = 1; % interval of tick for timeInfo (x axis)
 psnt.fig_row_num = 3; % number of rows (ROIs) in each figure
 psnt.save_fig = true; % true/false
-psnt.fig_position = [0.1 0.1 0.85 0.85]; % [left bottom width height]
+psnt.fig_position = [0.1 0.1 0.5 0.85]; % [left bottom width height]
 psnt.FontSize = 20;
 psnt.FontWeight = 'bold';
+debug_mode = false; % true/false
 
 if psnt.save_fig
 	psnt.save_path = uigetdir(FolderPathVA.fig,'Choose a folder to save spikes from series trials');
@@ -119,16 +124,17 @@ for sn = 1:series_num
 		'plot_mean',psnt.plot_mean,'plot_std',psnt.plot_std,'y_range',psnt.y_range,'tickInt_time',psnt.tickInt_time,...
 		'fig_row_num',psnt.fig_row_num,'fig_position',psnt.fig_position,'series_name',series_name,...
 		'FontSize',psnt.FontSize,'FontWeight',psnt.FontWeight,...
-		'save_fig',psnt.save_path);
+		'save_fig',psnt.save_path,'debug_mode',debug_mode);
 end
 
 %% ====================
 % 4.2 Plot the spike/event properties for each neuron
 close all
 pei.plot_combined_data = true;
-pei.parNames = {'rise_duration','peak_mag_delta','rise_duration_refNorm','peak_mag_delta_refNorm',...
+pei.parNames = {'rise_duration','peak_mag_delta',...
     'sponnorm_rise_duration','sponnorm_peak_mag_delta'}; % entry: event
-% 					,'rise_delay'
+% {'rise_duration_refNorm','peak_mag_delta_refNorm','rise_delay'}
+% 					
 pei.save_fig = false; % true/false
 pei.save_dir = FolderPathVA.fig;
 pei.stat = true; % true if want to run anova when plotting bars
@@ -179,8 +185,8 @@ close all
 pgase.plot_combined_data = true;
 pgase.parNames = {'rise_duration','peak_mag_delta','rise_duration_refNorm','peak_mag_delta_refNorm',...
 'sponnorm_rise_duration','sponnorm_peak_mag_delta'}; % entry: event
-% 					,'rise_delay'
-pgase.save_fig = false; % true/false
+% {'rise_duration_refNorm','peak_mag_delta_refNorm','rise_delay'}
+pgase.save_fig = true; % true/false
 pgase.save_dir = FolderPathVA.fig;
 pgase.stat = true; % true if want to run anova when plotting bars
 pgase.stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
@@ -205,10 +211,20 @@ if pgase.save_fig
 end
 
 %% ====================
+% 5.2 paired ttest of rise duration
+% averaged rise durations of trig[ap] and of 'rebound[og]' from the same neurons are paired
+neuronTags = {'trial','roi'};
+groupfield = 'group';
+groups = {'trig[ap]','rebound[og]'};
+parName = 'rise_duration';
+[pttest] = pairedtest_eventStruct(all_series_eventProp,...
+	neuronTags,groupfield,groups,parName);
+
+%% ====================
 % Save processed data
 save_dir = uigetdir(FolderPathVA.analysis);
 dt = datestr(now, 'yyyymmdd');
-save(fullfile(save_dir, [dt, '_seriesData_sync']), 'seriesData_sync');
+save(fullfile(save_dir, [dt, '_seriesData_sync']), 'seriesData_sync','recdata_organized','alignedData_allTrials');
 
 
 

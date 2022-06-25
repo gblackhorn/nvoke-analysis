@@ -264,4 +264,63 @@ for tn = 1:numel(roilist)
 	neg_roi_num = neg_roi_num+roilist(tn).neg_roi_num;
 end
 
-% 
+
+%% ====================
+% plot and paired ttest of spike frequency change during og stimulation
+% alignedData_allTrials = alignedData_allTrials_all; % all data
+save_fig = true; % true/false
+
+og_fq_data{1} = [grouped_event_info_filtered(3).event_info.sponfq];
+og_fq_data{2} = [grouped_event_info_filtered(3).event_info.stimfq];
+[barInfo_ogfq] = barplot_with_stat(og_fq_data,'group_names',{'sponfq','stimfq'},...
+	'stat','pttest','save_fig',save_fig);
+
+og_Calevel_data{1} = [grouped_event_info_filtered(3).event_info.CaLevelmeanBase];
+og_Calevel_data{2} = [grouped_event_info_filtered(3).event_info.CaLevelmeanStim];
+[barInfo_ogCalevel] = barplot_with_stat(og_Calevel_data,'group_names',{'Ca-base','Ca-stim'},...
+	'stat','pttest','save_fig',save_fig);
+
+
+event_groups = {grouped_event_info_filtered.group};
+event_pb_cell = cell(1,numel(event_groups));
+for gn = 1:numel(event_groups)
+	event_pb_cell{gn} = [grouped_event_info_filtered(gn).eventPbList.event1_pb];
+end
+[barInfo_eventPb] = barplot_with_stat(event_pb_cell,'group_names',event_groups,...
+	'stat','pttest','save_fig',save_fig);
+
+
+%% ====================
+% plot mean traces of ap-trig and og-rebound together
+% Run 9.2.2 in workflow_ventral_approach_analsyis_2 first and get the variable "stimAlignedTrace_means"
+trace_type(1).tag = {'trig','GPIO-1-1s-trig'}; % search 1st entry in {stimAlignedTrace_means.event_group};
+%												search 2nd entry in {stimAlignedTrace_means(3).trace.group}
+trace_type(2).tag = {'rebound','OG-LED-5s-rebound'};
+
+mean_line_color = {'#2942BA','#BA3C4F'};
+shade_color = {'#4DBEEE','#C67B86'};
+
+f_mean_trace = figure('Name','mean trace');
+set(gcf, 'Units', 'normalized', 'Position', [0.1 0.1 0.9 0.6]);
+% legendStr = {};
+for tn = 1:numel(trace_type)
+	event_pos = find(strcmp(trace_type(tn).tag{1},{stimAlignedTrace_means.event_group}));
+	event_data = stimAlignedTrace_means(event_pos).trace;
+	group_pos = find(strcmp(trace_type(tn).tag{2},{event_data.group}));
+	plot_trace(event_data(group_pos).timeInfo,[],'plotWhere', gca,'plot_combined_data', true,...
+		'mean_trace', event_data(group_pos).mean_val, 'mean_trace_shade', event_data(group_pos).ste_val,...
+		'plot_raw_races',false,'y_range', [-3 7],'tickInt_time',0.5,...
+		'mean_line_color',mean_line_color{tn},'shade_color',shade_color{tn});
+	hold on
+	% legendStr = [legendStr, {'',trace_type(tn).tag{2}}];
+end
+% legend(legendStr, 'location', 'northeast')
+% legend('boxoff')
+
+
+%% ====================
+% Collect all CaLevelDeltaData (base-col and stim-col) into a 2-col vector
+caLevelData_cell = {grouped_event(2).event_info.CaLevelDeltaData}(:);
+caLevelData = cell2mat(caLevelData_cell(:));
+[barInfo] = barplot_with_stat(caLevelData,'group_names',{'baseline','stim'},...
+	'stat','pttest','save_fig',true,'save_dir',FolderPathVA.fig,'gui_save',true);

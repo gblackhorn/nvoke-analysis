@@ -25,7 +25,7 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	tickInt_time = 1; % interval of tick for timeInfo (x axis)
 
 	% Optionals
-	for ii = 1:2:(nargin-3)
+	for ii = 1:2:(nargin-2)
 	    if strcmpi('plotWhere', varargin{ii})
 	        plotWhere = varargin{ii+1};
 	    elseif strcmpi('plot_combined_data', varargin{ii})

@@ -1,5 +1,5 @@
 function [TrialRoiList,varargout] = get_roiNum_from_eventProp(eventProp,varargin)
-    % Creat a list that involves trial, roi names, number of roi from the information in eventProp
+    % Creat a list that including trial, roi name, number of roi from the information in eventProp
     % The TrialRoiList will be used to count ROI numbers
 
     % eventProp: a structure variable containing event properties 

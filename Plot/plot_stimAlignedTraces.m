@@ -63,7 +63,7 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 			traceData_cell_rois_g1 = cell(1, num_roi);
 			traceData_cell_rois_g2 = cell(1, num_roi);
 			for nr = 1:num_roi
-				if exist('section','var')
+				if exist('section','var') && ~isempty(section)
 					traceVal = traceInfo_trial(nr).value(:,section);
 				else
 					traceVal = traceInfo_trial(nr).value;

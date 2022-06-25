@@ -61,6 +61,7 @@ function [event_info,varargout] = get_events_info(all_events_time,condition_win,
     rise_duration = peak_properties_table.rise_duration(idx_in_peak_table);
     peak_time = peak_properties_table.peak_time(idx_in_peak_table);
     peak_loc = peak_properties_table.peak_loc(idx_in_peak_table);
+    FWHM = peak_properties_table.FWHM(idx_in_peak_table);
     peak_mag_delta = peak_properties_table.peak_mag_delta(idx_in_peak_table);
     peak_delta_norm_hpstd = peak_properties_table.peak_delta_norm_hpstd(idx_in_peak_table);
     peak_slope = peak_properties_table.peak_slope(idx_in_peak_table);
@@ -92,6 +93,9 @@ function [event_info,varargout] = get_events_info(all_events_time,condition_win,
             event_info.peak_mag_delta = peak_mag_delta;
             event_info.peak_mag_delta_mean = mean(event_info.peak_mag_delta);
 
+            event_info.FWHM = FWHM;
+            event_info.FWHM = mean(event_info.FWHM);
+
             event_info.peak_delta_norm_hpstd = peak_delta_norm_hpstd;
             event_info.peak_delta_norm_hpstd_mean = mean(event_info.peak_delta_norm_hpstd);
 
@@ -105,7 +109,7 @@ function [event_info,varargout] = get_events_info(all_events_time,condition_win,
             event_info.peak_category = peak_category;
         case 'event'
             event_info_table = table(rise_time, rise_loc, rise_duration,...
-                peak_time, peak_loc, peak_mag_delta, peak_delta_norm_hpstd,...
+                peak_time, peak_loc, FWHM, peak_mag_delta, peak_delta_norm_hpstd,...
                 peak_slope, peak_slope_norm_hpstd, peak_category);
             event_info = [table2struct(event_info_table)]';
     end

@@ -64,7 +64,7 @@ function [histFit_info,varargout] = plot_event_info_histfit(event_info_struct,pa
 	histFit_info(1).group = 'all';
 	histFit_info(1).data = data_all(:);
 
-	if histFit_info(1).data>1 % fitdist only works when data number is bigger than 1
+	if numel(histFit_info(1).data)>1 % fitdist only works when data number is bigger than 1
 		histFit_info(1).pd = fitdist(histFit_info(1).data,'Normal');
 
 

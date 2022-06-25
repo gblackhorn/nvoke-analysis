@@ -13,6 +13,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
     plotWhere = [];
     save_fig = false;
     save_dir = '';
+    gui_save = false;
     stat = false; % true if want to run anova
     stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 
@@ -36,6 +37,8 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
             save_fig = varargin{ii+1};
         elseif strcmpi('save_dir', varargin{ii})
             save_dir = varargin{ii+1};
+        elseif strcmpi('gui_save', varargin{ii})
+            gui_save = varargin{ii+1};
         elseif strcmpi('stat_fig', varargin{ii})
             stat_fig = varargin{ii+1};
         elseif strcmpi('FontSize', varargin{ii})
@@ -53,7 +56,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
             group_num = size(data,2);
             group_data = cell(1,group_num);
             for gn = 1:group_num
-                group_data = data(:,gn);
+                group_data{gn} = data(:,gn);
             end
         case 'cell'
             group_num = numel(data);
@@ -81,7 +84,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
 
         data_cell{gn} = group_data{gn};
         data_cell_group{gn} = cell(size(data_cell{gn}));
-        [data_cell_group{gn}{:}] = deal(barInfo.data(gn).group_data);
+        [data_cell_group{gn}{:}] = deal(barInfo.data(gn).group);
     end
     data_all = [data_cell{:}]; % for anova1
     data_all_group = [data_cell_group{:}]; % for anova1
@@ -98,7 +101,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
     x = [1:1:group_num];
     y = [barInfo.data.mean_val];
     y_error = [barInfo.data.ste_val];
-    n_num_str = num2str([barInfo.data.n]);
+    n_num_str = num2str([barInfo.data.n]');
 
     fb = bar(x, y,...
         'EdgeColor', EdgeColor, 'FaceColor', FaceColor);
@@ -125,16 +128,6 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
     title_str = replace(title_str, ':', '-');
     hold off
 
-    if save_fig
-        dt = datestr(now, 'yyyymmdd');
-        fname = sprintf('%s-%s',title_str,dt);
-        if isempty(save_dir)
-            save_dir = uigetdir;
-        end
-        savePlot(f,...
-            'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
-    end
-
 
     barInfo_stat_fields = {'stat_method','p','tbl','c','ci','gnames','stats'};
     barInfo.stat = empty_content_struct(barInfo_stat_fields,1);
@@ -145,6 +138,10 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
             case 'pttest'
                 if group_num ~= 2
                     stat = 'anova';
+                else
+                    if numel(barInfo.data(1).group_data) ~= numel(barInfo.data(2).group_data)
+                       stat = 'anova';
+                    end 
                 end
             otherwise
         end
@@ -152,9 +149,9 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
 
         switch stat
             case 'anova'
-                [barInfo.stat.p,barInfo.stat.tbl,barInfo.stat.stats] = anova1(data_all, data_all_group,);
-                if stats.df~=0
-                    [c,~,~,gnames] = multcompare(stats, 'Display'); % multiple comparison test. Check if the difference between groups are significant
+                [barInfo.stat.p,barInfo.stat.tbl,barInfo.stat.stats] = anova1(data_all,data_all_group,'off');
+                if barInfo.stat.stats.df~=0
+                    [c,~,~,gnames] = multcompare(barInfo.stat.stats,'Display','off'); % multiple comparison test. Check if the difference between groups are significant
                     % 'tukey-kramer'
                     % The first two columns of c show the groups that are compared. 
                     % The fourth column shows the difference between the estimated group means. 
@@ -176,9 +173,22 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
                 barInfo.stat.c = c;
                 barInfo.stat.gnames = gnames;
             case 'pttest'
-                [barInfo.stat.h,barInfo.stat.p,barInfo.stat.ci,barInfo.stat.stats] = ttest(barInfo.data(1).group_data,barInfo.data(1).group_data);
+                [barInfo.stat.h,barInfo.stat.p,barInfo.stat.ci,barInfo.stat.stats] = ttest(barInfo.data(1).group_data,barInfo.data(2).group_data);
             otherwise
         end
+    end
+
+    if save_fig
+        dt = datestr(now, 'yyyymmdd');
+        fname = sprintf('%s-%s',title_str,dt);
+        if isempty(save_dir) || gui_save
+            save_dir = uigetdir(save_dir,'Choose a folder to save barplot and statistics');
+        end
+        save_dir = savePlot(f,...
+            'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
+
+        statfile_name = sprintf('%s-stat',fname);
+        save(fullfile(save_dir,statfile_name), 'barInfo');
     end
 end
 
