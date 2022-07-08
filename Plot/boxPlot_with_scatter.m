@@ -11,6 +11,7 @@ function [varargout] = boxPlot_with_scatter(CellArrayData,varargin)
 
 	boxColor = [0 0.1 0.4]; % '#0B4870';
 	notchMode = 'off';
+	outlier_marker = false;
 
 	plotScatter = true; % true/false. Scatter plot of every single value used for box plot. 
 
@@ -37,14 +38,16 @@ function [varargout] = boxPlot_with_scatter(CellArrayData,varargin)
 	        groupNames = varargin{ii+1};
 	    elseif strcmpi('traceMeanCom', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
 	        traceMeanCom = varargin{ii+1}; % output of stim_effect_compare_trace_mean_alltrial
-	    elseif strcmpi('plotScatter', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
-	        plotScatter = varargin{ii+1}; % output of stim_effect_compare_trace_mean_alltrial
-	    elseif strcmpi('plotWhere', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
-	        plotWhere = varargin{ii+1}; % output of stim_effect_compare_trace_mean_alltrial
-	    elseif strcmpi('FontSize', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
-	        FontSize = varargin{ii+1}; % output of stim_effect_compare_trace_mean_alltrial
-	    elseif strcmpi('FontWeight', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
-	        FontWeight = varargin{ii+1}; % output of stim_effect_compare_trace_mean_alltrial
+	    elseif strcmpi('outlier_marker', varargin{ii}) 
+	        outlier_marker = varargin{ii+1}; 
+	    elseif strcmpi('plotScatter', varargin{ii}) 
+	        plotScatter = varargin{ii+1}; 
+	    elseif strcmpi('plotWhere', varargin{ii}) 
+	        plotWhere = varargin{ii+1}; 
+	    elseif strcmpi('FontSize', varargin{ii}) 
+	        FontSize = varargin{ii+1}; 
+	    elseif strcmpi('FontWeight', varargin{ii}) 
+	        FontWeight = varargin{ii+1}; 
 	    elseif strcmpi('stat', varargin{ii})
             stat = varargin{ii+1};
 	    elseif strcmpi('stat_fig', varargin{ii})
@@ -78,7 +81,14 @@ function [varargout] = boxPlot_with_scatter(CellArrayData,varargin)
     	axes(plotWhere)
     	f = gcf;
     end
-	boxplot(boxPlot_data, boxPlot_group, 'Notch', notchMode, 'Colors', boxColor);
+
+    if outlier_marker
+    	symbol = '+'; % show outlier as defult: '+'
+    else
+    	symbol = ''; % do not show outlier marker
+    end
+
+	boxplot(boxPlot_data,boxPlot_group,'symbol',symbol,'Notch',notchMode,'Colors', boxColor);
 	set(gca, 'box', 'off')
 	set(gca, 'FontSize', FontSize)
 	set(gca, 'FontWeight', FontWeight)
@@ -88,16 +98,10 @@ function [varargout] = boxPlot_with_scatter(CellArrayData,varargin)
 
 	if plotScatter
 		for n = 1:groupNum
-			% disp(n) % lines for debugging
-			% if n == 20
-			% 	pause
-			% end
 
 			scatterY = CellArrayData{n};
 			scatterX = rand(size(scatterY))*scatter_spread-(scatter_spread/2)+xt(n);
 			if exist('traceMeanCom', 'var') 
-				% sig_diff_logVec = [traceMeanCom(n).stat.h]'; % a logical vector: 1 if stim and non-stim mean value are significantly different
-				% sig_diff_logVec = logical(sig_diff_logVec);
 
 				sig_diff_logVec = logical(traceMeanCom{n});
 				scatterY_1 = scatterY(sig_diff_logVec); % data points (ROIs) in which mean traces diffs are significant 
@@ -144,12 +148,6 @@ function [varargout] = boxPlot_with_scatter(CellArrayData,varargin)
 			h(idx_nonsig) = 0;
 			c.h = h;
 		end
-	% else
-	% 	p = NaN;
-	% 	tbl = NaN;
-	% 	stats = NaN; 
-	% 	c = NaN;
-	% 	gnames = NaN;
 	end
 	statInfo.anova_p = p; % p-value of anova test
 	statInfo.tbl = tbl; % anova table

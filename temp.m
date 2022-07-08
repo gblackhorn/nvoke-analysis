@@ -270,8 +270,8 @@ end
 % alignedData_allTrials = alignedData_allTrials_all; % all data
 save_fig = true; % true/false
 
-og_fq_data{1} = [grouped_event_info_filtered(3).event_info.sponfq];
-og_fq_data{2} = [grouped_event_info_filtered(3).event_info.stimfq];
+og_fq_data{1} = [grouped_event(3).event_info.sponfq];
+og_fq_data{2} = [grouped_event(3).event_info.stimfq];
 [barInfo_ogfq] = barplot_with_stat(og_fq_data,'group_names',{'sponfq','stimfq'},...
 	'stat','pttest','save_fig',save_fig);
 
@@ -324,3 +324,63 @@ caLevelData_cell = {grouped_event(2).event_info.CaLevelDeltaData}(:);
 caLevelData = cell2mat(caLevelData_cell(:));
 [barInfo] = barplot_with_stat(caLevelData,'group_names',{'baseline','stim'},...
 	'stat','pttest','save_fig',true,'save_dir',FolderPathVA.fig,'gui_save',true);
+
+
+%% ====================
+% event list grouped to event category
+[event_list] = eventcat_list(alignedData_allTrials);
+
+[TrialRoiList] = get_roiNum_from_eventProp(eventProp_all);
+
+PosAndAllCellNum = [25 54; 32 113; 72 113]; % AP, OG-evoke, OG-rebound
+PosCellNum = PosAndAllCellNum(:,1);
+AllCellNum = PosAndAllCellNum(:,2);
+NegCellNum = PosAndAllCellNum(:,2)-PosAndAllCellNum(:,1);
+% PosAndNegCellNum = [PosAndAllCellNum(:,1) NegCellNum];
+NegAndPosCellNum = [NegCellNum PosCellNum];
+% PosAndNegPercentage = PosAndNegCellNum./AllCellNum;
+NegAndPosPercentage = NegAndPosCellNum./AllCellNum;
+bar(NegAndPosPercentage,'stacked')
+
+
+%% ====================
+% plot stim event probability
+trig_ap_eventpb = grouped_event(1).eventPb{3,'eventPb_val'};
+trig_ogrb_eventpb = grouped_event(2).eventPb{2,'eventPb_val'};
+trig_og_eventpb = grouped_event(2).eventPb{3,'eventPb_val'};
+
+eventpb_cell = [trig_ap_eventpb,trig_ogrb_eventpb,trig_og_eventpb];
+
+[barInfo] = barplot_with_stat(eventpb_cell,'group_names',{'ap','ogrb','og'},...
+	'stat','anova','save_fig',true,'save_dir',FolderPathVA.fig,'gui_save',true);
+
+
+%% ====================
+% check the coexistence of OG-evoke and OG-rebound in OG trials
+% Get the number of ROIs of OG-evoke-pos, OG-rebound-pos, and double-pos
+[alignedData_event_list] = eventcat_list(alignedData_allTrials);
+[alignedData_event_list_OG,varargout] = filter_structData(alignedData_event_list,...
+	'stim','OG-LED-5s',1);
+trial_num = numel(alignedData_event_list_OG);
+OG_roiNum.evoke_pos = 0;
+OG_roiNum.rebound_pos = 0;
+OG_roiNum.double_pos = 0;
+OG_roiNum.double_neg = 0;
+OG_roiNum.extra = 0;
+for tn = 1:trial_num
+	roi_info = alignedData_event_list_OG(tn).roi_info;
+	roi_num = numel(roi_info);
+	for rn = 1:roi_num
+		if roi_info(rn).trig>0 && roi_info(rn).rebound>0
+			OG_roiNum.double_pos = OG_roiNum.double_pos+1;
+		elseif roi_info(rn).trig==0 && roi_info(rn).rebound==0
+			OG_roiNum.double_neg = OG_roiNum.double_neg+1;
+		elseif roi_info(rn).trig>0 && roi_info(rn).rebound==0
+			OG_roiNum.evoke_pos = OG_roiNum.evoke_pos+1;
+		elseif roi_info(rn).trig==0 && roi_info(rn).rebound>0
+			OG_roiNum.rebound_pos = OG_roiNum.rebound_pos+1;
+		else
+			OG_roiNum.extra = OG_roiNum.extra+1;
+		end
+	end
+end

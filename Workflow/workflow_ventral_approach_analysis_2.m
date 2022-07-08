@@ -9,7 +9,7 @@
 % 2022.03.18 Some sections are deleted. Some are reorganized to facilitate the workflow
 
 %% ====================
-clearvars -except recdata_organized alignedData_allTrials seriesData_sync grouped_event adata grouped_event_info_filtered
+clearvars -except recdata_organized alignedData_allTrials alignedData_event_list seriesData_sync grouped_event adata grouped_event_info_filtered
 
 PC_name = getenv('COMPUTERNAME'); 
 % set folders for different situation
@@ -133,6 +133,9 @@ if adata.disROI
 	alignedData_allTrials = discard_alignedData_roi(alignedData_allTrials,...
 		'stims',adata.disROI_setting.stims,'eventCats',adata.disROI_setting.eventCats);
 end
+
+% Create a list showing the numbers of various events in each ROI
+[alignedData_event_list] = eventcat_list(alignedData_allTrials);
 
 %% ====================
 % 9.2.1.1 Check trace aligned to stim window
@@ -277,7 +280,7 @@ parNames = {'rise_duration','sponNorm_rise_duration','FWHM','peak_mag_delta',...
 		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
 		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
 		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
-save_fig = true; % true/false
+save_fig = false; % true/false
 save_dir = FolderPathVA.fig;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
@@ -300,7 +303,7 @@ end
 % bar_data.data can be used to run one-way anova. bar_stat contains results of anova and the following multi-comparison 
 
 %% ====================
-% 9.5.1.2 screen groups based on tags. Delete unwanted groups for event analysis
+% 9.5.3 screen groups based on tags. Delete unwanted groups for event analysis
 tags_discard = {'trig-AP','og-delay','[og-ap]'}; % Discard groups containing these words. 'spon','EXopto',
 tags_keep = {'trig [ap]','trig [og]','rebound'}; % Keep groups containing these words
 clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
@@ -332,6 +335,28 @@ if save_fig
 	plot_stat_info.plot_info = plot_info;
 	dt = datestr(now, 'yyyymmdd');
 	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
+end
+
+%% ====================
+% 9.5.5 comparison within cells. 
+% Note: eprop.entry = 'roi'; mgSetting.groupField = {'stim_name'};
+% plot for paired parameters in same ROIs and run paired ttest
+save_fig = true; % true/false
+paired_fields = {{'sponfq','stimfq'}, {'CaLevelmeanBase','CaLevelmeanStim'}};
+stat = 'pttest';
+plotdata = true; % true/false
+group_num = numel(grouped_event_info_filtered);
+if save_fig
+	save_dir = uigetdir(FolderPathVA.fig);
+	if save_dir~=0
+		FolderPathVA.fig = save_dir;
+	end
+end
+withinCellComp_stat = empty_content_struct({'group','stat'},group_num);
+for gn = 1:group_num
+	withinCellComp_stat(gn).group = grouped_event_info_filtered(gn).group;
+	[withinCellComp_stat(gn).stat] = comparison_within_strutEntry(grouped_event_info_filtered(gn).event_info,paired_fields,...
+		'stat',stat,'plotdata',plotdata,'save_fig',save_fig,'title_str',grouped_event_info_filtered(gn).group);
 end
 
 %% ====================

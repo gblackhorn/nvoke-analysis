@@ -10,11 +10,12 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
 
     stat = 'anova'; % anova/pttest. anova test or paired ttest. The later only works when the group number is 2
 
+    plotData = true; % true/false
     plotWhere = [];
     save_fig = false;
     save_dir = '';
     gui_save = false;
-    stat = false; % true if want to run anova
+    % stat = false; % true if want to run anova
     stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 
     TickAngle = 45;
@@ -90,43 +91,45 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
     data_all_group = [data_cell_group{:}]; % for anova1
 
     % Plot
-    if isempty(plotWhere)
-        f = figure;
-    else
-        axes(plotWhere)
-        f = gcf;
+    if plotData
+        if isempty(plotWhere)
+            f = figure;
+        else
+            axes(plotWhere)
+            f = gcf;
+        end
+
+        group_names = {barInfo.data.group};
+        x = [1:1:group_num];
+        y = [barInfo.data.mean_val];
+        y_error = [barInfo.data.ste_val];
+        n_num_str = num2str([barInfo.data.n]');
+
+        fb = bar(x, y,...
+            'EdgeColor', EdgeColor, 'FaceColor', FaceColor);
+        hold on
+
+        yl = ylim;
+        yloc = yl(1)+0.05*(yl(2)-yl(1));
+        yloc_array = repmat(yloc, 1, numel(x));
+        text(x,yloc_array,n_num_str,'vert','bottom','horiz','center', 'Color', 'white');
+
+        ax.XTick = x;
+        set(gca, 'box', 'off')
+        set(gca, 'FontSize', FontSize)
+        set(gca, 'FontWeight', FontWeight)
+        xtickangle(TickAngle)
+        set(gca, 'XTick', [1:1:group_num]);
+        set(gca, 'xticklabel', group_names);
+        fe = errorbar(x, y, y_error, 'LineStyle', 'None');
+        set(fe,'Color', 'k', 'LineWidth', 2, 'CapSize', 10);
+        if ~exist('title_str','var')
+            title_str = sprintf('barplot');
+        end
+        title_str = replace(title_str, '_', '-');
+        title_str = replace(title_str, ':', '-');
+        hold off
     end
-
-    group_names = {barInfo.data.group};
-    x = [1:1:group_num];
-    y = [barInfo.data.mean_val];
-    y_error = [barInfo.data.ste_val];
-    n_num_str = num2str([barInfo.data.n]');
-
-    fb = bar(x, y,...
-        'EdgeColor', EdgeColor, 'FaceColor', FaceColor);
-    hold on
-
-    yl = ylim;
-    yloc = yl(1)+0.05*(yl(2)-yl(1));
-    yloc_array = repmat(yloc, 1, numel(x));
-    text(x,yloc_array,n_num_str,'vert','bottom','horiz','center', 'Color', 'white');
-
-    ax.XTick = x;
-    set(gca, 'box', 'off')
-    set(gca, 'FontSize', FontSize)
-    set(gca, 'FontWeight', FontWeight)
-    xtickangle(TickAngle)
-    set(gca, 'XTick', [1:1:group_num]);
-    set(gca, 'xticklabel', group_names);
-    fe = errorbar(x, y, y_error, 'LineStyle', 'None');
-    set(fe,'Color', 'k', 'LineWidth', 2, 'CapSize', 10);
-    if ~exist('title_str','var')
-        title_str = sprintf('barplot');
-    end
-    title_str = replace(title_str, '_', '-');
-    title_str = replace(title_str, ':', '-');
-    hold off
 
 
     barInfo_stat_fields = {'stat_method','p','tbl','c','ci','gnames','stats'};
@@ -178,7 +181,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
         end
     end
 
-    if save_fig
+    if plotData && save_fig 
         dt = datestr(now, 'yyyymmdd');
         fname = sprintf('%s-%s',title_str,dt);
         if isempty(save_dir) || gui_save

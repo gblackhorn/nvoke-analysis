@@ -116,7 +116,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	%% bar plot
 	f_bar = figure('Name', 'bar plots');
 	if par_num == 1
-		fig_position = [0.1 0.1 0.2 0.6];
+		fig_position = [0.1 0.1 0.2 0.6]; % left, bottom, width, height
 	else
 		fig_position = [0.1 0.1 0.8 0.6];
 	end

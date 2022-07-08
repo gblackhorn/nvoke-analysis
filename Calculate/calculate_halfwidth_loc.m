@@ -35,18 +35,5 @@ function [halfwidth_loc,varargout] = calculate_halfwidth_loc(roi_trace,rise_loc,
     end
 
     halfwidth_loc = [half_max_start_loc half_max_end_loc];
-
-
-    % Validating the halfwidth_loc
-
-
-
-    % rise_to_peak_dataNum = round((peak_loc-rise_loc+1)/numel(rise_loc));
-    % datapoint_int = amp_delta/(rise_to_peak_dataNum-1);
-
-    % half_max_val_diff = roi_trace(half_max_end_loc)-roi_trace(half_max_start_loc);
-    % invalid_half_max_pair = find(half_max_val_diff>datapoint_int*3);
-
-
 end
 
