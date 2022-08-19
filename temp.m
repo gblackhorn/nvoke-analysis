@@ -384,3 +384,17 @@ for tn = 1:trial_num
 		end
 	end
 end
+
+
+%% ====================
+% read metadata from .czi file
+% input the folder location
+fname_czi = dir(fullfile(folder,'*.czi'));
+fullpath_czi = fullfile(fname_czi.folder,fname_czi.name);
+czidata = czifinfo(fullpath_czi); 
+metadata = czidata.metadataXML;
+
+fname_csv = dir(fullfile(folder,'*.csv'));
+fullpath_csv = fullfile(fname_csv.folder,fname_csv.name);
+tb = readtable(fullpath_csv);
+st = table2struct(tb);
