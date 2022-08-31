@@ -72,7 +72,8 @@ function [varargout] = boxPlot_with_scatter(CellArrayData,varargin)
 	CellArrayData(dis_idx) = [];
 	boxGroups_cell(dis_idx) = [];
 
-	boxPlot_data = cat(1, CellArrayData{:});
+	% boxPlot_data = cat(1, CellArrayData{:});
+	boxPlot_data = cat(1, [CellArrayData{:}]');
 	boxPlot_group = cat(1, boxGroups_cell{:});
     
 	if isempty(plotWhere)
