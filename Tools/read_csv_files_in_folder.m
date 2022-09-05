@@ -9,9 +9,11 @@ function [combined_csv_data,varargout] = read_csv_files_in_folder(folder,varargi
     % Defaults
     debug_mode = false;
     keywords = {}; 
+    del_col = {};
     % keywords_exclud = {};
     save_tbl = false;
     gui_read = false;
+    debug_mode = false;
 
 
     % Options
@@ -20,14 +22,14 @@ function [combined_csv_data,varargout] = read_csv_files_in_folder(folder,varargi
             debug_mode = varargin{ii+1};
         elseif strcmpi('keywords', varargin{ii})
             keywords = varargin{ii+1}; % look for csv files containing the keywords in a folder
-        % elseif strcmpi('keywords_exclud', varargin{ii})
-        %     keywords_exclud = varargin{ii+1}; % look for csv files without the keywords_exclud in a folder
+        elseif strcmpi('del_col', varargin{ii}) 
+            del_col = varargin{ii+1}; % delete column. Add column header in a cell array
         elseif strcmpi('save_tbl', varargin{ii})
             save_tbl = varargin{ii+1};
         elseif strcmpi('gui_read', varargin{ii})
             gui_read = varargin{ii+1};
-        % elseif strcmpi('plotdata', varargin{ii})
-        %     plotdata = varargin{ii+1};
+        elseif strcmpi('debug_mode', varargin{ii})
+            debug_mode = varargin{ii+1};
         end
     end
 
@@ -52,9 +54,20 @@ function [combined_csv_data,varargout] = read_csv_files_in_folder(folder,varargi
         single_roi_data = empty_content_struct({'name','data'});
         for cn = 1:csv_num
             single_roi_data(cn).name = csv_list(cn).name;
-            fullpath_csv = fullfile(selpath,single_roi_data.name);
+
+            if debug_mode
+                fprintf('%s\n',single_roi_data(cn).name)
+            end
+
+            fullpath_csv = fullfile(selpath,single_roi_data(cn).name);
             single_roi_data(cn).data = table2struct(readtable(fullpath_csv)); % read csv file and convert the tbl to struct
             [single_roi_data(cn).data.CsvName] = deal(single_roi_data(cn).name); 
+
+            if ~isempty(del_col)
+                field_TF = isfield(single_roi_data(cn).data,del_col);
+                field_del = del_col(find(field_TF));
+                single_roi_data(cn).data = rmfield(single_roi_data(cn).data,field_del);
+            end
 
             if cn == 1
                 combined_data = single_roi_data(cn).data;
