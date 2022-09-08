@@ -320,7 +320,7 @@ end
 
 %% ====================
 % Collect all CaLevelDeltaData (base-col and stim-col) into a 2-col vector
-caLevelData_cell = {grouped_event(2).event_info.CaLevelDeltaData}(:);
+% caLevelData_cell = {grouped_event(2).event_info.CaLevelDeltaData}(:);
 caLevelData = cell2mat(caLevelData_cell(:));
 [barInfo] = barplot_with_stat(caLevelData,'group_names',{'baseline','stim'},...
 	'stat','pttest','save_fig',true,'save_dir',FolderPathVA.fig,'gui_save',true);
@@ -398,3 +398,53 @@ fname_csv = dir(fullfile(folder,'*.csv'));
 fullpath_csv = fullfile(fname_csv.folder,fname_csv.name);
 tb = readtable(fullpath_csv);
 st = table2struct(tb);
+
+
+%% ====================
+a = [15 18 16];
+b = [17 69 27 22];
+ab = [a b];
+ab_cell = num2cell(ab);
+[roi_val_data(11).combined_data.CellCount] = ab_cell{:};
+
+
+%% ====================
+% Box plot to show the positive neuron densities
+% Pre-requirement: Add Area and CellCount info first
+close all
+SaveFig = true;
+
+VA_AreaArray = [55809.936 29682.521 51289.236 37784.35];
+VA_CellCountArray = [44 21 30 27];
+VA_DensityArray = VA_CellCountArray./VA_AreaArray;
+VA_GroupNames = 'VA-22-days';
+
+GroupNames = {d2_area_data.label};
+for n = 1:numel(d2_area_data)
+	CombinedData = d2_area_data(n).combined_data;
+	AreaArray = [CombinedData.Area];
+	CellCountArray = [CombinedData.CellCount];
+	DensityArray = CellCountArray./AreaArray;
+	d2_area_data(n).density = DensityArray;
+end
+density_data = [{VA_DensityArray} {d2_area_data.density}];
+GroupNames = [VA_GroupNames GroupNames];
+[f_box_density] = fig_canvas(1,'fig_name','BoxPlot VentralApproach and D2 area');
+[~, box_stat_density] = boxPlot_with_scatter(density_data, 'groupNames', GroupNames,...
+		'plotWhere', gca, 'stat', true, 'FontSize', 18,'FontWeight','bold');  
+
+if SaveFig
+	% default_fig_path = fullfile(DefaultDir.fig,'*.mat');
+	FigFolder = uigetdir(DefaultDir.fig,'Select a folder to save box plot');
+	% [mat_file,mat_folder] = uiputfile(default_mat_path,'Save fluorescence intensity measurement', 'FIM.mat');
+	if mat_folder ~= 0
+		DefaultDir.fig = FigFolder;
+		dt = datestr(now, 'yyyymmdd-HHMM');
+		fbox_name = sprintf('%s_area_boxplot_density',dt);
+		savePlot(f_box_density,...
+			'guiSave', 'off', 'save_dir', FigFolder, 'fname', fbox_name);
+
+		save(fullfile(FigFolder, [dt, '_boxplot_stat']),...
+		    'box_stat_density');
+	end
+end

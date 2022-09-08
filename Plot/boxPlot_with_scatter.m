@@ -25,8 +25,8 @@ function [varargout] = boxPlot_with_scatter(CellArrayData,varargin)
 	FontSize = 18;
 	FontWeight = 'bold';
 
-	save_fig = false; % true/false
-	save_dir = '';
+	% save_fig = false; % true/false
+	% save_dir = '';
 
 	plotWhere = [];
 	stat = false; % true if want to run anova
