@@ -8,7 +8,7 @@ function [peak_properties_tables_add_stim_str,varargout] = organize_add_stim_str
     stim_str_full = 'no-stim';
 
     % main contents
-    peak_properties_tables_add_stim_str = cell(size(peak_properties_tables));;
+    peak_properties_tables_add_stim_str = cell(size(peak_properties_tables));
     roi_num = size(peak_properties_tables, 2);
     for rn = 1:roi_num
         if size(peak_properties_tables{1, rn}, 2) ~= 1
@@ -21,10 +21,11 @@ function [peak_properties_tables_add_stim_str,varargout] = organize_add_stim_str
         stim = cell(size(peak_properties_table_single.rise_time));
     	if ~isempty(gpio_info_table)
             stim_str_full = join(gpio_info_table.stim_ch_str);
-            stim = cellfun(@(x) stim_str_full, stim, 'UniformOutput', false);
-	    else
-	    	stim = cellfun(@(x) stim_str_full, stim, 'UniformOutput', false);
+     %        stim = cellfun(@(x) stim_str_full, stim, 'UniformOutput', false);
+	    % else
+	    % 	stim = cellfun(@(x) stim_str_full, stim, 'UniformOutput', false);
 	    end
+        stim = cellfun(@(x) stim_str_full, stim, 'UniformOutput', false);
 
         peak_properties_table_single = addvars(peak_properties_table_single,stim);
         peak_properties_tables_add_stim_str{1, rn} = peak_properties_table_single;
