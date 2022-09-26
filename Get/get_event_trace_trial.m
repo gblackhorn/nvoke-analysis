@@ -102,7 +102,9 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	event_spec_fulltable = trialData{event_spec_fulltable_col};
 	roi_num = size(event_spec_fulltable, 2);
 	
-	gpio_info = trialData{gpio_col}(3:end);
+	ch_names = {trialData{gpio_col}.name};
+	[~,gpio_ch_locs] = gpio_ch_names(ch_names,2); % 2: use the modified channel names, such as {'AP_GPIO-1','Airpuff-START','AP'}
+	gpio_info = trialData{gpio_col}(gpio_ch_locs.stim);
 	if ~isempty(gpio_info)
 		[alignedData.stimInfo,combine_stimRange,combine_stimDuration] = get_stimInfo(gpio_info);
 		combine_stimRange(:,1) = combine_stimRange(:,1)-stim_time_error;
@@ -187,7 +189,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			end
 			alignedData.traces(n).fullTrace = roi_trace_data;
 
-			% modify the names of peak catigories 
+			% modify the names of peak categories 
 			if ~isempty(alignedData.traces(n).eventProp) && mod_pcn 
 				[cat_setting] = set_CatNames_for_mod_cat_name('event');
 				[alignedData.traces(n).eventProp] = mod_cat_name(alignedData.traces(n).eventProp,'cat_setting',cat_setting,'dis_extra',false);

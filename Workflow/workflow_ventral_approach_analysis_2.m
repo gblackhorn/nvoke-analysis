@@ -36,9 +36,9 @@ recdata_organized = select_grouped_data(recdata_group);
 %% ====================
 % 9.1 Examine peak detection with plots 
 close all
-PauseTrial = false; % true or false
+PauseTrial = true; % true or false
 traceNum_perFig = 10; % number of traces/ROIs per figure
-SavePlot = true; % true or false
+SavePlot = false; % true or false
 SaveTo = FolderPathVA.fig;
 vis = 'off'; % on/off. set the 'visible' of figures
 decon = false; % true/false plot decon trace
@@ -106,10 +106,10 @@ adata.ss_range = 1; % single number (last n second) or a 2-element array (start 
 adata.stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 adata.mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
-debug_mode = false; % true/false
+debug_mode = true; % true/false
 adata.caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
 adata.disROI = true; % true/false. If true, Keep ROIs using the setting below, and delete the rest
-adata.disROI_setting.stims = {'GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s GPIO-1-1s'};
+adata.disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-1s'};
 adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
 
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...

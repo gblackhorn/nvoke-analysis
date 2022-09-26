@@ -5,13 +5,18 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
     %		[gpio_info_organized, gpio_info_table] = organize_gpio_info(gpio_info, 'stim_idx_start', 3, 'round_digit', 0);
 
     % Defaults
-    ch_exclude = {'sync','EX-LED'}; % Exclude the channels containing these words
+    ch_names_all = gpio_ch_names; % Get channel names from function "gpio_ch_names"
 
-    GPIO_names = {'GPIO-1','GPIO-2','GPIO-3'}; % GPIO names from nVoke2
-    GPIO_names_mod = {'AP_GPIO-1','Airpuff-START','AP'};
+    ch_exclude = ch_names_all.non_stim; % Exclude the channels containing these words
+    GPIO_names = ch_names_all.stim; % GPIO names from nVoke2
+    GPIO_names_mod = ch_names_all.stim_mod;
+
+    % ch_exclude = {'sync','EX-LED'}; % Exclude the channels containing these words
+    % GPIO_names = {'GPIO-1','GPIO-2','GPIO-3'}; % GPIO names from nVoke2
+    % GPIO_names_mod = {'AP_GPIO-1','Airpuff-START','AP'};
     % channel GPIO-2 output trigger signal to the Arduino, which guides MPPI-3 machine for airpuff protocol
     % channel GPIO-3 receives input from MPPI-3 for real airpuff information
-    modify_ch_name = false; % If true, replace the channel names in 'GPIO_names' with the ones in 'GPIO_names_mod'
+    modify_ch_name = true; % If true, replace the channel names in 'GPIO_names' with the ones in 'GPIO_names_mod'
 
     discard_ch = {'GPIO-2'}; % GPIO-2/Airpuff-START is the nVoke2 channel to command Arduino micro-controller to start airpuff stimulation
 
@@ -50,7 +55,6 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
     	ch_names = {gpio_info.name};
     end
 
-
     % Modify channel names for better readibility
     if modify_ch_name
     	for i = 1:numel(GPIO_names)
@@ -60,13 +64,20 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
     		end
     	end
     	[gpio_info.name] = ch_names{:};
+    	stim_name_type = 2; % stim channel names are GPIO_names_mod
+    else
+    	stim_name_type = 1; % stim channel names are GPIO_names
     end
 
     % Find the locations of 'SYNC' and 'EX-LED' channels. They will not be processed
-    TF_ch_exclude = contains(ch_names,ch_exclude,'IgnoreCase',true);
-    loc_ch_exclude = find(TF_ch_exclude);
-    % gpio_info_ch_exclude = gpio_info(loc_ch_exclude); 
-    loc_ch_stim = find(TF_ch_exclude==0);
+    [~,gpio_ch_locs] = gpio_ch_names(ch_names,stim_name_type);
+    loc_ch_exclude = gpio_ch_locs.non_stim;
+    loc_ch_stim = gpio_ch_locs.stim;
+
+    % TF_ch_exclude = contains(ch_names,ch_exclude,'IgnoreCase',true);
+    % loc_ch_exclude = find(TF_ch_exclude);
+    % % gpio_info_ch_exclude = gpio_info(loc_ch_exclude); 
+    % loc_ch_stim = find(TF_ch_exclude==0);
     % gpio_info_ch_stim = gpio_info(loc_ch_stim);
 
     % allocate ram to variables
@@ -126,7 +137,7 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
 
 				% if strfind(stim_ch_name{cn}, 'GPIO-1') % airpuff trigger signal is 0.5s. stimulation is 1s
 				if contains(stim_ch_name{cn}, GPIO_names{1}) % airpuff trigger signal is 0.5s. stimulation is 1s
-					stim_ch_train_duration{cn} = 1;
+					stim_ch_train_duration{cn} = ones(size(stim_ch_time_range{cn},1),1);
 					gpio_train_end_time = gpio_train_start_time+stim_ch_train_duration{cn};
 					stim_ch_time_range{cn}(:, 2) = gpio_train_end_time;
 					stim_ch_patch{cn} = organize_gpio_train_for_plot_patch(stim_ch_time_range{cn});
@@ -138,15 +149,15 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
 				end
 
 				if all(stim_ch_train_duration{cn} == stim_ch_train_duration{cn}(1))
-					duration_str = num2str(stim_ch_train_duration{cn}(1))
+					duration_str = num2str(stim_ch_train_duration{cn}(1));
 				else
 					duration_str = 'varied';
 				end
 
-				stim_ch_str{cn} = sprintf('%s-%s',stim_ch_name{cn},duration_str);
+				stim_ch_str{cn} = sprintf('%s-%ss',stim_ch_name{cn},duration_str);
 				% stim_ch_str{cn} = [stim_ch_name{cn}, '-', num2str(stim_ch_train_duration{cn}), 's'];
 				if numel(gpio_train_start_time)>1
-					stim_ch_train_inter(cn) = round(gpio_train_start_time(2)-gpio_train_end_time(1), round_digit_sig);
+					stim_ch_train_inter(cn) = round(gpio_train_start_time(2)-gpio_train_end_time(1), 0); % round the interval to the nearest integer
 				% else
 				% 	stim_ch_train_inter(cn) = [];
 				end

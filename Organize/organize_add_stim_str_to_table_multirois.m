@@ -20,7 +20,8 @@ function [peak_properties_tables_add_stim_str,varargout] = organize_add_stim_str
     	stim_ch_num = size(gpio_info_table, 1);
         stim = cell(size(peak_properties_table_single.rise_time));
     	if ~isempty(gpio_info_table)
-            stim_str_full = join(gpio_info_table.stim_ch_str);
+            stim_str_full = char(join(gpio_info_table.stim_ch_str));
+            % stim_str_full = join(gpio_info_table.stim_ch_str);
      %        stim = cellfun(@(x) stim_str_full, stim, 'UniformOutput', false);
 	    % else
 	    % 	stim = cellfun(@(x) stim_str_full, stim, 'UniformOutput', false);
