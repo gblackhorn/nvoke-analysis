@@ -38,25 +38,25 @@ elseif strcmp(PC_name, 'LAPTOP-84IERS3H')
 	AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
 end
 
-[FolderPathVAVA] = set_folder_path_ventral_approach(DataFolder,AnalysisFolder);
+[FolderPathVA] = set_folder_path_ventral_approach(DataFolder,AnalysisFolder);
 
 
 %% ==================== 
-% 2. Crop, spatial filter, and motion corrected recordings with Inscopix API for matlab. And export them in tiff format.
+% 2. Preprocess (Down-sampling is possible), spatial filter, and motion corrected recordings with Inscopix API for matlab. And export them in tiff format.
 % 	Export gpio (stimulation) and recording time stamp information in csv format with IDPS
 
 % This step can be only done on local desktop installed IDPS
 
 % Process all raw recording files in the same folder.
 % This is designed for the output of nVoke2
-recording_dir = uigetdir(ins_recordings_folder,...
+recording_dir = uigetdir(FolderPathVA.recordingVA,...
 	'Select a folder containing raw recording files (.isxd) and gpio files (.gpio)');
 if recording_dir ~= 0
-	ins_recordings_folder = recording_dir;
-	project_dir = uigetdir(ins_projects_folder,...
+	FolderPathVA.recordingVA = recording_dir;
+	project_dir = uigetdir(FolderPathVA.project,...
 		'Select a folder to save processed recording files (PP, BP, MC, DFF)');
-	if project_dir ~= 0 
-		ins_projects_folder = project_dir;
+	if FolderPathVA.project ~= 0 
+		FolderPathVA.project = project_dir;
 		process_nvoke_files(recording_dir, 'project_dir',project_dir);
 	end
 end
@@ -67,13 +67,13 @@ end
 
 %% ==================== 
 % 3.1 Export nvoke movies to tiff files
-keywords = '2021-09-30*-MC.isxd'; % used to filter 
+keywords = '2022-09-27*-MC.isxd'; % used to filter 
 overwrite = false;
 
-input_isxd_folder = uigetdir(project_dir,...
+input_isxd_folder = uigetdir(FolderPathVA.project,...
 	'Select a folder (project folder) containing processed recording files (.isxd)');
 if input_isxd_folder ~= 0
-	project_dir = input_isxd_folder;
+	FolderPathVA.project = input_isxd_folder;
 	output_tiff_folder = uigetdir(FolderPathVA.ExportTiff,...
 		'Select a folder to save the exported tiff files');
 	if output_tiff_folder ~= 0
@@ -134,7 +134,7 @@ cnmfe_process_batch('folder',  organized_tiff_folder, 'Fs', Fs);
 %% ==================== 
 % Write code with inscopix matlab API to simplify this step
 % 5. Copy *results.mat, *gpio.csv, and *ROI.csv files in each subfolders to another folder
-% So recording information in each subfolder can be integrated into a single mat file later。
+% So recording information in each subfolder can be integrated into a single mat file later
 % Manually Export *gpio.csv and *ROI.csv from Inscopix Data processing (ISDP) software
 input_folder = uigetdir(FolderPathVA.ExportTiff,...
 	'Select a folder containing processed recording files organized in subfolders');
@@ -172,17 +172,17 @@ output_dir = FolderPathVA.ventralApproach;
 	'output_dir', output_dir); % for CNMFe processed data
 
 
-% Check the gpio channel information and delete the false stimulation channels. 
-% nVoke2 generated gpio may include channel activity from unsed channels
-rec_num = size(recdata, 1);
-for i = 1:rec_num
-	gpio_info = recdata{i, 4};
+% % Check the gpio channel information and delete the false stimulation channels. 
+% % nVoke2 generated gpio may include channel activity from unsed channels
+% rec_num = size(recdata, 1);
+% for i = 1:rec_num
+% 	gpio_info = recdata{i, 4};
 
-	% Check and delete the false gpio channels
-	[gpio_info] = delete_false_gpio_info(gpio_info);
+% 	% Check and delete the false gpio channels
+% 	[gpio_info] = delete_false_gpio_info(gpio_info);
 
-	recdata{i, 4} = gpio_info;
-end
+% 	recdata{i, 4} = gpio_info;
+% end
 
 
 %% ====================

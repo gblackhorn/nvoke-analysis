@@ -11,12 +11,15 @@ function [gpio_ch_names,varargout] = gpio_ch_names(varargin)
     %	[gpio_ch_names,gpio_ch_locs] = gpio_ch_names({'sync','EX-LED','GPIO-1','GPIO-2','GPIO-3'},1)
 
     gpio_ch_names.non_stim = {'sync','EX-LED'}; 
-    gpio_ch_names.stim = {'GPIO-1','GPIO-2','GPIO-3'}; % GPIO names from nVoke2
-    gpio_ch_names.stim_mod = {'AP_GPIO-1','Airpuff-START','AP'}; % used to rename the gpio_ch_names.stim
+    % sync: sync signal between nVoke2 and other device
+    gpio_ch_names.discard = {'GPIO-2'}; % Can be used to mark the channels neither for non-stim and stim
+
+    gpio_ch_names.stim = {'OG-LED','GPIO-1','GPIO-3'}; % GPIO names from nVoke2
+    gpio_ch_names.stim_mod = {'OG-LED','AP_GPIO-1','AP'}; % used to rename the gpio_ch_names.stim
 
 
     if nargin == 0 % only output the gpio_ch_names
-    elseif nargin >= 1 && nargin <= 2
+    elseif nargin >= 1 && nargin <= 2 % Return the locations of non_stim and stim channels given in varargin{1} 
     	ch_names = varargin{1};
     	stim_name_type = 1;
     	if nargin == 2
@@ -33,6 +36,8 @@ function [gpio_ch_names,varargout] = gpio_ch_names(varargin)
 
     	TF_ch_non_stim = contains(ch_names,gpio_ch_names.non_stim,'IgnoreCase',true);
     	gpio_ch_locs.non_stim = find(TF_ch_non_stim);
+        TF_ch_discard = contains(ch_names,gpio_ch_names.discard,'IgnoreCase',true);
+        gpio_ch_locs.discard = find(TF_ch_discard);
     	TF_ch_stim = contains(ch_names,stim_names,'IgnoreCase',true);
     	gpio_ch_locs.stim = find(TF_ch_stim);
     	varargout{1} = gpio_ch_locs;

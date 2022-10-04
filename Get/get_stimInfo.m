@@ -5,6 +5,7 @@ function [stimInfo,varargout] = get_stimInfo(gpioInfo,varargin)
 	% Defaults
 	fn_stimName = 'name'; % field name of stimulation
 	fn_range = 'stim_range'; % field name of stimulation range (n x 2 vector). n is repeat times
+	round_digit_sig = 2; % round to the Nth significanat digit
 
 	% Optionals
 	for ii = 1:2:(nargin-1)
@@ -27,15 +28,26 @@ function [stimInfo,varargout] = get_stimInfo(gpioInfo,varargin)
 
 	if ~isempty(gpioInfo_stim)
 		stim_ch_num = numel(gpioInfo_stim);
-		stimInfo = struct('stim', cell(1, stim_ch_num), 'duration_sec', NaN(1, stim_ch_num),...
-			'time_range', cell(1, stim_ch_num), 'time_range_notAlign', cell(1, stim_ch_num));
+		stimInfo = empty_content_struct({'stim','duration_sec','duration_array','time_range','time_range_notAlign'},stim_ch_num);
+		% stimInfo = struct('stim', cell(1, stim_ch_num), 'duration_sec', NaN(1, stim_ch_num),...
+		% 	'time_range', cell(1, stim_ch_num), 'time_range_notAlign', cell(1, stim_ch_num));
 		stim_start_time = NaN(1, stim_ch_num);
 
 		for scn = 1:stim_ch_num
 			stimInfo(scn).stim = gpioInfo_stim(scn).(fn_stimName);
-			stimInfo(scn).duration_sec = gpioInfo_stim(scn).(fn_range)(1, 2)-gpioInfo_stim(scn).(fn_range)(1, 1);
+
+			stim_durations = round(gpioInfo_stim(scn).(fn_range)(:, 2)-gpioInfo_stim(scn).(fn_range)(:, 1),round_digit_sig,'significant');
+			if all(stim_durations == stim_durations(1)) 
+				varied_duration = false;
+				stimInfo(scn).duration_sec = stim_durations(1);
+				stimInfo(scn).repeats = size(gpioInfo_stim(scn).(fn_range), 1); % number of repeats
+			else
+				varied_duration = true;
+				stimInfo(scn).duration_sec = stim_durations;
+				stimInfo(scn).repeats = NaN;
+			end
 			stimInfo(scn).time_range_notAlign = gpioInfo_stim(scn).(fn_range);
-			stimInfo(scn).repeats = size(gpioInfo_stim(scn).(fn_range), 1); % number of repeats
+			
 			stim_start_time(scn) = gpioInfo_stim(scn).(fn_range)(1, 1);
 		end
 
@@ -53,7 +65,12 @@ function [stimInfo,varargout] = get_stimInfo(gpioInfo,varargin)
 		% combine value: Use the stim starting first as start, use the stim ending last as the last
 		combine_start = stimInfo(stim_start_first_idx).time_range_notAlign(:, 1);
 		combine_end = stimInfo(stim_end_last_idx).time_range_notAlign(:, 2);
-		combine_duration = combine_end(1) - combine_start(1);
+
+		if varied_duration
+			combine_duration = combine_end - combine_start;
+		else
+			combine_duration = combine_end(1) - combine_start(1);
+		end
 	end
 
 	varargout{1} = [combine_start combine_end]; % combine range

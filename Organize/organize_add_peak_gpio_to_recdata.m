@@ -123,7 +123,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     		stim_str = 'no-stim';
     	else
     		[recdata_organized{rn, col_gpioinfo}, gpio_info_table] = organize_gpio_info(recdata{rn, col_gpioinfo},...
-    			'stim_idx_start', 3, 'round_digit_sig', 2); % round to N significant digits (counted from the leftmost digit)
+    			'modify_ch_name', true, 'round_digit_sig', 2); % round to N significant digits (counted from the leftmost digit)
             if ~isempty(gpio_info_table)
     		    stim_str = char(join(gpio_info_table.stim_ch_str));
             else
