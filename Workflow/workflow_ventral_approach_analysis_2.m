@@ -107,11 +107,12 @@ adata.ss_range = 1; % single number (last n second) or a 2-element array (start 
 adata.stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 adata.mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
-debug_mode = true; % true/false
 adata.caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
 adata.disROI = true; % true/false. If true, Keep ROIs using the setting below, and delete the rest
 adata.disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-1s'};
 adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
+debug_mode = false; % true/false
+
 
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
 	'traceData_type', adata.traceData_type, 'event_data_group', adata.event_data_group,...

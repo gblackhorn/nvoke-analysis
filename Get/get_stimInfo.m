@@ -40,10 +40,12 @@ function [stimInfo,varargout] = get_stimInfo(gpioInfo,varargin)
 			if all(stim_durations == stim_durations(1)) 
 				varied_duration = false;
 				stimInfo(scn).duration_sec = stim_durations(1);
+				stimInfo(scn).duration_array = stim_durations;
 				stimInfo(scn).repeats = size(gpioInfo_stim(scn).(fn_range), 1); % number of repeats
 			else
 				varied_duration = true;
-				stimInfo(scn).duration_sec = stim_durations;
+				stimInfo(scn).duration_sec = NaN;
+				stimInfo(scn).duration_array = stim_durations;
 				stimInfo(scn).repeats = NaN;
 			end
 			stimInfo(scn).time_range_notAlign = gpioInfo_stim(scn).(fn_range);

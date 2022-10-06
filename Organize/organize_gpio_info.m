@@ -168,11 +168,13 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
 
 				if all(stim_ch_train_duration{cn} == stim_ch_train_duration{cn}(1))
 					duration_str = num2str(stim_ch_train_duration{cn}(1));
+					stim_ch_str{cn} = sprintf('%s-%ss',stim_ch_name{cn},duration_str);
 				else
 					duration_str = 'varied';
+					stim_ch_str{cn} = sprintf('%s-%s',stim_ch_name{cn},duration_str);
 				end
 
-				stim_ch_str{cn} = sprintf('%s-%ss',stim_ch_name{cn},duration_str);
+				% stim_ch_str{cn} = sprintf('%s-%ss',stim_ch_name{cn},duration_str);
 				% stim_ch_str{cn} = [stim_ch_name{cn}, '-', num2str(stim_ch_train_duration{cn}), 's'];
 				if numel(gpio_train_start_time)>1
 					stim_ch_train_inter(cn) = round(gpio_train_start_time(2)-gpio_train_end_time(1), 0); % round the interval to the nearest integer
@@ -182,6 +184,7 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
 
 				gpio_info(stim_ch_idx).stim_range = stim_ch_time_range{cn};
 				gpio_info(stim_ch_idx).patch_coordinats = stim_ch_patch{cn};
+				gpio_info(stim_ch_idx).durations = stim_ch_train_duration{cn};
 				% gpio_info_organized(stim_idx_start+cn-1).stim_range = stim_ch_time_range{cn};
 				% gpio_info_organized(stim_idx_start+cn-1).patch_coordinats = stim_ch_patch{cn};
 			end     

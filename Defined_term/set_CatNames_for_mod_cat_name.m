@@ -25,6 +25,10 @@ function [cat_setting,varargout] = set_CatNames_for_mod_cat_name(CatType,varargi
     %% main contents
     switch CatType
     case 'stimulation'
+        % cat_setting.cat_type = 'stim_name';
+        % cat_setting.cat_names = {'og', 'ap'};
+        % cat_setting.cat_merge = {{'OG-LED'}, {'AP_GPIO-1','AP'}};
+
         cat_setting.cat_type = 'stim_name';
         cat_setting.cat_names = {'og', 'ap', 'og-ap'};
         cat_setting.cat_merge = {{'OG-LED-5s'}, {'GPIO-1-1s'}, {'OG-LED-5s GPIO-1-1s'}};

@@ -37,7 +37,7 @@ function [alignedTrace_timeInfo,alignedTrace,varargout] = get_event_trace(events
 
 	fr = round(1/(full_time(10)-full_time(9))); % recording frequency. round it to an integer
 	datapoint_num_pre = ceil(pre_event_time*fr); % number of data points before event onset
-	datapoint_num_post = ceil(post_event_time*fr); % number of data points after event onset
+	datapoint_num_post = ceil(max(post_event_time)*fr); % number of data points after event onset
 
 	alignedTrace_timeInfo = [-datapoint_num_pre:datapoint_num_post]'/fr;
 	datapoint_num = numel(alignedTrace_timeInfo);

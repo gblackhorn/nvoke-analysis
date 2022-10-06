@@ -109,6 +109,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 		[alignedData.stimInfo,combine_stimRange,combine_stimDuration] = get_stimInfo(gpio_info);
 		combine_stimRange(:,1) = combine_stimRange(:,1)-stim_time_error;
 		combine_stimRange(:,2) = combine_stimRange(:,2)+stim_time_error;
+		combine_stimDuration = combine_stimDuration+stim_time_error+stim_time_error;
 		if strcmpi(event_type, 'stimWin')
 			stimStart = combine_stimRange(:, 1);
 			post_event_time = post_event_time+combine_stimDuration;

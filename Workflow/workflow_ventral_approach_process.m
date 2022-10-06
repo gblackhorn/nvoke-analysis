@@ -67,7 +67,7 @@ end
 
 %% ==================== 
 % 3.1 Export nvoke movies to tiff files
-keywords = '2022-09-27*-MC.isxd'; % used to filter 
+keywords = '2022-09-29*-MC.isxd'; % used to filter 
 overwrite = false;
 
 input_isxd_folder = uigetdir(FolderPathVA.project,...
