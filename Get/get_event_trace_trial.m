@@ -192,8 +192,10 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 
 			% modify the names of peak categories 
 			if ~isempty(alignedData.traces(n).eventProp) && mod_pcn 
-				[cat_setting] = set_CatNames_for_mod_cat_name('event');
-				[alignedData.traces(n).eventProp] = mod_cat_name(alignedData.traces(n).eventProp,'cat_setting',cat_setting,'dis_extra',false);
+				[cat_setting] = CaImg_char_pat('event_group');
+				[alignedData.traces(n).eventProp] = mod_str_TBLorSTRUCT(alignedData.traces(n).eventProp,'peak_category',...
+					cat_setting.old,cat_setting.new);	
+					% [alignedData.traces(n).eventProp] = mod_cat_name(alignedData.traces(n).eventProp,'cat_setting',cat_setting,'dis_extra',false);
 				[alignedData.traces(n).eventProp] = add_eventBaseDiff_to_eventProp(alignedData.traces(n).eventProp,...
 					combine_stimRange,full_time,roi_trace_data,varargin);
 				[alignedData.traces(n).eventProp,newFieldName,NFNtag] = add_tfTag_to_eventProp(alignedData.traces(n).eventProp,...

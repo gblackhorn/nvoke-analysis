@@ -15,7 +15,8 @@ function [gpio_ch_names,varargout] = gpio_ch_names(varargin)
     gpio_ch_names.discard = {'GPIO-2'}; % Can be used to mark the channels neither for non-stim and stim
 
     gpio_ch_names.stim = {'OG-LED','GPIO-1','GPIO-3'}; % GPIO names from nVoke2
-    gpio_ch_names.stim_mod = {'OG-LED','AP_GPIO-1','AP'}; % used to rename the gpio_ch_names.stim
+    gpio_ch_names.stim_mod = {'og','ap_GPIO-1','ap'}; % used to rename the gpio_ch_names.stim
+    % gpio_ch_names.stim_mod = {'OG-LED','AP_GPIO-1','AP'}; % used to rename the gpio_ch_names.stim
 
 
     if nargin == 0 % only output the gpio_ch_names
@@ -23,7 +24,7 @@ function [gpio_ch_names,varargout] = gpio_ch_names(varargin)
     	ch_names = varargin{1};
     	stim_name_type = 1;
     	if nargin == 2
-    		stim_name_type == varargin{2};
+    		stim_name_type = varargin{2};
     	end
 
     	if stim_name_type == 1

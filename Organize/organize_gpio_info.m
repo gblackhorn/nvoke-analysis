@@ -11,6 +11,7 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
     %			'round_digit_sig',2);
 
     % Defaults
+    gpio1_ap_duration = 0.1; % airpuff duration (s) when gpio1 channel of nVoke is used to activate ap machine directly
     ch_names_all = gpio_ch_names; % Get channel names from function "gpio_ch_names"
 
     chNonStim_names = ch_names_all.non_stim; % Exclude the channels containing these words from stimulation group
@@ -72,7 +73,8 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
     % Modify channel names for better readibility
     if modify_ch_name
     	for i = 1:numel(chStim_names)
-    		name_loc = find(strcmpi(chStim_names{i},ch_names));
+    		name_loc = find(contains(ch_names,chStim_names{i},'IgnoreCase',true));
+    		% name_loc = find(strcmpi(chStim_names{i},ch_names));
     		if ~isempty(name_loc)
     			ch_names{name_loc} = chStim_names_mod{i};
     		end
@@ -119,7 +121,8 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
 
 	    	% gpio signal from nvoke2 is not clean. need to set a threshold to not organize faulse stim_channel
 	    	if ~isempty(find(contains(stim_ch_name{cn},[chStim_names chStim_names_mod])))
-	    		if ~isempty(find(contains(stim_ch_name{cn},'OG-LED')))
+	    		if ~isempty(find(contains(stim_ch_name{cn},'og')))
+	    		% if ~isempty(find(contains(stim_ch_name{cn},'OG-LED')))
 	    			gpio_thresh = 0.15;
 	    		else
 	    			gpio_thresh = 30000; % 30000 for nvoke2
@@ -146,19 +149,22 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
 				train_inter_loc = find(gpio_rise_inter >= 5); % when gpio signal interval is longer than 5s, that's the break of trains
 				train_end_loc = [(gpio_rise_loc(train_inter_loc)+1); (gpio_rise_loc(end)+1)]; % +1 to each end: gpio switch off after rise signal
 				train_start_loc = [(gpio_rise_loc(1)); (gpio_rise_loc(train_inter_loc+1))]; % time of the train_start rises start
-				gpio_train_start_time = round(time_info(train_start_loc),round_digit_sig,'significant');
-				gpio_train_end_time = round(time_info(train_end_loc),round_digit_sig,'significant');
+				gpio_train_start_time = round(time_info(train_start_loc),round_digit_sig);
+				gpio_train_end_time = round(time_info(train_end_loc),round_digit_sig);
+				% gpio_train_start_time = round(time_info(train_start_loc),round_digit_sig,'significant');
+				% gpio_train_end_time = round(time_info(train_end_loc),round_digit_sig,'significant');
 				stim_ch_time_range{cn} = [gpio_train_start_time gpio_train_end_time];
 
 				% organize gpio info for plotting patches for the durations of stim_trains
 				stim_ch_patch{cn} = organize_gpio_train_for_plot_patch(stim_ch_time_range{cn});
 
 				% if strfind(stim_ch_name{cn}, 'GPIO-1') % airpuff trigger signal is 0.5s. stimulation is 1s
-				if contains(stim_ch_name{cn}, 'GPIO-1') % airpuff trigger signal is 0.5s. stimulation is 100ms
-					stim_ch_train_duration{cn} = 0.1*ones(size(stim_ch_time_range{cn},1),1);
+				if contains(stim_ch_name{cn}, 'GPIO-1') % airpuff trigger signal is 0.5s/1s. stimulation is 100ms
+					stim_ch_train_duration{cn} = gpio1_ap_duration*ones(size(stim_ch_time_range{cn},1),1);
 					gpio_train_end_time = gpio_train_start_time+stim_ch_train_duration{cn};
 					stim_ch_time_range{cn}(:, 2) = gpio_train_end_time;
 					stim_ch_patch{cn} = organize_gpio_train_for_plot_patch(stim_ch_time_range{cn});
+					stim_ch_name{cn} = 'ap'; % remove '_GPIO-1' from the stim_ch_name
 				else
 					stim_durations = gpio_train_end_time-gpio_train_start_time;
 					% stim_durations = round(stim_durations,round_digit_sig,'significant');
@@ -182,6 +188,7 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
 				% 	stim_ch_train_inter(cn) = [];
 				end
 
+				gpio_info(stim_ch_idx).name = stim_ch_name{cn};
 				gpio_info(stim_ch_idx).stim_range = stim_ch_time_range{cn};
 				gpio_info(stim_ch_idx).patch_coordinats = stim_ch_patch{cn};
 				gpio_info(stim_ch_idx).durations = stim_ch_train_duration{cn};

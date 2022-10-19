@@ -64,7 +64,7 @@ function [stimInfo,varargout] = get_stimInfo(gpioInfo,varargin)
 			stimInfo(scn).time_range = [stims_start(scn) stims_end(scn)];
 		end
 
-		% combine value: Use the stim starting first as start, use the stim ending last as the last
+		% combine value: Use the stim starting first as start, use the stim ending last as end
 		combine_start = stimInfo(stim_start_first_idx).time_range_notAlign(:, 1);
 		combine_end = stimInfo(stim_end_last_idx).time_range_notAlign(:, 2);
 

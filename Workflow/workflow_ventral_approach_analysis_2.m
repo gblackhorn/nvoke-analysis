@@ -92,7 +92,7 @@ recdata_organized(dis_idx, :) = [];
 % [recdata_organized] = discard_recData_roi(recdata_organized,'stims',dis.stims,'eventCats',dis.eventCats,'debug_mode',debug_mode);
 %% ====================
 % 9.2 Align traces from all trials. Also collect the properties of events
-adata.event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
+adata.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
 adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 adata.event_data_group = 'peak_lowpass';
 adata.event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
@@ -112,7 +112,6 @@ adata.disROI = true; % true/false. If true, Keep ROIs using the setting below, a
 adata.disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-1s'};
 adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
 debug_mode = false; % true/false
-
 
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
 	'traceData_type', adata.traceData_type, 'event_data_group', adata.event_data_group,...

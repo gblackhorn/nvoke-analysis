@@ -33,11 +33,12 @@ function [outputArg1,outputArg2] = process_nvoke_files(folderpath,varargin)
     fileinfo = dir(fullfile(folderpath, '*.isxd'));
     recording_num = length(fileinfo);
     for rn = 1:recording_num
-        rn
+        % rn
         
     	file_fullpath = fullfile(fileinfo(rn).folder, fileinfo(rn).name);
         
-        file_fullpath
+        % file_fullpath
+        fprintf('Processing %d/%d: %s\n',rn,recording_num,fileinfo(rn).name);
         
     	process_nvoke_file_with_api(file_fullpath,...
     		'project_dir', project_dir);

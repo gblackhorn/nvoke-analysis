@@ -1,3 +1,6 @@
+% Open matlab GUI by running:
+%	bash open_matlab_with_display.sh
+
 % Note: go to the folder containing recordings in its subfolders
 %% ====================
 % Run this section only once
@@ -38,12 +41,15 @@ ii = 1;
 %% ====================
 % run this section for each recordings.
 
-nam = file_names{ii}
+nam = file_names{ii};
+fprintf('Recording %d: %s\n',ii,nam)
 ii = ii+1;
-% Run "cnmfe_large_data_script_cluster.m"
+
 % Temprol solution: pause at line 111 in "viewNeurons.m" make sure the ROI and traces will be plotted
+% Note: pause at line 111 in "viewNeurons.m" to make sure that the ROI and
+% traces will be plotted for manual selection
 
 
 %% ====================
-cnmfe_process_batch_cluster('folder', folder,...
-	'Fs', opt.Fs, 'video', opt.video);
+% cnmfe_process_batch_cluster('folder', folder,...
+% 	'Fs', opt.Fs, 'video', opt.video);
