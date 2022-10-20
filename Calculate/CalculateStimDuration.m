@@ -41,31 +41,42 @@ function [StimDuration,varargout] = CalculateStimDuration(TimeRange,varargin)
 	round_digit_sig = 2; % round to the Nth significant digit for duration
 
 	% Optionals
-	for ii = 1:2:(nargin-1)
-	    if strcmpi('round_digit_sig', varargin{ii})
-	        round_digit_sig = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
-	    end
-	end	
+	if nargin == 2
+		round_digit_sig = varargin{1};
+	end
+
+	% for ii = 1:2:(nargin-1)
+	%     if strcmpi('round_digit_sig', varargin{ii})
+	%         round_digit_sig = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
+	%     end
+	% end	
 
 	%% Content
-	StimDuration = empty_content_struct({'array','fixed','fixed_loc','range','varied','repeats'},stimtype_num);	
+	StimDuration = empty_content_struct({'array','fixed','fixed_loc','range','range_aligned','varied','repeats'},1);	
 
-	StimDuration(stn).array = round(TimeRange(:,2)-TimeRange(:,1),round_digit_sig,'significant');
-	StimDuration(stn).range = TimeRange(:,1)+StimDuration(stn).array; % stimulation range [starts; (starts+durations)]
-	if all(StimDuration(stn).array == StimDuration(stn).array(1))
+	StimDuration(1).array = round(TimeRange(:,2)-TimeRange(:,1),round_digit_sig,'significant');
+	StimDuration(1).range(:,1) = TimeRange(:,1); % stimulation range [starts; (starts+durations)]
+	StimDuration(1).range(:,2) = TimeRange(:,1)+StimDuration(1).array; % stimulation range [starts; (starts+durations)]
+	
+	if all(StimDuration(1).array == StimDuration(1).array(1))
 		StimDuration.varied = false;
-		StimDuration(stn).fixed = StimDuration(stn).array(1);
-		StimDuration(stn).fixed_loc = {[1:numel(StimDuration(stn).array)]};
-		StimDuration(stn).repeats = numel(StimDuration(stn).array);
+		StimDuration(1).fixed = StimDuration(1).array(1);
+		StimDuration(1).fixed_loc = {(1:numel(StimDuration(1).array))};
+		StimDuration(1).range_aligned = StimDuration(1).range(1,:)-StimDuration(1).range(1,1); % aligned stimulation range [0 fixed_duration]
+		StimDuration(1).repeats = numel(StimDuration(1).array);
 	else
 		StimDuration.varied = true;
-		[StimDuration(stn).fixed,idx_array,idx_fixed] = unique(StimDuration(stn).array);
-		num_uniq_durations = numel(StimDuration(stn).fixed; % number of unique durations (fixed)
-		StimDuration(stn).fixed_loc = cell(num_uniq_durations,1);
-		StimDuration(stn).repeats = NaN(num_uniq_durations,1);
+		[StimDuration(1).fixed,idx_array,idx_fixed] = unique(StimDuration(1).array);
+		num_uniq_durations = numel(StimDuration(1).fixed); % number of unique durations (fixed)
+		StimDuration(1).fixed_loc = cell(num_uniq_durations,1);
+		StimDuration(1).range_aligned = NaN(num_uniq_durations,2);
+		StimDuration(1).repeats = NaN(num_uniq_durations,1); % aligned stimulation range [0 fixed_duration]
+		StimDuration(1).repeats(:,1) = deal(0);
+		StimDuration(1).repeats(:,2) = StimDuration(1).fixed;
 		for fn = 1:numel(num_uniq_durations) % go through the unique durations
-			StimDuration(stn).fixed_loc{fn} = find(StimDuration(stn).array==StimDuration(stn).fixed(fn));
-			StimDuration(stn).repeats(fn) = numel(StimDuration(stn).fixed_loc{fn});
+			StimDuration(1).fixed_loc{fn} = find(StimDuration(1).array==StimDuration(1).fixed(fn));
+			StimDuration(1).fixed_loc{fn} = find(StimDuration(1).array==StimDuration(1).fixed(fn));
+			StimDuration(1).repeats(fn) = numel(StimDuration(1).fixed_loc{fn});
 		end
 	end
 end

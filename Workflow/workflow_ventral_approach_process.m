@@ -67,7 +67,7 @@ end
 
 %% ==================== 
 % 3.1 Export nvoke movies to tiff files
-keywords = '2022-10-10*-MC.isxd'; % used to filter 
+keywords = '2022-10-15*-MC.isxd'; % used to filter 
 overwrite = false;
 
 input_isxd_folder = uigetdir(FolderPathVA.project,...
@@ -132,10 +132,11 @@ cnmfe_process_batch('folder',  organized_tiff_folder, 'Fs', Fs);
 
 
 %% ==================== 
-% Write code with inscopix matlab API to simplify this step
+
 % 5. Copy *results.mat, *gpio.csv, and *ROI.csv files in each subfolders to another folder
 % So recording information in each subfolder can be integrated into a single mat file later
-% Manually Export *gpio.csv and *ROI.csv from Inscopix Data processing (ISDP) software
+% Manually Export *gpio.csv and *ROI.csv from Inscopix Data processing
+% (ISDP) software (Write code with inscopix matlab API to simplify this step)
 input_folder = uigetdir(FolderPathVA.ExportTiff,...
 	'Select a folder containing processed recording files organized in subfolders');
 if input_folder ~= 0
