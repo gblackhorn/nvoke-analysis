@@ -102,6 +102,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	event_spec_fulltable = trialData{event_spec_fulltable_col};
 	roi_num = size(event_spec_fulltable, 2);
 	
+	% Organize the stimulation information and store them in alignedData.stimInfo
 	ch_names = {trialData{gpio_col}.name};
 	[~,gpio_ch_locs] = gpio_ch_names(ch_names,2); % 2: use the modified channel names, such as {'AP_GPIO-1','Airpuff-START','AP'}
 	gpio_info = trialData{gpio_col}(gpio_ch_locs.stim);
@@ -111,9 +112,9 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 		alignedData.stimInfo.multistim = ExtraInfo.multistim; % true if multiple types of stimulation applied
 		alignedData.stimInfo.stimtype_num = ExtraInfo.stimtype_num; % number of stimulation types
 		alignedData.stimInfo.type_order = ExtraInfo.type_order; % onset order of stimulation types which are shown in alignedData.stimInfo.StimDuration
-		combine_stimRange(:,1) = UnifiedStimDuration.range(:,1)-stim_time_error;
-		combine_stimRange(:,2) = UnifiedStimDuration.range(:,2)+stim_time_error;
-		combine_stimDuration = UnifiedStimDuration.fixed+stim_time_error+stim_time_error;
+		combine_stimRange(:,1) = alignedData.stimInfo.UnifiedStimDuration.range(:,1)-stim_time_error;
+		combine_stimRange(:,2) = alignedData.stimInfo.UnifiedStimDuration.range(:,2)+stim_time_error;
+		combine_stimDuration = alignedData.stimInfo.UnifiedStimDuration.fixed+stim_time_error+stim_time_error;
 		if strcmpi(event_type, 'stimWin')
 			stimStart = combine_stimRange(:, 1);
 			post_event_time = post_event_time+combine_stimDuration;
@@ -212,7 +213,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 				eventProp_stim = dis_struct_entry(alignedData.traces(n).eventProp,'peak_category',...
 					'spon','discard');
 				[alignedData.traces(n).stimEvent_possi] = get_stimEvent_possibility({eventProp_stim.peak_category},...
-					alignedData.stimInfo.repeats);
+					alignedData.stimInfo.UnifiedStimDuration.repeats);
 			end
 			% get the event number and frequency (spontaneous events and event during stimulation)
 			events_time = [alignedData.traces(n).eventProp.rise_time];

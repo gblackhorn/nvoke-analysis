@@ -66,11 +66,12 @@ function [StimDuration,varargout] = ExtractStimDurationAndExtraInfo(StimRange,va
 	stim_end_time = NaN(1, stimtype_num); % This is used to create unified/combined stimulation ranges and durations
 
 	for stn = 1:stimtype_num % loop through every stimulation type
-		if ExtraInfo(1).multistim
-			TimeRange = StimRange{stn};
-		else
-			TimeRange = StimRange;
-		end
+		TimeRange = StimRange{stn};
+		% if ExtraInfo(1).multistim
+		% 	TimeRange = StimRange{stn};
+		% else
+		% 	TimeRange = StimRange;
+		% end
 
 		% Calculate and round the durations
 		[StimDuration(stn)] = CalculateStimDuration(TimeRange,round_digit_sig);

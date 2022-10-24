@@ -1,4 +1,4 @@
-function [newTBLorSTRUCT,varargout] = SortVariedStimDuration(StimRange,varargin)
+function [newTBLorSTRUCT,varargout] = CreateStimTagForEvents(StimuDuration,EventsTime,varargin)
 	%Tag calcium events and stimulation window with stimulation durations
 
 	% In some recordings, varied stimulation duration are applied. For example, airpuff with 0.05s,
