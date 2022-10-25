@@ -38,7 +38,7 @@ function [StimDuration,varargout] = get_stimInfo(gpioInfo,varargin)
 			StimDuration(scn).type = StimType{scn};
 		end
 
-		UnifiedStimDuration.type = join(StimType(ExtraInfo.type_order));
+		UnifiedStimDuration.type = join(StimType(ExtraInfo.type_order),'&');
 
 		varargout{1} = UnifiedStimDuration; % combine range
 		varargout{2} = ExtraInfo;

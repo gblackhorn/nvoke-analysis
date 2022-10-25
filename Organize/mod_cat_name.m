@@ -14,15 +14,22 @@ function [event_info,varargout] = mod_cat_name(event_info,varargin)
 	% Settings for modifying the category. This can be input with varargin
 	% each cell in cat_merge should pair with one cat_names element sharing the same index
 	cat_type = 'peak_category'; % 'fovID', 'peak_category'
-	cat_names = {'spon', 'trig', 'trig-AP', 'opto-delay', 'rebound'}; % new category names
+
+	EventCat_OldNew = CaImg_char_pat('event_group');
+	cat_names = EventCat_OldNew.new;
+	cat_merge = EventCat_OldNew.old;
 	cat_num = numel(cat_names);
-	cat_merge = cell(cat_num, 1); % each cell contains old categories which will be grouped together
-	cat_merge{1} = {'noStim', 'beforeStim', 'interval',...
-		'beforeStim-beforeStim', 'interval-interval'}; % spon
-	cat_merge{2} = {'trigger', 'trigger-beforeStim', 'trigger-interval'}; % trig
-	cat_merge{3} = {'delay-trigger'}; % trig-AP
-	cat_merge{4} = {'delay', 'delay-rebound', 'delay-interval', 'delay-beforeStim'}; % delay. 'delay-delay', 
-	cat_merge{5} = {'rebound', 'rebound-interval'}; % rebound
+	% cat_names = {'spon', 'trig', 'trig-AP', 'opto-delay', 'rebound'}; % new category names
+	% cat_num = numel(cat_names);
+	% cat_merge = cell(cat_num, 1); % each cell contains old categories which will be grouped together
+	% cat_merge{1} = {'noStim', 'beforeStim', 'interval',...
+	% 	'beforeStim-beforeStim', 'interval-interval'}; % spon
+	% cat_merge{2} = {'trigger', 'trigger-beforeStim', 'trigger-interval'}; % trig
+	% cat_merge{3} = {'delay-trigger'}; % trig-AP
+	% cat_merge{4} = {'delay', 'delay-rebound', 'delay-interval', 'delay-beforeStim'}; % delay. 'delay-delay', 
+	% cat_merge{5} = {'rebound', 'rebound-interval'}; % rebound
+
+	add_extra = 'stim_tags'; % add info in event_info.(add_extra) to the category name;
 
 	cat_setting = '';
 
@@ -93,8 +100,8 @@ function [event_info,varargout] = mod_cat_name(event_info,varargin)
 		else
 			addStim_tf = false;
 		end
-		if addStim_tf && isfield(event_info(n), 'stim_name')
-			new_name = sprintf('%s [%s]', new_name, event_info(n).stim_name);
+		if addStim_tf && isfield(event_info(n), add_extra)
+			new_name = sprintf('%s [%s]', new_name, event_info(n).(add_extra));
 		end
 
 		event_info(n).(cat_type) = new_name;

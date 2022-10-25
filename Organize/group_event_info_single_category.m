@@ -1,4 +1,4 @@
-function [grouped_event_info, varargout] = group_event_info_single_category(event_info, category_name, varargin)
+function [grouped_event_info,varargout] = group_event_info_single_category(event_info,category_name,varargin)
 
 
 	% Defaults

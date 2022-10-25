@@ -29,7 +29,7 @@ function [Ratio_zscore,varargout] = stim_effect_compare_eventFreq_roi2(events_ti
 	eventCat = ones(size(events_time)); % event categorey. default all are 1: simultaneous events
 
 	if ~isempty(stim_range)
-		stimRepeats = size(stim_range, 1);
+		stimNum = size(stim_range, 1);
 		stim_range(:, 1) = stim_range(:, 1)-stimStart_err;
 
 		if afterStim_exepWin
@@ -43,7 +43,7 @@ function [Ratio_zscore,varargout] = stim_effect_compare_eventFreq_roi2(events_ti
 
 		for n = 1:eventNum
 			% 1-simulataneous, 2-insideStim, NaN-insideExepWin
-			for ii = 1:stimRepeats
+			for ii = 1:stimNum
 				if events_time(n)>=stim_range(ii, 1) && events_time(n)<stim_range(ii, 2)
 					eventCat(n) = 2;
 				elseif events_time(n)>=exepWin(ii, 1) && events_time(n)<exepWin(ii, 2)
