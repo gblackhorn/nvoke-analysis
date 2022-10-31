@@ -6,6 +6,7 @@ function [gpio_info_modified, varargout] = delete_false_gpio_info(gpio_info, var
     ogled_thr = 0.8; % standard signal exported by nVoke is 1
     gpio1_thr = 10000; % standard signal exported by nVoke is higher than 50'000
     digitalGPO_thr = 0.8;
+    discard_ch = {'DI-LED','e-focus'}; % always discard these channels
 
     % discard_gpio_idx = [];
     channel_num = numel(gpio_info); 
@@ -30,8 +31,11 @@ function [gpio_info_modified, varargout] = delete_false_gpio_info(gpio_info, var
                 if signal_max < gpio1_thr
                     TF_channel(i) = 0;
                 end
+            elseif contains(ch_name,discard_ch)
+                TF_channel(i) = 0;
+            % elseif ~isempty(strfind(ch_name, 'e-focus'))
+            %     TF_channel(i) = 0;
             end
-
         end
     end
 

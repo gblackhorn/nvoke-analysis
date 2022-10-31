@@ -30,7 +30,7 @@ function [SaveTo, varargout] = plotTracesFromAllTrials (IOnVokeData, varargin)
 
 	if SavePlot
 		figdir = uigetdir(SaveTo,...
-			    'Select a folder to save figures');
+			    'Select a folder to save calcium signal traces');
 		if figdir ~= 0
 			SaveTo = figdir;
 		else

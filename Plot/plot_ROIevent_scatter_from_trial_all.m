@@ -24,7 +24,7 @@ function [varargout] = plot_ROIevent_scatter_from_trial_all(recdata,varargin)
     %% main contents
     if save_fig
         save_dir = uigetdir(save_dir,...
-                'Select a folder to save figures');
+                'Select a folder to save scatter plot of calcium events');
         if save_dir ~= 0
             SaveTo = save_dir;
         else

@@ -52,7 +52,8 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 		stimName = C{n};
 		IDX_trial = find(ic == n);
 		timeInfo = alignedData(IDX_trial(1)).time;
-		stim_range = {alignedData(IDX_trial(1)).stimInfo.time_range};
+		stim_range = {alignedData(IDX_trial(1)).stimInfo.UnifiedStimDuration.range_aligned};
+		% stim_range = {alignedData(IDX_trial(1)).stimInfo.time_range};
 		num_stimTrial = numel(IDX_trial); % number of trials applied with the same stim
 		traceData_cell_trials_g1 = cell(1, num_stimTrial); 
 		traceData_cell_trials_g2 = cell(1, num_stimTrial); 

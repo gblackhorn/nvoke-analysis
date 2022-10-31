@@ -54,7 +54,7 @@ function [tags,varargout] = CreateStimTagForEvents(StimRange,EventsTime,varargin
 		for en = 1:EventNum
 			if ~contains(EventCat{en},SkipTag_keyword,'IgnoreCase',true)
 				[closestValue,ClosestLoc] = find_closest_in_array(EventsTime(en),RangeEnds(:));
-				TagChar = sprintf('%s-%ds',StimType,StimDuration.array(ClosestLoc));
+				TagChar = sprintf('%s-%.2gs',StimType,StimDuration.array(ClosestLoc));
 				tags{en} = TagChar;
 			end
 		end
@@ -62,7 +62,7 @@ function [tags,varargout] = CreateStimTagForEvents(StimRange,EventsTime,varargin
 		for sn = 1:StimNum
 			OneRange = StimDuration.range(sn,:);
 			TagLoc = find(EventsTime>=OneRange(1) & EventsTime<OneRange(2));
-			TagChar = sprintf('%s-%ds',StimType,StimDuration.array(sn));
+			TagChar = sprintf('%s-%.2gs',StimType,StimDuration.array(sn));
 			[tags{TagLoc}] = deal(TagChar);
 		end
 	end

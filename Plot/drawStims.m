@@ -20,11 +20,16 @@ function [varargout] = drawStims(trialData, plotWhere)
             stim_name = gpio_info(i+2).name; % name of the stimulation channel
             stim_patch_data = gpio_info(i+2).patch_coordinats; % number arrays used for plot "patch" representing stimulation
 
-            if strcmpi('GPIO-1', stim_name)
+            if contains(stim_name,'ap')
                 patchColor = '#4DBEEE';
-            elseif strcmpi('OG-LED', stim_name)
+            elseif strcmpi(stim_name,'og')
                 patchColor = '#ED8564';
             end
+            % if strcmpi('GPIO-1', stim_name)
+            %     patchColor = '#4DBEEE';
+            % elseif strcmpi('OG-LED', stim_name)
+            %     patchColor = '#ED8564';
+            % end
 
             % Locate the min and max value in patch_data, and replace them with yLims
             stim_patch_data_ymin_idx = find(stim_patch_data(:,2)==0);

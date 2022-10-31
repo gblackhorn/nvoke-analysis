@@ -41,8 +41,13 @@ ii = 1;
 %% ====================
 % run this section for each recordings.
 
-nam = file_names{ii};
-fprintf('Recording %d: %s\n',ii,nam)
+
+if ii<=numel(file_names)
+	nam = file_names{ii};
+	fprintf('Recording %d/%d: %s\n',ii,numel(file_names),nam)
+else
+	fprintf('\nEnd of the subfolder list\n')
+end
 ii = ii+1;
 
 % Temprol solution: pause at line 111 in "viewNeurons.m" make sure the ROI and traces will be plotted

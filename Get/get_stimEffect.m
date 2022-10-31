@@ -54,22 +54,28 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 		[mean_in,std_in] = get_meanVal_in_timeRange(in_range,traceTimeInfo,traceData);
 		[mean_base,std_base] = get_meanVal_in_timeRange(base_range,traceTimeInfo,traceData);
 
-		% Check if inhibition
+		% Check for inhibition
+		% Compare the calcium level at baseline (prior to stim) and during stimulation
 		repeat_num = numel(mean_in);
 		tfRepeat_in = logical(zeros(size(mean_in)));
 		mean_in_diff = NaN(size(mean_in));
-		for rn = 1:repeat_num
-			mean_in_diff(rn) = (mean_base(rn)-std_base(rn)*in_thresh_stdScale);
-			if mean_in_diff(rn) < 0
-				tfRepeat_in(rn) = true;
-				% inhibition = true;
-				% break
-			end
-		end
+		mean_in_diff = mean_in-(mean_base-std_base*in_thresh_stdScale);
+		in_loc = find(mean_in_diff<0);
+		tfRepeat_in(in_loc) = true;
+		% for rn = 1:repeat_num
+		% 	mean_in_diff(rn) = mean_in(rn)-(mean_base(rn)-std_base(rn)*in_thresh_stdScale);
+		% 	if mean_in_diff(rn) < 0
+		% 		tfRepeat_in(rn) = true;
+		% 		% inhibition = true;
+		% 		% break
+		% 	end
+		% end
+		% If the calcium level decreases in (perc_meanInDiff)% of the stimulation, confirm the decrease calcium level 
 		if numel(find(tfRepeat_in)) >= perc_meanInDiff*repeat_num
 			inhibition = true;
 		end
-		if ~isempty(freq_spon_stim) % check the event frequency to confirm the inhibition effect
+		% check the event frequency to confirm the inhibition effect
+		if ~isempty(freq_spon_stim) 
 			for fn = 1:numel(freq_spon_stim)
 				if freq_spon_stim(fn) == 0; % if spontaneous/stimulation event frequency is 0
 					freq_spon_stim(fn) = 1e-5;
@@ -81,7 +87,7 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 			end
 		end
 
-		% Check if excitation
+		% Check for excitation
 		for n_exCat = 1:numel(ex_eventCat)
 			tf = strcmpi(ex_eventCat{n_exCat}, eventCats);
 			if ~isempty(find(tf))
@@ -90,7 +96,7 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 			end
 		end
 
-		% check if rebound
+		% check for rebound
 		for n_rbCat = 1:numel(rb_eventCat)
 			tf = strcmpi(rb_eventCat{n_rbCat}, eventCats);
 			if ~isempty(find(tf))

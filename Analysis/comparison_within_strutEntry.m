@@ -99,5 +99,12 @@ function [stat_info,varargout] = comparison_within_strutEntry(structVar,paired_f
         stat_info(pn).data = barInfo.data;
         stat_info(pn).stat = barInfo.stat;
     end
+
+    if save_fig
+        [save_dir,fname] = savePlot(f_bar,'save_dir',save_dir,'fname',title_str);
+        save(fullfile(save_dir, [title_str, '_stat']),...
+            'stat_info');
+    end
+    varargout{1} = save_dir;
 end
 

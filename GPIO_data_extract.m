@@ -84,12 +84,13 @@ if ~isempty(loc_sync)
 	sync_loc = find(contains({channel.name},'sync','IgnoreCase',true)); % get the location of 'BNC Sync Output' in channel
 	loc_last_sync_sig = find(channel(sync_loc).time_value(:, 2), 1, 'last'); % nVoke2 keeps working after scheduled rec finished. Use last sync signal to find the real recording end
 	GPIO_duration = channel(sync_loc).time_value(loc_last_sync_sig, 1); % end point of SYNC channel time, the duration of recording
-	stimulation = channel(setdiff([1:numel(channel)],[EX_loc sync_loc])); % name of stimulation channel. 1-SYNC， 2-EX_LED
+	stim_ch_loc = setdiff([1:numel(channel)],[EX_loc sync_loc]); % locations of stimulation channels in channel
+	stim_name = {channel(stim_ch_loc).name}; % names of stimulation channel. 
 	% stimulation = channel_list(active_channels(3 : end)); % name of stimulation channel. 1-SYNC， 2-EX_LED
 
 	varargout{1} = EX_LED_power;
 	varargout{2} = GPIO_duration;
-	varargout{3} = stimulation;
+	varargout{3} = stim_name;
 
 	if nargin == 2
 		if draw == 1

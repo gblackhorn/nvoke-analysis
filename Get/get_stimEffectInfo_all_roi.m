@@ -30,7 +30,8 @@ function [stimEffectInfo,varargout] = get_stimEffectInfo_all_roi(alignedData,var
 		trialName = trialData.trialName;
 		timeInfo = trialData.fullTime;
 		stimName = trialData.stim_name;
-		stimTimeInfo = trialData.stimInfo(1).time_range_notAlign;  
+		stimTimeInfo = trialData.stimInfo.UnifiedStimDuration.range;  
+		% stimTimeInfo = trialData.stimInfo(1).time_range_notAlign;  
 
 		% fprintf('trial %d/%d: %s\n', tn, num_trial, trialName)
 
@@ -38,7 +39,7 @@ function [stimEffectInfo,varargout] = get_stimEffectInfo_all_roi(alignedData,var
 			num_roi = numel(trialData.traces);
 			effectInfo_struct =  struct('trial', cell(1, num_roi), 'roi', cell(1, num_roi),...
 				'inhibition', cell(1, num_roi), 'excitation',...
-				cell(1, num_roi),'rebound', cell(1, num_roi), 'ex_in', cell(1, num_roi),...
+				cell(1, num_roi),'ex_in', cell(1, num_roi), 'rebound', cell(1, num_roi),...
 				'meanIn_average', cell(1, num_roi), 'sponStim_logRatio', cell(1, num_roi));
 
 			for rn = 1:num_roi
@@ -64,8 +65,8 @@ function [stimEffectInfo,varargout] = get_stimEffectInfo_all_roi(alignedData,var
 				effectInfo_struct(rn).roi = roiName;
 				effectInfo_struct(rn).inhibition = roiData.stimEffect.inhibition;
 				effectInfo_struct(rn).excitation = roiData.stimEffect.excitation;
-				effectInfo_struct(rn).rebound = roiData.stimEffect.rebound;
 				effectInfo_struct(rn).ex_in = ex_in;
+				effectInfo_struct(rn).rebound = roiData.stimEffect.rebound;
 				effectInfo_struct(rn).meanIn_average = in_info.meanIn_average;
 				effectInfo_struct(rn).sponStim_logRatio = in_info.sponStim_logRatio;
 			end
@@ -87,13 +88,13 @@ function [stimEffectInfo,varargout] = get_stimEffectInfo_all_roi(alignedData,var
 
 	meanTrace_stim.inhibition = [stimEffectInfo(idx_inhibition).meanIn_average];
 	meanTrace_stim.excitation = [stimEffectInfo(idx_excitation).meanIn_average];
-	meanTrace_stim.rebound = [stimEffectInfo(idx_rebound).meanIn_average];
 	meanTrace_stim.ExIn = [stimEffectInfo(idx_ExIn).meanIn_average];
+	meanTrace_stim.rebound = [stimEffectInfo(idx_rebound).meanIn_average];
 
 	logRatio_SponStim.inhibition = [stimEffectInfo(idx_inhibition).sponStim_logRatio];
 	logRatio_SponStim.excitation = [stimEffectInfo(idx_excitation).sponStim_logRatio];
-	logRatio_SponStim.rebound = [stimEffectInfo(idx_rebound).sponStim_logRatio];
 	logRatio_SponStim.ExIn = [stimEffectInfo(idx_ExIn).sponStim_logRatio];
+	logRatio_SponStim.rebound = [stimEffectInfo(idx_rebound).sponStim_logRatio];
 
 	varargout{1} = meanTrace_stim;
 	varargout{2} = logRatio_SponStim;

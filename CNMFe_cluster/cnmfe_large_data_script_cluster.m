@@ -24,6 +24,8 @@ pars_envs = struct('memory_size_to_use', 256, ...   % default=8, GB, memory spac
 % nVoke spatial calibration: Measured with a ThorLabs micrometer glass slide (A1L3S8P)
 % -   Length 9 mm, Ø 1 mm: 2.960608 pixels = 1 µm
 % -   Length 8.4 mm, Ø 0.5 mm: 2.660676 pixels = 1 µm
+% -   Average principal IO diameter is about 5-6, dorsal IO is slightly
+% bigger
 
 gSig = 12;           % default=3, pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
 gSiz = 24;          % default=13, pixel, neuron diameter

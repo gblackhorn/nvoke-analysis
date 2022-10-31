@@ -46,8 +46,10 @@ function [varargout] = plot_trace_roiCoor(alignedData,varargin)
 	num_fig = ceil(num_roi/traceNum_perFig);
 	timeInfo = alignedData.fullTime;
 	aligned_timeInfo = alignedData.time;
-	stimRange = {alignedData.stimInfo.time_range_notAlign};
-	aligned_stimRange = {alignedData.stimInfo.time_range};
+	stimRange = {alignedData.stimInfo.UnifiedStimDuration.range};
+%     stimRange = {alignedData.stimInfo.time_range_notAlign};
+    aligned_stimRange = {alignedData.stimInfo.UnifiedStimDuration.range_aligned};
+% 	aligned_stimRange = {alignedData.stimInfo.time_range};
 
 	marker1_frame = cell(1, num_roi);
 	for rn = 1:num_roi

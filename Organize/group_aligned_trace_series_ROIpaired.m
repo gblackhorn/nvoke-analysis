@@ -43,7 +43,8 @@ function [grouped_data,varargout] = group_aligned_trace_series_ROIpaired(aligned
         end
         es_idx = [];
         for esn = 1:numel(exclude_stim)
-            idx = find(strcmpi(exclude_stim{esn},{alignedData_series.stim_name}));
+            idx = find(contains({alignedData_series.stim_name},exclude_stim{esn}));
+            % idx = find(strcmpi(exclude_stim{esn},{alignedData_series.stim_name}));
             es_idx = [es_idx,idx];
         end
         alignedData_series(unique(es_idx)) = [];
@@ -51,7 +52,8 @@ function [grouped_data,varargout] = group_aligned_trace_series_ROIpaired(aligned
     trial_num = numel(alignedData_series);
     if ~isempty(ref_stim)
         % Sort the order of trials. Neurons in reference stim trial will be plotted first
-        ref_stim_tf = strcmpi(ref_stim,{alignedData_series.stim_name});
+        ref_stim_tf = contains({alignedData_series.stim_name},ref_stim);
+        % ref_stim_tf = strcmpi(ref_stim,{alignedData_series.stim_name});
         ref_trial_idx = find(ref_stim_tf);
         other_trial_idx = find(ref_stim_tf==false);
         trial_order = [ref_trial_idx other_trial_idx];

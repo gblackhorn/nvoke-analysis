@@ -17,7 +17,8 @@ end
 
 %% ====================
 % 2.1 Discard rois (in recdata_organized) if they are lack of certain types of events
-stims = {'GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s GPIO-1-1s'};
+stims = {'ap-0.1s', 'og-5s', 'og-5s ap-0.1s'};
+% stims = {'GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s GPIO-1-1s'};
 eventCats = {{'trigger'},...
 		{'trigger', 'rebound'},...
 		{'trigger-beforeStim', 'trigger-interval', 'delay-trigger', 'rebound-interval'}};
@@ -66,7 +67,7 @@ end
 %% ====================
 % 3.1 Sync ROIs across trials in the same series (same FOV, same ROI set) 
 % Note: ad.event_type must be "detected_events"
-sd.ref_stim = 'GPIO-1-1s'; % ROIs are synced to the trial applied with this stimulation
+sd.ref_stim = 'ap-0.1s'; % ROIs are synced to the trial applied with this stimulation
 sd.ref_SpikeCat = {'spon','trig'}; % {'spon','trig'}. spike/peak/event categories kept during the syncing in ref trials
 sd.nonref_SpikeCat = {'spon','rebound'}; % {'spon','rebound','trig-AP'}. spike/peak/event categories kept during the syncing in non-ref trials
 [seriesData_sync] = sync_rois_multiseries(alignedData_allTrials,...
@@ -78,7 +79,7 @@ ngd.ref_stim = 'ap'; % 'ap'. reference stimulation
 ngd.ref_SpikeCat = 'trig'; % 'trig','spon'. reference spike/peak/event category 
 ngd.other_SpikeCat = 'rebound'; % 'rebound','spon'. spike/peak/event category in other trial will be plot
 ngd.ref_norm = true; % true/false. normalized data with ref_spike values
-ngd.exclude_stim = 'og-ap';
+ngd.exclude_stim = {'og-5s ap-0.1s'};
 ngd.contain_ref = true; % true/false
 ngd.debug_mode = false;
 
@@ -93,6 +94,7 @@ end
 %% ====================
 % 4.1 Plot spikes of each ROI recorded in trials received various stimulation
 close all
+psnt.save_fig = true; % true/false
 psnt.plot_raw = true; % true/false.
 psnt.plot_norm = true; % true/false. plot the ref_trial normalized data
 psnt.plot_mean = true; % true/false. plot a mean trace on top of raw traces
@@ -100,11 +102,10 @@ psnt.plot_std = true; % true/false. plot the std as a shade on top of raw traces
 psnt.y_range = [-5 12];
 psnt.tickInt_time = 1; % interval of tick for timeInfo (x axis)
 psnt.fig_row_num = 3; % number of rows (ROIs) in each figure
-psnt.save_fig = true; % true/false
 psnt.fig_position = [0.1 0.1 0.5 0.85]; % [left bottom width height]
 psnt.FontSize = 20;
 psnt.FontWeight = 'bold';
-debug_mode = false; % true/false
+debug_mode = true; % true/false
 
 if psnt.save_fig
 	psnt.save_path = uigetdir(FolderPathVA.fig,'Choose a folder to save spikes from series trials');
@@ -177,7 +178,7 @@ end
 [grouped_all_series_eventProp] = group_event_info_multi_category(all_series_eventProp,...
 	'category_names', {'peak_category'}); % 'group'(event[trial_stim]), 'peak_category'(event)
 
-sort_keywords = {'[ap]','[og]','trig','rebound'};
+sort_keywords = {'[ap-0.1s]','[og-5s]','trig','rebound'};
 [grouped_all_series_eventProp] = sort_struct_with_str(grouped_all_series_eventProp,...
 	'group',sort_keywords); % sort the entries in grouped_all_series_eventProp
 
@@ -215,7 +216,7 @@ end
 % averaged rise durations of trig[ap] and of 'rebound[og]' from the same neurons are paired
 neuronTags = {'trial','roi'};
 groupfield = 'group';
-groups = {'trig[ap]','rebound[og]'};
+groups = {'trig[ap-0.1s]','rebound[og-5s]'};
 parName = 'rise_duration';
 [pttest] = pairedtest_eventStruct(all_series_eventProp,...
 	neuronTags,groupfield,groups,parName);

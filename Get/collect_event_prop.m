@@ -50,7 +50,7 @@ function [eventProp_all,varargout] = collect_event_prop(alignedData,varargin)
     		if strcmpi(stim_name, 'no-stim')
     			stim_repeats = NaN;
     		else
-    			stim_repeats = alignedData_trial.stimInfo.repeats;
+    			stim_repeats = alignedData_trial.stimInfo.UnifiedStimDuration.repeats;
     		end
 
     		roi_num = numel(alignedData_trial.traces);

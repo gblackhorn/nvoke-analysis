@@ -71,12 +71,12 @@ function [StimDuration,varargout] = CalculateStimDuration(TimeRange,varargin)
 		StimDuration(1).fixed_loc = cell(num_uniq_durations,1);
 		StimDuration(1).range_aligned = NaN(num_uniq_durations,2);
 		StimDuration(1).repeats = NaN(num_uniq_durations,1); % aligned stimulation range [0 fixed_duration]
-		StimDuration(1).repeats(:,1) = deal(0);
-		StimDuration(1).repeats(:,2) = StimDuration(1).fixed;
-		for fn = 1:numel(num_uniq_durations) % go through the unique durations
+		StimDuration(1).range_aligned(:,1) = deal(0);
+		StimDuration(1).range_aligned(:,2) = StimDuration(1).fixed;
+		for fn = 1:num_uniq_durations % go through the unique durations
 			StimDuration(1).fixed_loc{fn} = find(StimDuration(1).array==StimDuration(1).fixed(fn));
-			StimDuration(1).fixed_loc{fn} = find(StimDuration(1).array==StimDuration(1).fixed(fn));
-			StimDuration(1).repeats(fn) = numel(StimDuration(1).fixed_loc{fn});
+% 			StimDuration(1).fixed_loc{fn} = find(StimDuration(1).array==StimDuration(1).fixed(fn));
+			StimDuration(1).repeats(fn,1) = numel(StimDuration(1).fixed_loc{fn});
 		end
 	end
 end

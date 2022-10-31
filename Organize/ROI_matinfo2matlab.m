@@ -10,6 +10,7 @@ function [recdata, varargout] = ROI_matinfo2matlab(varargin)
 		input_dir = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/ventral_exported_decon_demix_rawdata/';
 		output_dir = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/';
 	end
+	debug_mode = false;
 
 	% Optionals for inputs
 	for ii = 1:2:(nargin)
@@ -17,6 +18,8 @@ function [recdata, varargout] = ROI_matinfo2matlab(varargin)
 			input_dir = varargin{ii+1};
 		elseif strcmpi('output_dir', varargin{ii})
 			output_dir = varargin{ii+1};
+		elseif strcmpi('debug_mode', varargin{ii})
+			debug_mode = varargin{ii+1};
 		end
 	end
 
@@ -38,6 +41,12 @@ function [recdata, varargout] = ROI_matinfo2matlab(varargin)
 	cell_num = 0;
 
 	for n = 1:numel(roi_readout_file_info_processed)
+		if debug_mode
+			fprintf('%d/%d: %s\n',n,numel(roi_readout_file_info_processed),roi_readout_file_info_processed(n).name)
+			if n == 7
+				pause
+			end
+		end
 		roi_readout_file_processed = fullfile(roi_readout_file_info_processed(n).folder, roi_readout_file_info_processed(n).name);
 		load(roi_readout_file_processed, 'results'); % load CNMF-E processed results
 		CalSig_decon = results.C; % results.C has deconvoluted and demixed data. Each row is a neuron

@@ -67,7 +67,7 @@ end
 
 %% ==================== 
 % 3.1 Export nvoke movies to tiff files
-keywords = '2022-10-15*-MC.isxd'; % used to filter 
+keywords = '2022-09-29-13-13-33*-MC.isxd'; % used to filter 
 overwrite = false;
 
 input_isxd_folder = uigetdir(FolderPathVA.project,...
@@ -168,9 +168,10 @@ end
 % [ROIdata, recording_num, cell_num] = ROIinfo2matlab; % for data without CNMFe process
 input_dir = FolderPathVA.cnmfe;
 output_dir = FolderPathVA.ventralApproach;
+debug_mode = true;
 
 [recdata, recording_num, cell_num] = ROI_matinfo2matlab('input_dir', input_dir,...
-	'output_dir', output_dir); % for CNMFe processed data
+	'output_dir', output_dir,'debug_mode',debug_mode); % for CNMFe processed data
 
 
 % % Check the gpio channel information and delete the false stimulation channels. 
@@ -246,12 +247,13 @@ debug_mode = false; % true/false.
 
 %% ====================
 % 8.1.1 Copy the FOV_loc struct-field from a sourceData, if exists, to a newly formed recdata_organized
-recdata_target = recdata_organized;
-recdata_source = recdata_old;
+recdata_target = recdata_organized; % The data receiving FOV info
+recdata_source = recdata_organized_nonseries; % The data giving FOV info
 
 [recdata_target_with_fov,trial_list_wo_fov] = copy_fovInfo(recdata_source,recdata_target);
 recdata_organized = recdata_target_with_fov;
 
+clear recdata_target recdata_source recdata_target_with_fov
 
 %% ====================
 % 8.1.2 Add FOV location information in second column of recdata
@@ -270,11 +272,11 @@ rec_num = size(recordings, 1);
 
 nrec = 1;
 while nrec <= rec_num
-	fprintf('- %d/%d ', nrec, rec_num);
+	fprintf('\n- %d/%d ', nrec, rec_num);
 	single_recording = recordings(nrec, :);
 	[~, FOV_loc] = organize_add_fov_loc_info(single_recording, 'loc_opt', loc_opt, 'modify_info', modify_info);
 	recordings{nrec, fov_info_col}.FOV_loc = FOV_loc;
-	direct_input = input(sprintf('\n(c)continue, (r)re-input or (b)go back to previous one? [default-c]\n'), 's');
+	direct_input = input(sprintf('\n\t(c)continue, (r)re-input or (b)go back to previous one? [default-c]:'), 's');
 	if isempty(direct_input)
 		direct_input = 'c';
 	end
@@ -286,7 +288,7 @@ while nrec <= rec_num
 	    nrec = nrec-1; 
 	end
 end
-
+recdata_organized = recordings;
 
 
 %% ====================
@@ -296,7 +298,8 @@ end
 % [recdata_organized] = add_fov_category(recdata_organized,...
 % 	'hemi_sort', hemi_sort, 'fov_contents', fov_contents);
 overwrite = true; %options: true/false
-[recdata_organized,mouseIDs,fovIDs] = auto_gen_mouseID_fovID(recdata_organized,'overwrite',overwrite);
+[recdata_organized] = auto_gen_mouseID_fovID(recdata_organized,'overwrite',overwrite);
+% [recdata_organized,mouseIDs,fovIDs] = auto_gen_mouseID_fovID(recdata_organized,'overwrite',overwrite);
 
 
 
@@ -331,3 +334,6 @@ end
 
 
 
+%% ====================
+% 9 Clear temp variables to reclaim memory
+clear recordings recdata_backup

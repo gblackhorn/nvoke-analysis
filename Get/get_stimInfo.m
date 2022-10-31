@@ -38,7 +38,12 @@ function [StimDuration,varargout] = get_stimInfo(gpioInfo,varargin)
 			StimDuration(scn).type = StimType{scn};
 		end
 
-		UnifiedStimDuration.type = join(StimType(ExtraInfo.type_order),'&');
+		if stim_ch_num == 1
+			UnifiedStimDuration.type = StimDuration.type;
+		else
+			CombinedType = join(StimType(ExtraInfo.type_order),'&'); % This is a cell array
+			UnifiedStimDuration.type = CombinedType{1}; % convert the CombinedType from cell to char and assign it to UnifiedStimDuration.type 
+		end
 
 		varargout{1} = UnifiedStimDuration; % combine range
 		varargout{2} = ExtraInfo;

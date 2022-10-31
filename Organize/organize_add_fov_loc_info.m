@@ -84,7 +84,7 @@ function [single_recording_fov_loc,varargout] = organize_add_fov_loc_info(single
     	single_recording_fov_loc{fov_col}.FOV_loc = FOV_loc;	
         varargout{1} = FOV_loc;
     else
-        fprintf('\tFOV location information not written\n');
+        % fprintf('\tFOV location information not written\n');
     end
 end
 

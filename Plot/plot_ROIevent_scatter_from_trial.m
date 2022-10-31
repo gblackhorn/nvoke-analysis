@@ -39,8 +39,9 @@ function [varargout] = plot_ROIevent_scatter_from_trial(trialData,varargin)
     xAx = trialData{2}.lowpass.Time; % use time information from lowpass data
     roi_num = size(trialData{peak_properties_col},2);
 
-    f = figure;
-    
+    % f = figure;
+    f = figure('Units', 'Normalized', 'OuterPosition', [0.05, 0.05, 0.95, 0.95 ], 'visible', vis); 
+    % hold on
 
     roi_names = cell(roi_num,1);
     trace_y_pos = zeros(1, roi_num);
@@ -63,7 +64,7 @@ function [varargout] = plot_ROIevent_scatter_from_trial(trialData,varargin)
         spikeFrames_all_cell{rn} = spikeFrames;
         if (find (~isnan(spikeFrames)))
             spike_y = trace_y_pos(rn)*ones(size(spikeFrames));
-            s1= scatter (xAx(spikeFrames), spike_y,sz,'ko','filled',...
+            s1= scatter (xAx(spikeFrames), spike_y,sz,'k|','filled',...
                 'MarkerEdgeColor', 'k','LineWidth', 1);
         else
             s1 = [];

@@ -27,8 +27,8 @@ end
 save_dir = uigetdir(AnalysisFolder);
 dt = datestr(now, 'yyyymmdd');
 save(fullfile(save_dir, [dt, '_ProcessedData_ogEx']),...
-    'recdata_organized','alignedData_allTrials');
-% 'recdata_organized','alignedData_allTrials','grouped_event','adata','grouped_event_setting'
+    'recdata_organized','alignedData_allTrials','opt','adata');
+% 'recdata_organized','alignedData_allTrials','grouped_event','adata','grouped_event_setting','opt','adata'
 
 %% ====================
 % 8.4 Select a specific group of data from recdata_group for further analysis
@@ -37,13 +37,13 @@ recdata_organized = select_grouped_data(recdata_group);
 %% ====================
 % 9.1 Examine peak detection with plots 
 close all
-PauseTrial = true; % true or false
+PauseTrial = false; % true or false
 traceNum_perFig = 10; % number of traces/ROIs per figure
-SavePlot = false; % true or false
+SavePlot = true; % true or false
 SaveTo = FolderPathVA.fig;
 vis = 'off'; % on/off. set the 'visible' of figures
-decon = false; % true/false plot decon trace
-marker = false; % true/false plot markers
+decon = true; % true/false plot decon trace
+marker = true; % true/false plot markers
 
 [SaveTo] = plotTracesFromAllTrials(recdata_organized,...
 	'PauseTrial', PauseTrial,...
@@ -62,8 +62,8 @@ end
 % 9.1.1 manually discard rois or trial 
 % recdata_organized_bk = recdata_organized;
 
-trial_idx = 29; % trial index number
-roi_idx = [76:78]; % roi number. 2 for 'neuron2'
+trial_idx = 35; % trial index number
+roi_idx = [5]; % roi number. 2 for 'neuron2'
 
 [recdata_organized] = discard_data(recdata_organized,trial_idx,roi_idx);
 %% ====================
@@ -101,7 +101,7 @@ adata.rebound_duration = 2; % time duration after stimulation to form a window f
 adata.cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
 adata.pre_event_time = 5; % unit: s. event trace starts at 1s before event onset
-adata.post_event_time = 5; % unit: s. event trace ends at 2s after event onset
+adata.post_event_time = 10; % unit: s. event trace ends at 2s after event onset
 adata.stim_section = true; % true: use a specific section of stimulation to calculate the calcium level delta. For example the last 1s
 adata.ss_range = 1; % single number (last n second) or a 2-element array (start and end. 0s is stimulation onset)
 adata.stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
@@ -139,6 +139,8 @@ end
 [alignedData_event_list] = eventcat_list(alignedData_allTrials);
 
 %% ====================
+% Note: plot_stimAlignedTraces does not work properly if there are trials
+% applied with varied stim durations
 % 9.2.1.1 Check trace aligned to stim window
 % note: 'event_type' for alignedData_allTrials must be 'stimWin'
 close all
@@ -245,7 +247,7 @@ mgSetting.groupField = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak
 
 % rename the stimulation tag if og evokes spike at the onset of stimulation
 mgSetting.mark_EXog = false; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
-mgSetting.og_tag = {'og', 'og-ap'}; % find og events with these strings. 'og' to 'Exog', 'og-ap' to 'EXog-ap'
+mgSetting.og_tag = {'og', 'og&ap'}; % find og events with these strings. 'og' to 'Exog', 'og&ap' to 'EXog&ap'
 
 % arrange the order of group entries using function [sort_struct_with_str] with settings below. 
 mgSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', 'rebound', 'delay'
@@ -261,8 +263,8 @@ debug_mode = false; % true/false
 % 9.5.1.2 screen groups based on tags. Delete unwanted groups for event analysis
 
 % {'trig [EXog]','EXog','trig-AP',}
-tags_discard = {'spon','og-delay','[og-ap]'}; % 'trig-AP',Discard groups containing these words. 
-tags_keep = {'trig','trig [og]','rebound'}; % Keep groups containing these words
+tags_discard = {'spon','opto-delay','og&ap'}; % Discard groups containing these words. 
+tags_keep = {'trig','trig [og','rebound'}; % Keep groups containing these words
 clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
 [grouped_event_info_filtered] = filter_entries_in_structure(grouped_event,'group',...
 	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);
@@ -305,8 +307,8 @@ end
 
 %% ====================
 % 9.5.3 screen groups based on tags. Delete unwanted groups for event analysis
-tags_discard = {'trig-AP','og-delay','[og-ap]'}; % Discard groups containing these words. 'spon','EXopto',
-tags_keep = {'trig [ap]','trig [og]','rebound'}; % Keep groups containing these words
+tags_discard = {'trig-ap','opto-delay'}; % Discard groups containing these words. 'spon','EXopto',
+tags_keep = {'trig [ap]','trig [og','rebound'}; % Keep groups containing these words
 clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
 [grouped_event_info_filtered] = filter_entries_in_structure(grouped_event,'group',...
 	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);
@@ -317,7 +319,7 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 close all
 plot_combined_data = true;
 parNames = {'sponfq','stimfq','stimfqNorm','stimfqDeltaNorm','CaLevelDelta','CaLevelMinDelta','stimEvent_possi'}; % entry: roi
-save_fig = true; % true/false
+save_fig = false; % true/false
 save_dir = FolderPathVA.fig;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
@@ -342,7 +344,7 @@ end
 % 9.5.5 comparison within cells. 
 % Note: eprop.entry = 'roi'; mgSetting.groupField = {'stim_name'};
 % plot for paired parameters in same ROIs and run paired ttest
-save_fig = true; % true/false
+save_fig = false; % true/false
 paired_fields = {{'sponfq','stimfq'}, {'CaLevelmeanBase','CaLevelmeanStim'}};
 stat = 'pttest';
 plotdata = true; % true/false
@@ -357,13 +359,14 @@ withinCellComp_stat = empty_content_struct({'group','stat'},group_num);
 for gn = 1:group_num
 	withinCellComp_stat(gn).group = grouped_event_info_filtered(gn).group;
 	[withinCellComp_stat(gn).stat] = comparison_within_strutEntry(grouped_event_info_filtered(gn).event_info,paired_fields,...
-		'stat',stat,'plotdata',plotdata,'save_fig',save_fig,'title_str',grouped_event_info_filtered(gn).group);
+		'stat',stat,'plotdata',plotdata,'save_fig',save_fig,'save_dir',save_dir,...
+		'title_str',grouped_event_info_filtered(gn).group);
 end
 
 %% ====================
 % 9.6.1 Get the stimulation effect info, such as inhibition, excitation for each ROI
 % Scatter plot the rois (inhibition/excitation/... vs meanTraceLevel) 'meanTraceLevel' is output by func [get_stimEffect]
-stim = 'OG-LED'; % data will be collected from trials applied with this stimulation
+stim = 'og'; % data will be collected from trials applied with this stimulation
 [stimEffectInfo,meanTrace_stim,logRatio_SponStim] = get_stimEffectInfo_all_roi(alignedData_allTrials,'stim',stim);
 
 % plot
@@ -375,15 +378,17 @@ colorGroup = {'#3FF5E6', '#F55E58', '#F5A427', '#4CA9F5', '#33F577',...
 % groups = {'inhibition', 'excitation', 'rebound', 'ExIn'}; % 'rebound'
 groups = fieldnames(meanTrace_stim); % 'rebound'
 num_groups = numel(groups);
-figure
+% figure
+[~] = fig_canvas(1,'fig_name','StimEffect',...
+	'unit_width',0.4,'unit_height',0.6);
 hold on
 for gn = 1:num_groups
 	if contains(groups{gn}, 'rebound')
-		mSize = 30;
+		mSize = 10;
 	else
-		mSize = 80;
+		mSize = 50;
 	end
-	h(gn) = scatter(meanTrace_stim.(groups{gn}), logRatio_SponStim.(groups{gn}),...
+	h(gn) = scatter(gca,meanTrace_stim.(groups{gn}), logRatio_SponStim.(groups{gn}),...
 		mSize, 'filled', 'MarkerFaceColor', colorGroup{gn},...
 		'MarkerFaceAlpha', 0.8, 'MarkerEdgeAlpha', 0);
 end
@@ -400,10 +405,13 @@ if save_fig
 	end
 end
 
+clear stimEffectInfo meanTrace_stim logRatio_SponStim
+
 %% ====================
 % 9.2.0.3 Plot traces, aligned traces and roi map
 close all
 save_fig = true; % true/false
+pause_after_trial = false;
 if save_fig
 	save_dir = uigetdir(FolderPathVA.fig,'Choose a folder to save plots');
 	if save_dir~=0
@@ -416,17 +424,22 @@ while tn <= trial_num
 	close all
 	alignedData = alignedData_allTrials(tn);
 	plot_trace_roiCoor(alignedData,'save_fig',save_fig,'save_dir',save_dir);
-	fprintf('- %d/%d: %s', tn, trial_num, alignedData.trialName);
-	direct_input = input(sprintf('\n(c)continue  (b)back to previous or input the trial number [default-c]:\n'), 's');
-	if isempty(direct_input)
-		direct_input = 'c';
-	end
-	if strcmpi(direct_input, 'c')
-		tn = tn+1; 
-	elseif strcmpi(direct_input, 'b')
-		tn = tn-1; 
+	fprintf('- %d/%d: %s\n', tn, trial_num, alignedData.trialName);
+
+	if pause_after_trial
+		direct_input = input(sprintf('\n(c)continue  (b)back to previous or input the trial number [default-c]:'), 's');
+		if isempty(direct_input)
+			direct_input = 'c';
+		end
+		if strcmpi(direct_input, 'c')
+			tn = tn+1; 
+		elseif strcmpi(direct_input, 'b')
+			tn = tn-1; 
+		else
+			tn = str2num(direct_input);
+		end
 	else
-		tn = str2num(direct_input);
+		tn = tn+1;
 	end
 end
 
