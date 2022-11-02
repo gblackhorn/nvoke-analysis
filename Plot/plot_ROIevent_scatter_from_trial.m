@@ -40,7 +40,8 @@ function [varargout] = plot_ROIevent_scatter_from_trial(trialData,varargin)
     roi_num = size(trialData{peak_properties_col},2);
 
     % f = figure;
-    f = figure('Units', 'Normalized', 'OuterPosition', [0.05, 0.05, 0.95, 0.95 ], 'visible', vis); 
+    f = figure('Units', 'Normalized', 'OuterPosition', [0.05, 0.05, 0.95, 0.95 ]); 
+
     % hold on
 
     roi_names = cell(roi_num,1);

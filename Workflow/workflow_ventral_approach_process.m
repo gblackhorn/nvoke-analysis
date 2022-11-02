@@ -168,7 +168,7 @@ end
 % [ROIdata, recording_num, cell_num] = ROIinfo2matlab; % for data without CNMFe process
 input_dir = FolderPathVA.cnmfe;
 output_dir = FolderPathVA.ventralApproach;
-debug_mode = true;
+debug_mode = false; % true/false.
 
 [recdata, recording_num, cell_num] = ROI_matinfo2matlab('input_dir', input_dir,...
 	'output_dir', output_dir,'debug_mode',debug_mode); % for CNMFe processed data

@@ -9,7 +9,7 @@
 % 2022.03.18 Some sections are deleted. Some are reorganized to facilitate the workflow
 
 %% ====================
-clearvars -except recdata_organized alignedData_allTrials alignedData_event_list seriesData_sync grouped_event adata grouped_event_info_filtered
+clearvars -except recdata_organized opt alignedData_allTrials adata alignedData_event_list seriesData_sync grouped_event grouped_event_info_filtered
 
 PC_name = getenv('COMPUTERNAME'); 
 % set folders for different situation
@@ -222,7 +222,7 @@ end
 %% ====================
 % 9.5.1.1 Create 'eventProp_all' according to stimulation and category 
 
-eprop.entry = 'event'; % options: 'roi' or 'event'
+eprop.entry = 'roi'; % options: 'roi' or 'event'
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 eprop.modify_stim_name = true; % true/false. Change the stimulation name, 
@@ -238,7 +238,7 @@ mgSetting.sponOnly = false; % If eventType is 'roi', and mgSetting.sponOnly is t
 mgSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
 mgSetting.dis_spon = false; % true/false. Discard spontaneous events
 mgSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
-mgSetting.groupField = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+mgSetting.groupField = {'peak_category','stim_name'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
 
 % if strcmp('stim_name',mgSetting.groupField) && strcmp('roi',eprop.entry)
 % 	keep_eventcat = 'spon'; % only keep spon events to avoid duplicated values when eprop.entry is "roi"
@@ -257,13 +257,28 @@ debug_mode = false; % true/false
 [grouped_event,grouped_event_setting] = mod_and_group_eventProp(eventProp_all,eventType,adata,...
 	'mgSetting',mgSetting,'debug_mode',debug_mode);
 [grouped_event_setting.TrialRoiList] = get_roiNum_from_eventProp_fieldgroup(eventProp_all,'stim_name'); % calculate all roi number
-
+if strcmpi(eprop.entry,'roi')
+	GroupNum = numel(grouped_event);
+	% GroupName = {grouped_event.group};
+	for gn = 1:GroupNum
+		EventInfo = grouped_event(gn).event_info;
+		fovIDs = {EventInfo.fovID};
+		fovIDs_unique = unique(fovIDs);
+		fovIDs_unique_num = numel(fovIDs_unique);
+		fovID_count_struct = empty_content_struct({'fovID','numROI'},fovIDs_unique_num);
+		[fovID_count_struct.fovID] = fovIDs_unique{:};
+		for fn = 1:fovIDs_unique_num
+			fovID_count_struct(fn).numROI = numel(find(contains(fovIDs,fovID_count_struct(fn).fovID)));
+		end
+		grouped_event(gn).fovCount = fovID_count_struct;
+	end
+end
 
 %% ====================
 % 9.5.1.2 screen groups based on tags. Delete unwanted groups for event analysis
 
 % {'trig [EXog]','EXog','trig-AP',}
-tags_discard = {'spon','opto-delay','og&ap'}; % Discard groups containing these words. 
+tags_discard = {'spon','opto-delay','og&ap','rebound [ap','ap-0.25s','ap-0.5s','og-0.96s'}; % Discard groups containing these words. 
 tags_keep = {'trig','trig [og','rebound'}; % Keep groups containing these words
 clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
 [grouped_event_info_filtered] = filter_entries_in_structure(grouped_event,'group',...
@@ -306,9 +321,9 @@ end
 % bar_data.data can be used to run one-way anova. bar_stat contains results of anova and the following multi-comparison 
 
 %% ====================
-% 9.5.3 screen groups based on tags. Delete unwanted groups for event analysis
-tags_discard = {'trig-ap','opto-delay'}; % Discard groups containing these words. 'spon','EXopto',
-tags_keep = {'trig [ap]','trig [og','rebound'}; % Keep groups containing these words
+% 9.5.3 screen groups based on tags. Delete unwanted groups for roi analysis
+tags_discard = {'opto-delay','rebound-ap','rebound-og-0.96s','varied','og-5s ap-0.1s','ap-0.1s og-5s'}; % Discard groups containing these words. 'spon','EXopto','trig-ap',
+tags_keep = {'trig-ap','trig','rebound'}; % Keep groups containing these words
 clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
 [grouped_event_info_filtered] = filter_entries_in_structure(grouped_event,'group',...
 	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);
@@ -442,6 +457,48 @@ while tn <= trial_num
 		tn = tn+1;
 	end
 end
+
+%% ====================
+% Plot venn diagram to show the number of ROIs of OG-evoke-pos, OG-rebound-pos, and double-neg.
+venndia = empty_content_struct({'stim_name','EventType1','EventType2','roi_allnum','EventType1_num','EventType2_num','Intersect_num','A','I'},1);
+venndia.stim_name = 'og-5s';
+keep_specified_stim = 1;
+venndia.EventType1 = 'trig';
+venndia.EventType2 = 'rebound';
+% Get the event list from alignedData_allTrials
+[alignedData_event_list] = eventcat_list(alignedData_allTrials);
+
+% Get the trials applied with specific stimulation (input after 'stim')
+[alignedData_event_list_stim,varargout] = filter_structData(alignedData_event_list,...
+	'stim',venndia.stim_name,keep_specified_stim); 
+
+% Get the total ROI num
+roi_info_cell = {alignedData_event_list_stim.roi_info}; % store the roi_info field in a cell array
+roi_combine = vertcat(roi_info_cell{:});
+% roi_num = sum(cellfun(@numel,roi_info_cell)); % total roi_num
+
+% Prepare a vector to plot the venn diagram
+EventType1_loc=find([roi_combine.(venndia.EventType1)]>0);
+EventType2_loc=find([roi_combine.(venndia.EventType2)]>0);
+EventTypes_intersect = intersect(EventType1_loc,EventType2_loc);
+AllRoi_loc = [1:numel(roi_combine)];
+venndia.EventType1_num = numel(EventType1_loc);
+venndia.EventType2_num = numel(EventType2_loc);
+venndia.Intersect_num = numel(EventTypes_intersect);
+venndia.roi_allnum = numel(AllRoi_loc);
+venndia.A = [roi_allnum,EventType1_num,EventType2_num];
+venndia.I = [EventType1_num,EventType2_num,Intersect_num,Intersect_num];
+
+% Plot venn diagram
+% F = struct('Display', 'iter');
+venn(venndia.A,venndia.I);
+% [H,S] = venn(A,I,F,'ErrMinMode','ChowRodgers','FaceAlpha', 0.6);
+ 
+% %Now label each zone 
+% for i = 1:7
+%     text(S.ZoneCentroid(i,1), S.ZoneCentroid(i,2), ['Zone ' num2str(i)])
+% end
+
 
 
 

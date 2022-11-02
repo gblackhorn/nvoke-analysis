@@ -46,9 +46,9 @@ function [varargout] = plot_trace_roiCoor(alignedData,varargin)
 	num_fig = ceil(num_roi/traceNum_perFig);
 	timeInfo = alignedData.fullTime;
 	aligned_timeInfo = alignedData.time;
-	stimRange = {alignedData.stimInfo.UnifiedStimDuration.range};
+	stimRange = {alignedData.stimInfo.StimDuration.range};
 %     stimRange = {alignedData.stimInfo.time_range_notAlign};
-    aligned_stimRange = {alignedData.stimInfo.UnifiedStimDuration.range_aligned};
+    aligned_stimRange = {alignedData.stimInfo.StimDuration.range_aligned};
 % 	aligned_stimRange = {alignedData.stimInfo.time_range};
 
 	marker1_frame = cell(1, num_roi);
@@ -61,7 +61,7 @@ function [varargout] = plot_trace_roiCoor(alignedData,varargin)
 	end
 
 	for fn = 1:num_fig
-		fig_title = sprintf('%s (%d)', alignedData.trialName(1:15), fn);
+		fig_title = sprintf('%s[%s] (%d)', alignedData.trialName(1:15),alignedData.stim_name,fn);
 		f(fn) = figure('Name', fig_title);
 		set(gcf, 'Units', 'normalized', 'Position', fig_position)
 		tlo = tiledlayout(f(fn), 1, 9);
@@ -104,7 +104,7 @@ function [varargout] = plot_trace_roiCoor(alignedData,varargin)
 		title('roi map')
 
 		if save_fig
-			fname = sprintf('trace_roimap_%s_%d',alignedData.trialName(1:15),fn);
+			fname = sprintf('trace_roimap_%s_%s_%d',alignedData.trialName(1:15),alignedData.stim_name,fn);
 			savePlot(f(fn),'save_dir',save_dir,'fname',fname);
 		end
 	end

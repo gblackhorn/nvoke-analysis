@@ -76,7 +76,7 @@ function [StimDuration,varargout] = ExtractStimDurationAndExtraInfo(StimRange,va
 		% Calculate and round the durations
 		[StimDuration(stn)] = CalculateStimDuration(TimeRange,round_digit_sig);
 		stim_start_time(stn) = StimDuration(stn).range(1,1); % the start time of very first stimulation for each type 
-		stim_end_time(stn) = StimDuration(stn).range(1,2); % the start time of very first stimulation for each type 
+		stim_end_time(stn) = StimDuration(stn).range(1,2); % the end time of very first stimulation for each type 
 	end
 
 	if ~ExtraInfo.multistim
@@ -88,6 +88,14 @@ function [StimDuration,varargout] = ExtractStimDurationAndExtraInfo(StimRange,va
 
 		[~, stim_end_order] = sort(stim_end_time,'descend'); % When various stim applied, use the one end late as the stim_end
 		stim_end_first_loc = stim_end_order(1);
+		for stn = 1:stimtype_num % go to each single stimulation type
+			if stn~=stim_start_first_loc
+				start_lag = StimDuration(stn).range(1,1)-StimDuration(stim_start_first_loc).range(1,1); % [stn]type stimulation starts after (start_lag)s of the onset of the [stim_start_first_loc]type stimulation
+				StimDuration(stn).range_aligned = StimDuration(stn).range_aligned+start_lag;
+			end
+		end
+
+		% Correct the range_aligned of in StimDuration
 
 		UnifiedStimDuration(1).range = [StimDuration(stim_start_first_loc).range(:,1) StimDuration(stim_end_first_loc).range(:,2)];
 

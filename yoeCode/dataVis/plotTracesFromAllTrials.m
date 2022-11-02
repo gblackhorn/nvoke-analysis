@@ -57,7 +57,7 @@ function [SaveTo, varargout] = plotTracesFromAllTrials (IOnVokeData, varargin)
 
 	    fprintf('%d/%d recordings have been plotted\n', trial, nTrials)
 	    if trial==25
-	    	pause
+	    	% pause
 	    end
 
 

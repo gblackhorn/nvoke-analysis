@@ -342,6 +342,24 @@ NegAndPosCellNum = [NegCellNum PosCellNum];
 NegAndPosPercentage = NegAndPosCellNum./AllCellNum;
 bar(NegAndPosPercentage,'stacked')
 
+%% ====================
+% Get the numbers of ROIs exhibiting certain event category in specific FOVs, and add them to grouped_event_info_filtered
+% Note: set eprop.entry to 'roi' when creating grouped_event
+GroupNum = numel(grouped_event_info_filtered);
+% GroupName = {grouped_event_info_filtered.group};
+for gn = 1:GroupNum
+	EventInfo = grouped_event_info_filtered(gn).event_info;
+	fovIDs = {EventInfo.fovID};
+	fovIDs_unique = unique(fovIDs);
+	fovIDs_unique_num = numel(fovIDs_unique);
+	fovID_count_struct = empty_content_struct({'fovID','numROI'},fovIDs_unique_num);
+	[fovID_count_struct.fovID] = fovIDs_unique{:};
+	for fn = 1:fovIDs_unique_num
+		fovID_count_struct(fn).numROI = numel(find(contains(fovIDs,fovID_count_struct(fn).fovID)));
+	end
+	grouped_event_info_filtered(gn).fovCount = fovID_count_struct;
+end
+
 
 %% ====================
 % plot stim event probability
@@ -354,97 +372,109 @@ eventpb_cell = [trig_ap_eventpb,trig_ogrb_eventpb,trig_og_eventpb];
 [barInfo] = barplot_with_stat(eventpb_cell,'group_names',{'ap','ogrb','og'},...
 	'stat','anova','save_fig',true,'save_dir',FolderPathVA.fig,'gui_save',true);
 
-
 %% ====================
-% check the coexistence of OG-evoke and OG-rebound in OG trials
-% Get the number of ROIs of OG-evoke-pos, OG-rebound-pos, and double-pos
-[alignedData_event_list] = eventcat_list(alignedData_allTrials);
-[alignedData_event_list_OG,varargout] = filter_structData(alignedData_event_list,...
-	'stim','OG-LED-5s',1);
-trial_num = numel(alignedData_event_list_OG);
-OG_roiNum.evoke_pos = 0;
-OG_roiNum.rebound_pos = 0;
-OG_roiNum.double_pos = 0;
-OG_roiNum.double_neg = 0;
-OG_roiNum.extra = 0;
-for tn = 1:trial_num
-	roi_info = alignedData_event_list_OG(tn).roi_info;
-	roi_num = numel(roi_info);
-	for rn = 1:roi_num
-		if roi_info(rn).trig>0 && roi_info(rn).rebound>0
-			OG_roiNum.double_pos = OG_roiNum.double_pos+1;
-		elseif roi_info(rn).trig==0 && roi_info(rn).rebound==0
-			OG_roiNum.double_neg = OG_roiNum.double_neg+1;
-		elseif roi_info(rn).trig>0 && roi_info(rn).rebound==0
-			OG_roiNum.evoke_pos = OG_roiNum.evoke_pos+1;
-		elseif roi_info(rn).trig==0 && roi_info(rn).rebound>0
-			OG_roiNum.rebound_pos = OG_roiNum.rebound_pos+1;
-		else
-			OG_roiNum.extra = OG_roiNum.extra+1;
-		end
+% Correct stimulation name in recdata for proper processing of gpio info
+for tn = 1:size(recdata,1)
+	if strcmpi(recdata{tn,3},'og-5s ap-0.5s')
+		recdata{tn, 4}(4).name = 'GPIO-1';
 	end
 end
 
 
+% %% ====================
+% % check the coexistence of OG-evoke and OG-rebound in OG trials
+% % Get the number of ROIs of OG-evoke-pos, OG-rebound-pos, and double-pos
+% [alignedData_event_list] = eventcat_list(alignedData_allTrials);
+% [alignedData_event_list_OG,varargout] = filter_structData(alignedData_event_list,...
+% 	'stim','og-5s',1);
+% trial_num = numel(alignedData_event_list_OG);
+% OG_roiNum.evoke_pos = 0;
+% OG_roiNum.rebound_pos = 0;
+% OG_roiNum.double_pos = 0;
+% OG_roiNum.double_neg = 0;
+% OG_roiNum.extra = 0;
+% OG_roiNum.total = 0;
+% for tn = 1:trial_num
+% 	roi_info = alignedData_event_list_OG(tn).roi_info;
+% 	roi_num = numel(roi_info);
+% 	for rn = 1:roi_num
+% 		if roi_info(rn).trig>0 && roi_info(rn).rebound>0
+% 			OG_roiNum.double_pos = OG_roiNum.double_pos+1;
+% 		elseif roi_info(rn).trig==0 && roi_info(rn).rebound==0
+% 			OG_roiNum.double_neg = OG_roiNum.double_neg+1;
+% 		elseif roi_info(rn).trig>0 && roi_info(rn).rebound==0
+% 			OG_roiNum.evoke_pos = OG_roiNum.evoke_pos+1;
+% 		elseif roi_info(rn).trig==0 && roi_info(rn).rebound>0
+% 			OG_roiNum.rebound_pos = OG_roiNum.rebound_pos+1;
+% 		else
+% 			OG_roiNum.extra = OG_roiNum.extra+1;
+% 		end
+% 		OG_roiNum.total = OG_roiNum.total+1;
+% 	end
+% end
+
+
+
 %% ====================
-% read metadata from .czi file
-% input the folder location
-fname_czi = dir(fullfile(folder,'*.czi'));
-fullpath_czi = fullfile(fname_czi.folder,fname_czi.name);
-czidata = czifinfo(fullpath_czi); 
-metadata = czidata.metadataXML;
+% % read metadata from .czi file
+% % input the folder location
+% fname_czi = dir(fullfile(folder,'*.czi'));
+% fullpath_czi = fullfile(fname_czi.folder,fname_czi.name);
+% czidata = czifinfo(fullpath_czi); 
+% metadata = czidata.metadataXML;
 
-fname_csv = dir(fullfile(folder,'*.csv'));
-fullpath_csv = fullfile(fname_csv.folder,fname_csv.name);
-tb = readtable(fullpath_csv);
-st = table2struct(tb);
-
-
-%% ====================
-a = [15 18 16];
-b = [17 69 27 22];
-ab = [a b];
-ab_cell = num2cell(ab);
-[roi_val_data(11).combined_data.CellCount] = ab_cell{:};
+% fname_csv = dir(fullfile(folder,'*.csv'));
+% fullpath_csv = fullfile(fname_csv.folder,fname_csv.name);
+% tb = readtable(fullpath_csv);
+% st = table2struct(tb);
 
 
-%% ====================
-% Box plot to show the positive neuron densities
-% Pre-requirement: Add Area and CellCount info first
-close all
-SaveFig = true;
+% %% ====================
+% a = [15 18 16];
+% b = [17 69 27 22];
+% ab = [a b];
+% ab_cell = num2cell(ab);
+% [roi_val_data(11).combined_data.CellCount] = ab_cell{:};
 
-VA_AreaArray = [55809.936 29682.521 51289.236 37784.35];
-VA_CellCountArray = [44 21 30 27];
-VA_DensityArray = VA_CellCountArray./VA_AreaArray;
-VA_GroupNames = 'VA-22-days';
 
-GroupNames = {d2_area_data.label};
-for n = 1:numel(d2_area_data)
-	CombinedData = d2_area_data(n).combined_data;
-	AreaArray = [CombinedData.Area];
-	CellCountArray = [CombinedData.CellCount];
-	DensityArray = CellCountArray./AreaArray;
-	d2_area_data(n).density = DensityArray;
-end
-density_data = [{VA_DensityArray} {d2_area_data.density}];
-GroupNames = [VA_GroupNames GroupNames];
-[f_box_density] = fig_canvas(1,'fig_name','BoxPlot VentralApproach and D2 area');
-[~, box_stat_density] = boxPlot_with_scatter(density_data, 'groupNames', GroupNames,...
-		'plotWhere', gca, 'stat', true, 'FontSize', 18,'FontWeight','bold');  
+% %% ====================
+% % Box plot to show the positive neuron densities
+% % Pre-requirement: Add Area and CellCount info first
+% close all
+% SaveFig = true;
 
-if SaveFig
-	% default_fig_path = fullfile(DefaultDir.fig,'*.mat');
-	FigFolder = uigetdir(DefaultDir.fig,'Select a folder to save box plot');
-	% [mat_file,mat_folder] = uiputfile(default_mat_path,'Save fluorescence intensity measurement', 'FIM.mat');
-	if mat_folder ~= 0
-		DefaultDir.fig = FigFolder;
-		dt = datestr(now, 'yyyymmdd-HHMM');
-		fbox_name = sprintf('%s_area_boxplot_density',dt);
-		savePlot(f_box_density,...
-			'guiSave', 'off', 'save_dir', FigFolder, 'fname', fbox_name);
+% VA_AreaArray = [55809.936 29682.521 51289.236 37784.35];
+% VA_CellCountArray = [44 21 30 27];
+% VA_DensityArray = VA_CellCountArray./VA_AreaArray;
+% VA_GroupNames = 'VA-22-days';
 
-		save(fullfile(FigFolder, [dt, '_boxplot_stat']),...
-		    'box_stat_density');
-	end
-end
+% GroupNames = {d2_area_data.label};
+% for n = 1:numel(d2_area_data)
+% 	CombinedData = d2_area_data(n).combined_data;
+% 	AreaArray = [CombinedData.Area];
+% 	CellCountArray = [CombinedData.CellCount];
+% 	DensityArray = CellCountArray./AreaArray;
+% 	d2_area_data(n).density = DensityArray;
+% end
+% density_data = [{VA_DensityArray} {d2_area_data.density}];
+% GroupNames = [VA_GroupNames GroupNames];
+% [f_box_density] = fig_canvas(1,'fig_name','BoxPlot VentralApproach and D2 area');
+% [~, box_stat_density] = boxPlot_with_scatter(density_data, 'groupNames', GroupNames,...
+% 		'plotWhere', gca, 'stat', true, 'FontSize', 18,'FontWeight','bold');  
+
+% if SaveFig
+% 	% default_fig_path = fullfile(DefaultDir.fig,'*.mat');
+% 	FigFolder = uigetdir(DefaultDir.fig,'Select a folder to save box plot');
+% 	% [mat_file,mat_folder] = uiputfile(default_mat_path,'Save fluorescence intensity measurement', 'FIM.mat');
+% 	if mat_folder ~= 0
+% 		DefaultDir.fig = FigFolder;
+% 		dt = datestr(now, 'yyyymmdd-HHMM');
+% 		fbox_name = sprintf('%s_area_boxplot_density',dt);
+% 		savePlot(f_box_density,...
+% 			'guiSave', 'off', 'save_dir', FigFolder, 'fname', fbox_name);
+
+% 		save(fullfile(FigFolder, [dt, '_boxplot_stat']),...
+% 		    'box_stat_density');
+% 	end
+% end
+
