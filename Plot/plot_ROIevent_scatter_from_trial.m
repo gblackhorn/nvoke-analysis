@@ -61,7 +61,7 @@ function [varargout] = plot_ROIevent_scatter_from_trial(trialData,varargin)
         trace_y_pos(rn) = trace_y_pos(rn)-rn*plotInterval;
         trace_y_tick{rn} = roi_name;
 
-        spikeFrames = getSpikeFramesForROI(trialData,rn, 'lowpass');
+        spikeFrames = getSpikeFramesForROI(trialData,rn, 'rise');
         spikeFrames_all_cell{rn} = spikeFrames;
         if (find (~isnan(spikeFrames)))
             spike_y = trace_y_pos(rn)*ones(size(spikeFrames));

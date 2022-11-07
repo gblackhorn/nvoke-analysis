@@ -83,7 +83,7 @@ function [grouped_event,grouped_event_setting,varargout] = mod_and_group_eventPr
         group_name = grouped_event(gn).group;
         if debug_mode
             fprintf('[mod_and_group_eventProp] group (%d/%d): %s\n',gn,numel(grouped_event),group_name);
-            if gn == 7
+            if gn == 3
                 pause
             end
         end
@@ -94,7 +94,7 @@ function [grouped_event,grouped_event_setting,varargout] = mod_and_group_eventPr
         grouped_event(gn).numRoi = sum([TrialRoiList.roi_num]);
         grouped_event(gn).TrialRoiList = TrialRoiList;
 
-        if strcmp(eventType,'roi') && ~contains(group_name,'spon')
+        if strcmp(eventType,'roi') && ~contains(group_name,'spon') && ~contains(group_name,'varied')
             [grouped_event(gn).eventPb,grouped_event(gn).eventPbList] = analyze_roi_event_possibility(grouped_event(gn).event_info,'debug_mode',debug_mode);
         end
     end

@@ -34,7 +34,7 @@ function [varargout] = get_CaLevel_delta(stimRange,timeInfo,roiTrace,varargin)
 
 	%% Content
 	stimRange(:,1) = stimRange(:,1)-stim_time_error; 
-	stimRange(:,2) = stimRange(:,2)+stim_time_error;
+	stimRange(:,2) = stimRange(:,2)+stim_time_error; %
 
 	repeatNum = size(stimRange,1);
 	freq = round(1/(timeInfo(10)-timeInfo(9))); % recording frequency
@@ -127,8 +127,8 @@ function [varargout] = get_CaLevel_delta(stimRange,timeInfo,roiTrace,varargin)
 
 	% average value of all stim repeats (use the minimum value in the stim range)
 	% CaLevel.ChangeMin_norm = mean(meanVal.stimMinVal_norm); % 
-	CaLevel.min_delta = mean(meanVal.stimMinVal_delta);
-	CaLevel.min_delta_data = meanVal.stimMinVal_delta;
+	CaLevel.mean_delta = mean(meanVal.stimMinVal_delta);
+	CaLevel.mean_delta_data = meanVal.stimMinVal_delta;
 
 
 	CaDecline_num = numel(find(meanVal.meanVal_CaDecline==true));

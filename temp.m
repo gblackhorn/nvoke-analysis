@@ -381,6 +381,27 @@ for tn = 1:size(recdata,1)
 end
 
 
+
+%% ====================
+% Draw roi manually and extract calcium data using FIJI. Replace cnmfe data with this and plot traces
+folder = 'G:\Workspace\Inscopix_Seagate\Projects\Exported_tiff\IO_ventral_approach\2021-03-29_dff_crop';
+file = '2021-03-29-14-19-43_video_sched_0-PP-BP-MC_crop.csv';
+% recdata_manual_new = recdata_manual;
+% Get the tbl data
+csvpath = fullfile(folder,file);
+opts = detectImportOptions(csvpath);
+tbl = readtable(csvpath,opts);
+%% ====================
+% Process the tbl to replace the existing cnmfe data
+[new_tbl] = ConvertFijiTbl(tbl);
+
+% Replace cnmfe data
+trial_loc = 1;
+DataStruct = recdata_manual{trial_loc,2};
+[DataStruct_new] = Replace_decon_raw_data(DataStruct,new_tbl);
+recdata_manual_new{trial_loc,2} = DataStruct_new;
+
+
 % %% ====================
 % % check the coexistence of OG-evoke and OG-rebound in OG trials
 % % Get the number of ROIs of OG-evoke-pos, OG-rebound-pos, and double-pos

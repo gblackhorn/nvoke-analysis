@@ -51,12 +51,16 @@ function [varargout] = plot_trace_roiCoor(alignedData,varargin)
     aligned_stimRange = {alignedData.stimInfo.StimDuration.range_aligned};
 % 	aligned_stimRange = {alignedData.stimInfo.time_range};
 
-	marker1_frame = cell(1, num_roi);
+	% marker1_frame = cell(1, num_roi);
 	for rn = 1:num_roi
-		for mn = 1:numel(markers_name)
-			markers_frame_all{rn}{mn} = [alignedData.traces(rn).eventProp.(markers_name{mn})];
-			% marker2_frame{rn} = {alignedData.traces(rn).eventProp.(marker2_name)};
-			% marker3_frame{rn} = alignedData.traces(rn).eventProp.(marker3_name)};
+		if numel(markers_name)>0
+			for mn = 1:numel(markers_name)
+				markers_frame_all{rn}{mn} = [alignedData.traces(rn).eventProp.(markers_name{mn})];
+				% marker2_frame{rn} = {alignedData.traces(rn).eventProp.(marker2_name)};
+				% marker3_frame{rn} = alignedData.traces(rn).eventProp.(marker3_name)};
+			end
+		else
+			markers_frame_all = [];
 		end
 	end
 
@@ -77,7 +81,11 @@ function [varargout] = plot_trace_roiCoor(alignedData,varargin)
 		roiData = alignedData.traces(idx_start_roi:idx_end_roi);
 		tracesInfo = {roiData.fullTrace};
 		yLabelName = {roiData.roi};
-		markers_frame = markers_frame_all(idx_start_roi:idx_end_roi);
+		if ~isempty(markers_frame_all)
+			markers_frame = markers_frame_all(idx_start_roi:idx_end_roi);
+		else
+			markers_frame = [];
+		end
 		aligned_tracesInfo = {roiData.value};
 		aligned_tracesMean = {roiData.mean_val};
 		aligned_tracesStd = {roiData.std_val};

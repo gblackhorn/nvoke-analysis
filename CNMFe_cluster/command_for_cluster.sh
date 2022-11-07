@@ -16,16 +16,16 @@ cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMFe_cluster
 cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/Organize/ /flash/UusisaariU/GD/code/
 
 
-# Copy data from bucket to /flash
-bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2022-09-27/'
+# Set folder path on Bucket to Copy data from bucket to /flash
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/series_20221029/'
 
 # If folder does not exist, creat one
 # flashdatadir=$(mktemp -d /flash/UusisaariU/GD/data_folder20220927.XXXXXX) 
-mktemp -d /flash/UusisaariU/GD/data_folder20220927.XXXXXX
+mktemp -d /flash/UusisaariU/GD/data_folder_series20221029.XXXXXX
 # assign the new dir to 'flashdatadir'
 
 # If folder exists on cluster, specify it 
-flashdatadir='/flash/UusisaariU/GD/data_folder.par_test'
+flashdatadir='/flash/UusisaariU/GD/data_folder_series20221029.NPzddC'
 
 
 # Copy the content in bucketdatadir to flashdatadir
@@ -58,11 +58,11 @@ srun matlab -nosplash "cluster_interactive_matlab_bash;quit"
 
 
 # sync process data back to bucket
-flashdatadir='/flash/UusisaariU/GD/data_folder.qNDugf'
-bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach_cluster_trial/'
+flashdatadir='/flash/UusisaariU/GD/data_folder20221024.4abc2p'
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2022-10-24/'
 
-flashdatadir='/flash/UusisaariU/GD/data_folder.reprocess_recordings/'
-bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2022.05-06_reprocess_recordings/'
+flashdatadir='/flash/UusisaariU/GD/data_folder20221010.ggFe7G'
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2022-10-10/'
 rsync -av --no-group --no-perms $flashdatadir/ deigo:$bucketdatadir/
 
 

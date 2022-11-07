@@ -38,7 +38,8 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
     if ~isempty(gpio_info_table)
 	    stim_ch_name = gpio_info_table.stim_ch_name{:};
 	    stim_time_range = gpio_info_table.stim_ch_time_range{:}; % 2-col matrix. [train_start_time train_end_time]
-	    stim_train_duration = gpio_info_table.stim_ch_train_duration{:};
+        stim_train_duration = gpio_info_table.stim_ch_train_duration{:};
+        stim_time_range(:,2) = stim_time_range(:,1)+stim_train_duration; % old airpuff gpio data had wrong ending points. used the updated duration to correct the ends
 	    stim_train_num = size(stim_time_range, 1);
 	    stim_train_inter = gpio_info_table.stim_ch_train_inter;
 
@@ -63,8 +64,10 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
 		    % trig_duration = min(criteria_excitated, stim_train_duration);
 		    % win_trig = [stim_time_range(:, 1), stim_time_range(:, 1)+trig_duration];
 	    loc_big_win = find(stim_train_duration>criteria_excitated); % stimulation windows longer than criteria_excitated
+	    loc_small_win = find(stim_train_duration<criteria_excitated); % stimulation windows shorter than criteria_excitated
 		win_trig = stim_time_range;
 	    win_trig(loc_big_win,2) = stim_time_range(loc_big_win, 1)+criteria_excitated;
+	    win_trig(loc_small_win,2) = stim_time_range(loc_small_win, 1)+criteria_excitated;
 	    win_trig_delay = [stim_time_range(:,2) stim_time_range(:,2)];
 	    win_trig_delay(loc_big_win,1) = stim_time_range(loc_big_win, 1)+criteria_excitated;
 
@@ -72,7 +75,9 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
 	    % 	win_trig_delay = [stim_time_range(:, 1)+criteria_excitated, stim_time_range(:, 2)];
 	    % end
 	    win_rebound = [stim_time_range(:, 2), stim_time_range(:, 2)+criteria_rebound];
-	    win_inter = [stim_time_range(:, 2)+criteria_rebound, inter_end];
+	    win_rebound(loc_small_win,1) = win_trig(loc_small_win,2);
+	    win_rebound(loc_small_win,2) = win_rebound(loc_small_win,1)+criteria_rebound;
+	    win_inter = [win_rebound(:, 2), inter_end];
 	    time_after_last_stim = [stim_time_range(end, 2)+stim_train_inter]; % last_stim+stim_train_inter : end_of_rec
 
 	    % Find index of peaks fall in various windows for peak category

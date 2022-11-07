@@ -59,7 +59,11 @@ function [stat_info,varargout] = comparison_within_strutEntry(structVar,paired_f
         f_bar_name = sprintf('BarPlots%s%s',inter_sign,title_str);
         [f_bar] = fig_canvas(pair_num,'fig_name',f_bar_name,...
             'unit_width',0.2,'unit_height',0.4);
+        f_box_name = sprintf('boxPlots%s%s',inter_sign,title_str);
+        [f_box] = fig_canvas(pair_num,'fig_name',f_box_name,...
+            'unit_width',0.2,'unit_height',0.4);
         tlo_bar = tiledlayout(f_bar,ceil(pair_num/max_col),max_col);
+        tlo_box = tiledlayout(f_box,ceil(pair_num/max_col),max_col);
         if save_fig
             if gui_save || isempty(save_dir)
                 save_dir = uigetdir(save_dir,...
@@ -91,17 +95,21 @@ function [stat_info,varargout] = comparison_within_strutEntry(structVar,paired_f
 
         if plotdata
             ax_bar = nexttile(tlo_bar);
+            ax_box = nexttile(tlo_box);
         end
 
         stat_info(pn).pair_group = cell2mat(pair_group_cell);
         [barInfo] = barplot_with_stat(p_data,'plotData',plotdata,'plotWhere',ax_bar,...
             'group_names',p_dataname,'stat',stat);
-        stat_info(pn).data = barInfo.data;
+                stat_info(pn).data = barInfo.data;
         stat_info(pn).stat = barInfo.stat;
+
+        f_box = boxPlot_with_scatter(p_data,'groupNames',p_dataname,'plotWhere',ax_box);
     end
 
     if save_fig
-        [save_dir,fname] = savePlot(f_bar,'save_dir',save_dir,'fname',title_str);
+        [save_dir,fname] = savePlot(f_bar,'save_dir',save_dir,'fname',f_bar_name);
+        savePlot(f_box,'save_dir',save_dir,'fname',f_box_name);
         save(fullfile(save_dir, [title_str, '_stat']),...
             'stat_info');
     end

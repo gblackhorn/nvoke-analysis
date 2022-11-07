@@ -128,6 +128,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
         end
         title_str = replace(title_str, '_', '-');
         title_str = replace(title_str, ':', '-');
+        title(title_str);
         hold off
     end
 
