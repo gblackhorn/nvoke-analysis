@@ -320,7 +320,7 @@ end
 
 %% ====================
 % Collect all CaLevelDeltaData (base-col and stim-col) into a 2-col vector
-% caLevelData_cell = {grouped_event(2).event_info.CaLevelDeltaData}(:);
+% caLevelData_cell = {grouped_event(2).event_info.CaLevelDeltaData};
 caLevelData = cell2mat(caLevelData_cell(:));
 [barInfo] = barplot_with_stat(caLevelData,'group_names',{'baseline','stim'},...
 	'stat','pttest','save_fig',true,'save_dir',FolderPathVA.fig,'gui_save',true);
@@ -401,6 +401,49 @@ DataStruct = recdata_manual{trial_loc,2};
 [DataStruct_new] = Replace_decon_raw_data(DataStruct,new_tbl);
 recdata_manual_new{trial_loc,2} = DataStruct_new;
 
+
+%% ====================
+% 9.2.0.3 Plot traces, aligned traces and roi map
+close all
+save_fig = true; % true/false
+pause_after_trial = false;
+markers_name = {}; % of which will be labled in trace plot: 'peak_loc', 'rise_loc'
+
+if save_fig
+	save_dir = uigetdir(FolderPathVA.fig,'Choose a folder to save plots');
+	if save_dir~=0
+		FolderPathVA.fig = save_dir;
+	end 
+end
+trial_num = numel(alignedData_allTrials);
+tn = 1;
+while tn <= trial_num
+	close all
+	alignedData = alignedData_allTrials(tn);
+	plot_trace_roiCoor(alignedData,'markers_name',markers_name,...
+		'save_fig',save_fig,'save_dir',save_dir);
+	fprintf('- %d/%d: %s\n', tn, trial_num, alignedData.trialName);
+
+	if pause_after_trial
+		direct_input = input(sprintf('\n(c)continue  (b)back to previous or input the trial number [default-c]:'), 's');
+		if isempty(direct_input)
+			direct_input = 'c';
+		end
+		if strcmpi(direct_input, 'c')
+			tn = tn+1; 
+		elseif strcmpi(direct_input, 'b')
+			tn = tn-1; 
+		else
+			tn = str2num(direct_input);
+		end
+	else
+		tn = tn+1;
+	end
+end
+
+%% ====================
+% fit the data to exponential curve
+[curvefit,gof,output] = fit(tdata',ydata','exp1');
 
 % %% ====================
 % % check the coexistence of OG-evoke and OG-rebound in OG trials

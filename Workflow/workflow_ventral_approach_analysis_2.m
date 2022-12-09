@@ -91,7 +91,7 @@ recdata_organized(dis_idx, :) = [];
 % [recdata_organized] = discard_recData_roi(recdata_organized,'stims',dis.stims,'eventCats',dis.eventCats,'debug_mode',debug_mode);
 %% ====================
 % 9.2 Align traces from all trials. Also collect the properties of events
-adata.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
+adata.event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
 adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 adata.event_data_group = 'peak_lowpass';
 adata.event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
@@ -243,7 +243,7 @@ end
 %% ====================
 % 9.5.1.1 Create 'eventProp_all' according to stimulation and category 
 
-eprop.entry = 'event'; % options: 'roi' or 'event'
+eprop.entry = 'roi'; % options: 'roi' or 'event'
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 eprop.modify_stim_name = true; % true/false. Change the stimulation name, 
@@ -256,10 +256,10 @@ eprop.modify_stim_name = true; % true/false. Change the stimulation name,
 % Rename stim name of og to EXog if og-5s exhibited excitation effect
 eventType = eprop.entry; % 'roi' or 'event'. The entry type in eventProp
 mgSetting.sponOnly = false; % true/false. If eventType is 'roi', and mgSetting.sponOnly is true. Only keep spon entries
-mgSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
-mgSetting.dis_spon = true; % true/false. Discard spontaneous events
+mgSetting.seperate_spon = true; % true/false. Whether to seperated spon according to stimualtion
+mgSetting.dis_spon = false; % true/false. Discard spontaneous events
 mgSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
-mgSetting.groupField = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+mgSetting.groupField = {'stim_name','peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
 
 % if strcmp('stim_name',mgSetting.groupField) && strcmp('roi',eprop.entry)
 % 	keep_eventcat = 'spon'; % only keep spon events to avoid duplicated values when eprop.entry is "roi"
@@ -318,6 +318,8 @@ parNames = {'rise_duration','sponNorm_rise_duration','FWHM','peak_mag_delta',...
         % 'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
         % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
     
+    	% baseDiff = EventRiseVal-BaselineVal
+    	% baseDiff_stimWin = min_stimWinVal-BaselineVal
         % {'sponNorm_rise_duration', 'sponNorm_peak_delta_norm_hpstd', 'sponNorm_peak_slope_norm_hpstd'}; 
 		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
 		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
