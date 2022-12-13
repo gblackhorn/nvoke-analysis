@@ -65,20 +65,20 @@ function [varargout] = get_CaLevel_delta(stimRange,timeInfo,roiTrace,varargin)
 				ss_range = stimDur;
 			end 
 			pNum = round(ss_range*freq); % data point number
-			range_stimSec = [range_stim(2)-pNum+1, range_stim(2)];
+			range_stimPart = [range_stim(2)-pNum+1, range_stim(2)]; % part of the data during stimulation used to calculate the fluorescence level
 		elseif length(ss_range) == 2
 			if ss_range(1)>=stimDur || (ss_range(2)-ss_range(1))>=stimDur
-				range_stimSec = range_stim;
+				range_stimPart = range_stim;
 			elseif ss_range(2)>=stimDur
-				range_stimSec = ss_range;
-				range_stimSec(2) = range_stim(2);
+				range_stimPart(1) = range_stim(1)+ss_range(1)*freq-1;
+				range_stimPart(2) = range_stim(2);
 			else
-				range_stimSec(1) = range_stim(1)+ss_range(1)*freq-1;
-				range_stimSec(2) = range_stim(1)+ss_range(2)*freq-1;
+				range_stimPart(1) = range_stim(1)+ss_range(1)*freq-1;
+				range_stimPart(2) = range_stim(1)+ss_range(2)*freq-1;
 			end
 		end
 	else
-		range_stimSec = range_stim;
+		range_stimPart = range_stim;
 	end
 
 	% mean value during/around one stimulation repeat
@@ -95,10 +95,10 @@ function [varargout] = get_CaLevel_delta(stimRange,timeInfo,roiTrace,varargin)
 		alignedTrace_raw(:,rn) = roiTrace(data_start(rn):data_end(rn));
 		meanVal.baseVal(rn) = mean(alignedTrace_raw(range_base(1):range_base(2),rn)); 
 		meanVal.baseValstd(rn) = std(alignedTrace_raw(range_base(1):range_base(2),rn)); 
-		meanVal.stimVal(rn) = mean(alignedTrace_raw(range_stimSec(1):range_stimSec(2),rn)); 
+		meanVal.stimVal(rn) = mean(alignedTrace_raw(range_stimPart(1):range_stimPart(2),rn)); 
 		% meanVal.stimVal_norm(rn) = meanVal.stimVal(rn)/meanVal.baseVal(rn); 
 		meanVal.stimVal_delta(rn) = meanVal.stimVal(rn)-meanVal.baseVal(rn); 
-		meanVal.stimMinVal(rn) = min(alignedTrace_raw(range_stimSec(1):range_stimSec(2),rn)); 
+		meanVal.stimMinVal(rn) = min(alignedTrace_raw(range_stimPart(1):range_stimPart(2),rn)); 
 		% meanVal.stimMinVal_norm(rn) = meanVal.stimMinVal(rn)/meanVal.baseVal(rn); 
 		meanVal.stimMinVal_delta(rn) = meanVal.stimMinVal(rn)-meanVal.baseVal(rn); 
 		meanVal.postStimVal(rn) = mean(alignedTrace_raw(range_postStim(1):range_postStim(2),rn)); 
@@ -154,7 +154,7 @@ function [varargout] = get_CaLevel_delta(stimRange,timeInfo,roiTrace,varargin)
 
 	% data in index ranges are used for calculating the calcium level
 	CaLevel_cal_range.rang_base = range_base;
-	CaLevel_cal_range.range_stimSec = range_stimSec;
+	CaLevel_cal_range.range_stimPart = range_stimPart;
 	CaLevel_cal_range.range_postStim = range_postStim;
 
 	varargout{1} = CaLevel; 

@@ -87,15 +87,20 @@ function [yfit,varargout] = GetTraceAndFitCurves_neuron(TimeInfo,fVal,TimeRanges
 		for pn = 1:plot_num
 			f_title = sprintf('stimulation %d/%d',yfit(pn).SN,Range_num);
 			ax = nexttile(tlo);
-			if ~isempty(yfit(pn).fitinfo_curvefit)
-				plot(yfit(pn).tdata,yfit(pn).ydata,'o');
-				hold on
-				plot(yfit(pn).fitinfo_curvefit,'predobs')
-				xlabel('Time')
-				ylabel('Response Data and Curve')
-				title(f_title)
-				hold off
-			end
+
+			[ax_handle,varargout] = PlotCurveFitting(yfit(pn).tdata,yfit(pn).ydata,yfit(pn).fitinfo_curvefit,...
+				'xlabel_str','Time','ylabel_str','Response Data and Curve',...
+				'title_str',f_title,...
+				'ax',ax)
+			% if ~isempty(yfit(pn).fitinfo_curvefit)
+			% 	plot(yfit(pn).tdata,yfit(pn).ydata,'o');
+			% 	hold on
+			% 	plot(yfit(pn).fitinfo_curvefit,'predobs')
+			% 	xlabel('Time')
+			% 	ylabel('Response Data and Curve')
+			% 	title(f_title)
+			% 	hold off
+			% end
 		end
 	end
 end

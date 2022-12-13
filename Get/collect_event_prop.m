@@ -117,6 +117,11 @@ function [eventProp_all,varargout] = collect_event_prop(alignedData,varargin)
                                 eventProp_trial_roi{pcn}.CaLevelmeanStim = roiData.CaLevelmeanStim;
                                 % eventProp_trial_roi{pcn}.baseChangeMinNorm = roiData.baseChangeMinNorm;
                                 eventProp_trial_roi{pcn}.CaLevelMinDelta = roiData.CaLevelMinDelta;
+                                
+                                eventProp_trial_roi{pcn}.StimCurveFit = roiData.StimCurveFit;
+                                eventProp_trial_roi{pcn}.StimCurveFit_TauMean = roiData.StimCurveFit_TauMean;
+                                eventProp_trial_roi{pcn}.StimCurveFit_TauMean = roiData.StimCurveFit_TauMean;
+                                eventProp_trial_roi{pcn}.StimCurveFit_TauNum = roiData.StimCurveFit_TauNum;
                             end
 
                             eventProp_trial{rn} = [eventProp_trial_roi{:}];

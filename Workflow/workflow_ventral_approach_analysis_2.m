@@ -348,7 +348,8 @@ end
 %% ====================
 % 9.5.3 screen groups based on tags. Delete unwanted groups for roi analysis
 tags_discard = {'opto-delay','rebound-ap','rebound-og-0.96s','varied','og-5s ap-0.1s','ap-0.1s og-5s'}; % Discard groups containing these words. 'spon','EXopto','trig-ap',
-tags_keep = {'og-5s','ap-0.1s'}; % Keep groups containing these words: {'trig-ap','trig','rebound'}
+% tags_keep = {'og-5s','ap-0.1s'}; % Keep groups containing these words: {'trig-ap','trig','rebound'}
+tags_keep = {'og-5s-spon'}; % Keep groups containing these words: {'trig-ap','trig','rebound'}
 clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
 [grouped_event_info_filtered] = filter_entries_in_structure(grouped_event,'group',...
 	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);
@@ -358,8 +359,9 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 % [9.3] eventProp_all: entry is 'roi'. mgSetting.groupField = {'stim_name','peak_category'};
 close all
 plot_combined_data = true;
-parNames = {'sponfq','stimfq','stimfqNorm','stimfqDeltaNorm','CaLevelDelta','CaLevelMinDelta','stimEvent_possi'}; % entry: roi
-save_fig = true; % true/false
+parNames = {'sponfq','stimfq','stimfqNorm','stimfqDeltaNorm',...
+'CaLevelDelta','CaLevelMinDelta','stimEvent_possi','StimCurveFit_TauMean'}; % entry: roi
+save_fig = false; % true/false
 save_dir = FolderPathVA.fig;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not

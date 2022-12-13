@@ -68,34 +68,37 @@ function [varargout] = cumulative_distr_plot(CellArrayData,varargin)
     num_group = num_group-numel(dis_idx);
 	data_struct(dis_idx) = [];
 	legendStr(dis_idx) = [];
+	data_struct_combine = empty_content_struct({'group','data','f','x'},1);
 
-	if plotCombine
-        data_reshape = cellfun(@(x) reshape(x,1,[]),CellArrayData,'UniformOutput',false);
-		dataAll = [cat(2, data_reshape{:})];
-		% dataAll = [cat(1, CellArrayData{:})];
-		data_struct_combine.group = combineDataName;
-		data_struct_combine.data = dataAll;
-		[data_struct_combine.f, data_struct_combine.x]= ecdf(data_struct_combine.data);
-		legendStr = ['all', legendStr];
+	if ~isempty(data_struct)
+		if plotCombine
+	        data_reshape = cellfun(@(x) reshape(x,1,[]),CellArrayData,'UniformOutput',false);
+			dataAll = [cat(2, data_reshape{:})];
+			% dataAll = [cat(1, CellArrayData{:})];
+			data_struct_combine.group = combineDataName;
+			data_struct_combine.data = dataAll;
+			[data_struct_combine.f, data_struct_combine.x]= ecdf(data_struct_combine.data);
+			legendStr = ['all', legendStr];
 
-		stairs(gca, data_struct_combine.x, data_struct_combine.f,...
-			'color', colorCombine, 'LineWidth', LineWidth);
-		hold on
-	else
-		data_struct_combine = [];
+			stairs(gca, data_struct_combine.x, data_struct_combine.f,...
+				'color', colorCombine, 'LineWidth', LineWidth);
+			hold on
+		else
+			% data_struct_combine = [];
+		end
+
+		for pn = 1:num_group
+			stairs(gca, data_struct(pn).x, data_struct(pn).f,...
+				'color', colorGroup{pn}, 'LineWidth', LineWidth);
+			hold on
+		end
+
+		legend(legendStr, 'Location', lcn);
+		legend('boxoff')
+		set(gca,'box','off')
+		set(gca, 'FontSize', FontSize)
+		set(gca, 'FontWeight', FontWeight)
 	end
-
-	for pn = 1:num_group
-		stairs(gca, data_struct(pn).x, data_struct(pn).f,...
-			'color', colorGroup{pn}, 'LineWidth', LineWidth);
-		hold on
-	end
-
-	legend(legendStr, 'Location', lcn);
-	legend('boxoff')
-	set(gca,'box','off')
-	set(gca, 'FontSize', FontSize)
-	set(gca, 'FontWeight', FontWeight)
 
 	varargout{1} = data_struct; 
 	varargout{2} = data_struct_combine; 
