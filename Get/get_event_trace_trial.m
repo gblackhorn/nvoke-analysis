@@ -221,6 +221,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 				[alignedData.traces(n).stimEvent_possi] = get_stimEvent_possibility({eventProp_stim.peak_category},...
 					alignedData.stimInfo.UnifiedStimDuration.repeats);
 			end
+
 			% get the event number and frequency (spontaneous events and event during stimulation)
 			events_time = [alignedData.traces(n).eventProp.rise_time];
 			if contains(alignedData.stim_name, 'GPIO-1', 'IgnoreCase',true)
@@ -286,6 +287,12 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			% alignedData.traces(n).CaLevelTrace.yAlign = CaLevelTrace.yAlign;
 			aligned_time_CaLevel = CaLevelTrace.timeInfo;
 			alignedData.traces(n).CaLevelTrace = CaLevelTrace.yAlign;
+
+			% Fit data during stimulation to negative exponantial curve
+			[alignedData.traces(n).StimCurveFit,StimCurveFit_TauInfo] = GetDecayFittingInfo_neuron(full_time,roi_trace_data,...
+				combine_stimRange,[alignedData.traces(n).eventProp.peak_time],0.7); % 0.7 is the threshold for rsquare
+			alignedData.traces(n).StimCurveFit_TauMean = StimCurveFit_TauInfo.mean;
+			alignedData.traces(n).StimCurveFit_TauNum = StimCurveFit_TauInfo.num;
 		else
 			empty_idx = [empty_idx n];
 		end
