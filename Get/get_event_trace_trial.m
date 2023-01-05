@@ -225,11 +225,14 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			% get the event number and frequency (spontaneous events and event during stimulation)
 			events_time = [alignedData.traces(n).eventProp.rise_time];
 			if contains(alignedData.stim_name, 'GPIO-1', 'IgnoreCase',true)
-				exclude_duration = 0;
-				exepWinDur = 0;
+				exclude_duration = 0; % exclude the duration after stimulation window from "spontaneuous window"
+				exepWinDur = 0; % exclude a time window with the specified duration after stimulation window in case the stimulation has a prolonged effect 
 			else
-				exclude_duration = 1;
+				exclude_duration = 1; % exclude the duration after stimulation window from "spontaneuous window"
 				exepWinDur = rebound_duration;
+				if exclude_duration < exepWinDur % the exclude duration should be at least as long as the window for the "rebound events"
+					exclude_duration = exepWinDur;
+				end
 			end
 			[stimWin,sponWin,~,stimDuration,sponDuration] = get_condition_win(combine_stimRange,full_time,...
 				'err_duration', 0, 'exclude_duration', exclude_duration); % add 1s exclude duration after opto stimulation

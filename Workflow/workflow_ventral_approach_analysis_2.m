@@ -37,7 +37,7 @@ recdata_organized = select_grouped_data(recdata_group);
 %% ====================
 % 9.1 Examine peak detection with plots 
 close all
-SavePlot = true; % true or false
+SavePlot = false; % true or false
 PauseTrial = false; % true or false
 traceNum_perFig = 10; % number of traces/ROIs per figure
 SaveTo = FolderPathVA.fig;
@@ -51,7 +51,7 @@ marker = false; % true/false plot markers
 	'SavePlot', SavePlot, 'SaveTo', SaveTo,...
 	'vis', vis);
 
-[SaveTo] = plot_ROIevent_scatter_from_trial_all(recdata_organized,...
+[SaveTo] = plot_ROIevent_raster_from_trial_all(recdata_organized,...
 	'plotInterval',5,'sz',10,'save_fig',SavePlot,'save_dir',SaveTo);
 if SaveTo~=0
 	FolderPathVA.fig = SaveTo;
@@ -141,7 +141,7 @@ end
 % 9.1.4 Plot traces and stim-aligned traces
 % Note: set adata.event_type to 'stimWin' when creating alignedData_allTrials
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 pause_after_trial = false;
 TraceType = 'aligned'; % 'full'/'aligned'. Plot the full trace or stimulation aligned trace
 markers_name = {}; % of which will be labled in trace plot: 'peak_loc', 'rise_loc'
