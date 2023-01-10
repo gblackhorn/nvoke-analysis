@@ -1,19 +1,20 @@
-function [EventFreqInBins,varargout] = get_EventFreqInBins_roi(eventTimeStamps_periStimulus,PeriStimulusRange,binWidth,varargin)
+function [EventFreqInBins,varargout] = get_EventFreqInBins_roi(EventsPeriStimulus,PeriStimulusRange,varargin)
     % Calculte the event frequency in time bins
 
-    % [EventFreqInBins] = get_EventFreqInBins_roi(eventTimeStamps_periStimulus,PeriStimulusRange,binWidth)
-    % 'eventTimeStamps_periStimulus' is a vertical cell array/numerical array. As a cell array, 
+    % [EventFreqInBins] = get_EventFreqInBins_roi(EventsPeriStimulus,PeriStimulusRange)
+    % 'EventsPeriStimulus' is a vertical cell array/numerical array. As a cell array, 
     % each cell contains events in the 'PeriStimulusRange'. The number of cells is the repeat number 
     % of stimulation. As a numerical array, the repeat number of stimulation should be specified. 
-    % 'binWidth' is the span of a single bin
 
     % Defaults
-    binWidth = 1; % the width of histogram bin. the default value is 1 s.
+    binWidth = 1; % the width of single histogram bin. the default value is 1 s.
     plotHisto = false; % true/false [default].Plot histogram if true.
 
     % Optionals for inputs
     for ii = 1:2:(nargin-2)
-        if strcmpi('denorm', varargin{ii}) 
+        if strcmpi('binWidth', varargin{ii}) 
+            binWidth = varargin{ii+1}; % denorminator used to normalize the EventFreq 
+        elseif strcmpi('denorm', varargin{ii}) 
             denorm = varargin{ii+1}; % denorminator used to normalize the EventFreq 
         elseif strcmpi('stimRepeats', varargin{ii})
             stimRepeats = varargin{ii+1}; % the repeat number of stimulation
@@ -24,10 +25,10 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_roi(eventTimeStamps_p
         end
     end
 
-    % Find out if 'eventTimeStamps_periStimulus' is a cell array or numerical array
-    if iscell(eventTimeStamps_periStimulus)
-        stimRepeats = numel(eventTimeStamps_periStimulus); % get the repeat number of stimulation
-        eventTimeStamps_periStimulus = cell2mat(eventTimeStamps_periStimulus);
+    % Find out if 'EventsPeriStimulus' is a cell array or numerical array
+    if iscell(EventsPeriStimulus)
+        stimRepeats = numel(EventsPeriStimulus); % get the repeat number of stimulation
+        EventsPeriStimulus = cell2mat(EventsPeriStimulus);
     else
         if exist('stimRepeats')==0
             error('stimRepeats is needed to run fun [get_EventFreqInBins_roi]')
@@ -39,11 +40,11 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_roi(eventTimeStamps_p
     %     HistEdges = [HistEdges PeriStimulusRange(2)]; % add the end of PeriStimulusRange to the edges to keep the full PeriStimulusRange
     % end
 
-    [eventCounts,HistEdges] = histcounts(eventTimeStamps_periStimulus,HistEdges); % get the event numbers in histbins
+    [eventCounts,HistEdges] = histcounts(EventsPeriStimulus,HistEdges); % get the event numbers in histbins
     eventCounts_mean = eventCounts/stimRepeats; % use the repeat number of stimulation as denominater to get the mean values of event counts
     EventFreqInBins = eventCounts_mean/binWidth; % Get the event frequency using the binWidth (duration)
 
-    if exist('denorm')==1 && ~isempty(denorm);
+    if exist('denorm')==1 && ~isempty(denorm)
         EventFreqInBins = EventFreqInBins/denorm; % normalize the EventFreqInBins with an input, denorm.
     end
 

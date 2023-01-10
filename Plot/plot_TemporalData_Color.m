@@ -1,5 +1,6 @@
 function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
     % Create a plot for temporal related data using color
+    % Note: the rows in 'TemporalData' will be plotted to rows
 
     % Can be used to plot: 
     %   1. Calcium fluorescence level in ROIs
@@ -30,26 +31,28 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
     end
 
     if exist('rowNames')==0 || isempty(rowNames)
-        rowNames = [1:row_num]; % Create a numerical array 
-        rowNames = arrayfun(@num2str,rowNames,'UniformOutput',0); % The NUM2STR function converts a number 
+        rowNames = NumArray2StringCell(size(TemporalData,1));
+        % rowNames = [1:size(TemporalData,1)]; % Create a numerical array 
+        % rowNames = arrayfun(@num2str,rowNames,'UniformOutput',0); % The NUM2STR function converts a number 
         % to the string representation of that number. This function is applied to each cell in the A array/matrix 
         % using ARRAYFUN. The 'UniformOutput' parameter is set to 0 to instruct CELLFUN to encapsulate the outputs into a cell array.
     end
 
 
+    y_range = [1:size(TemporalData,1)]; % use the row number as y tick
     if exist('x_window') && ~isempty(x_window)
-        y_range = [1:size(TemporalData,1)]; % use the row number as y tick
         p_handle = imagesc(plotWhere,x_window,y_range,TemporalData);
 
         set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
-        yticks(y_range); % only tick the value in y_range
-        yticklabels(rowNames); % label yticks
         xticks([x_window(1):xtickInt:x_window(2)]);
     else
-        p_handle = imagesc(TemporalData);
+        p_handle = imagesc(plotWhere,TemporalData);
         set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
-        yticks(y_range); % only tick the value in y_range
         set(gca,'xtick',[])
         set(gca,'xticklabel',[])
     end
+    set(gca,'box','off')
+    yticks(y_range); % only tick the value in y_range
+    yticklabels(rowNames); % label yticks
+
 end

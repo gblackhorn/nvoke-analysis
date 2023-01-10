@@ -23,6 +23,8 @@ function [varargout] = plot_TemporalRaster(plotWhere,TemporalData,varargin)
     		rowNames = varargin{ii+1}; % cell array containing strings used to label y_ticks
         elseif strcmpi('x_window', varargin{ii})
             x_window = varargin{ii+1}; % [a b] numerical array. Used to set the limitation of x axis
+        elseif strcmpi('x_ticks', varargin{ii})
+            x_ticks = varargin{ii+1}; % [a b] numerical array. Used to set the limitation of x axis
         elseif strcmpi('yInterval', varargin{ii})
             yInterval = varargin{ii+1}; % interval between rows in the plot
         elseif strcmpi('sz', varargin{ii})
@@ -70,13 +72,15 @@ function [varargout] = plot_TemporalRaster(plotWhere,TemporalData,varargin)
     end
     TemporalData_all = cell2mat(TemporalData); % Get all data in "TemporalData" and store them in a vertial numerical array
     yticks(flip(y_pos));
-    yticklabels(filp(rowNames));
-    if isempty(x_window)
+    yticklabels(flip(rowNames));
+    if exist('x_window')==0 || isempty(x_window)
         x_window = xlim; % get the xlim of the current axis
         x_edge = (x_window(2)-x_window(1))/10; % use the 10% of the x_window as and edge
         x_window = [x_window(1)-x_edge, x_window(2)+x_edge]; % add edge to both sides of x_window
     end
-    set(gca,'Xtick',x_window)
+    if exist('x_ticks')~=0 && ~isempty(x_ticks) % if variable 'x_ticks' exists and is not empty
+        xticks(x_ticks) % draw x_ticks 
+    end
 
     varargout{1} = TemporalData_all;
 end
