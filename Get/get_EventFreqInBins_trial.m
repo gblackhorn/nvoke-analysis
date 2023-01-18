@@ -13,8 +13,8 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trial(EventsProps,Sti
 
     % Defaults
     binWidth = 1; % the width of histogram bin. the default value is 1 s.
-    PropName = 'rise_time'
-    TrialName = 'trial'
+    PropName = 'rise_time';
+    TrialName = 'trial';
     % plotHisto = false; % true/false [default].Plot histogram if true.
 
     AlignEventsToStim = true; % align the EventTimeStamps to the onsets of the stimulations: subtract EventTimeStamps with stimulation onset time
@@ -52,10 +52,10 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trial(EventsProps,Sti
     % Calculate event frequencies in time bins for each ROI in the trial and organize them in 'EventFreqInBins'
     roi_num = numel(EventsProps); % number of ROIs
     if exist('roiNames')==0 || numel(roiNames)~=roi_num % if 'roiNames' does not exist or its number does not equal to roi_num
-        roiNames = NumArray2StringCell(size(TemporalData,1));
+        roiNames = NumArray2StringCell(size(roi_num,1));
     end
     TrialNames = repmat({TrialName},1,roi_num); % create a 1*roi_num cell containing the 'TrialNames' in every element
-    EventFreqInBins = empty_content_struct({'TrialNames','roiNames','EventFqInBins'},roi_num); % create an empty structure
+    EventFreqInBins = emptyStruct({'TrialNames','roiNames','EventFqInBins'},[1, roi_num]); % create an empty structure
     [EventFreqInBins.TrialNames] = TrialNames{:}; % add trial names in struct EventFreqInBins
     [EventFreqInBins.roiNames] = roiNames{:}; % add roi names in struct EventFreqInBins
 

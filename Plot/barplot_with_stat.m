@@ -153,6 +153,10 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
 
         switch stat
             case 'anova'
+                % Convert data_all and data_all_group to a single column
+                % var to be able to run anova1 using them
+                data_all = data_all(:); % Convert data_all to a single column var
+                data_all_group = data_all_group(:); % Convert data_all_group to a single column var
                 [barInfo.stat.p,barInfo.stat.tbl,barInfo.stat.stats] = anova1(data_all,data_all_group,'off');
                 if barInfo.stat.stats.df~=0
                     [c,~,~,gnames] = multcompare(barInfo.stat.stats,'Display','off'); % multiple comparison test. Check if the difference between groups are significant

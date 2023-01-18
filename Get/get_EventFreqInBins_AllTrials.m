@@ -7,14 +7,14 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_AllTrials(alignedData
     % duration).
 
 
-    % [EventFreqInBins] = get_EventFreqInBins_roi(alignedData_allTrials,'og-5s')
+    % [EventFreqInBins] = get_EventFreqInBins_AllTrials(alignedData_allTrials,'og-5s')
     % 'alignedData_allTrials' is a struct var. It contains calcium signals, event propertis,
     %  stimulation infos of multiple recording trials. Use 'og-5s' to get the EventFreqInBins only
     %  from the trials applied with optogenetic stimulation for 5 second
 
     % Defaults
     binWidth = 1; % the width of histogram bin. the default value is 1 s.
-    PropName = 'rise_time'
+    PropName = 'rise_time';
     % plotHisto = false; % true/false [default].Plot histogram if true.
 
     AlignEventsToStim = true; % align the EventTimeStamps to the onsets of the stimulations: subtract EventTimeStamps with stimulation onset time
@@ -59,8 +59,9 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_AllTrials(alignedData
 
         EventFreqInBins_cell{tn} = get_EventFreqInBins_trial(EventsProps,StimRanges,...
             'binWidth',binWidth,'PropName',PropName,'AlignEventsToStim',AlignEventsToStim,...
+            'TrialName',TrialName,'roiNames',roiNames,...
             'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
             'round_digit_sig',round_digit_sig);
     end
-    EventFreqInBins = EventFreqInBins_cell{:};
+    EventFreqInBins = [EventFreqInBins_cell{:}];
 end

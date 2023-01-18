@@ -22,6 +22,8 @@ markerPeak_color = '#8D73BA';
 markerPeak_color_decon = '#5B7A87';
 marker_rise_decay_color = '#BA9973';
 
+plotwhere = [];
+
 % Optionals
 for ii = 1:2:(nargin-1)
     if strcmpi('SavePlot', varargin{ii})
@@ -38,6 +40,8 @@ for ii = 1:2:(nargin-1)
         decon = varargin{ii+1};
     elseif strcmpi('marker', varargin{ii})
         marker = varargin{ii+1};
+    elseif strcmpi('plotwhere', varargin{ii})
+        plotwhere = varargin{ii+1};
     end
 end
 
@@ -61,6 +65,9 @@ fovInfo = get_fov_info(trialData);
 peak_properties_col = 5;
 xAx = trialData{2}.lowpass.Time; % use time information from lowpass data
 
+if isempty(traceNum_perFig) % if the number of traces in a figure is not specified, plot all in one figure
+    traceNum_perFig = nROIs;
+end
 nFig = ceil(nROIs/traceNum_perFig);
 
 
@@ -68,7 +75,12 @@ for fn = 1:nFig
     roi_num_start = (fn-1)*traceNum_perFig+1;
     roi_num_end = min([nROIs, fn*traceNum_perFig]);
 
-    f(fn) = figure('Units', 'Normalized', 'OuterPosition', [0.05, 0.05, 0.95, 0.95 ], 'visible', vis); 
+    if isempty(plotwhere) || traceNum_perFig>1
+        f(fn) =  fig_canvas(1,'unit_width',0.9,unit_height,0.9);
+    else
+        plotwhere;
+    end
+    % f(fn) = figure('Units', 'Normalized', 'OuterPosition', [0.05, 0.05, 0.95, 0.95 ], 'visible', vis); 
     hold on
 
     if exist('p', 'var')

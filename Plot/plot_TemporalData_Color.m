@@ -22,7 +22,7 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
         elseif strcmpi('x_window', varargin{ii})
             x_window = varargin{ii+1}; % [a b] numerical array. Used to display time
         elseif strcmpi('xtickInt', varargin{ii})
-            xtickInt = varargin{ii+1}; % [a b] numerical array. Used to display time
+            xtickInt = varargin{ii+1}; % a single number to set the interval between x ticks
         elseif strcmpi('colorLUT', varargin{ii})
             colorLUT = varargin{ii+1}; % look up table (LUT)/colormap: 'turbo','parula','hot','jet', etc.
         elseif strcmpi('show_colorbar', varargin{ii})
