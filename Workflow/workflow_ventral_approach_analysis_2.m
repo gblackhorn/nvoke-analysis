@@ -243,7 +243,7 @@ end
 %% ====================
 % 9.5.1.1 Create 'eventProp_all' according to stimulation and category 
 
-eprop.entry = 'roi'; % options: 'roi' or 'event'
+eprop.entry = 'event'; % options: 'roi' or 'event'
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 eprop.modify_stim_name = true; % true/false. Change the stimulation name, 
@@ -311,7 +311,7 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 % 9.5.2 Plot event parameters. Grouped according to categories
 % [9.3] eventProp_all: entry is 'events'
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 plot_combined_data = false;
 parNames = {'rise_duration','sponNorm_rise_duration','FWHM','peak_mag_delta',...
     'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise','rise_delay'}; % entry: event

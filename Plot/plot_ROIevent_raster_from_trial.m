@@ -51,7 +51,7 @@ function [varargout] = plot_ROIevent_raster_from_trial(trialData,varargin)
 
     if plot_hist
         tlo = tiledlayout(f,2,1);
-        ax = nexttile(tlo);
+        % ax = nexttile(tlo);
     end
 
     hold on

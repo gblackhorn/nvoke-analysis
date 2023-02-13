@@ -115,30 +115,49 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 
 	%% bar plot
 	f_bar = figure('Name', 'bar plots');
+    f_stat = figure('Name', 'bar stat');;
 	if par_num == 1
 		fig_position = [0.1 0.1 0.2 0.6]; % left, bottom, width, height
 	else
 		fig_position = [0.1 0.1 0.8 0.6];
 	end
-	set(gcf, 'Units', 'normalized', 'Position', fig_position)
+	set(f_bar, 'Units', 'normalized', 'Position', fig_position)
+    set(f_stat, 'Units', 'normalized', 'Position', fig_position)
 	tlo = tiledlayout(f_bar, ceil(par_num/4), 4);
+	tlo_barstat = tiledlayout(f_stat, ceil(par_num/4), 4);
 	for pn = 1:par_num
 		ax = nexttile(tlo);
+		ax_stat = nexttile(tlo_barstat);
 		par = parNames{pn};
 		if group_num >1
 			[bar_data.(par), bar_stat.(par)] = plot_event_info_bar(event_info_struct,par,...
 				'plotWhere',ax,'stat',stat,'stat_fig',stat_fig,'FontSize',FontSize,'FontWeight',FontWeight);
-			% 'save_fig', save_fig, 'save_dir', save_dir,
-			% title_str = ['Bar-plot: ', par_name]; 
-			% title_str = replace(title_str, '_', '-');
 			title(replace(par, '_', '-'));
+
+			% Plot multiCompare statistics in a single figure
+			uit_pos = get(ax_stat,'Position');
+			uit_unit = get(ax_stat,'Units');
+			% delete(ax_stat);
+			MultCom_stat = bar_stat.(par).multCompare;
+			uit = uitable(f_stat,'Data',table2cell(MultCom_stat),...
+				'ColumnName',MultCom_stat.Properties.VariableNames,...
+				'Units',uit_unit,'Position',uit_pos);
+			% delete(ax_stat);
+
+			jScroll = findjobj(uit);
+			jTable  = jScroll.getViewport.getView;
+			jTable.setAutoResizeMode(jTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+			drawnow;
 		end
 	end
 	if save_fig
-		% fname = 'bar_plots';
 		fname = sprintf('bar_plots-%s',fname_suffix);
 		savePlot(f_bar,...
 			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
+
+		fname_stat = sprintf('bar_stat-%s',fname_suffix);
+		savePlot(f_stat,...
+			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname_stat);
 	end
 
 	%% box plot

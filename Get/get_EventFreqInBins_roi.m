@@ -18,8 +18,8 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_roi(EventsPeriStimulu
             denorm = varargin{ii+1}; % denorminator used to normalize the EventFreq 
         elseif strcmpi('stimRepeats', varargin{ii})
             stimRepeats = varargin{ii+1}; % the repeat number of stimulation
-        % elseif strcmpi('StimDuration', varargin{ii})
-        %     StimDuration = varargin{ii+1}; % specify the duration of stimulations. only a single number is valid
+        elseif strcmpi('plotHisto', varargin{ii})
+            plotHisto = varargin{ii+1}; % specify the duration of stimulations. only a single number is valid
         % elseif strcmpi('round_digit_sig', varargin{ii})
         %     round_digit_sig = varargin{ii+1}; % round to the Nth significant digit for duration
         end

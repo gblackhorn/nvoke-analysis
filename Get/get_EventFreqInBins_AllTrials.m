@@ -13,6 +13,10 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_AllTrials(alignedData
     %  from the trials applied with optogenetic stimulation for 5 second
 
     % Defaults
+    stim_ex = nan;
+    stim_in = nan;
+    stim_rb = nan;
+
     binWidth = 1; % the width of histogram bin. the default value is 1 s.
     PropName = 'rise_time';
     % plotHisto = false; % true/false [default].Plot histogram if true.
@@ -24,7 +28,13 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_AllTrials(alignedData
 
     % Optionals for inputs
     for ii = 1:2:(nargin-2)
-        if strcmpi('binWidth', varargin{ii}) 
+        if strcmpi('stim_ex', varargin{ii}) 
+            stim_ex = varargin{ii+1}; % logical. stimulation effect: excitation 
+        elseif strcmpi('stim_in', varargin{ii}) 
+            stim_in = varargin{ii+1}; % logical. stimulation effect: inhibition 
+        elseif strcmpi('stim_rb', varargin{ii}) 
+            stim_rb = varargin{ii+1}; % logical. stimulation effect: rebound 
+        elseif strcmpi('binWidth', varargin{ii}) 
             binWidth = varargin{ii+1}; % denorminator used to normalize the EventFreq 
         elseif strcmpi('PropName', varargin{ii}) 
             PropName = varargin{ii+1}; % denorminator used to normalize the EventFreq 
@@ -54,8 +64,11 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_AllTrials(alignedData
     for tn = 1:trialNum
         TrialName = alignedData_filtered(tn).trialName; % get the current recording trial name
         StimRanges = alignedData_filtered(tn).stimInfo.UnifiedStimDuration.range; % get the ranges of stimulations
-        EventsProps = {alignedData_filtered(tn).traces.eventProp}; % get the event properties of rois from current trial
-        roiNames = {alignedData_filtered(tn).traces.roi}; % get the roi names from current trial
+
+        [alignedDataTraces_filtered] = Filter_AlignedDataTraces_withStimEffect(alignedData_filtered(tn).traces,...
+            'ex',stim_ex,'in',stim_in,'rb',stim_rb);
+        EventsProps = {alignedDataTraces_filtered.eventProp}; % get the event properties of rois from current trial
+        roiNames = {alignedDataTraces_filtered.roi}; % get the roi names from current trial
 
         EventFreqInBins_cell{tn} = get_EventFreqInBins_trial(EventsProps,StimRanges,...
             'binWidth',binWidth,'PropName',PropName,'AlignEventsToStim',AlignEventsToStim,...

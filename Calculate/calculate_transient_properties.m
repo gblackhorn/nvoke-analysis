@@ -8,6 +8,9 @@ function [transient_properties,varargout] = calculate_transient_properties(roi_t
     extension_time_pre = 0.5; % extend the time window by subtracting rise_time with this
     extension_time_post = 1; % extend the time window by adding decay_time with this
 
+    max_RiseWin = 1; % unit: s. Maximum duration from check_start to peak. This window is used to find the
+    % start point of a peak
+
     % Optionals
     for ii = 1:2:(nargin-4)
     	if strcmpi('slope_per_low', varargin{ii})
@@ -27,7 +30,8 @@ function [transient_properties,varargout] = calculate_transient_properties(roi_t
     [eventWin,eventWin_idx] = get_event_win(peak_loc,time_info,'pre_peakTime',2,'post_peakTime',5); % get time windows for each peak
     if ~isempty(peak_loc) % if there are peak(s) in the trace
         if ~exist('existing_peakInfo', 'var')
-    	   [rise_decay_loc] = FindRiseandDecay(roi_trace,peak_loc); % find the locations of rise, decay, check_start and check_end for every peak
+    	   [rise_decay_loc] = FindRiseandDecay(roi_trace,peak_loc,...
+           'freq',recFreq,'max_RiseWin',max_RiseWin); % find the locations of rise, decay, check_start and check_end for every peak
         else
             [rise_decay_loc] = FindRiseandDecay_with_existing_peakinfo(roi_trace,peak_loc,existing_peakInfo,...
                 'eventWin_idx',eventWin_idx);    

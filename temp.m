@@ -442,6 +442,27 @@ while tn <= trial_num
 end
 
 %% ====================
+% barPlot for showing event frequencies in time bins 
+close all
+[EventFreqInBins] = get_EventFreqInBins_AllTrials(alignedData_allTrials,'og-5s'); % 'ap-0.1s', 'og-5s', 'og-5s ap-0.1s'
+ef_cell = {EventFreqInBins.EventFqInBins};
+ef_cell = ef_cell(:);
+ef = vertcat(ef_cell{:});
+[barInfo] = barplot_with_stat(ef);
+
+%% ====================
+% Plot the the calcium fluorescence with color
+close all
+trial_loc = 1;
+x_window = [alignedData_allTrials(trial_loc).fullTime(1), alignedData_allTrials(trial_loc).fullTime(end)];
+fullTraceCell = {alignedData_allTrials(trial_loc).traces.fullTrace};
+fullTraceCell_norm = cellfun(@(x) x./max(x),fullTraceCell,'UniformOutput',false); % normalize the trace with max value
+TemporalData = [fullTraceCell_norm{:}];
+TemporalData = TemporalData';
+plot_TemporalData_Color(gca,TemporalData,'x_window',x_window)
+colorbar
+
+%% ====================
 % fit the data to exponential curve
 [curvefit,gof,output] = fit(tdata',ydata','exp1');
 
