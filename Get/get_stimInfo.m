@@ -36,6 +36,7 @@ function [StimDuration,varargout] = get_stimInfo(gpioInfo,varargin)
 
 		for scn = 1:stim_ch_num % assign the stimInfo to each channel
 			StimDuration(scn).type = StimType{scn};
+			StimDuration(scn).patch_coor = gpioInfo_stim(scn).patch_coordinats;
 		end
 
 		if stim_ch_num == 1
