@@ -3,6 +3,8 @@ function [events,varargout] = get_TrialEvents_from_alignedData(alignedData_trial
 
 	% events can be used by plot functions such as 'plot_TemporalData_Trace' to mark the events 
 
+	% [events] = get_TrialEvents_from_alignedData(alignedData_trial,'rise_time')
+
 	% Defaults
 	pick = nan; 
 

@@ -14,11 +14,14 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
 
     % Defaults
     plotInterval = 20; % offset for traces on y axis to seperate them
+    xtickInt = 10; % unit: second. x tick interval. 
+
     % vis = 'on'; % set the 'visible' of figures
     % decon = true; % true/false plot decon trace
     plot_marker = true; % true/false
     marker1_xData = {}; % plot markers for peaks. 
     marker2_xData = {}; % plot markers for rise and decay frames
+
     LineWidth = 1;
     line_color = '#616887';
     % line_color_decon = '#24283B';
@@ -39,6 +42,8 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
             plotInterval = varargin{ii+1}; 
         elseif strcmpi('ylabels', varargin{ii})
             ylabels = varargin{ii+1}; 
+        elseif strcmpi('xtickInt', varargin{ii})
+            xtickInt = varargin{ii+1};  % cell array. size equals to yData column. Each cell contains time information can be found in xData
         elseif strcmpi('plot_marker', varargin{ii}) 
             plot_marker = varargin{ii+1}; 
         elseif strcmpi('marker1_xData', varargin{ii}) 
@@ -109,7 +114,7 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
 
     yticks(flip(trace_y_pos));
     yticklabels(flip(trace_y_tick));
-    set(gca,'Xtick',[xData(1):10:xData(end)]);
+    set(gca,'Xtick',[xData(1):xtickInt:xData(end)]);
 
     if ~isempty(shadeData)
         shade_type_num = numel(shadeData);

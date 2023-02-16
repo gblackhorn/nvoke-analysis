@@ -2,9 +2,7 @@ function [patchCoor,stimName,varargout] = get_TrialStimPatchCoor_from_alignedDat
 	% Get PatchCoor for drawing shade to indicate the range of stimulation
 	% patchCoor can be use by function 'draw_shade' to draw a transparent patch
 
-	% Defaults
-	% pick = nan; 
-	% norm_FluorData = false; % true/false. whether to normalize the FluroData
+	% [patchCoor,stimName,stimTypeNum] = get_TrialStimPatchCoor_from_alignedData(alignedData_trial)
 
 	% % Optionals
 	% for ii = 1:2:(nargin-1)

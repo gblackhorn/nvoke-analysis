@@ -31,33 +31,33 @@ function [alignedDataTraces_filtered,varargout] = Filter_AlignedDataTraces_withS
 
 
     roi_num = numel(alignedDataTraces);
-    tf_idx = logical(ones(1,roi_num));
+    tf_idx = logical(ones(1,roi_num)); % default: keep all ROIs
 
     stimEffect_all = {alignedDataTraces.(SE_name)};
     for rn = 1:roi_num
         stimEffect = stimEffect_all{rn};
-        ex_tf = true;
-        in_tf = true;
-        rb_tf = true;
+        ex_tf = true; % default: do not discard
+        in_tf = true; % default: do not discard
+        rb_tf = true; % default: do not discard                                                                     
 
-        if ~isnan(ex) && stimEffect.excitation ~= ex
-            ex_tf = false;
+        if ~isnan(ex) && stimEffect.excitation ~= ex % use 'ex' filter and the stim effect is different from the 'ex' filter
+            ex_tf = false; % mark discard
         end
 
-        if ~isnan(in) && stimEffect.inhibition ~= in
-            in_tf = false;
+        if ~isnan(in) && stimEffect.inhibition ~= in % use 'in' filter and the stim effect is different from the 'in' filter
+            in_tf = false; % mark discard
         end
 
-        if ~isnan(rb) && stimEffect.rebound ~= rb
-            rb_tf = false;
+        if ~isnan(rb) && stimEffect.rebound ~= rb % use 'rb' filter and the stim effect is different from the 'rb' filter
+            rb_tf = false; % mark discard
         end
 
-        if ~ex_tf || ~in_tf || ~rb_tf
-            tf_idx(rn) = false;
+        if ~ex_tf || ~in_tf || ~rb_tf % if the ROI receives "discard" tag for at least once
+            tf_idx(rn) = false; % mark the ROI with 'discard'
         end
     end
 
-    alignedDataTraces_filtered = alignedDataTraces(tf_idx);
-    varargout{1} = find(tf_idx);
+    alignedDataTraces_filtered = alignedDataTraces(tf_idx); % using the logical array tf_idx to filter ROIs
+    varargout{1} = find(tf_idx); % the locations of ROIs in the original data
 end
 
