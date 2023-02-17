@@ -82,11 +82,15 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
     trace_length = size(yData,1); % data point number of yData
     trace_y_pos = [0:-20:(trace_num-1)*-20];
     trace_y_shift = repmat(trace_y_pos,trace_length,1);
-    yData_shift = yData-trace_y_shift;
+    yData_shift = yData+trace_y_shift;
     trace_y_tick = ylabels;
     % spikeFrames_all_cell = cell(trace_num,1);
 
     plot(xData,yData_shift,'LineWidth',LineWidth,'Color',line_color);
+    xlim([xData(1) xData(end)]); % set the x-axis limit to the beginnin and the end of xData
+    ymax = max(yData_shift(:,1)); % Get the largest y value
+    ymin = min(yData_shift(:,end)); % Get the smallest y value
+    ylim([ymin-plotInterval ymax+plotInterval]) % add plotInterval to ymax and ymin and use them for ylim
     hold on
 
     if isempty(marker1_xData)
@@ -112,6 +116,8 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
         end
     end
 
+    set(gca,'box','off')
+    set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
     yticks(flip(trace_y_pos));
     yticklabels(flip(trace_y_tick));
     set(gca,'Xtick',[xData(1):xtickInt:xData(end)]);
@@ -125,6 +131,6 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
 
     set(gca,'children',flipud(get(gca,'children')))
 
-    title(titleString);
+    title(titleStr);
     xlabel ('sec');
 end

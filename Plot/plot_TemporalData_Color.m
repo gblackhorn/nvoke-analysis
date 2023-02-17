@@ -23,6 +23,8 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
             x_window = varargin{ii+1}; % [a b] numerical array. Used to display time
         elseif strcmpi('xtickInt', varargin{ii})
             xtickInt = varargin{ii+1}; % a single number to set the interval between x ticks
+        % elseif strcmpi('x_rescale', varargin{ii})
+        %     x_rescale = varargin{ii+1}; % a single number to set the interval between x ticks
         elseif strcmpi('colorLUT', varargin{ii})
             colorLUT = varargin{ii+1}; % look up table (LUT)/colormap: 'turbo','parula','hot','jet', etc.
         elseif strcmpi('show_colorbar', varargin{ii})
@@ -38,8 +40,10 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
         % using ARRAYFUN. The 'UniformOutput' parameter is set to 0 to instruct CELLFUN to encapsulate the outputs into a cell array.
     end
 
+    % Re-scale the x-axis
+    % x_dataNum = size(TemporalData,2); % column length of TemporalData
 
-    y_range = [1:size(TemporalData,1)]; % use the row number as y tick
+    y_range = [1 size(TemporalData,1)]; % use the row number as y tick
     if exist('x_window') && ~isempty(x_window)
         p_handle = imagesc(plotWhere,x_window,y_range,TemporalData);
 
@@ -52,7 +56,12 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
         set(gca,'xticklabel',[])
     end
     set(gca,'box','off')
-    yticks(y_range); % only tick the value in y_range
+    yticks([y_range(1):y_range(end)]); % only tick the value in y_range
     yticklabels(rowNames); % label yticks
 
+
+
+    if show_colorbar
+        colorbar
+    end
 end

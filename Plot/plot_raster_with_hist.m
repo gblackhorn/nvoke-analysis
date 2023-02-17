@@ -67,7 +67,7 @@ function [f,varargout] = plot_raster_with_hist(rasterData,x_window,varargin)
 	end
 	raster_all = cell2mat(rasterData); % collect rasterData in every cell and make a number array
 	raster_all(isnan(raster_all)) = []; % discard nan values
-	histogram(raster_all,hist_binedge);
+	histogram(raster_all,hist_binedge,'LineStyle','none');
 	xlim(scatter_xlim);
 
 	x_ticks = [scatter_xlim(1):xtickInt:scatter_xlim(2)];

@@ -19,7 +19,7 @@ function [alignedDataTraces_filtered,varargout] = Filter_AlignedDataTraces_withS
     SE_name = 'stimEffect'; % default name of the stimEffect field
 
     % Optionals for inputs
-    for ii = 1:2:(nargin-2)
+    for ii = 1:2:(nargin-1)
         if strcmpi('ex', varargin{ii}) 
             ex = varargin{ii+1}; % excitation filter.  
         elseif strcmpi('in', varargin{ii}) 
@@ -58,6 +58,8 @@ function [alignedDataTraces_filtered,varargout] = Filter_AlignedDataTraces_withS
     end
 
     alignedDataTraces_filtered = alignedDataTraces(tf_idx); % using the logical array tf_idx to filter ROIs
-    varargout{1} = find(tf_idx); % the locations of ROIs in the original data
+    varargout{1} = find(tf_idx); % the locations of ROIs in the original 
+    varargout{2} = sprintf('%d/%d ROIs are kept (filter: ex-%d, in-%d, rb-%d)',...
+        length(varargout{1}),roi_num,ex,in,rb);
 end
 
