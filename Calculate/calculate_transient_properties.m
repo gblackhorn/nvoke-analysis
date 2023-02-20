@@ -26,7 +26,7 @@ function [transient_properties,varargout] = calculate_transient_properties(roi_t
         end
     end
 
-    recFreq = 1/(time_info(10)-time_info(9)); % recording sampling frequency
+    recFreq = round(1/(time_info(10)-time_info(9))); % recording sampling frequency
     [eventWin,eventWin_idx] = get_event_win(peak_loc,time_info,'pre_peakTime',2,'post_peakTime',5); % get time windows for each peak
     if ~isempty(peak_loc) % if there are peak(s) in the trace
         if ~exist('existing_peakInfo', 'var')

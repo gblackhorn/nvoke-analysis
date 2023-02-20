@@ -1,6 +1,8 @@
-function [varargout] = savePlot(plot_handle,varargin)
+function [varargout] = savePlot(fig_handle,varargin)
 	% save plot 
 	% handle of the plot to be saved
+
+	% savePlot(fig_handle,'save_dir',folder,'guiInfo',msg,'guiSave','on','fname',figTitle)
 
 	% Defaults
 	guiSave = 'off'; % Options: 'on'/'off'. whether use the gui to choose the save_dir
@@ -56,13 +58,13 @@ function [varargout] = savePlot(plot_handle,varargin)
 		filepath = fullfile(save_dir, fname);
 
 		if figFormat
-			savefig(plot_handle, [filepath, '.fig']);
+			savefig(fig_handle, [filepath, '.fig']);
 		end
 		if jpgFormat
-			saveas(plot_handle, [filepath, '.jpg']);
+			saveas(fig_handle, [filepath, '.jpg']);
 		end
 		if svgFormat
-			saveas(plot_handle, [filepath, '.svg']);
+			saveas(fig_handle, [filepath, '.svg']);
 		end
 	end
 

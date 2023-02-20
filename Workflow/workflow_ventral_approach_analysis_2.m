@@ -137,8 +137,28 @@ end
 % Create a list showing the numbers of various events in each ROI
 [alignedData_event_list] = eventcat_list(alignedData_allTrials);
 
+
 %% ====================
-% 9.1.4 Plot traces and stim-aligned traces
+% 9.1.4 Plot calcium signal as traces and color array, and calcium events with hist-count.
+% Note: ROIs of all trials in alignedData_allTrials can be plotted. 
+%	Use 'filter' to screen ROIs based on the effect of stimulation
+close all
+save_fig = false;
+
+filter_roi_tf = true; % true/false. If true, screen ROIs
+stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
+filters = {[nan 1 nan], [1 nan nan], [nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+norm_FluorData = true; % true/false. whether to normalize the FluroData
+hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins
+xtickInt_scale = 5; % xtickInt = hist_binsize * xtickInt_scale. Use by figure 2
+
+plot_calcium_signals_alignedData_allTrials(alignedData_allTrials,'filter_roi_tf',filter_roi_tf,...
+	'stim_names',stim_names,'filters',filters,'norm_FluorData',norm_FluorData,...
+	'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,'default_dir',FolderPathVA.fig);
+
+
+%% ====================
+% 9.1.5 Plot traces and stim-aligned traces
 % Note: set adata.event_type to 'stimWin' when creating alignedData_allTrials
 close all
 save_fig = false; % true/false
