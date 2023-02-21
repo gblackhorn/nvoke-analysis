@@ -32,7 +32,7 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
     marker2_color = '#BA9973';
 
     shadeData = {};
-    shadeColor = {'#4DBEEE','#ED8564'};
+    shadeColor = {'#F05BBD','#4DBEEE','#ED8564'};
 
     titleStr = '';
 
@@ -132,5 +132,5 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
     set(gca,'children',flipud(get(gca,'children')))
 
     title(titleStr);
-    xlabel ('sec');
+    xlabel ('Time (s)');
 end

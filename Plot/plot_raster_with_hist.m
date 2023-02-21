@@ -6,6 +6,8 @@ function [f,varargout] = plot_raster_with_hist(rasterData,x_window,varargin)
 
 	% Defaults
 	rowNames = [];
+	shadeData = {};
+	shadeColor = {'#F05BBD','#4DBEEE','#ED8564'};
 	% xtickInt = [];
 	yInterval = 5; % offset on y axis to seperate data from various ROIs
 	sz = 20; % marker area
@@ -20,6 +22,8 @@ function [f,varargout] = plot_raster_with_hist(rasterData,x_window,varargin)
     		rowNames = varargin{ii+1}; % cell array containing strings used to label y_ticks
         elseif strcmpi('x_window', varargin{ii})
             x_window = varargin{ii+1}; % [a b] numerical array. Used to set the limitation of x axis
+        elseif strcmpi('shadeData', varargin{ii})
+            shadeData = varargin{ii+1}; % [a b] numerical array. Used to set the limitation of x axis
         % elseif strcmpi('xtickInt', varargin{ii})
         %     xtickInt = varargin{ii+1}; % [a b] numerical array. Used to set the limitation of x axis
         elseif strcmpi('yInterval', varargin{ii})
@@ -69,6 +73,14 @@ function [f,varargout] = plot_raster_with_hist(rasterData,x_window,varargin)
 	raster_all(isnan(raster_all)) = []; % discard nan values
 	histogram(raster_all,hist_binedge,'LineStyle','none');
 	xlim(scatter_xlim);
+
+	if ~isempty(shadeData)
+	    shade_type_num = numel(shadeData);
+	    for stn = 1:shade_type_num
+	        draw_WindowShade(gca,shadeData{stn},'shadeColor',shadeColor{stn});
+	    end
+	end
+	set(gca,'children',flipud(get(gca,'children')))
 
 	x_ticks = [scatter_xlim(1):xtickInt:scatter_xlim(2)];
 	set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'

@@ -36,29 +36,29 @@ recdata_organized = select_grouped_data(recdata_group);
 
 %% ====================
 % 9.1 Examine peak detection with plots 
-close all
-SavePlot = false; % true or false
-PauseTrial = false; % true or false
-traceNum_perFig = 10; % number of traces/ROIs per figure
-SaveTo = FolderPathVA.fig;
-vis = 'off'; % on/off. set the 'visible' of figures
-decon = false; % true/false plot decon trace
-marker = false; % true/false plot markers
+% close all
+% SavePlot = false; % true or false
+% PauseTrial = false; % true or false
+% traceNum_perFig = 10; % number of traces/ROIs per figure
+% SaveTo = FolderPathVA.fig;
+% vis = 'off'; % on/off. set the 'visible' of figures
+% decon = false; % true/false plot decon trace
+% marker = false; % true/false plot markers
 
-[SaveTo] = plotTracesFromAllTrials(recdata_organized,...
-	'PauseTrial', PauseTrial,...
-	'traceNum_perFig', traceNum_perFig, 'decon', decon, 'marker', marker,...
-	'SavePlot', SavePlot, 'SaveTo', SaveTo,...
-	'vis', vis);
+% [SaveTo] = plotTracesFromAllTrials(recdata_organized,...
+% 	'PauseTrial', PauseTrial,...
+% 	'traceNum_perFig', traceNum_perFig, 'decon', decon, 'marker', marker,...
+% 	'SavePlot', SavePlot, 'SaveTo', SaveTo,...
+% 	'vis', vis);
 
-[SaveTo] = plot_ROIevent_raster_from_trial_all(recdata_organized,...
-	'plotInterval',5,'sz',10,'save_fig',SavePlot,'save_dir',SaveTo);
-if SaveTo~=0
-	FolderPathVA.fig = SaveTo;
-end
+% [SaveTo] = plot_ROIevent_raster_from_trial_all(recdata_organized,...
+% 	'plotInterval',5,'sz',10,'save_fig',SavePlot,'save_dir',SaveTo);
+% if SaveTo~=0
+% 	FolderPathVA.fig = SaveTo;
+% end
 
 %% ====================
-% 9.1.1 manually discard rois or trial 
+% 8.5 manually discard rois or trial 
 % recdata_organized_bk = recdata_organized;
 
 trial_idx = 35; % trial index number
@@ -66,7 +66,7 @@ roi_idx = [5]; % roi number. 2 for 'neuron2'
 
 [recdata_organized] = discard_data(recdata_organized,trial_idx,roi_idx);
 %% ====================
-% 9.1.2 discard rec if the fovID number is bigger than fov_max
+% 8.6 discard rec if the fovID number is bigger than fov_max
 fov_max = 6; % fov 1-6 are from the ChrimsonR positive CN axon side
 dis_idx = [];
 recdata_organized_bk = recdata_organized;
@@ -90,7 +90,7 @@ recdata_organized(dis_idx, :) = [];
 % recdata_organized_bk = recdata_organized;
 % [recdata_organized] = discard_recData_roi(recdata_organized,'stims',dis.stims,'eventCats',dis.eventCats,'debug_mode',debug_mode);
 %% ====================
-% 9.2 Align traces from all trials. Also collect the properties of events
+% 8.7 Align traces from all trials. Also collect the properties of events
 adata.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
 adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 adata.event_data_group = 'peak_lowpass';
@@ -139,22 +139,43 @@ end
 
 
 %% ====================
-% 9.1.4 Plot calcium signal as traces and color array, and calcium events with hist-count.
-% Note: ROIs of all trials in alignedData_allTrials can be plotted. 
-%	Use 'filter' to screen ROIs based on the effect of stimulation
-close all
-save_fig = false;
-
+% Common settings for 9.1.1 - 9.1.2
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
 filters = {[nan 1 nan], [1 nan nan], [nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+
+
+%% ====================
+% 9.1.1 Plot calcium signal as traces and color array, and calcium events with hist-count.
+% Note: ROIs of all trials in alignedData_allTrials can be plotted. 
+%	Use 'filter' to screen ROIs based on the effect of stimulation
+close all
+save_fig = true; % true/false
+
 norm_FluorData = true; % true/false. whether to normalize the FluroData
 hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins
 xtickInt_scale = 5; % xtickInt = hist_binsize * xtickInt_scale. Use by figure 2
 
-plot_calcium_signals_alignedData_allTrials(alignedData_allTrials,'filter_roi_tf',filter_roi_tf,...
-	'stim_names',stim_names,'filters',filters,'norm_FluorData',norm_FluorData,...
-	'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,'default_dir',FolderPathVA.fig);
+FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTrials,...
+	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'norm_FluorData',norm_FluorData,...
+	'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...
+	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
+
+
+%% ==================== 
+%9.1.2 Plot the event frequency in specified time bins to examine the effect
+%% of stimulation and compare each pair of bins
+close all
+save_fig = true; % true/false
+
+binWidth = 1; % the width of histogram bin. the default value is 1 s.
+preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
+postStim_duration = 5; % unit: second. include events happened after the end of stimulations
+debug_mode = false;
+
+[barStat,FolderPathVA.fig] =plot_event_freq_alignedData_allTrials(alignedData_allTrials,...
+	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'binWidth',binWidth,...
+	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on','debug_mode',debug_mode);
 
 
 %% ====================

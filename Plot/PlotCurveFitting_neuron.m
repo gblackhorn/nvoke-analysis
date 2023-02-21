@@ -9,7 +9,7 @@ function [f_handle,varargout] = PlotCurveFitting_neuron(CurveFitInfo,varargin)
 	xlabel_str = 'Time';
 	ylabel_str = 'Response Data and Curve';
 	% title_str = 'Curve Fitting';
-	ax = gca;
+	% ax = gca;
 	
 	% Options
 	for ii = 1:2:(nargin-3)

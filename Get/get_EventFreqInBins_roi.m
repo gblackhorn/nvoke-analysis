@@ -51,4 +51,6 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_roi(EventsPeriStimulu
     if plotHisto
         histogram(EventFreqInBins,HistEdges);
     end
+
+    varargout{1} = HistEdges;
 end

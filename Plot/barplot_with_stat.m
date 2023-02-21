@@ -9,6 +9,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
     % Defaults
 
     stat = 'anova'; % anova/pttest. anova test or paired ttest. The later only works when the group number is 2
+    xdata = [];
 
     plotData = true; % true/false
     plotWhere = [];
@@ -18,7 +19,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
     % stat = false; % true if want to run anova
     stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 
-    TickAngle = 45;
+    TickAngle = 0;
     EdgeColor = 'none';
     FaceColor = '#4D4D4D';
     FontSize = 18;
@@ -30,6 +31,10 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
             group_names = varargin{ii+1};
         elseif strcmpi('stat', varargin{ii})
             stat = varargin{ii+1};
+        elseif strcmpi('xdata', varargin{ii})
+            xdata = varargin{ii+1};
+        % elseif strcmpi('xticks', varargin{ii})
+        %     xticks = varargin{ii+1};
         elseif strcmpi('plotWhere', varargin{ii})
             plotWhere = varargin{ii+1};
         elseif strcmpi('title_str', varargin{ii})
@@ -71,12 +76,24 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
     barInfo.data = empty_content_struct(barInfo_data_fields,group_num);
     data_cell = cell(1, group_num); % for anova1
     data_cell_group = cell(1, group_num); % for anova1
+
+    % Get x for plotting. Create group_names using x if it does not exist
+    if isempty(xdata)
+        x = [1:1:group_num]; % create x using group number if xdata does not exist
+    else
+        x = xdata;
+    end
+    if ~exist('group_names', 'var')
+        group_names = NumArray2StringCell(x); % use x as group names, if group_name does not exist
+    end
+
     for gn = 1:group_num
-        if exist('group_names', 'var')
-            barInfo.data(gn).group = group_names{gn};
-        else
-            barInfo.data(gn).group = sprintf('group%d',gn);
-        end
+        barInfo.data(gn).group = group_names{gn};
+        % if exist('group_names', 'var')
+        %     barInfo.data(gn).group = group_names{gn};
+        % else
+        %     barInfo.data(gn).group = sprintf('group%d',gn);
+        % end
         barInfo.data(gn).group_data = group_data{gn};
         barInfo.data(gn).n = numel(group_data{gn});
         barInfo.data(gn).mean_val = mean(group_data{gn});
@@ -100,7 +117,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
         end
 
         group_names = {barInfo.data.group};
-        x = [1:1:group_num];
+        % x = [1:1:group_num];
         y = [barInfo.data.mean_val];
         y_error = [barInfo.data.ste_val];
         n_num_str = num2str([barInfo.data.n]');
@@ -115,11 +132,12 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
         text(x,yloc_array,n_num_str,'vert','bottom','horiz','center', 'Color', 'white');
 
         ax.XTick = x;
+        set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
         set(gca, 'box', 'off')
         set(gca, 'FontSize', FontSize)
         set(gca, 'FontWeight', FontWeight)
         xtickangle(TickAngle)
-        set(gca, 'XTick', [1:1:group_num]);
+        set(gca, 'XTick', x);
         set(gca, 'xticklabel', group_names);
         fe = errorbar(x, y, y_error, 'LineStyle', 'None');
         set(fe,'Color', 'k', 'LineWidth', 2, 'CapSize', 10);

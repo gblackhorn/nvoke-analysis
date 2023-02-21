@@ -1,11 +1,11 @@
-function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varargin)
+function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,varargin)
 	% Plot calcium fluorescence as traces and color, and plot calcium events using scatter
 	% (show the event number in time bins in the histogram). Use the data from one trial in the
 	% format of aligneData (a structure var) accquired from function "get_event_trace_allTrials"
 
 	% Example:
-	%	[f1,f2] = plot_trace_events_alignedData(alignedData_trial,'pick',[1 3 5 7],'norm_FluorData',true); 
-	%		get the 1st, 3rd, 5th and 7th roi traces from alignedData_trial and normalize them with their
+	%	[f1,f2] = plot_trace_events_alignedData(alignedData_trials,'pick',[1 3 5 7],'norm_FluorData',true); 
+	%		get the 1st, 3rd, 5th and 7th roi traces from alignedData_trials and normalize them with their
 	% 		max values
 
 	% Defaults
@@ -66,36 +66,36 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,v
 	% Main contents
 
 	% Get the stimulation patch info for plotting the shades to indicate stimulation
-	[patchCoor,stimName,stimTypeNum] = get_TrialStimPatchCoor_from_alignedData(alignedData_trial);
+	[patchCoor,stimName,stimTypeNum] = get_TrialStimPatchCoor_from_alignedData(alignedData_trials);
 
 	% Filter ROIs if 'pick' is input as varargin
-	trace_event_data = alignedData_trial.traces; % roi names, calcium fluorescence data, events' time info are all in the field 'traces'
+	trace_event_data = alignedData_trials.traces; % roi names, calcium fluorescence data, events' time info are all in the field 'traces'
 	if ~isnan(pick)
 		trace_event_data = trace_event_data(pick);
 	end
 	% [trace_event_data] = Filter_AlignedDataTraces_withStimEffect(trace_event_data,...
 	% 	'ex',stim_effect_filter(1),'in',stim_effect_filter(2),'rb',stim_effect_filter(3));
-	alignedData_trial.traces = trace_event_data; % replace the trace_event_data with the filtered one
+	alignedData_trials.traces = trace_event_data; % replace the trace_event_data with the filtered one
 
 	
 	% Get the ROI names
-	rowNames = {alignedData_trial.traces.roi};
+	rowNames = {alignedData_trials.traces.roi};
 
 
 	% Get the time information and traces
-	[timeData,FluroData] = get_TrialTraces_from_alignedData(alignedData_trial,...
+	[timeData,FluroData] = get_TrialTraces_from_alignedData(alignedData_trials,...
 		'norm_FluorData',norm_FluorData); 
 
 
 	if ~isempty(FluroData)
 		% Get the events' time
-		[event_riseTime] = get_TrialEvents_from_alignedData(alignedData_trial,'rise_time');
-		[event_peakTime] = get_TrialEvents_from_alignedData(alignedData_trial,'peak_time');
+		[event_riseTime] = get_TrialEvents_from_alignedData(alignedData_trials,'rise_time');
+		[event_peakTime] = get_TrialEvents_from_alignedData(alignedData_trials,'peak_time');
 
 
 		% Compose the stem part of figure title
-		trialName = alignedData_trial.trialName(1:15); % Get the date (yyyymmdd-hhmmss) part from trial name
-		stimName = alignedData_trial.stim_name; % Get the stimulation name
+		trialName = alignedData_trials.trialName(1:15); % Get the date (yyyymmdd-hhmmss) part from trial name
+		stimName = alignedData_trials.stim_name; % Get the stimulation name
 		if ~isempty(title_prefix)
 			title_prefix = sprintf('%s ', title_prefix); % add a space after the title_prefix in increase the readibility when combine with other strings
 		end
@@ -131,7 +131,7 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,v
 
 		% Figure 2: Plot the calcium events as scatter and show the events number in a histogram (2 plots)
 		fig_title{2} = sprintf('%s event raster and histbin',title_str_stem);
-		f(2) = plot_raster_with_hist(event_riseTime,trace_xlim,...
+		f(2) = plot_raster_with_hist(event_riseTime,trace_xlim,'shadeData',patchCoor,...
 			'rowNames',rowNames,'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...
 			'titleStr',fig_title{2});
 		sgtitle(fig_title{2})
@@ -143,8 +143,8 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,v
 			for fn = 1:fig_num
 				if isempty(save_dir)
 					gui_save = 'on';
-					msg = 'Choose a folder to save calcium traces and events plots';
 				end
+				msg = 'Choose a folder to save calcium traces and events plots';
 				savePlot(f(fn),'save_dir',save_dir,'guiSave',gui_save,...
 					'guiInfo',msg,'fname',fig_title{fn});
 			end

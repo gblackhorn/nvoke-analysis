@@ -22,9 +22,9 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 	xtickInt_scale = 5; % xtickInt = hist_binsize * xtickInt_scale. Use by figure 2
 
 	save_fig = false;
-	default_dir = '';
+	save_dir = '';
 
-	pause_plot = true;
+	% pause_plot = true;
 
 	debug_mode = false;
 
@@ -46,8 +46,8 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
             show_colorbar = varargin{ii+1};
 	    elseif strcmpi('save_fig', varargin{ii})
             save_fig = varargin{ii+1};
-	    elseif strcmpi('default_dir', varargin{ii})
-            default_dir = varargin{ii+1};
+	    elseif strcmpi('save_dir', varargin{ii})
+            save_dir = varargin{ii+1};
 	    elseif strcmpi('debug_mode', varargin{ii})
             debug_mode = varargin{ii+1};
 	    end
@@ -56,7 +56,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 	% ====================
 	% Main contents
 
-	% Filter the ROIs in all trials according to the stimulation effect
+	% Filter the ROIs in all trials using the stimulation effect
 	if filter_roi_tf
 		[alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData,...
 			'stim_names',stim_names,'filters',filters);
@@ -68,7 +68,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 
 	% Get the save location with UI if save_fig is true
 	if save_fig
-		save_dir = uigetdir(default_dir,'Choose a folder to save plots');
+		save_dir = uigetdir(save_dir,'Choose a folder to save plots');
 		if save_dir == 0
 			error('Folder for saving figures is not selected')
 		end
@@ -79,6 +79,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 	% (show the event number in time bins in the histogram) (fig2).
 	trial_num = numel(alignedData_filtered);
 	for tn = 1:trial_num
+		pause_plot = true;
 
 		if debug_mode
 			fprintf('trial %d/%d: %s\n',tn,trial_num,alignedData_filtered(tn).trialName)
@@ -91,7 +92,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 			'norm_FluorData',norm_FluorData,...
 			'plot_unit_width',plot_unit_width,'plot_unit_height',plot_unit_height,...
 			'show_colorbar',show_colorbar,'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...
-			'title_prefix',title_prefix,'save_fig',save_fig,'save_dir',default_dir,...
+			'title_prefix',title_prefix,'save_fig',save_fig,'save_dir',save_dir,...
 			'debug_mode',debug_mode);
 
 		if save_fig
@@ -102,5 +103,5 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 		end
 	end
 
-	
+	varargout{1} = save_dir;	
 end

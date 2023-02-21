@@ -21,14 +21,14 @@ function [EventsPeriStimulus,PeriStimulusRange,varargout] = group_EventsPeriStim
             preStim_duration = varargin{ii+1}; % events happened before the onset of stimulations will be collected and grouped
         elseif strcmpi('postStim_duration', varargin{ii})
             postStim_duration = varargin{ii+1}; % events happened after the end of stimulations will be collected and grouped
-        elseif strcmpi('StimDuration', varargin{ii})
-            StimDuration = varargin{ii+1}; % specify the duration of stimulations. only a single number is valid
+        elseif strcmpi('StimDuration_aligned', varargin{ii})
+            StimDuration_aligned = varargin{ii+1}; % specify the duration of stimulations. only a single number is valid
         elseif strcmpi('round_digit_sig', varargin{ii})
             round_digit_sig = varargin{ii+1}; % round to the Nth significant digit for duration
         end
     end
 
-    if exist('StimDuration')==0 
+    if AlignEventsToStim && exist('StimDuration_aligned')==0 
         [StimDurationInfo] = CalculateStimDuration(StimRanges,round_digit_sig); % Get a structure var 'StimDurationInfo'
         StimDuration = StimDurationInfo.fixed;
         StimDuration_aligned = StimDurationInfo.range_aligned; % [0 StimDuration]

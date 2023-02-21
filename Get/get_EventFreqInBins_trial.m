@@ -65,7 +65,9 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trial(EventsProps,Sti
             'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
             'round_digit_sig',round_digit_sig); % group event time stamps around stimulations
 
-        [EventFreqInBins(rn).EventFqInBins] = get_EventFreqInBins_roi(EventsPeriStimulus,PeriStimulusRange,...
-            'binWidth',binWidth,'plotHisto','false'); % calculate the event frequencies (in bins) in a roi and assigne the array to the EventFreqInBins
+        [EventFreqInBins(rn).EventFqInBins,binEdges] = get_EventFreqInBins_roi(EventsPeriStimulus,PeriStimulusRange,...
+            'binWidth',binWidth,'plotHisto',false); % calculate the event frequencies (in bins) in a roi and assigne the array to the EventFreqInBins
     end
+
+    varargout{1} = binEdges;
 end

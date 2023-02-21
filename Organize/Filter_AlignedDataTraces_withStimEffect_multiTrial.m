@@ -23,15 +23,27 @@ function [alignedData_filtered,varargout] = Filter_AlignedDataTraces_withStimEff
 
 	% ====================
 	% Main contents
+
+	% If stim_names only contain one name, such as 'og-5s'. Put this character var into a cell.
+	if isa(stim_names,'char')
+		stim_names = {stim_names}; 
+	end
+
+	% if filters only has a 1*3 numerica array. Put the filters in a cell array
+	if isa(filters,'numeric')
+		filters = {filters};
+	end 
+
+
 	alignedData_filtered = alignedData;
-	trail_num = numel(alignedData_filtered);
+	trial_num = numel(alignedData_filtered);
 
 	roiNum_all = 0;
 	roiNum_kept = 0;
 	roiNum_dis = 0;
 
 	% Filter the trials one by one
-	for tn = 1:trail_num
+	for tn = 1:trial_num
 		trialData = alignedData_filtered(tn); % data of a single trial
 		roiNum_all = roiNum_all+numel(trialData.traces);
 

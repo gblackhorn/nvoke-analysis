@@ -1,9 +1,9 @@
-function [events,varargout] = get_TrialEvents_from_alignedData(alignedData_trial,event_type,varargin)
-	% Get the events, such as rise_time, peak_time, rise_loc, peak_loc from a single trial in alignedData var
+function [event_info,varargout] = get_TrialEvents_from_alignedData(alignedData_trial,event_type,varargin)
+	% Get the event_info, such as rise_time, peak_time, rise_loc, peak_loc from a single trial in alignedData var
 
-	% events can be used by plot functions such as 'plot_TemporalData_Trace' to mark the events 
+	% event_info can be used by plot functions such as 'plot_TemporalData_Trace' to mark the events 
 
-	% [events] = get_TrialEvents_from_alignedData(alignedData_trial,'rise_time')
+	% [event_info] = get_TrialEvents_from_alignedData(alignedData_trial,'rise_time')
 
 	% Defaults
 	pick = nan; 
@@ -30,5 +30,5 @@ function [events,varargout] = get_TrialEvents_from_alignedData(alignedData_trial
 		fullEventProp = fullEventProp(pick);
 	end
 
-	events = cellfun(@(x) [x.(event_type)],fullEventProp,'UniformOutput',false);
+	event_info = cellfun(@(x) [x.(event_type)],fullEventProp,'UniformOutput',false);
 end
