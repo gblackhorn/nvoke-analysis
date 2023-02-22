@@ -122,8 +122,6 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 			'guiInfo',msg,'fname',titleStr);
 		save(fullfile(save_dir, [titleStr, '_stat']),...
 		    'barStat');
-
-		
-    end 
-    varargout{2} = save_dir;
+	end 
+	varargout{2} = save_dir;
 end
