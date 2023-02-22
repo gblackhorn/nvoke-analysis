@@ -51,7 +51,7 @@ function [rise_decay_loc] = FindRiseandDecay(roi_trace,peakLoc,varargin)
             idx = find(diff(roi_trace(check_start(pn):peakLoc(pn)))<=0, 1, 'last');
             % [min_val_CheckToPeak,idx]= min(roi_trace(check_start(pn):peakLoc(pn))); 
 
-            rise_loc = check_start(pn)+idx-1;
+            rise_loc = check_start(pn)+idx;
     		decay_diff_value = diff(roi_trace(peakLoc(pn):check_end(pn))); % diff value from peak to check_end
     		diff_turning_value = min(decay_diff_value); % when the diff of decay is smallest. Decay stop loc will be looked for from here
     		diff_turning_loc = peakLoc(pn)+find(decay_diff_value==diff_turning_value, 1, 'first');
