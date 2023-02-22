@@ -166,9 +166,9 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 %9.1.2 Plot the event frequency in specified time bins to examine the effect
 %% of stimulation and compare each pair of bins
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 
-binWidth = 1; % the width of histogram bin. the default value is 1 s.
+binWidth = 0.5; % the width of histogram bin. the default value is 1 s.
 preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 postStim_duration = 5; % unit: second. include events happened after the end of stimulations
 debug_mode = false;
