@@ -29,8 +29,10 @@ function [alignedDataTraces_filtered,varargout] = Filter_AlignedDataTraces_event
 	switch filter_direction
 		case 'high'
 			idx_dis = find(freq_all<freq_thresh);
+			filter_sign = '>=';
 		case 'low'
 			idx_dis = find(freq_all>freq_thresh);
+			filter_sign = '<=';
 		otherwise
 			error('function "Filter_AlignedDataTraces_eventFreq":filter_direction can only be high or low')
 	end
@@ -41,6 +43,6 @@ function [alignedDataTraces_filtered,varargout] = Filter_AlignedDataTraces_event
 
 	alignedDataTraces_filtered = alignedDataTraces(tf_idx);
 	varargout{1} = keptNum;
-	varargout{2} = sprintf('%d/%d ROIs are kept (filter: %s - %d -  %s)',...
-	    freq_field,freq_thresh,filter_direction);
+	varargout{2} = sprintf('%d/%d ROIs are kept (filter: %s %s %g Hz)',...
+	    keptNum,roi_num,freq_field,filter_sign,freq_thresh);
 end

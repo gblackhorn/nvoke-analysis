@@ -110,6 +110,10 @@ adata.caDeclineOnly = false; % true/false. Only keep the calcium decline trials 
 adata.disROI = true; % true/false. If true, Keep ROIs using the setting below, and delete the rest
 adata.disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-1s'};
 adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
+adata.sponfreqFilter.status = true; % true/false. If true, use the following settings to filter ROIs
+adata.sponfreqFilter.field = 'sponfq'; % 
+adata.sponfreqFilter.thresh = 0.06; % Hz
+adata.sponfreqFilter.direction = 'high';
 debug_mode = false; % true/false
 
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
@@ -132,6 +136,12 @@ end
 if adata.disROI
 	alignedData_allTrials = discard_alignedData_roi(alignedData_allTrials,...
 		'stims',adata.disROI_setting.stims,'eventCats',adata.disROI_setting.eventCats);
+end
+
+% Filter ROIs using their spontaneous event freq
+if adata.sponfreqFilter.status
+	[alignedData_allTrials] = Filter_AlignedDataTraces_eventFreq_multiTrial(alignedData_allTrials,...
+		'freq_field',adata.sponfreqFilter.field,'freq_thresh',adata.sponfreqFilter.thresh,'filter_direction',adata.sponfreqFilter.direction);
 end
 
 % Create a list showing the numbers of various events in each ROI
@@ -176,6 +186,18 @@ debug_mode = false;
 [barStat,FolderPathVA.fig] =plot_event_freq_alignedData_allTrials(alignedData_allTrials,...
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'binWidth',binWidth,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on','debug_mode',debug_mode);
+
+
+%% ==================== 
+% 9.1.3 Get decay curve taus and plot them in histogram
+filter_roi_tf = true;
+stimName = 'og-5s';
+stimEffect_filter = [nan 1 nan]; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+rsquare_thresh = 0.7;
+norm_FluorData = false; % true/false. whether to normalize the FluroData
+
+[roi_tauInfo] = get_decayCurveTau(alignedData_allTrials,'rsquare_thresh',rsquare_thresh,...
+ 	'filter_roi_tf',filter_roi_tf,'stimName',stimName,'stimEffect_filter',stimEffect_filter);
 
 
 %% ====================
