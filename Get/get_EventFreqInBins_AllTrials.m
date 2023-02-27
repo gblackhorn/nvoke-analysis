@@ -26,6 +26,8 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_AllTrials(alignedData
     postStim_duration = 5; % unit: second. include events happened after the end of stimulations
     round_digit_sig = 2; % round to the Nth significant digit for duration
 
+    debug_mode = false;
+
     % Optionals for inputs
     for ii = 1:2:(nargin-2)
         if strcmpi('stim_ex', varargin{ii}) 
@@ -50,6 +52,8 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_AllTrials(alignedData
             postStim_duration = varargin{ii+1}; % round to the Nth significant digit for duration
         elseif strcmpi('round_digit_sig', varargin{ii})
             round_digit_sig = varargin{ii+1}; % round to the Nth significant digit for duration
+        elseif strcmpi('debug_mode', varargin{ii})
+            debug_mode = varargin{ii+1}; % round to the Nth significant digit for duration
         end
     end
 
@@ -63,6 +67,14 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_AllTrials(alignedData
     EventFreqInBins_cell = cell(1,trialNum);
     for tn = 1:trialNum
         TrialName = alignedData_filtered(tn).trialName; % get the current recording trial name
+
+        if debug_mode
+            fprintf('trial %d/%d: %s\n',tn,trialNum,TrialName);
+            if tn == 16
+                pause
+            end
+        end
+        
         StimRanges = alignedData_filtered(tn).stimInfo.UnifiedStimDuration.range; % get the ranges of stimulations
 
         [alignedDataTraces_filtered] = Filter_AlignedDataTraces_withStimEffect(alignedData_filtered(tn).traces,...
@@ -70,11 +82,15 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_AllTrials(alignedData
         EventsProps = {alignedDataTraces_filtered.eventProp}; % get the event properties of rois from current trial
         roiNames = {alignedDataTraces_filtered.roi}; % get the roi names from current trial
 
-        [EventFreqInBins_cell{tn},binEdges] = get_EventFreqInBins_trial(EventsProps,StimRanges,...
+        [EventFreqInBins_cell{tn},trial_binEdges] = get_EventFreqInBins_trial(EventsProps,StimRanges,...
             'binWidth',binWidth,'PropName',PropName,'AlignEventsToStim',AlignEventsToStim,...
             'TrialName',TrialName,'roiNames',roiNames,...
             'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
             'round_digit_sig',round_digit_sig);
+
+        if ~isempty(trial_binEdges)
+            binEdges = trial_binEdges;
+        end
     end
     EventFreqInBins = [EventFreqInBins_cell{:}];
     varargout{1} = binEdges;

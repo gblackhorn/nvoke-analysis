@@ -296,6 +296,17 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 				combine_stimRange,[alignedData.traces(n).eventProp.peak_time],0.7); % 0.7 is the threshold for rsquare
 			alignedData.traces(n).StimCurveFit_TauMean = StimCurveFit_TauInfo.mean;
 			alignedData.traces(n).StimCurveFit_TauNum = StimCurveFit_TauInfo.num;
+
+			% Add tau to rebound events
+			if ~isempty(alignedData.traces(n).StimCurveFit)
+				tauStimIDX = [alignedData.traces(n).StimCurveFit.SN];
+				tauVal = [alignedData.traces(n).StimCurveFit.tau];
+			else
+				tauStimIDX = [];
+				tauVal = [];
+			end
+			alignedData.traces(n).eventProp = add_tau_for_specificEvents(alignedData.traces(n).eventProp,...
+				'rebound',combine_stimRange(:,2),tauStimIDX,tauVal);
 		else
 			empty_idx = [empty_idx n];
 		end

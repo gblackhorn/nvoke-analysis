@@ -4,8 +4,15 @@ function [closestValue,varargout] = find_closest_in_array(ideal_value,target_arr
     %   ideal_value: a single number or a vector
     %   target_array: a vector
 
+    % Example:
+    % ideal_value = [1 5 10 15];
+    % target_array = [1.2 2 9];
+    % [closestValue,closestIndex] = find_closest_in_array(ideal_value,target_array)
+
+
+
     ideal_value = ideal_value(:); % make sure that ideal_value is a single column vector
-    target_array = target_array(:); % make sure that ideal_value is a single column vector
+    target_array = target_array(:); % make sure that target_array is a single column vector
 
     target_array_repmat = repmat(target_array, [1 length(ideal_value)]);
     [minValue, closestIndex] = min(abs(target_array_repmat-ideal_value'));

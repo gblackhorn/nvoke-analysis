@@ -69,5 +69,8 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trial(EventsProps,Sti
             'binWidth',binWidth,'plotHisto',false); % calculate the event frequencies (in bins) in a roi and assigne the array to the EventFreqInBins
     end
 
+    if roi_num == 0
+        binEdges = [];
+    end
     varargout{1} = binEdges;
 end

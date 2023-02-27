@@ -13,7 +13,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	filters = {[nan 1 nan], [1 nan nan], [nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 
 
-	plot_unit_width = 0.4; % normalized size of a single plot to the display
+	plot_unit_width = 0.45; % normalized size of a single plot to the display
 	plot_unit_height = 0.4; % nomralized size of a single plot to the display
 
 	binWidth = 1; % the width of histogram bin. the default value is 1 s.
@@ -82,7 +82,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 
 		% Get the subplot number and create a title string for the figure
 	stim_type_num = numel(stim_names); % Get the number of stimulation types
-	titleStr = sprintf('event freq in %d s bins',binWidth);
+	titleStr = sprintf('event freq in %g s bins',binWidth);
 
 		% Create a figure and start to plot 
 	barStat = empty_content_struct({'stim','method','multi_comp'},stim_type_num);
@@ -90,7 +90,9 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		'fig_name',titleStr); % create a figure
 	tlo = tiledlayout(f,f_rowNum,f_colNum);
 	for stn = 1:stim_type_num
-		[EventFreqInBins,binEdges] = get_EventFreqInBins_AllTrials(alignedData,stim_names{stn}); % get event freq in time bins 
+		[EventFreqInBins,binEdges] = get_EventFreqInBins_AllTrials(alignedData,stim_names{stn},...
+			'binWidth',binWidth,'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
+			'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
 		ef_cell = {EventFreqInBins.EventFqInBins}; % collect EventFqInBins in a cell array
 		ef_cell = ef_cell(:); % make sure that ef_cell is a vertical array
 		ef = vertcat(ef_cell{:}); % concatenate ef_cell contents and create a number array

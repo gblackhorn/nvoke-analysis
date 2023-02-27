@@ -71,7 +71,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	for n = 1:trial_num
 		if debug_mode
 			fprintf('trial %d: %s\n', n, allTrialsData{n, 1})
-			if n == 35
+			if n == 16
 				pause
 			end
 		end

@@ -114,7 +114,7 @@ adata.sponfreqFilter.status = true; % true/false. If true, use the following set
 adata.sponfreqFilter.field = 'sponfq'; % 
 adata.sponfreqFilter.thresh = 0.06; % Hz
 adata.sponfreqFilter.direction = 'high';
-debug_mode = false; % true/false
+debug_mode = true; % true/false
 
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
 	'traceData_type', adata.traceData_type, 'event_data_group', adata.event_data_group,...
@@ -165,23 +165,24 @@ save_fig = true; % true/false
 norm_FluorData = true; % true/false. whether to normalize the FluroData
 hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins
 xtickInt_scale = 5; % xtickInt = hist_binsize * xtickInt_scale. Use by figure 2
+debug_mode = false;
 
 FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTrials,...
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'norm_FluorData',norm_FluorData,...
 	'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...
-	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
+	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'debug_mode',debug_mode);
 
 
 %% ==================== 
 %9.1.2 Plot the event frequency in specified time bins to examine the effect
-%% of stimulation and compare each pair of bins
+% of stimulation and compare each pair of bins
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 
 binWidth = 0.5; % the width of histogram bin. the default value is 1 s.
 preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 postStim_duration = 5; % unit: second. include events happened after the end of stimulations
-debug_mode = false;
+debug_mode = false; % true/false
 
 [barStat,FolderPathVA.fig] =plot_event_freq_alignedData_allTrials(alignedData_allTrials,...
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'binWidth',binWidth,...
@@ -190,6 +191,7 @@ debug_mode = false;
 
 %% ==================== 
 % 9.1.3 Get decay curve taus and plot them in histogram
+close all
 filter_roi_tf = true;
 stimName = 'og-5s';
 stimEffect_filter = [nan 1 nan]; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
@@ -198,7 +200,8 @@ norm_FluorData = false; % true/false. whether to normalize the FluroData
 
 [roi_tauInfo] = get_decayCurveTau(alignedData_allTrials,'rsquare_thresh',rsquare_thresh,...
  	'filter_roi_tf',filter_roi_tf,'stimName',stimName,'stimEffect_filter',stimEffect_filter);
-
+histogram([roi_tauInfo.tauMean],20);
+FolderPathVA.fig = savePlot(gcf,'guiSave','on','save_dir',FolderPathVA.fig,'fname','hist_tau_mean');
 
 %% ====================
 % 9.1.5 Plot traces and stim-aligned traces
@@ -520,23 +523,32 @@ end
 % 9.5.5 Compare baseline and stimulation calcium signal change (one type of stimulaiton) using boxplot
 stim_name = 'og-5s';
 box_duration = 1; % unit: second. one box show the calcium signal in the specified duration
-[CaLevelData,CaLevelData_n_num] = GetCalLevelInfoFromAlignedData(alignedData_allTrials,stim_name);
+filter = [0 1 nan]; % [ex in rb].
+[alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
+			'stim_names',stim_name,'filters',filter);
+[CaLevelData,CaLevelData_n_num] = GetCalLevelInfoFromAlignedData(alignedData_filtered,stim_name);
 freq = get_frame_rate(CaLevelData.time);
 box_DataPoint = box_duration*freq; % time point number in a singla box 
 box_num = floor(max(CaLevelData.time)-min(CaLevelData.time))/box_duration;
+xData = [CaLevelData.time(1):box_duration:(CaLevelData.time(1)+box_duration*(box_num-1))]+box_duration/2; % the x-axis location of data in the plot 
 box_data_cellarray = cell(box_num,1);
+data_groupName = cell(box_num,1);
 for bn = 1:box_num
 	start_loc = (bn-1)*box_DataPoint+1;
 	end_loc = bn*box_DataPoint;
 	single_box_data = mean(CaLevelData.data(start_loc:end_loc,:));
 	box_data_cellarray{bn} = single_box_data(:);
 end
-[~,CaLevel_box_statInfo] = boxPlot_with_scatter(box_data_cellarray,...
+[~,CaLevel_box_statInfo] = boxPlot_with_scatter(box_data_cellarray,'groupNames',NumArray2StringCell(xData),...
 	'stat',true,'plotScatter',false);
 title('CaLevel box')
 ylim([-4 4]);
-save_dir = savePlot(gcf,'guiSave','on','save_dir',FolderPathVA.fig,'fname','CaLevel box');
+FolderPathVA.fig = savePlot(gcf,'guiSave','on','save_dir',FolderPathVA.fig,'fname','CaLevel box');
 save(fullfile(save_dir, ['CaLevel_data_stat']),'CaLevelData','CaLevelData_n_num','CaLevel_box_statInfo');
+
+violinData = [box_data_cellarray{:}]; % convert cell data to matrix
+violinplot(violinData,NumArray2StringCell(xData));
+savePlot(gcf,'guiSave','off','save_dir',FolderPathVA.fig,'fname','CaLevel violin');
 %% ====================
 % 9.6.1 Get the stimulation effect info, such as inhibition, excitation for each ROI
 % Scatter plot the rois (inhibition/excitation/... vs meanTraceLevel) 'meanTraceLevel' is output by func [get_stimEffect]
