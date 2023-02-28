@@ -17,6 +17,7 @@ function [varargout] = scatterPlot_groups(CellArrayDataX,CellArrayDataY,varargin
 	PlotXYlinear = true; % true/false
 
 	xyLabel = {'', ''};
+	titleStr = '';
 
 	save_fig = false; % true/false
 	save_dir = '';
@@ -29,15 +30,21 @@ function [varargout] = scatterPlot_groups(CellArrayDataX,CellArrayDataY,varargin
 	        xyLabel = varargin{ii+1}; % output of stim_effect_compare_trace_mean_alltrial
 	    elseif strcmpi('PlotXYlinear', varargin{ii}) % add labels to x and y axis, a two component cell array
 	        PlotXYlinear = varargin{ii+1}; % output of stim_effect_compare_trace_mean_alltrial
-	    % elseif strcmpi('stat_fig', varargin{ii})
-     %        stat_fig = varargin{ii+1};
+	    elseif strcmpi('plotwhere', varargin{ii})
+            plotwhere = varargin{ii+1};
+	    elseif strcmpi('titleStr', varargin{ii})
+            titleStr = varargin{ii+1};
 	    end
 	end
 
 	% ====================
 	% Main content
-    
-    f = figure;
+    if ~exist('plotwhere','var')
+    	f = figure;
+    	ax = gca;
+    else
+    	ax = plotwhere;
+    end
 	set(gca, 'box', 'off')
 	hold on
 
@@ -56,33 +63,51 @@ function [varargout] = scatterPlot_groups(CellArrayDataX,CellArrayDataY,varargin
 
 		hs(n) = scatter(gca, scatterX, scatterY, scatter_size,...
 			'filled', 'MarkerFaceColor', C, 'MarkerEdgeColor', 'none');
+
+		if PlotXYlinear
+			% Fit a line to the data using polyfit
+			[coeffs,s] = polyfit(scatterX, scatterY, 1);
+			[yfit,delta] = polyval(coeffs, scatterX,s);
+
+			% Calculate R^2
+			yresid = scatterY - yfit;
+			SSresid = sum(yresid.^2);
+			SStotal = (length(scatterY)-1) * var(scatterY);
+			rsq = 1 - SSresid/SStotal; % the coefficient of determination
+			R2_str = sprintf('R^2 = %f\n', rsq);
+
+			hl = plot(scatterX, yfit, '-', 'Color', scatterColor{n}, 'LineWidth', 2); 
+		end
+		title(titleStr);
 	end
 
-	
+
+	% if PlotXYlinear
+	% 	xl = xlim;
+	% 	yl = ylim;
+
+	% 	xyMax = max(xl(2), yl(2));
+
+	% 	linearX = [0, xyMax];
+	% 	linearY = [0, xyMax];
+
+	% 	xlim(linearX);
+	% 	ylim(linearY);
+
+	% 	hl = plot(linearX, linearY, 'Color', [0, 0, 0, 0.2]); % first 3 digits of color is RGB value, last is transparency
+	% end
 
 	if PlotXYlinear
-		xl = xlim;
-		yl = ylim;
-
-		xyMax = max(xl(2), yl(2));
-
-		linearX = [0, xyMax];
-		linearY = [0, xyMax];
-
-		xlim(linearX);
-		ylim(linearY);
-
-		hl = plot(linearX, linearY, 'Color', [0, 0, 0, 0.2]); % first 3 digits of color is RGB value, last is transparency
-	end
-
-	if PlotXYlinear
-		legend([hs, hl], [groupNames; 'y=x'], 'Location', 'northeastoutside');
+		legend([hs, hl], [groupNames; R2_str], 'Location', 'northeastoutside');
 	else
 		legend(groupNames, 'Location', 'northeastoutside');
 	end
 
+
+
 	xlabel(xyLabel{1});
 	ylabel(xyLabel{2});
 
-	varargout{1} = f; % handle of the plot
+	varargout{1} = gcf; % handle of the plot
+	varargout{2} = gca; % handle of the plot
 end

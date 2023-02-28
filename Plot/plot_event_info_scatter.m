@@ -31,7 +31,9 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 
 	% Optionals
 	for ii = 1:2:(nargin-3)
-	    if strcmpi('save_fig', varargin{ii})
+	    if strcmpi('plotwhere', varargin{ii})
+	        plotwhere = varargin{ii+1};
+	    elseif strcmpi('save_fig', varargin{ii})
 	        save_fig = varargin{ii+1};
 	    elseif strcmpi('save_dir', varargin{ii})
 	        save_dir = varargin{ii+1};
@@ -82,10 +84,24 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 	data_struct(1).(par_name_2) = data_all_2;
 
 	
-	title_str = sprintf('Scatter-plot: %s vs %s - %s', par_name_1, par_name_2, fname_suffix); 
+	if ~isempty(fname_suffix)
+		title_str = sprintf('Scatter-plot: %s vs %s - %s', par_name_1, par_name_2, fname_suffix); 
+	else
+		title_str = sprintf('Scatter-plot: %s vs %s', par_name_1, par_name_2); 
+	end
 	title_str = replace(title_str, '_', '-');
-	figure('Name', title_str);
+
+	if ~exist('plotwhere','var')
+		figure('Name', title_str);
+		ax = gca;
+	else
+		ax = plotwhere;
+	end
 	hold on
+
+	p = cell(1,group_num); % coefficients for a polynomial fit
+	s = cell(1,group_num); % a structure S that can be used as an input to polyval to obtain error estimates
+	f = cell(1,group_num); % y_fitted
 	for n = 1:group_num
 		group_data_1 = data_cell_1{n};
 		group_data_2 = data_cell_2{n};
@@ -95,12 +111,12 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 		data_struct(n+1).par_name_1 = group_data_1;
 		data_struct(n+1).par_name_2 = group_data_2;
 
-		h(n) = scatter(group_data_1, group_data_2,...
+		h(n) = scatter(ax,group_data_1, group_data_2,...
 			marker_size, 'filled', 'MarkerFaceColor', colorGroup{n},...
 			'MarkerFaceAlpha',marker_face_alpha,'MarkerEdgeAlpha',marker_edge_alpha);
 		if linearFit
-			p{n} = polyfit(group_data_1, group_data_2, 1);
-			f{n} = polyval(p{n}, group_data_1);
+			[p{n},s{n}] = polyfit(group_data_1, group_data_2, 1);
+			f{n} = polyval(p{n}, group_data_1,s{n});
 			plot(group_data_1, f{n}, '-', 'Color', colorGroup{n}, 'LineWidth', 2); 
 		end
 	end

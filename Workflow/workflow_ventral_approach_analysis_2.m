@@ -409,6 +409,9 @@ if save_fig
 	dt = datestr(now, 'yyyymmdd');
 	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
 end
+
+BarInfo_rbEvents = plot_reboundEvent_analysis(rbEventInfo,...
+	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on');
 % bar_data.data can be used to run one-way anova. bar_stat contains results of anova and the following multi-comparison 
 
 %% ====================

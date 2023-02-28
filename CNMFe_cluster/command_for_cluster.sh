@@ -17,15 +17,15 @@ cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/Organize/ /fl
 
 
 # Set folder path on Bucket to Copy data from bucket to /flash
-bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/series_20221029/'
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2023-02-23/'
 
 # If folder does not exist, creat one
 # flashdatadir=$(mktemp -d /flash/UusisaariU/GD/data_folder20220927.XXXXXX) 
-mktemp -d /flash/UusisaariU/GD/data_folder_series20221029.XXXXXX
+mktemp -d /flash/UusisaariU/GD/data_folder20230223.XXXXXX
 # assign the new dir to 'flashdatadir'
 
 # If folder exists on cluster, specify it 
-flashdatadir='/flash/UusisaariU/GD/data_folder_series20221029.NPzddC'
+flashdatadir='/flash/UusisaariU/GD/data_folder20230223.pHpwaD'
 
 
 # Copy the content in bucketdatadir to flashdatadir
@@ -44,6 +44,11 @@ rsync -av --no-group --no-perms deigo:$bucketdatadir/ $flashdatadir/
  # cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMFe_cluster/batch_nocopy_cnmfe_process.slurm.sh /flash/UusisaariU/GD/
  # cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMFe_cluster/cnmfe_large_data_script_cluster.m /flash/UusisaariU/GD/
  # cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMFe_cluster/batch_figure_video.slurm.sh /flash/UusisaariU/GD/
+
+
+# start an automatic job
+sbatch batch_nocopy_cnmfe_process.slurm.sh 
+
 
 
 # start an interactive job

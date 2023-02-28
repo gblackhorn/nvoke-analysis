@@ -307,6 +307,8 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			end
 			alignedData.traces(n).eventProp = add_tau_for_specificEvents(alignedData.traces(n).eventProp,...
 				'rebound',combine_stimRange(:,2),tauStimIDX,tauVal);
+			alignedData.traces(n).eventProp = add_caLevelDelta_for_specificEvents(alignedData.traces(n).eventProp,...
+				'rebound',combine_stimRange(:,2),alignedData.traces(n).CaLevelMinDeltaData);
 		else
 			empty_idx = [empty_idx n];
 		end

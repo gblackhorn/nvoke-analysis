@@ -1,10 +1,10 @@
-function [ROIeventProp_new,varargout] = add_tau_for_specificEvents(ROIeventProp,eventCat,stimTime,tauStimIDX,tauVal,varargin)
-	% This function is used to get the decay constant during stimulations for a specific type of
-	% events, such as 'rebound'
+function [ROIeventProp_new,varargout] = add_caLevelDelta_for_specificEvents(ROIeventProp,eventCat,stimTime,caLevelDelta,varargin)
+	% This function is used to get the calcium level delta (lowest point/largest value) during
+	% stimulations for a specific type of events, such as 'rebound'
 
 	% Note: ROIeventProp is a structure var. Fields 'rise_time' and 'peak_category' are used in this
 	% function. eventCat is a character var (such as 'rebound'). StimTime is a vector (the ends of stimulation for
-	% rebound events). tauStimIDX and tauVal are both vectors and they have the same length.
+	% rebound events). caLevelDelta is an double vector with the same length as the stimTime.
 
 	% Example:
 
@@ -30,7 +30,7 @@ function [ROIeventProp_new,varargout] = add_tau_for_specificEvents(ROIeventProp,
 	ROIeventProp_new = ROIeventProp;
 	
 	defaultValue = {[]}; % create a cell array with the default value for the new field
-	[ROIeventProp_new(:).decayTau] = deal(defaultValue{:}); % use deal to assign the default value to each structure
+	[ROIeventProp_new(:).caLevelDelta] = deal(defaultValue{:}); % use deal to assign the default value to each structure
 
 
 
@@ -46,15 +46,12 @@ function [ROIeventProp_new,varargout] = add_tau_for_specificEvents(ROIeventProp,
 
 
 
-	% assign the tau to the new fields
+	% assign the calcium delta and the tau to the new fields
 	if ~isempty(idx_events)
 		eventNum = numel(idx_events); % number of events with specified category
 		for n = 1:eventNum
 			idxStim_event = idxStim(n); % stimulation idx for this single event
-			pos_tauStimIDX = find(tauStimIDX == idxStim_event);
-			if ~isempty(pos_tauStimIDX) % if tau value exists for this certain stimulation
-				ROIeventProp_new(idx_events(n)).decayTau = tauVal(pos_tauStimIDX);
-			end
+			ROIeventProp_new(idx_events(n)).caLevelDelta = caLevelDelta(idxStim_event);
 		end
 	end
 end

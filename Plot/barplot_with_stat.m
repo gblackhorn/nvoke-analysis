@@ -39,6 +39,8 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
             plotWhere = varargin{ii+1};
         elseif strcmpi('title_str', varargin{ii})
             title_str = varargin{ii+1};
+        elseif strcmpi('TickAngle', varargin{ii})
+            TickAngle = varargin{ii+1};
         elseif strcmpi('save_fig', varargin{ii})
             save_fig = varargin{ii+1};
         elseif strcmpi('save_dir', varargin{ii})
