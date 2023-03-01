@@ -114,7 +114,7 @@ adata.sponfreqFilter.status = true; % true/false. If true, use the following set
 adata.sponfreqFilter.field = 'sponfq'; % 
 adata.sponfreqFilter.thresh = 0.06; % Hz
 adata.sponfreqFilter.direction = 'high';
-debug_mode = true; % true/false
+debug_mode = false; % true/false
 
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
 	'traceData_type', adata.traceData_type, 'event_data_group', adata.event_data_group,...
@@ -377,7 +377,7 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 % 9.5.2 Plot event parameters. Grouped according to categories
 % [9.3] eventProp_all: entry is 'events'
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 plot_combined_data = false;
 parNames = {'rise_duration','sponNorm_rise_duration','FWHM','peak_mag_delta',...
     'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise','rise_delay'}; % entry: event
@@ -410,6 +410,7 @@ if save_fig
 	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
 end
 
+rbEventInfo = grouped_event_info_filtered(3).event_info;
 BarInfo_rbEvents = plot_reboundEvent_analysis(rbEventInfo,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on');
 % bar_data.data can be used to run one-way anova. bar_stat contains results of anova and the following multi-comparison 
