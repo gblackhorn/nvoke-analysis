@@ -189,6 +189,10 @@ function [varargout] = plot_reboundEvent_analysis(rbEventInfo,varargin)
 		end
 		gui_save = 'off';
 
+		% pie chart
+		save_dir = savePlot(pf,'save_dir',save_dir,'guiSave',gui_save,...
+				'guiInfo',msg,'fname',pf_title);
+
 		% bar plot figure
 		for sfn = 1:sf_num 
 			savePlot(bf(sfn),'save_dir',save_dir,'guiSave',gui_save,...
