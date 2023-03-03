@@ -442,7 +442,7 @@ while tn <= trial_num
 end
 
 %% ====================
-% barPlot for showing event frequencies in time bins 
+% barPlot to show the event frequencies in time bins 
 close all
 [EventFreqInBins] = get_EventFreqInBins_AllTrials(alignedData_allTrials,'og-5s'); % 'ap-0.1s', 'og-5s', 'og-5s ap-0.1s'
 ef_cell = {EventFreqInBins.EventFqInBins};
@@ -464,102 +464,85 @@ colorbar
 
 %% ====================
 % fit the data to exponential curve
-[curvefit,gof,output] = fit(tdata',ydata','exp1');
+% [curvefit,gof,output] = fit(tdata',ydata','exp1');
 
-% %% ====================
-% % check the coexistence of OG-evoke and OG-rebound in OG trials
-% % Get the number of ROIs of OG-evoke-pos, OG-rebound-pos, and double-pos
-% [alignedData_event_list] = eventcat_list(alignedData_allTrials);
-% [alignedData_event_list_OG,varargout] = filter_structData(alignedData_event_list,...
-% 	'stim','og-5s',1);
-% trial_num = numel(alignedData_event_list_OG);
-% OG_roiNum.evoke_pos = 0;
-% OG_roiNum.rebound_pos = 0;
-% OG_roiNum.double_pos = 0;
-% OG_roiNum.double_neg = 0;
-% OG_roiNum.extra = 0;
-% OG_roiNum.total = 0;
-% for tn = 1:trial_num
-% 	roi_info = alignedData_event_list_OG(tn).roi_info;
-% 	roi_num = numel(roi_info);
-% 	for rn = 1:roi_num
-% 		if roi_info(rn).trig>0 && roi_info(rn).rebound>0
-% 			OG_roiNum.double_pos = OG_roiNum.double_pos+1;
-% 		elseif roi_info(rn).trig==0 && roi_info(rn).rebound==0
-% 			OG_roiNum.double_neg = OG_roiNum.double_neg+1;
-% 		elseif roi_info(rn).trig>0 && roi_info(rn).rebound==0
-% 			OG_roiNum.evoke_pos = OG_roiNum.evoke_pos+1;
-% 		elseif roi_info(rn).trig==0 && roi_info(rn).rebound>0
-% 			OG_roiNum.rebound_pos = OG_roiNum.rebound_pos+1;
-% 		else
-% 			OG_roiNum.extra = OG_roiNum.extra+1;
-% 		end
-% 		OG_roiNum.total = OG_roiNum.total+1;
-% 	end
-% end
-
+alignedData = alignedData_allTrials(7);
+[TimeInfo,FluroData] = get_TrialTraces_from_alignedData(alignedData,...
+		'norm_FluorData',false); 
+fVal = FluroData(:,1);
+TimeRanges = alignedData_allTrials(7).stimInfo.StimDuration.range  ;
+EventTime = [alignedData_allTrials(7).traces(1).eventProp.rise_time];
+[curvefit,tauInfo] = GetDecayFittingInfo_neuron(TimeInfo,fVal,TimeRanges,EventTime);
+PlotCurveFitting_neuron(curvefit);
 
 
 %% ====================
-% % read metadata from .czi file
-% % input the folder location
-% fname_czi = dir(fullfile(folder,'*.czi'));
-% fullpath_czi = fullfile(fname_czi.folder,fname_czi.name);
-% czidata = czifinfo(fullpath_czi); 
-% metadata = czidata.metadataXML;
+% Generate some sample data
+x = 1:10;
+y = 2*x + 3 + randn(size(x));
 
-% fname_csv = dir(fullfile(folder,'*.csv'));
-% fullpath_csv = fullfile(fname_csv.folder,fname_csv.name);
-% tb = readtable(fullpath_csv);
-% st = table2struct(tb);
+% Fit a line to the data using polyfit
+coeffs = polyfit(x, y, 1);
+yfit = polyval(coeffs, x);
 
+% Calculate R^2
+yresid = y - yfit;
+SSresid = sum(yresid.^2);
+SStotal = (length(y)-1) * var(y);
+rsq = 1 - SSresid/SStotal;
+fprintf('R^2 = %f\n', rsq);
 
-% %% ====================
-% a = [15 18 16];
-% b = [17 69 27 22];
-% ab = [a b];
-% ab_cell = num2cell(ab);
-% [roi_val_data(11).combined_data.CellCount] = ab_cell{:};
+% Calculate RMSE
+rmse = sqrt(mean(yresid.^2));
+fprintf('RMSE = %f\n', rmse);
 
+% Plot the data and the fitted line
+plot(x, y, 'o', x, yfit, '-')
+legend('Data', 'Fitted line')
 
-% %% ====================
-% % Box plot to show the positive neuron densities
-% % Pre-requirement: Add Area and CellCount info first
-% close all
-% SaveFig = true;
+% %% ==================== 
+% To perform frequency power analysis on calcium imaging data in MATLAB, you can follow these steps: 
 
-% VA_AreaArray = [55809.936 29682.521 51289.236 37784.35];
-% VA_CellCountArray = [44 21 30 27];
-% VA_DensityArray = VA_CellCountArray./VA_AreaArray;
-% VA_GroupNames = 'VA-22-days';
+% 1. Load the data into MATLAB. The data should be in a matrix format, with time on one axis and the
+% fluorescence intensity of each neuron on the other axis. 
 
-% GroupNames = {d2_area_data.label};
-% for n = 1:numel(d2_area_data)
-% 	CombinedData = d2_area_data(n).combined_data;
-% 	AreaArray = [CombinedData.Area];
-% 	CellCountArray = [CombinedData.CellCount];
-% 	DensityArray = CellCountArray./AreaArray;
-% 	d2_area_data(n).density = DensityArray;
-% end
-% density_data = [{VA_DensityArray} {d2_area_data.density}];
-% GroupNames = [VA_GroupNames GroupNames];
-% [f_box_density] = fig_canvas(1,'fig_name','BoxPlot VentralApproach and D2 area');
-% [~, box_stat_density] = boxPlot_with_scatter(density_data, 'groupNames', GroupNames,...
-% 		'plotWhere', gca, 'stat', true, 'FontSize', 18,'FontWeight','bold');  
+% 2. Select the time intervals corresponding to the optogenetic stimulations. You can do this by
+% creating a vector of logical values that is true during the time intervals when the stimulation
+% was delivered. 
 
-% if SaveFig
-% 	% default_fig_path = fullfile(DefaultDir.fig,'*.mat');
-% 	FigFolder = uigetdir(DefaultDir.fig,'Select a folder to save box plot');
-% 	% [mat_file,mat_folder] = uiputfile(default_mat_path,'Save fluorescence intensity measurement', 'FIM.mat');
-% 	if mat_folder ~= 0
-% 		DefaultDir.fig = FigFolder;
-% 		dt = datestr(now, 'yyyymmdd-HHMM');
-% 		fbox_name = sprintf('%s_area_boxplot_density',dt);
-% 		savePlot(f_box_density,...
-% 			'guiSave', 'off', 'save_dir', FigFolder, 'fname', fbox_name);
+% 3. Separate the data into two groups based on whether the stimulation was delivered or not. You
+% can do this using the logical vector created in step 2.
+    
+% 4. Perform frequency power analysis on each group separately. You can use the fft function to
+% compute the Fourier transform of the data, and then calculate the power spectrum as the square of
+% the absolute value of the Fourier coefficients. 
 
-% 		save(fullfile(FigFolder, [dt, '_boxplot_stat']),...
-% 		    'box_stat_density');
-% 	end
-% end
+% 5. Compare the power between the two groups. You can use a statistical test, such as a t-test or
+% Wilcoxon rank-sum test, to determine if there is a significant difference in power between the
+% stimulated and non-stimulated groups. 
+
+% Here is some example code that demonstrates these steps:
+
+% Load the data
+data = load('calcium_data.mat');
+
+% Set the stimulation interval
+stim_interval = [1000:2000, 3000:4000, 5000:6000];
+
+% Separate the data into two groups based on the stimulation interval
+stim_data = data(:, stim_interval);
+nonstim_data = data(:, ~ismember(1:size(data, 2), stim_interval));
+
+% Perform frequency power analysis on each group
+stim_power = abs(fft(stim_data)).^2;
+nonstim_power = abs(fft(nonstim_data)).^2;
+
+% Calculate the mean power across neurons for each group
+stim_mean_power = mean(stim_power, 2);
+nonstim_mean_power = mean(nonstim_power, 2);
+
+% Compare the power between the two groups using a t-test
+[h, p] = ttest2(stim_mean_power, nonstim_mean_power);
+disp(['p-value: ' num2str(p)]);
+
 
