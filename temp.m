@@ -475,6 +475,14 @@ EventTime = [alignedData_allTrials(7).traces(1).eventProp.rise_time];
 [curvefit,tauInfo] = GetDecayFittingInfo_neuron(TimeInfo,fVal,TimeRanges,EventTime);
 PlotCurveFitting_neuron(curvefit);
 
+%% ==================== 
+FitStimIDX = [alignedData_allTrials(7).traces(13).StimCurveFit.SN];
+stimTime = alignedData_allTrials(7).stimInfo.StimDuration.range(:,2);
+ROIeventProp = alignedData_allTrials(7).traces(13).eventProp;
+eventCat = 'rebound';
+
+[stimNum,decayNum,eventIDX,eventFitNum,eventNoFitNum] = get_StimEvents_CloseToFit_roi(FitStimIDX,stimTime,ROIeventProp,eventCat)
+
 
 %% ====================
 % Generate some sample data
