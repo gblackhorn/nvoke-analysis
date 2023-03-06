@@ -25,8 +25,10 @@ function [eventProp_new,varargout] = add_riseDelay_to_eventProp(eventProp,stimRa
 	for n = 1:event_num
 		eventCat = eventProp_new(n).peak_category;
 		eventTime = eventProp_new(n).rise_time;
+		eventTime_peak = eventProp_new(n).peak_time;
 		if strcmpi('spon', eventCat) 
 			rise_delay = [];
+			peak_delay = [];
 		else
 			stimWin= get_stimWin_for_event(eventTime,stimRange);
 			stimStartTime = stimWin(:, 1);
@@ -39,7 +41,9 @@ function [eventProp_new,varargout] = add_riseDelay_to_eventProp(eventProp,stimRa
 			end
 
 			rise_delay = eventTime-ref;
+			peak_delay = eventTime_peak-ref;
 		end
 		eventProp_new(n).rise_delay = rise_delay;
+		eventProp_new(n).peak_delay = peak_delay;
 	end
 end

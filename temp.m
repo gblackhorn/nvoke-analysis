@@ -483,6 +483,9 @@ eventCat = 'rebound';
 
 [stimNum,decayNum,eventIDX,eventFitNum,eventNoFitNum] = get_StimEvents_CloseToFit_roi(FitStimIDX,stimTime,ROIeventProp,eventCat)
 
+%% ==================== 
+
+[List_curveFitNum_eventNum] = get_StimEvents_CloseToFit_trials(alignedData_allTrials,'rebound',2);
 
 %% ====================
 % Generate some sample data
@@ -554,3 +557,25 @@ nonstim_mean_power = mean(nonstim_power, 2);
 disp(['p-value: ' num2str(p)]);
 
 
+%% ==================== 
+tags = {grouped_event_info_filtered.tag};
+pos_OG5sRB = find(strcmpi('rebound [og-5s]', tags));
+
+stimNum = [List_decayFitNum_rbNum.stimNum];
+fitNum = [List_decayFitNum_rbNum.fitNum];
+eventFitNum = [List_decayFitNum_rbNum.eventFitNum];
+
+% Calculate the curve_fit/stimulation_number 
+PercFit = fitNum./stimNum; 
+meanPercFit = mean(PercFit);
+stePercFit = ste(PercFit);
+
+% Calculate the events_with_curveFit/curve_fit
+PercEventFit = eventFitNum./fitNum;
+meanPercEventFit = mean(PercEventFit);
+stePercEventFit = ste(PercEventFit);
+
+% Calculate the events_with_curveFit/stimulation_number
+PercEventFitToStimNum = eventFitNum./stimNum;
+meanEventFitToStimNum = mean(EventFitToStimNum);
+steEventFitToStimNum = ste(EventFitToStimNum);

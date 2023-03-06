@@ -10,6 +10,8 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
 
     stat = 'anova'; % anova/pttest. anova test or paired ttest. The later only works when the group number is 2
     xdata = [];
+    ylim_val = [];
+    ylabelStr = '';
 
     plotData = true; % true/false
     plotWhere = [];
@@ -33,6 +35,10 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
             stat = varargin{ii+1};
         elseif strcmpi('xdata', varargin{ii})
             xdata = varargin{ii+1};
+        elseif strcmpi('ylim_val', varargin{ii})
+            ylim_val = varargin{ii+1};
+        elseif strcmpi('ylabelStr', varargin{ii})
+            ylabelStr = varargin{ii+1};
         % elseif strcmpi('xticks', varargin{ii})
         %     xticks = varargin{ii+1};
         elseif strcmpi('plotWhere', varargin{ii})
@@ -89,6 +95,9 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
         group_names = NumArray2StringCell(x); % use x as group names, if group_name does not exist
     end
 
+    % Replace underscore with space in all cells
+    group_names = cellfun(@(x) strrep(x, '_', ' '), group_names, 'UniformOutput', false);
+
     for gn = 1:group_num
         barInfo.data(gn).group = group_names{gn};
         % if exist('group_names', 'var')
@@ -96,6 +105,11 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
         % else
         %     barInfo.data(gn).group = sprintf('group%d',gn);
         % end
+
+        % Find non-NaN elements
+        nonNanIndices = ~isnan(group_data{gn});
+        group_data{gn} = group_data{gn}(nonNanIndices);
+
         barInfo.data(gn).group_data = group_data{gn};
         barInfo.data(gn).n = numel(group_data{gn});
         barInfo.data(gn).mean_val = mean(group_data{gn});
@@ -128,6 +142,10 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
             'EdgeColor', EdgeColor, 'FaceColor', FaceColor);
         hold on
 
+        if ~isempty(ylim_val)
+            ylim(ylim_val)
+        end
+
         yl = ylim;
         yloc = yl(1)+0.05*(yl(2)-yl(1));
         yloc_array = repmat(yloc, 1, numel(x));
@@ -141,6 +159,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
         xtickangle(TickAngle)
         set(gca, 'XTick', x);
         set(gca, 'xticklabel', group_names);
+        ylabel(ylabelStr);
         fe = errorbar(x, y, y_error, 'LineStyle', 'None');
         set(fe,'Color', 'k', 'LineWidth', 2, 'CapSize', 10);
         if ~exist('title_str','var')
@@ -218,5 +237,6 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
         statfile_name = sprintf('%s-stat',fname);
         save(fullfile(save_dir,statfile_name), 'barInfo');
     end
+    varargout{1} = save_dir;
 end
 

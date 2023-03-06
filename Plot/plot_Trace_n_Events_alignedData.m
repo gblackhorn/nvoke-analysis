@@ -16,6 +16,8 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 	% %	Use nan (inactive filter), true (active effect), and false (inactive effect) to filter ROIs
 	% %	[true false nan]: stimulation has excitation effect, no inhibitory effect, rebound effect is not considered
 
+	sortROI = false; % true/false. Sort ROIs according to the event number: high to low
+
 	plot_unit_width = 0.4; % normalized size of a single plot to the display
 	plot_unit_height = 0.4; % nomralized size of a single plot to the display
 
@@ -39,6 +41,8 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 	        norm_FluorData = varargin{ii+1}; % normalize every FluoroData trace with its max value
 	    % elseif strcmpi('stim_effect_filter', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
 	    %     stim_effect_filter = varargin{ii+1}; % normalize every FluoroData trace with its max value
+	    elseif strcmpi('sortROI', varargin{ii})
+            sortROI = varargin{ii+1};
 	    elseif strcmpi('plot_unit_width', varargin{ii})
             plot_unit_width = varargin{ii+1};
 	    elseif strcmpi('plot_unit_height', varargin{ii})
@@ -91,6 +95,17 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 		% Get the events' time
 		[event_riseTime] = get_TrialEvents_from_alignedData(alignedData_trials,'rise_time');
 		[event_peakTime] = get_TrialEvents_from_alignedData(alignedData_trials,'peak_time');
+
+
+		% Calculate the numbers of events in each roi and sort the order of roi according to this (descending)
+		if sortROI
+			eventNums = cellfun(@(x) numel(x),event_riseTime);
+			[~,descendIDX] = sort(eventNums,'descend');
+			rowNames = rowNames(descendIDX);
+			FluroData = FluroData(:,descendIDX);
+			event_riseTime = event_riseTime(descendIDX);
+			event_peakTime = event_peakTime(descendIDX);
+		end
 
 
 		% Compose the stem part of figure title

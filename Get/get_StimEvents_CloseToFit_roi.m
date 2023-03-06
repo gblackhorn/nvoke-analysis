@@ -1,4 +1,4 @@
-function [stimNum,decayNum,FiteventIDX,eventFitNum,eventNoFitNum,varargout] = get_StimEvents_CloseToFit_roi(FitStimIDX,stimTime,ROIeventProp,eventCat,varargin)
+function [stimNum,fitNum,FiteventIDX,eventFitNum,eventNoFitNum,varargout] = get_StimEvents_CloseToFit_roi(FitStimIDX,stimTime,ROIeventProp,eventCat,varargin)
 	% This function use the eventProp data and StimCurveFit data to find the stimulation related
 	% events for each curve fit
 
@@ -16,7 +16,7 @@ function [stimNum,decayNum,FiteventIDX,eventFitNum,eventNoFitNum,varargout] = ge
 	% ROIeventProp = alignedData_allTrials(7).traces(13).eventProp;
 	% eventCat = 'rebound';
 
-	% [stimNum,decayNum,eventIDX,eventFitNum,eventNoFitNum] = get_StimEvents_CloseToFit_roi(FitStimIDX,stimTime,ROIeventProp,eventCat)
+	% [stimNum,fitNum,eventIDX,eventFitNum,eventNoFitNum] = get_StimEvents_CloseToFit_roi(FitStimIDX,stimTime,ROIeventProp,eventCat)
 
 
 
@@ -27,7 +27,7 @@ function [stimNum,decayNum,FiteventIDX,eventFitNum,eventNoFitNum,varargout] = ge
 	stimNum = numel(stimTime);
 
 	% Get the number of decay
-	decayNum = numel(FitStimIDX);
+	fitNum = numel(FitStimIDX);
 
 	% Get the number of rebound events
 	tf_idx_events = strcmpi({ROIeventProp.peak_category},eventCat);

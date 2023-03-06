@@ -17,7 +17,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	plot_unit_height = 0.4; % nomralized size of a single plot to the display
 
 	binWidth = 1; % the width of histogram bin. the default value is 1 s.
-	% PropName = 'rise_time';
+	PropName = 'rise_time';
 	% plotHisto = false; % true/false [default].Plot histogram if true.
 
 	AlignEventsToStim = true; % align the EventTimeStamps to the onsets of the stimulations: subtract EventTimeStamps with stimulation onset time
@@ -41,6 +41,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	        filters = varargin{ii+1}; % normalize every FluoroData trace with its max value
 	    elseif strcmpi('binWidth', varargin{ii})
             binWidth = varargin{ii+1};
+	    elseif strcmpi('PropName', varargin{ii})
+            PropName = varargin{ii+1};
 	    elseif strcmpi('preStim_duration', varargin{ii})
             preStim_duration = varargin{ii+1};
 	    elseif strcmpi('postStim_duration', varargin{ii})
@@ -82,7 +84,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 
 		% Get the subplot number and create a title string for the figure
 	stim_type_num = numel(stim_names); % Get the number of stimulation types
-	titleStr = sprintf('event freq in %g s bins',binWidth);
+	titleStr = sprintf('event freq in %g s bins [%s]',binWidth,PropName);
+	titleStr = strrep(titleStr,'_',' ');
 
 		% Create a figure and start to plot 
 	barStat = empty_content_struct({'stim','method','multi_comp'},stim_type_num);
@@ -90,7 +93,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		'fig_name',titleStr); % create a figure
 	tlo = tiledlayout(f,f_rowNum,f_colNum);
 	for stn = 1:stim_type_num
-		[EventFreqInBins,binEdges] = get_EventFreqInBins_AllTrials(alignedData,stim_names{stn},...
+		[EventFreqInBins,binEdges] = get_EventFreqInBins_AllTrials(alignedData,stim_names{stn},'PropName',PropName,...
 			'binWidth',binWidth,'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 			'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
 		ef_cell = {EventFreqInBins.EventFqInBins}; % collect EventFqInBins in a cell array

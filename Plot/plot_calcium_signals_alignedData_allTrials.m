@@ -13,6 +13,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 	filters = {[nan 1 nan], [1 nan nan], [nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 
 	norm_FluorData = false; % true/false. whether to normalize the FluroData
+	sortROI = false; % true/false. Sort ROIs according to the event number: high to low
 
 	plot_unit_width = 0.4; % normalized size of a single plot to the display
 	plot_unit_height = 0.4; % nomralized size of a single plot to the display
@@ -38,6 +39,8 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 	        filters = varargin{ii+1}; % normalize every FluoroData trace with its max value
 	    elseif strcmpi('norm_FluorData', varargin{ii})
             norm_FluorData = varargin{ii+1};
+	    elseif strcmpi('sortROI', varargin{ii})
+            sortROI = varargin{ii+1};
 	    elseif strcmpi('plot_unit_width', varargin{ii})
             plot_unit_width = varargin{ii+1};
 	    elseif strcmpi('plot_unit_height', varargin{ii})
@@ -89,7 +92,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 		end
 
 		plot_Trace_n_Events_alignedData(alignedData_filtered(tn),...
-			'norm_FluorData',norm_FluorData,...
+			'norm_FluorData',norm_FluorData,'sortROI',sortROI,...
 			'plot_unit_width',plot_unit_width,'plot_unit_height',plot_unit_height,...
 			'show_colorbar',show_colorbar,'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...
 			'title_prefix',title_prefix,'save_fig',save_fig,'save_dir',save_dir,...

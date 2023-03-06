@@ -163,12 +163,14 @@ close all
 save_fig = true; % true/false
 
 norm_FluorData = true; % true/false. whether to normalize the FluroData
+sortROI = true; % true/false. Sort ROIs according to the event number: high to low
 hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins
 xtickInt_scale = 5; % xtickInt = hist_binsize * xtickInt_scale. Use by figure 2
 debug_mode = false;
 
 FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTrials,...
-	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'norm_FluorData',norm_FluorData,...
+	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
+	'norm_FluorData',norm_FluorData,'sortROI',sortROI,...
 	'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'debug_mode',debug_mode);
 
@@ -180,11 +182,12 @@ close all
 save_fig = true; % true/false
 
 binWidth = 0.5; % the width of histogram bin. the default value is 1 s.
+PropName = 'rise_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
 preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 postStim_duration = 5; % unit: second. include events happened after the end of stimulations
 debug_mode = false; % true/false
 
-[barStat,FolderPathVA.fig] =plot_event_freq_alignedData_allTrials(alignedData_allTrials,...
+[barStat,FolderPathVA.fig] =plot_event_freq_alignedData_allTrials(alignedData_allTrials,'PropName',PropName,...
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'binWidth',binWidth,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on','debug_mode',debug_mode);
 
@@ -379,8 +382,8 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 close all
 save_fig = true; % true/false
 plot_combined_data = false;
-parNames = {'rise_duration','sponNorm_rise_duration','FWHM','peak_mag_delta',...
-    'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise','rise_delay'}; % entry: event
+parNames = {'rise_duration','FWHM','peak_mag_delta','sponNorm_peak_mag_delta',...
+    'baseDiff','baseDiff_stimWin','val_rise','rise_delay','peak_delay'}; % entry: event
         % 'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
         % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
     
@@ -410,10 +413,21 @@ if save_fig
 	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
 end
 
-rbEventInfo = grouped_event_info_filtered(3).event_info;
-BarInfo_rbEvents = plot_reboundEvent_analysis(rbEventInfo,...
+% Show the relationship between decayTau/caLevelDecrease and various rebound event properties
+fieldNames_rb_prop = {'rise_duration','FWHM','peak_mag_delta','sponNorm_peak_mag_delta',...
+	'rise_delay','peak_delay'}; % properties of rebound events.
+GroupedEventTags = {grouped_event_info_filtered.tag}; % Get the tags containing event catergory and stimulation
+pos_OG5sRB = find(strcmpi('rebound [og-5s]', GroupedEventTags)); % Get the idx of rebound events in og-5s recordings
+rbEventInfo = grouped_event_info_filtered(pos_OG5sRB).event_info;
+BarInfo_rbEvents = plot_reboundEvent_analysis(rbEventInfo,'fieldNames_rb_prop',fieldNames_rb_prop,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on');
-% bar_data.data can be used to run one-way anova. bar_stat contains results of anova and the following multi-comparison 
+
+[List_curveFitNum_eventNum_ogRB] = plot_stimNum_fitNum_eventNum(alignedData_allTrials,'rebound','og-5s',...
+	'stimTimeCol',2,'save_fig',save_fig,'save_dir',save_dir,'gui_save',false);
+[List_curveFitNum_eventNum_ogTrig] = plot_stimNum_fitNum_eventNum(alignedData_allTrials,'trig','og-5s',...
+	'stimTimeCol',1,'save_fig',save_fig,'save_dir',save_dir,'gui_save',false);
+[List_curveFitNum_eventNum_apTrig] = plot_stimNum_fitNum_eventNum(alignedData_allTrials,'trig','ap-0.1s',...
+	'stimTimeCol',1,'save_fig',save_fig,'save_dir',save_dir,'gui_save',false);
 
 %% ====================
 % 9.5.3 screen groups based on tags. Delete unwanted groups for roi analysis

@@ -47,7 +47,7 @@ function [alignedData_filtered,varargout] = Filter_AlignedDataTraces_withStimEff
 		trialData = alignedData_filtered(tn); % data of a single trial
 		roiNum_all = roiNum_all+numel(trialData.traces);
 
-		% Check the stimulated used in a trial and decide what filter to use
+		% Check the stimulation used in a trial and decide what filter to use
 		stimName = trialData.stim_name; % stimulation used in this trial
 		filter_idx = find(strcmpi(stim_names,stimName)); % look for stimName in the stim_names
 		if ~isempty(filter_idx) 
