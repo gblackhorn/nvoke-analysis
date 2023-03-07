@@ -61,21 +61,12 @@ function [List_curveFitNum_eventNum,varargout] = plot_stimNum_fitNum_eventNum(al
 
 	% Calculate the curve_fit/stimulation_number 
 	barplotData{1} =  fitNum./stimNum;
-	% PercFit = fitNum./stimNum; 
-	% meanPercFit = mean(PercFit);
-	% stePercFit = ste(PercFit);
 
 	% Calculate the events_with_curveFit/curve_fit
 	barplotData{2} =  eventFitNum./fitNum;
-	% PercEventFit = eventFitNum./fitNum;
-	% meanPercEventFit = mean(PercEventFit);
-	% stePercEventFit = ste(PercEventFit);
 
 	% Calculate the events_with_curveFit/stimulation_number
 	barplotData{3} =  eventFitNum./stimNum;
-	% PercEventFitToStimNum = eventFitNum./stimNum;
-	% meanEventFitToStimNum = mean(EventFitToStimNum);
-	% steEventFitToStimNum = ste(EventFitToStimNum);
 
 	% Calculate the events_all/stimulation_number
 	barplotData{4} =  (eventFitNum+eventNoFitNum)./stimNum;
@@ -86,9 +77,6 @@ function [List_curveFitNum_eventNum,varargout] = plot_stimNum_fitNum_eventNum(al
 	[barInfo,save_dir] = barplot_with_stat(barplotData,'group_names',barplotGroupName,...
 		'TickAngle',45,'title_str',titleStr,'ylim_val',ylim_val,'ylabelStr','ratio',...
 		'save_fig',save_fig,'save_dir',save_dir,'gui_save',gui_save);
-	% ylim([0 1]);
-	% xlabel('X-axis');
-	% ylabel('ratio');
 
 	if save_fig
 		list_fileName = sprintf('%s-dataList',titleStr);
@@ -96,4 +84,5 @@ function [List_curveFitNum_eventNum,varargout] = plot_stimNum_fitNum_eventNum(al
 	end
 
 	varargout{1} = barInfo;
+	varargout{2} = save_dir;
 end

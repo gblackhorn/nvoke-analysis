@@ -91,7 +91,7 @@ recdata_organized(dis_idx, :) = [];
 % [recdata_organized] = discard_recData_roi(recdata_organized,'stims',dis.stims,'eventCats',dis.eventCats,'debug_mode',debug_mode);
 %% ====================
 % 8.7 Align traces from all trials. Also collect the properties of events
-adata.event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
+adata.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
 adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 adata.event_data_group = 'peak_lowpass';
 adata.event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
@@ -377,7 +377,7 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);
 
 %% ====================
-% 9.5.2 Plot event parameters. Grouped according to categories
+% 9.5.2.1 Plot event parameters. Grouped according to categories
 % [9.3] eventProp_all: entry is 'events'
 close all
 save_fig = true; % true/false
@@ -413,6 +413,10 @@ if save_fig
 	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
 end
 
+%% ====================
+% 9.5.2.2 
+close all
+save_fig = false; % true/false
 % Show the relationship between decayTau/caLevelDecrease and various rebound event properties
 fieldNames_rb_prop = {'rise_duration','FWHM','peak_mag_delta','sponNorm_peak_mag_delta',...
 	'rise_delay','peak_delay'}; % properties of rebound events.
@@ -422,13 +426,31 @@ rbEventInfo = grouped_event_info_filtered(pos_OG5sRB).event_info;
 BarInfo_rbEvents = plot_reboundEvent_analysis(rbEventInfo,'fieldNames_rb_prop',fieldNames_rb_prop,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on');
 
-[List_curveFitNum_eventNum_ogRB] = plot_stimNum_fitNum_eventNum(alignedData_allTrials,'rebound','og-5s',...
-	'stimTimeCol',2,'save_fig',save_fig,'save_dir',save_dir,'gui_save',false);
-[List_curveFitNum_eventNum_ogTrig] = plot_stimNum_fitNum_eventNum(alignedData_allTrials,'trig','og-5s',...
+if filter_roi_tf == true
+	[alignedData] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
+			'stim_names',stim_names,'filters',filters); % check section before 9.1.1
+else 
+	alignedData = alignedData_allTrials;
+end
+
+[List_curveFitNum_eventNum_ogRB,~,save_dir] = plot_stimNum_fitNum_eventNum(alignedData,'rebound','og-5s',...
+	'stimTimeCol',2,'save_fig',save_fig,'save_dir',save_dir,'gui_save',true);
+[List_curveFitNum_eventNum_ogTrig] = plot_stimNum_fitNum_eventNum(alignedData,'trig','og-5s',...
 	'stimTimeCol',1,'save_fig',save_fig,'save_dir',save_dir,'gui_save',false);
-[List_curveFitNum_eventNum_apTrig] = plot_stimNum_fitNum_eventNum(alignedData_allTrials,'trig','ap-0.1s',...
+[List_curveFitNum_eventNum_apTrig] = plot_stimNum_fitNum_eventNum(alignedData,'trig','ap-0.1s',...
 	'stimTimeCol',1,'save_fig',save_fig,'save_dir',save_dir,'gui_save',false);
 
+%% ====================
+% 9.5.2.3
+close all
+save_fig = true; % true/false
+gui_save = true;
+filter_roi_tf = false;
+excludeWinPre = 1; % exclude the specified duration (unit: s) before stimulation
+excludeWinPost = 3; % exclude the specified duration (unit: s) after stimulation
+[sponFreqList,sponFreqStat] = plot_sponFreq_everyStim_trials(alignedData_allTrials,'og-5s',...
+	'excludeWinPre',excludeWinPre,'excludeWinPost',excludeWinPost,'filter_roi_tf',filter_roi_tf,...
+	'save_fig',save_fig,'save_dir',save_dir,'gui_save',gui_save);
 %% ====================
 % 9.5.3 screen groups based on tags. Delete unwanted groups for roi analysis
 tags_discard = {'opto-delay','rebound-ap','rebound-og-0.96s','varied','og-5s ap-0.1s','ap-0.1s og-5s'}; % Discard groups containing these words. 'spon','EXopto','trig-ap',

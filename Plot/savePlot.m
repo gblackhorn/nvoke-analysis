@@ -31,21 +31,44 @@ function [varargout] = savePlot(fig_handle,varargin)
 	% Main contents
 	switch guiSave
 		case 'on'
-			guiInfo = sprintf('%s: %s', guiInfo, fname);
-			% if ~isempty(fname)
-			% 	save_dir = fullfile(save_dir, fname);
-			% end
-			save_dir = uigetdir(save_dir,...
-				guiInfo);
+			guiSave = true;
 		case 'off'
-			if isempty(save_dir)
-				fprintf('[save_dir] is empty. figure will not be saved\n')
-				return
-			end
-		otherwise
-			fprintf('Input [on] or [off] for [guiSave]\n')
-			return
+			guiSave = false;
 	end
+
+	if guiSave
+		guiInfo = sprintf('%s: %s', guiInfo, fname);
+		% if ~isempty(fname)
+		% 	save_dir = fullfile(save_dir, fname);
+		% end
+		save_dir = uigetdir(save_dir,...
+			guiInfo);
+	else
+		if isempty(save_dir)
+			fprintf('[save_dir] is empty. figure will not be saved\n')
+			return
+		end
+	end
+
+	% switch guiSave
+	% 	case 'on'
+	% 		guiSave = true;
+	% 		guiInfo = sprintf('%s: %s', guiInfo, fname);
+	% 		% if ~isempty(fname)
+	% 		% 	save_dir = fullfile(save_dir, fname);
+	% 		% end
+	% 		save_dir = uigetdir(save_dir,...
+	% 			guiInfo);
+	% 	case 'off'
+	% 		guiSave = false;
+	% 		if isempty(save_dir)
+	% 			fprintf('[save_dir] is empty. figure will not be saved\n')
+	% 			return
+	% 		end
+	% 	otherwise
+	% 		fprintf('Input [on] or [off] for [guiSave]\n')
+	% 		return
+	% end
 
 	if save_dir == 0
 		disp('Folder for saving plots not chosen.')

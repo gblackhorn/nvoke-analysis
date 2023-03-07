@@ -122,10 +122,16 @@ function [varargout] = plot_reboundEvent_analysis(rbEventInfo,varargin)
 	barInfo = empty_content_struct({'prop','info'},rb_prop_num);
 
 	for sfn = 1:sf_num
-		bf_title{sfn} = sprintf('rebound events decay vs nondecay -%g',sfn);
+		bf_title{sfn} = sprintf('rebound events decay vs nondecay bar -%g',sfn);
 		bf(sfn) = fig_canvas(tileNum,'unit_width',plot_unit_width,'unit_height',plot_unit_height,...
 			'column_lim',f_column_lim,'fig_name',bf_title{sfn}); % create a figure
 		tlo = tiledlayout(bf(sfn),tileNum/f_column_lim,f_column_lim); % setup tiles
+
+		vf_title{sfn} = sprintf('rebound events decay vs nondecay violin -%g',sfn);
+		vf(sfn) = fig_canvas(tileNum,'unit_width',plot_unit_width,'unit_height',plot_unit_height,...
+			'column_lim',f_column_lim,'fig_name',vf_title{sfn}); % create a figure
+		tlo_v = tiledlayout(vf(sfn),tileNum/f_column_lim,f_column_lim); % setup tiles
+
 		axNum_notPlotted = rb_prop_num-(sfn-1)*tileNum; % number of subplots waiting to be plot
 		if axNum_notPlotted >= tileNum
 			axNum = tileNum; % number of plots in the current figure
@@ -134,7 +140,7 @@ function [varargout] = plot_reboundEvent_analysis(rbEventInfo,varargin)
 		end
 
 		for an = 1:axNum
-			ax = nexttile(tlo); % activate the ax for trace plot
+			ax = nexttile(tlo); % activate the ax for bar plot
 			idx_rb_prop = (sfn-1)*tileNum+an;
 			prop_name = fieldNames_rb_prop{idx_rb_prop};
 			bardata = {[rbEventInfo_decay.(prop_name)],...
@@ -143,6 +149,14 @@ function [varargout] = plot_reboundEvent_analysis(rbEventInfo,varargin)
 			barInfo(idx_rb_prop).info = barplot_with_stat(bardata,'plotWhere',gca,...
 				'group_names',group_names,'title_str',rb_prop_field{idx_rb_prop},...
 				'TickAngle',45);
+
+			ax = nexttile(tlo_v); % activate the ax for violin plot
+			fieldNames = cellfun(@(x) strrep(x,'-',''),group_names,'UniformOutput',false);
+			violinData = cell2struct(bardata,fieldNames,2);
+			violinplot(violinData);
+			set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
+			set(gca, 'box', 'off');
+            title(barInfo(idx_rb_prop).prop)
 		end
 	end 
 	varargout{1} = barInfo; % data and stat for the event property comparisons between decay and no-decay reboud events
@@ -200,6 +214,12 @@ function [varargout] = plot_reboundEvent_analysis(rbEventInfo,varargin)
 		end
 		save(fullfile(save_dir, ['rbEvent_decay_vs_nodecay']),...
 		    'barInfo');
+
+		% violin plot figure
+		for sfn = 1:sf_num 
+			savePlot(vf(sfn),'save_dir',save_dir,'guiSave',gui_save,...
+				'guiInfo',msg,'fname',vf_title{sfn});
+		end
 
 		% scatter plot figure for decayTau related 
 		for sfn = 1:sf_num 
