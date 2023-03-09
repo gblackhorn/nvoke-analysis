@@ -60,7 +60,7 @@ function [sponFreqList,varargout] = plot_sponFreq_everyStim_trials(alignedData,s
 	recNum = numel(alignedData);
 	sponFreqList_cell = cell(1,recNum);
 	sponFreqList_fieldNames = {'trialName','roiName','sponEventData',...
-		'sponFreq','sponfreq_withFit','sponfreq_woFit'};
+		'sponFreq','sponfreq_withFit','sponfreq_woFit','fitFlag'};
 
 
 	% Loop throught all the recordings
@@ -97,8 +97,10 @@ function [sponFreqList,varargout] = plot_sponFreq_everyStim_trials(alignedData,s
 			stimIDX_curvefit = find([sponEventData.curvefit_tf]); % idx of the stims with curve fit
 			if ~isempty(stimIDX_curvefit)
 				sponFreqList_rec(rn).sponfreq_withFit = sum([sponEventData(stimIDX_curvefit).sponFreq])/numel(stimIDX_curvefit);
+				sponFreqList_rec(rn).fitFlag = true; % mark the roi with curve fit
 			else
 				sponFreqList_rec(rn).sponfreq_withFit = nan;
+				sponFreqList_rec(rn).fitFlag = false; % mark the roi without curve fit
 			end
 
 			stimIDX_wocurvefit = find([sponEventData.curvefit_tf]==0); % idx of the stims without curve fit
@@ -108,10 +110,11 @@ function [sponFreqList,varargout] = plot_sponFreq_everyStim_trials(alignedData,s
 				sponFreqList_rec(rn).sponfreq_woFit = nan;
 			end
 		end
-		if ~isempty(sponFreqList_rec)
-			sponFreqList_cell{recn} = sponFreqList_rec;
-        else
-		end
+		sponFreqList_cell{recn} = sponFreqList_rec;
+		% if ~isempty(sponFreqList_rec)
+		% 	sponFreqList_cell{recn} = sponFreqList_rec;
+        % else
+		% end
 	end
 	sponFreqList = cat(1,sponFreqList_cell{:});
 
@@ -123,11 +126,15 @@ function [sponFreqList,varargout] = plot_sponFreq_everyStim_trials(alignedData,s
 	tlo = tiledlayout(f,f_rowNum,f_colNum);
 
 	% Plot the freq with bars
-	barplotData = cell(1,3);
-	barplotGroupName = {'all','preStimFit','preStimNofit'}; 
+	barplotData = cell(1,5);
+	barplotGroupName = {'all','preStimFit','preStimNofit','roiFit','roiNoFit'}; 
 	barplotData{1} =  [sponFreqList.sponFreq]; % freq of all spontaneous events
 	barplotData{2} =  [sponFreqList.sponfreq_withFit]; % freq of spontaneous events before stimulation with curvefit
 	barplotData{3} =  [sponFreqList.sponfreq_woFit]; % freq of spontaneous events before stimulation without curvefit
+	idx_roiFit = find([sponFreqList.fitFlag]==1);
+	idx_roiNoFit = find([sponFreqList.fitFlag]==0);
+	barplotData{4} = barplotData{1}(idx_roiFit); % freq of spon events in ROIs with at least one curvefit
+	barplotData{5} = barplotData{1}(idx_roiNoFit); % freq of spon events in ROIs without any curvefit
 
 	ax = nexttile(tlo);
 	[statInfo] = barplot_with_stat(barplotData,'group_names',barplotGroupName,...
@@ -135,11 +142,14 @@ function [sponFreqList,varargout] = plot_sponFreq_everyStim_trials(alignedData,s
 		'save_fig',false,'save_dir',save_dir,'gui_save',gui_save,'plotWhere',gca); %'title_str',titleStr,
 
 	% Plot the freq with violin
-	violinPlotData = cell2struct(barplotData,barplotGroupName,2);
 	ax = nexttile(tlo);
-	violinplot(violinPlotData);
-	set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
-	set(gca, 'box', 'off')
+	violinplot_CellArray(barplotData,barplotGroupName);
+
+	% violinPlotData = cell2struct(barplotData,barplotGroupName,2);
+	% ax = nexttile(tlo);
+	% violinplot(violinPlotData);
+	% set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
+	% set(gca, 'box', 'off')
 
 	sgtitle(titleStr);
 

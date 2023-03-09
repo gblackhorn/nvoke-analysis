@@ -153,10 +153,9 @@ function [varargout] = plot_reboundEvent_analysis(rbEventInfo,varargin)
 			ax = nexttile(tlo_v); % activate the ax for violin plot
 			fieldNames = cellfun(@(x) strrep(x,'-',''),group_names,'UniformOutput',false);
 			violinData = cell2struct(bardata,fieldNames,2);
-			violinplot(violinData);
+			violinplot(violinData,fieldNames,'GroupOrder',fieldNames);
 			set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
 			set(gca, 'box', 'off');
-            title(barInfo(idx_rb_prop).prop)
 		end
 	end 
 	varargout{1} = barInfo; % data and stat for the event property comparisons between decay and no-decay reboud events

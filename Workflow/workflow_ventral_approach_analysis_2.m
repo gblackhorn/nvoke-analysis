@@ -152,7 +152,7 @@ end
 % Common settings for 9.1.1 - 9.1.2
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[nan 1 nan], [1 nan nan], [nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+filters = {[nan 1 nan], [nan nan nan], [nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 
 
 %% ====================
@@ -179,10 +179,10 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 %9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 
-binWidth = 0.5; % the width of histogram bin. the default value is 1 s.
-PropName = 'rise_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
+binWidth = 1; % the width of histogram bin. the default value is 1 s.
+PropName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
 preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 postStim_duration = 5; % unit: second. include events happened after the end of stimulations
 debug_mode = false; % true/false
@@ -312,7 +312,7 @@ end
 %% ====================
 % 9.5.1.1 Create 'eventProp_all' according to stimulation and category 
 
-eprop.entry = 'event'; % options: 'roi' or 'event'
+eprop.entry = 'roi'; % options: 'roi' or 'event'
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 eprop.modify_stim_name = true; % true/false. Change the stimulation name, 
@@ -328,7 +328,7 @@ mgSetting.sponOnly = false; % true/false. If eventType is 'roi', and mgSetting.s
 mgSetting.seperate_spon = true; % true/false. Whether to seperated spon according to stimualtion
 mgSetting.dis_spon = false; % true/false. Discard spontaneous events
 mgSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
-mgSetting.groupField = {'stim_name','peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+mgSetting.groupField = {'stim_name', 'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
 
 % if strcmp('stim_name',mgSetting.groupField) && strcmp('roi',eprop.entry)
 % 	keep_eventcat = 'spon'; % only keep spon events to avoid duplicated values when eprop.entry is "roi"
@@ -416,7 +416,7 @@ end
 %% ====================
 % 9.5.2.2 
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 % Show the relationship between decayTau/caLevelDecrease and various rebound event properties
 fieldNames_rb_prop = {'rise_duration','FWHM','peak_mag_delta','sponNorm_peak_mag_delta',...
 	'rise_delay','peak_delay'}; % properties of rebound events.
@@ -426,12 +426,12 @@ rbEventInfo = grouped_event_info_filtered(pos_OG5sRB).event_info;
 BarInfo_rbEvents = plot_reboundEvent_analysis(rbEventInfo,'fieldNames_rb_prop',fieldNames_rb_prop,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on');
 
-if filter_roi_tf == true
-	[alignedData] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
-			'stim_names',stim_names,'filters',filters); % check section before 9.1.1
-else 
-	alignedData = alignedData_allTrials;
-end
+% if filter_roi_tf == true
+% 	[alignedData] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
+% 			'stim_names',stim_names,'filters',filters); % check section before 9.1.1
+% else 
+% 	alignedData = alignedData_allTrials;
+% end
 
 [List_curveFitNum_eventNum_ogRB,~,save_dir] = plot_stimNum_fitNum_eventNum(alignedData,'rebound','og-5s',...
 	'stimTimeCol',2,'save_fig',save_fig,'save_dir',save_dir,'gui_save',true);
@@ -519,7 +519,7 @@ end
 % [9.3] eventProp_all: entry is 'roi'. mgSetting.groupField = {'stim_name'};
 % If save, save to the existing save_dir
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 eventPb_bar = fig_canvas(1,'fig_name','event probability','unit_width',0.6,'unit_height',0.3);
 eventPb_plot_info = empty_content_struct({'group','plotinfo'},numel(grouped_event_info_filtered));
 [eventPb_plot_info.group] = grouped_event_info_filtered.group;

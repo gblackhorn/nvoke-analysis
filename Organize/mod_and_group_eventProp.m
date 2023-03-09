@@ -103,11 +103,13 @@ function [grouped_event,grouped_event_setting,varargout] = mod_and_group_eventPr
     [grouped_event] = sort_struct_with_str(grouped_event,'group',mgSetting.sort_order,'strCells_plus',mgSetting.sort_order_plus);
 
     grouped_event_setting.event_type = eventType;
-    grouped_event_setting.traceData_type = adataSetting.traceData_type;
-    grouped_event_setting.event_data_group = adataSetting.event_data_group;
-    grouped_event_setting.event_filter = adataSetting.event_filter;
-    grouped_event_setting.event_align_point = adataSetting.event_align_point;
-    grouped_event_setting.cat_keywords = adataSetting.cat_keywords;
 
+    if ~isempty(adataSetting) 
+        grouped_event_setting.traceData_type = adataSetting.traceData_type;
+        grouped_event_setting.event_data_group = adataSetting.event_data_group;
+        grouped_event_setting.event_filter = adataSetting.event_filter;
+        grouped_event_setting.event_align_point = adataSetting.event_align_point;
+        grouped_event_setting.cat_keywords = adataSetting.cat_keywords;
+    end
 end
 
