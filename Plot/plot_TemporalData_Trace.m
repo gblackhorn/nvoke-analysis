@@ -18,7 +18,7 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
 
     % vis = 'on'; % set the 'visible' of figures
     % decon = true; % true/false plot decon trace
-    plot_marker = true; % true/false
+    plot_marker = false; % true/false
     marker1_xData = {}; % plot markers for peaks. 
     marker2_xData = {}; % plot markers for rise and decay frames
 

@@ -558,6 +558,14 @@ disp(['p-value: ' num2str(p)]);
 
 
 %% ==================== 
+sponTimeRanges(:,1) = alignedData_allTrials(7).stimInfo.UnifiedStimDuration.range(:,1)-15;   
+sponTimeRanges(:,2) = alignedData_allTrials(7).stimInfo.UnifiedStimDuration.range(:,1);   
+EventsTime = [alignedData_allTrials(7).traces(1).eventProp.rise_time];  
+stimIDX_curvefit = [alignedData_allTrials(7).traces(1).StimCurveFit.SN];
+[sponFreqList] = get_sponFreq_everyStim_roi(EventsTime,sponTimeRanges,'stimIDX_curvefit',stimIDX_curvefit);
+
+
+%% ==================== 
 tags = {grouped_event_info_filtered.tag};
 pos_OG5sRB = find(strcmpi('rebound [og-5s]', tags));
 
@@ -579,3 +587,16 @@ stePercEventFit = ste(PercEventFit);
 PercEventFitToStimNum = eventFitNum./stimNum;
 meanEventFitToStimNum = mean(EventFitToStimNum);
 steEventFitToStimNum = ste(EventFitToStimNum);
+
+
+%% ==================== 
+[file_traceCSV,folder_traceCSV] = uigetfile({'*.csv', 'CSV files (*.csv)'}, 'Select a CSV file');
+T = readtable(fullfile(folder_traceCSV, file_traceCSV));
+timeInfo = T.var1;
+
+
+[file_gpio,folder_gpio] = uigetfile({'*.csv', 'CSV files (*.csv)'}, 'Select a CSV file');
+GPIO_table = readtable(fullfile(folder_gpio,file_gpio));
+[channel, EX_LED_power, GPIO_duration, stimulation ] = GPIO_data_extract(GPIO_table);
+[gpio_Info_organized, gpio_info_table] = organize_gpio_info(channel,...
+    			'modify_ch_name', true, 'round_digit_sig', 2); 
