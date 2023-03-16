@@ -37,32 +37,34 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_AllTrials(alignedData
         elseif strcmpi('stim_rb', varargin{ii}) 
             stim_rb = varargin{ii+1}; % logical. stimulation effect: rebound 
         elseif strcmpi('binWidth', varargin{ii}) 
-            binWidth = varargin{ii+1}; % denorminator used to normalize the EventFreq 
+            binWidth = varargin{ii+1}; 
         elseif strcmpi('PropName', varargin{ii}) 
-            PropName = varargin{ii+1}; % denorminator used to normalize the EventFreq 
+            PropName = varargin{ii+1}; 
         elseif strcmpi('denorm', varargin{ii}) 
             denorm = varargin{ii+1}; % denorminator used to normalize the EventFreq 
         elseif strcmpi('TrialName', varargin{ii})
-            TrialName = varargin{ii+1}; % specify the duration of stimulations. only a single number is valid
+            TrialName = varargin{ii+1}; 
         elseif strcmpi('roiNames', varargin{ii})
-            roiNames = varargin{ii+1}; % round to the Nth significant digit for duration
+            roiNames = varargin{ii+1}; 
         elseif strcmpi('preStim_duration', varargin{ii})
-            preStim_duration = varargin{ii+1}; % round to the Nth significant digit for duration
+            preStim_duration = varargin{ii+1}; 
         elseif strcmpi('postStim_duration', varargin{ii})
-            postStim_duration = varargin{ii+1}; % round to the Nth significant digit for duration
+            postStim_duration = varargin{ii+1}; 
         elseif strcmpi('round_digit_sig', varargin{ii})
             round_digit_sig = varargin{ii+1}; % round to the Nth significant digit for duration
         elseif strcmpi('debug_mode', varargin{ii})
-            debug_mode = varargin{ii+1}; % round to the Nth significant digit for duration
+            debug_mode = varargin{ii+1}; 
         end
     end
 
-    % Calculate the StimDuration_aligned which is the [0 StimDuration]
+    % Collect trials/recording applied with a specific stimulation  
     stim_names = {alignedData.stim_name}; % Get all the stimulation names
     stim_names_tf = strcmpi(stim_names,StimName); % compare the stimulation names with the input 'StimName'
     trial_idx = find(stim_names_tf); % get the index of trials applied with specified stimulations
     alignedData_filtered = alignedData(trial_idx);
 
+
+    % Loop through trials/recordings
     trialNum = numel(alignedData_filtered);
     EventFreqInBins_cell = cell(1,trialNum);
     for tn = 1:trialNum
@@ -75,8 +77,10 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_AllTrials(alignedData
             end
         end
         
-        StimRanges = alignedData_filtered(tn).stimInfo.UnifiedStimDuration.range; % get the ranges of stimulations
+        % get the ranges of stimulations
+        StimRanges = alignedData_filtered(tn).stimInfo.UnifiedStimDuration.range; 
 
+        % Filter ROIs using their response to the stimulation: excitatory/inhibitory/rebound
         [alignedDataTraces_filtered] = Filter_AlignedDataTraces_withStimEffect(alignedData_filtered(tn).traces,...
             'ex',stim_ex,'in',stim_in,'rb',stim_rb);
         EventsProps = {alignedDataTraces_filtered.eventProp}; % get the event properties of rois from current trial

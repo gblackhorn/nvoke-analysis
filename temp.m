@@ -600,3 +600,72 @@ GPIO_table = readtable(fullfile(folder_gpio,file_gpio));
 [channel, EX_LED_power, GPIO_duration, stimulation ] = GPIO_data_extract(GPIO_table);
 [gpio_Info_organized, gpio_info_table] = organize_gpio_info(channel,...
     			'modify_ch_name', true, 'round_digit_sig', 2); 
+[StimDuration,UnifiedStimDuration,ExtraInfo] = get_stimInfo(gpio_Info_organized);
+patchCoor = {StimDuration.patch_coor};
+stimName = {StimDuration.type};
+
+
+%% ==================== 
+close all
+% Example data
+A = rand(10,20);
+B = rand(10,10);
+
+% Calculate means and standard deviations for each group at each time point
+mean_A = mean(A, 2);
+% std_A = std(A, 0, 2);
+std_A = zeros(size(mean_A));
+mean_B = mean(B, 2);
+% std_B = std(B, 0, 2);
+std_B = zeros(size(mean_B));
+
+% Set up the plot
+figure
+hold on
+xlabel('Time Point')
+ylabel('Value')
+title('Group A vs Group B')
+
+% Plot the means and error bars for each group at each time point
+x = 1:10;
+errorbar(x, mean_A, std_A, 'o-', 'LineWidth', 1.5, 'CapSize', 10, 'MarkerSize', 8)
+errorbar(x, mean_B, std_B, 'o-', 'LineWidth', 1.5, 'CapSize', 10, 'MarkerSize', 8)
+
+% Add legend and grid
+legend('Group A', 'Group B', 'Location', 'Best')
+grid on
+
+% Show the plot
+hold off
+
+plot_diff(x,mean_A,mean_B,'errorA',std_A,'errorB',std_B);
+
+%% ==================== 
+% Define the cell array
+cellArray = {'-1', '0', '1'};
+
+% Convert the cell array to a numeric array
+numArray = cellfun(@str2double, cellArray);
+
+% Display the numeric array
+disp(numArray);
+
+
+%% ==================== 
+figTitleStr_3 = sprintf('diff between ap-0.1s and og-5s ap-0.1s in %gs bins normToBase',binWidth);
+xData_new = xData(2:end);
+meanVal_ogap_new = meanVal_ogap(2:end);
+diffVal_3 = plot_diff(xData_new,meanVal_ap,meanVal_ogap_new,'errorA',steVal_ap,'errorB',steVal_ogap,...
+	'legStrA','ap-0.1s','legStrB','og-5s ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_3,...
+	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
+
+%% ==================== 
+ogData = {barStat(1).data.group_data};
+apData = {barStat(2).data.group_data};
+ogapData = {barStat(3).data.group_data};
+
+ogapDataShift = ogapData(2:end);
+
+[pVal_ogVSogap] = unpaired_ttest_cellArray(ogData,ogapData);
+[pVal_ogVSap] = unpaired_ttest_cellArray(ogData,apData);
+[pVal_apVSogap] = unpaired_ttest_cellArray(apData,ogapDataShift);
