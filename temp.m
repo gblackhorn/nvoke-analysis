@@ -669,3 +669,26 @@ ogapDataShift = ogapData(2:end);
 [pVal_ogVSogap] = unpaired_ttest_cellArray(ogData,ogapData);
 [pVal_ogVSap] = unpaired_ttest_cellArray(ogData,apData);
 [pVal_apVSogap] = unpaired_ttest_cellArray(apData,ogapDataShift);
+
+
+%% ==================== 
+close all
+% Generate sample data
+data = {randn(1,10), randn(1,10), randn(1,10), randn(1,10), randn(1,10)};
+xData = 1:5;
+
+% Calculate mean and standard error for each data set
+means = cellfun(@mean, data);
+stderrs = cellfun(@std, data) ./ sqrt(cellfun(@length, data));
+
+% Plot errorbar with scatter
+errorbar(xData, means, stderrs, 'o', 'DisplayName', 'Error Bars');
+hold on
+for i = 1:numel(xData)
+    scatter(xData(i) + 0.1*randn(1,length(data{i})), data{i}, 'k');
+end
+hold off
+
+% Add legend for error bars only
+legend('show', 'Location', 'best', 'AutoUpdate', 'off');
+

@@ -182,22 +182,26 @@ close all
 save_fig = false; % true/false
 
 binWidth = 1; % the width of histogram bin. the default value is 1 s.
-baseBinEdge = 0;
-normToBase = true; % normalize the data to baseline (data before baseBinEdge)
+
+normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
+baseBinEdgestart = -1; % where to start to use the bin for calculating the baseline
+baseBinEdgeEnd = 0;
+apCorrection = false; % true/false.
+
 PropName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
 preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 postStim_duration = 5; % unit: second. include events happened after the end of stimulations
 debug_mode = false; % true/false
 
 [barStat,FolderPathVA.fig] = plot_event_freq_alignedData_allTrials(alignedData_allTrials,'PropName',PropName,...
-    'baseBinEdge',baseBinEdge,'normToBase',normToBase,...
+    'baseBinEdge',baseBinEdge,'normToBase',normToBase,'apCorrection',apCorrection,...
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'binWidth',binWidth,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on','debug_mode',debug_mode);
 
 % plot the difference between 'og-5s ap-0.1s' and 'og5s'
-[xData,meanVal_og,steVal_og,binEdges] = get_mean_ste_from_barStat(barStat,'og-5s');
-[~,meanVal_ogap,steVal_ogap] = get_mean_ste_from_barStat(barStat,'og-5s ap-0.1s');
-[~,meanVal_ap,steVal_ap] = get_mean_ste_from_barStat(barStat,'ap-0.1s');
+[xData,meanVal_og,steVal_og,binEdges,ogData] = get_mean_ste_from_barStat(barStat,'og-5s');
+[~,meanVal_ogap,steVal_ogap,~,ogapData] = get_mean_ste_from_barStat(barStat,'og-5s ap-0.1s');
+[~,meanVal_ap,steVal_ap,~,apData] = get_mean_ste_from_barStat(barStat,'ap-0.1s');
 if normToBase
 	figTitleStr_1 = sprintf('diff between og-5s and og-5s ap-0.1s in %gs bins normToBase',binWidth);
 	figTitleStr_2 = sprintf('diff between og-5s and ap-0.1s in %gs bins normToBase',binWidth);
@@ -208,17 +212,33 @@ else
 	figTitleStr_3 = sprintf('diff between ap-0.1s and og-5s ap-0.1s in %gs bins',binWidth);
 end
 
-diffVal_1 = plot_diff(xData,meanVal_og,meanVal_ogap,'errorA',steVal_og,'errorB',steVal_ogap,...
+[ttest_p_1,diffVal_1,scatterNum_1]=plot_diff_usingRawData(xData,ogData,ogapData,...
 	'legStrA','og-5s','legStrB','og-5s ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_1,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
 
-diffVal_2 = plot_diff(xData,meanVal_og,meanVal_ap,'errorA',steVal_og,'errorB',steVal_ap,...
+[ttest_p_2,diffVal_2,scatterNum_2]=plot_diff_usingRawData(xData,ogData,apData,...
 	'legStrA','og-5s','legStrB','ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_2,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
 
-diffVal_3 = plot_diff(xData,meanVal_ap,meanVal_ogap,'errorA',steVal_ap,'errorB',steVal_ogap,...
+% shift ogap data to 1 s left, so its ap is aligned with ap tirals ap
+ogapData_shift = ogapData(2:end);
+[ttest_p_3,diffVal_3,scatterNum_3]=plot_diff_usingRawData(xData,apData,ogapData_shift,...
 	'legStrA','ap-0.1s','legStrB','og-5s ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_3,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
+
+% diffVal_1 = plot_diff(xData,meanVal_og,meanVal_ogap,'errorA',steVal_og,'errorB',steVal_ogap,...
+% 	'legStrA','og-5s','legStrB','og-5s ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_1,...
+% 	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
+
+% diffVal_2 = plot_diff(xData,meanVal_og,meanVal_ap,'errorA',steVal_og,'errorB',steVal_ap,...
+% 	'legStrA','og-5s','legStrB','ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_2,...
+% 	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
+
+% % shift ogap data to 1 s left, so its ap is aligned with ap tirals ap
+% meanVal_ogap_new = meanVal_ogap(2:end);
+% diffVal_3 = plot_diff(xData,meanVal_ap,meanVal_ogap_new,'errorA',steVal_ap,'errorB',steVal_ogap,...
+% 	'legStrA','ap-0.1s','legStrB','og-5s ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_3,...
+% 	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
 
 %% ==================== 
 % 9.1.3 Get decay curve taus and plot them in histogram

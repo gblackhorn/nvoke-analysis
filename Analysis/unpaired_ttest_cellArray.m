@@ -25,7 +25,7 @@ function [pVal,varargout] = unpaired_ttest_cellArray(cellArrayA,cellArrayB,varar
 	cellArrayB = cellArrayB(1:sizeSmaller);
 
 	% Preallocate array to store p-values
-	pVal = NaN(sizeSmaller,1);
+	pVal = NaN(1,sizeSmaller);
 
 	% Perform unpaired t-test for each pair of elements
 	for n = 1:sizeSmaller

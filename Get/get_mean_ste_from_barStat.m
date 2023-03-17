@@ -20,6 +20,7 @@ function [xData,meanVal,steVal,varargout] = get_mean_ste_from_barStat(barStat,st
 	if ~isempty(idx)
 		xData = {barStat(idx).data.group};
 		xData = cellfun(@str2double, xData); % convert the string cell array to a number array
+		rawData = {barStat(idx).data.group_data};
 
 		meanVal = [barStat(idx).data.mean_val];
 		steVal = [barStat(idx).data.ste_val];
@@ -28,4 +29,5 @@ function [xData,meanVal,steVal,varargout] = get_mean_ste_from_barStat(barStat,st
 		error('stimName not found in the input structure var')
 	end
 	varargout{1} = binEdges;
+	varargout{2} = rawData;
 end

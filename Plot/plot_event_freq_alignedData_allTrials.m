@@ -3,6 +3,9 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	% compare each pair of bins
 	% ROIs can be filtered according to the effect of stimulations on them
 
+	% Note: When using 'normToBase', trials applied with 'ap-0.1s' will be normalized to an earlier
+	% bin (decided by baseBinEdgeEnd_apCorrection)
+
 	% Example:
 	%	plot_calcium_signals_alignedData_allTrials(alignedData,'filter_roi_tf',true); 
 	%		
@@ -16,9 +19,12 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	plot_unit_width = 0.45; % normalized size of a single plot to the display
 	plot_unit_height = 0.4; % nomralized size of a single plot to the display
 
-	IdxbaseBinEdgeStart = 5; % where to start to use the bin for calculating the baseline
-	baseBinEdgeEnd = 0;
 	normToBase = false; % normalize the data to baseline (data before baseBinEdgeEnd)
+	baseBinEdgestart = -1; % where to start to use the bin for calculating the baseline
+	baseBinEdgeEnd = 0;
+	baseBinEdgeEnd_apCorrection = -1; % use an earlier bin for AP stimulation
+	apCorrection = true;
+	
 	binWidth = 1; % the width of histogram bin. the default value is 1 s.
 	PropName = 'rise_time';
 	% plotHisto = false; % true/false [default].Plot histogram if true.
@@ -42,10 +48,14 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	        stim_names = varargin{ii+1}; % number array. An index of ROI traces will be collected 
 	    elseif strcmpi('filters', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
 	        filters = varargin{ii+1}; % normalize every FluoroData trace with its max value
+	    elseif strcmpi('baseBinEdgestart', varargin{ii})
+            baseBinEdgestart = varargin{ii+1};
 	    elseif strcmpi('baseBinEdgeEnd', varargin{ii})
             baseBinEdgeEnd = varargin{ii+1};
 	    elseif strcmpi('normToBase', varargin{ii})
             normToBase = varargin{ii+1};
+	    elseif strcmpi('apCorrection', varargin{ii})
+            apCorrection = varargin{ii+1};
 	    elseif strcmpi('binWidth', varargin{ii})
             binWidth = varargin{ii+1};
 	    elseif strcmpi('PropName', varargin{ii})
@@ -99,7 +109,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	titleStr = strrep(titleStr,'_',' ');
 
 		% Create a figure and start to plot 
-	barStat = empty_content_struct({'stim','method','multi_comp','data','binEdges'},stim_type_num);
+	barStat = empty_content_struct({'stim','method','multiComp','data','binEdges','baseRange'},stim_type_num);
 	[f,f_rowNum,f_colNum] = fig_canvas(stim_type_num,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
 		'fig_name',titleStr); % create a figure
 	tlo = tiledlayout(f,f_rowNum,f_colNum);
@@ -122,9 +132,22 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 
 		% normalized all data to baseline level
 		if normToBase
-			idxBinEdges = find(binEdges==baseBinEdgeEnd); % the location of 0 in binEdge
-			idxBaseData = [IdxbaseBinEdgeStart:idxBinEdges-1]; % idx of baseline data in every cell in ef_cell 
+			% if stimulation is 'ap-0.1s', use an earlier bin for normalization
+			if strcmpi(stim_names{stn},'ap-0.1s') && apCorrection
+				baseEnd = baseBinEdgeEnd+baseBinEdgeEnd_apCorrection;
+				baseStart = baseBinEdgestart+baseBinEdgeEnd_apCorrection;
+			else
+				baseEnd = baseBinEdgeEnd;
+				baseStart = baseBinEdgestart;
+			end
+
+			idxBaseBinEdgeEnd = find(binEdges==baseEnd); % the location of 0 in binEdge
+			idxBaseBinEdgeStart = find(binEdges==baseStart); % the location of 0 in binEdge
+			idxBaseData = [idxBaseBinEdgeStart:idxBaseBinEdgeEnd-1]; % idx of baseline data in every cell in ef_cell 
 			ef = ef/mean(ef(:,idxBaseData),'all'); 
+			barStat(stn).baseRange = [baseStart baseEnd];
+		else
+			barStat(stn).baseRange = [];
 		end
 		xdata = binEdges(1:end-1)+binWidth/2; % Use binEdges and binWidt to create xdata for bar plot
 
@@ -138,7 +161,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 
 		barStat(stn).stim = stim_names{stn};
 		barStat(stn).method = barInfo.stat.stat_method;
-		barStat(stn).multi_comp = barInfo.stat.c;
+		barStat(stn).multiComp = barInfo.stat.c;
 		barStat(stn).data = barInfo.data;
 		barStat(stn).binEdges = binEdges;
 	end
