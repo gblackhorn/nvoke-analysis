@@ -227,7 +227,7 @@ opt.discard_noisy_roi = false;
 opt.std_fold = 10; % used as criteria to discard noisy_rois
 plot_traces = 0; % 0: do not plot. 1: plot. 2: plot with pause
 save_traces = 0; % 0: do not save. 1: save
-debug_mode = false; % true/false.
+debug_mode = true; % true/false.
 
 % recdata=recdata_organized;
 

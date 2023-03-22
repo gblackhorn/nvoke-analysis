@@ -69,6 +69,5 @@ function [] = rm_subdir_files(varargin)
 		    end
 	    end
     end
-
 end
 

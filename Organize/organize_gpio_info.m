@@ -169,8 +169,9 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
 					stim_durations = gpio_train_end_time-gpio_train_start_time;
 					% stim_durations = round(stim_durations,round_digit_sig,'significant');
 					% stim_durations_round = round(stim_durations,round_digit_sig,'significant');
-					if ~isfield(gpio_info,'durations') 
-						gpio_info(stim_ch_idx).durations = stim_durations;
+					if ~isfield(gpio_info,'durations') || isempty(gpio_info(stim_ch_idx).durations)
+						% gpio_info(stim_ch_idx).durations = stim_durations;
+						gpio_info(stim_ch_idx).durations = round(stim_durations,round_digit_sig,'significant');;
 					end
 					if ~isempty(gpio_info(stim_ch_idx).durations) % temproal solution: old airpuff gpio duration is longer than real airpuff. duration has been corrected, but gpio was not
 						if gpio_info(stim_ch_idx).durations > stim_durations

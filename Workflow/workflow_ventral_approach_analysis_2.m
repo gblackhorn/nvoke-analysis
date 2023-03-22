@@ -114,7 +114,7 @@ adata.sponfreqFilter.status = true; % true/false. If true, use the following set
 adata.sponfreqFilter.field = 'sponfq'; % 
 adata.sponfreqFilter.thresh = 0.06; % Hz
 adata.sponfreqFilter.direction = 'high';
-debug_mode = false; % true/false
+debug_mode = true; % true/false
 
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
 	'traceData_type', adata.traceData_type, 'event_data_group', adata.event_data_group,...
@@ -179,14 +179,14 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 %9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 
-binWidth = 1; % the width of histogram bin. the default value is 1 s.
+binWidth = 0.5; % the width of histogram bin. the default value is 1 s.
 
 normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
 baseBinEdgestart = -1; % where to start to use the bin for calculating the baseline
 baseBinEdgeEnd = 0;
-apCorrection = false; % true/false.
+apCorrection = true; % true/false.
 
 PropName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
 preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
@@ -194,7 +194,7 @@ postStim_duration = 5; % unit: second. include events happened after the end of 
 debug_mode = false; % true/false
 
 [barStat,FolderPathVA.fig] = plot_event_freq_alignedData_allTrials(alignedData_allTrials,'PropName',PropName,...
-    'baseBinEdge',baseBinEdge,'normToBase',normToBase,'apCorrection',apCorrection,...
+    'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,'normToBase',normToBase,'apCorrection',apCorrection,...
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'binWidth',binWidth,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on','debug_mode',debug_mode);
 
@@ -202,15 +202,31 @@ debug_mode = false; % true/false
 [xData,meanVal_og,steVal_og,binEdges,ogData] = get_mean_ste_from_barStat(barStat,'og-5s');
 [~,meanVal_ogap,steVal_ogap,~,ogapData] = get_mean_ste_from_barStat(barStat,'og-5s ap-0.1s');
 [~,meanVal_ap,steVal_ap,~,apData] = get_mean_ste_from_barStat(barStat,'ap-0.1s');
-if normToBase
-	figTitleStr_1 = sprintf('diff between og-5s and og-5s ap-0.1s in %gs bins normToBase',binWidth);
-	figTitleStr_2 = sprintf('diff between og-5s and ap-0.1s in %gs bins normToBase',binWidth);
-	figTitleStr_3 = sprintf('diff between ap-0.1s and og-5s ap-0.1s in %gs bins normToBase',binWidth);
+
+if apCorrection
+	apCorrectionStr = ' apBaseBinShift'; 
 else
-	figTitleStr_1 = sprintf('diff between og-5s and og-5s ap-0.1s in %gs bins',binWidth);
-	figTitleStr_2 = sprintf('diff between og-5s and ap-0.1s in %gs bins',binWidth);
-	figTitleStr_3 = sprintf('diff between ap-0.1s and og-5s ap-0.1s in %gs bins',binWidth);
+	apCorrectionStr = '';
 end
+% indicate that the data are normalized to baseline
+if normToBase
+	normToBaseStr = ' normToBase';
+else
+	normToBaseStr = '';
+end
+figTitleStr_1 = sprintf('diff between og-5s and og-5s ap-0.1s in %gs bins%s%s',binWidth,normToBaseStr,apCorrectionStr);
+figTitleStr_2 = sprintf('diff between og-5s and ap-0.1s in %gs bins%s%s',binWidth,normToBaseStr,apCorrectionStr);
+figTitleStr_3 = sprintf('diff between ap-0.1s and og-5s ap-0.1s in %gs bins%s%s',binWidth,normToBaseStr,apCorrectionStr);
+
+% if normToBase
+% 	figTitleStr_1 = sprintf('diff between og-5s and og-5s ap-0.1s in %gs bins normToBase',binWidth);
+% 	figTitleStr_2 = sprintf('diff between og-5s and ap-0.1s in %gs bins normToBase',binWidth);
+% 	figTitleStr_3 = sprintf('diff between ap-0.1s and og-5s ap-0.1s in %gs bins normToBase',binWidth);
+% else
+% 	figTitleStr_1 = sprintf('diff between og-5s and og-5s ap-0.1s in %gs bins',binWidth);
+% 	figTitleStr_2 = sprintf('diff between og-5s and ap-0.1s in %gs bins',binWidth);
+% 	figTitleStr_3 = sprintf('diff between ap-0.1s and og-5s ap-0.1s in %gs bins',binWidth);
+% end
 
 [ttest_p_1,diffVal_1,scatterNum_1]=plot_diff_usingRawData(xData,ogData,ogapData,...
 	'legStrA','og-5s','legStrB','og-5s ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_1,...

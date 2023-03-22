@@ -141,6 +141,11 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 		alignedData.traces(n).roi = roiName;
 		roi_event_spec_table = event_spec_fulltable{event_data_group, roiName}{:};
 
+		% Temporal solution: event spec table can be not empty, but the number will be 1 and value is NaN
+		if numel(roi_event_spec_table.peak_loc) == 1 && isnan(roi_event_spec_table.peak_loc)
+			roi_event_spec_table = [];
+		end
+
 		if debug_mode
 			fprintf(' - roi %d/%d %s\n', n, roi_num, roiName)
 			if n == 15

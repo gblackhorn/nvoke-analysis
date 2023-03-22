@@ -101,7 +101,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
         % Debugging
         fprintf(' - recording_num: %d/%d (%s)\n', rn, recording_num, recording_name);
         if debug_mode
-            if rn == 2
+            if rn == 3
                 disp('pause for debugging')
                 pause
             end

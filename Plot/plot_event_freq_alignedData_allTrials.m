@@ -85,6 +85,20 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	% Main contents
 
 
+	% Use the settings below to modify the title string for figures 
+	% indicate that the bin used to normalize the ap data is shifted by 'baseBinEdgeEnd_apCorrection'
+	if apCorrection
+		apCorrectionStr = ' apBaseBinShift'; 
+	else
+		apCorrectionStr = '';
+	end
+	% indicate that the data are normalized to baseline
+	if normToBase
+		normToBaseStr = ' normToBase';
+	else
+		normToBaseStr = '';
+	end
+
 	% Filter the ROIs in all trials according to the stimulation effect
 	if filter_roi_tf
 		[alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData,...
@@ -106,6 +120,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	else
 		titleStr = sprintf('event freq in %g s bins [%s]',binWidth,PropName);
 	end
+	titleStr = sprintf('event freq in %g s bins [%s]%s%s',binWidth,PropName,normToBaseStr,apCorrectionStr);
 	titleStr = strrep(titleStr,'_',' ');
 
 		% Create a figure and start to plot 
