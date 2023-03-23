@@ -114,7 +114,7 @@ adata.sponfreqFilter.status = true; % true/false. If true, use the following set
 adata.sponfreqFilter.field = 'sponfq'; % 
 adata.sponfreqFilter.thresh = 0.06; % Hz
 adata.sponfreqFilter.direction = 'high';
-debug_mode = true; % true/false
+debug_mode = false; % true/false
 
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
 	'traceData_type', adata.traceData_type, 'event_data_group', adata.event_data_group,...
@@ -152,7 +152,7 @@ end
 % Common settings for 9.1.1 - 9.1.2
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[nan 1 nan], [nan nan nan], [nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+filters = {[0 1 nan], [1 nan nan], [0 nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 
 
 %% ====================
@@ -183,18 +183,21 @@ save_fig = true; % true/false
 
 binWidth = 0.5; % the width of histogram bin. the default value is 1 s.
 
-normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
+normToBase = false; % true/false. normalize the data to baseline (data before baseBinEdge)
 baseBinEdgestart = -1; % where to start to use the bin for calculating the baseline
 baseBinEdgeEnd = 0;
 apCorrection = true; % true/false.
 
 PropName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
+stimIDX = []; % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
 preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 postStim_duration = 5; % unit: second. include events happened after the end of stimulations
 debug_mode = false; % true/false
 
 [barStat,FolderPathVA.fig] = plot_event_freq_alignedData_allTrials(alignedData_allTrials,'PropName',PropName,...
-    'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,'normToBase',normToBase,'apCorrection',apCorrection,...
+    'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,'stimIDX',stimIDX,...
+    'normToBase',normToBase,'apCorrection',apCorrection,...
+    'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'binWidth',binWidth,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on','debug_mode',debug_mode);
 

@@ -40,15 +40,15 @@ function [alignedDataTraces_filtered,varargout] = Filter_AlignedDataTraces_withS
         in_tf = true; % default: do not discard
         rb_tf = true; % default: do not discard                                                                     
 
-        if ~isnan(ex) && stimEffect.excitation ~= ex % use 'ex' filter and the stim effect is different from the 'ex' filter
+        if ~isnan(ex) && stimEffect.excitation ~= ex % use 'ex' filter && the stim effect is different from the 'ex' filter
             ex_tf = false; % mark discard
         end
 
-        if ~isnan(in) && stimEffect.inhibition ~= in % use 'in' filter and the stim effect is different from the 'in' filter
+        if ~isnan(in) && stimEffect.inhibition ~= in % use 'in' filter && the stim effect is different from the 'in' filter
             in_tf = false; % mark discard
         end
 
-        if ~isnan(rb) && stimEffect.rebound ~= rb % use 'rb' filter and the stim effect is different from the 'rb' filter
+        if ~isnan(rb) && stimEffect.rebound ~= rb % use 'rb' filter && the stim effect is different from the 'rb' filter
             rb_tf = false; % mark discard
         end
 

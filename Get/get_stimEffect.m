@@ -9,6 +9,7 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 	% Defaults
 	base_timeRange = 2; % default 2s. 
 	ex_eventCat = {'trig'}; % event category string used to define excitation. May contain multiple strings
+	exAP_eventCat = {'trig-ap'}; % event category string used to define excitation caused by airpuff during og stimulation. 
 	rb_eventCat = {'rebound'}; % event category string used to define rebound. May contain multiple strings
 	in_thresh_stdScale = 2; % n times of std lower than baseline level. Last n s during stimulation is used
 	in_calLength = 1; % calculate the last n s trace level during stimulation to 
@@ -35,6 +36,7 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 
 	%% Content
 	excitation = false; % pre-set
+	excitationAP = false; % pre-set
 	inhibition = false; % pre-set
 	rebound = false; % pre-set
 
@@ -77,7 +79,7 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 		% check the event frequency to confirm the inhibition effect
 		if ~isempty(freq_spon_stim) 
 			for fn = 1:numel(freq_spon_stim)
-				if freq_spon_stim(fn) == 0; % if spontaneous/stimulation event frequency is 0
+				if freq_spon_stim(fn) == 0 % if spontaneous/stimulation event frequency is 0
 					freq_spon_stim(fn) = 1e-5;
 				end
 			end
@@ -96,6 +98,15 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 			end
 		end
 
+		% Check for excitation caused by airpuff during optogenetics stimulation
+		for n_exAPCat = 1:numel(exAP_eventCat)
+			tf = strcmpi(exAP_eventCat{n_exAPCat}, eventCats);
+			if ~isempty(find(tf))
+				excitationAP = true;
+				break
+			end
+		end
+
 		% check for rebound
 		for n_rbCat = 1:numel(rb_eventCat)
 			tf = strcmpi(rb_eventCat{n_rbCat}, eventCats);
@@ -107,10 +118,12 @@ function [stimEffect,varargout] = get_stimEffect(traceTimeInfo,traceData,stimTim
 
 		% assign value
 		stimEffect.excitation = excitation;
+		stimEffect.exAP_eventCat = excitationAP;
 		stimEffect.inhibition = inhibition;
 		stimEffect.rebound = rebound;
 	else
 		stimEffect.excitation = [];
+		stimEffect.exAP_eventCat = [];
 		stimEffect.inhibition = [];
 		stimEffect.rebound = [];
 	end

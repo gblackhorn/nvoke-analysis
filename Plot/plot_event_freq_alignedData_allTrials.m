@@ -26,7 +26,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	apCorrection = true;
 	
 	binWidth = 1; % the width of histogram bin. the default value is 1 s.
-	PropName = 'rise_time';
+	PropName = 'rise_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
+	stimIDX = []; % specify stimulation repeats around which the events will be gathered 
 	% plotHisto = false; % true/false [default].Plot histogram if true.
 
 	AlignEventsToStim = true; % align the EventTimeStamps to the onsets of the stimulations: subtract EventTimeStamps with stimulation onset time
@@ -60,6 +61,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
             binWidth = varargin{ii+1};
 	    elseif strcmpi('PropName', varargin{ii})
             PropName = varargin{ii+1};
+	    elseif strcmpi('stimIDX', varargin{ii})
+            stimIDX = varargin{ii+1};
 	    elseif strcmpi('preStim_duration', varargin{ii})
             preStim_duration = varargin{ii+1};
 	    elseif strcmpi('postStim_duration', varargin{ii})
@@ -115,11 +118,11 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 
 		% Get the subplot number and create a title string for the figure
 	stim_type_num = numel(stim_names); % Get the number of stimulation types
-	if normToBase
-		titleStr = sprintf('event freq in %g s bins [%s] normToBase',binWidth,PropName);
-	else
-		titleStr = sprintf('event freq in %g s bins [%s]',binWidth,PropName);
-	end
+	% if normToBase
+	% 	titleStr = sprintf('event freq in %g s bins [%s] normToBase',binWidth,PropName);
+	% else
+	% 	titleStr = sprintf('event freq in %g s bins [%s]',binWidth,PropName);
+	% end
 	titleStr = sprintf('event freq in %g s bins [%s]%s%s',binWidth,PropName,normToBaseStr,apCorrectionStr);
 	titleStr = strrep(titleStr,'_',' ');
 
@@ -129,9 +132,13 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		'fig_name',titleStr); % create a figure
 	tlo = tiledlayout(f,f_rowNum,f_colNum);
 	for stn = 1:stim_type_num
-		[EventFreqInBins,binEdges] = get_EventFreqInBins_AllTrials(alignedData,stim_names{stn},'PropName',PropName,...
-			'binWidth',binWidth,'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
+		[EventFreqInBins,binEdges] = get_EventFreqInBins_trials(alignedData_filtered,stim_names{stn},'PropName',PropName,...
+			'binWidth',binWidth,'stimIDX',stimIDX,...
+			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 			'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
+		% [EventFreqInBins,binEdges] = get_EventFreqInBins_AllTrials(alignedData,stim_names{stn},'PropName',PropName,...
+		% 	'binWidth',binWidth,'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
+		% 	'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
 		ef_cell = {EventFreqInBins.EventFqInBins}; % collect EventFqInBins in a cell array
 		ef_cell = ef_cell(:); % make sure that ef_cell is a vertical array
 
