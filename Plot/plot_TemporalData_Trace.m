@@ -13,7 +13,7 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
     % data.
 
     % Defaults
-    plotInterval = 20; % offset for traces on y axis to seperate them
+    plotInterval = 10; % offset for traces on y axis to seperate them
     xtickInt = 10; % unit: second. x tick interval. 
 
     % vis = 'on'; % set the 'visible' of figures

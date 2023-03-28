@@ -10,6 +10,7 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 	y_range = [-20 30];
 	stimEffectType = 'excitation'; % options: 'excitation', 'inhibition', 'rebound'
 	sponNorm = false; % true/false
+	stimNames = {};
 
 	% Optionals
 	for ii = 1:2:(nargin-1)
@@ -25,6 +26,8 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 	        sponNorm = varargin{ii+1};
         elseif strcmpi('section', varargin{ii})
 	        section = varargin{ii+1}; % double/vector. specify the n-th repeat of stimulation
+        elseif strcmpi('stimNames', varargin{ii})
+	        stimNames = varargin{ii+1}; % double/vector. specify the n-th repeat of stimulation
 	    end
 	end	
 
@@ -36,7 +39,12 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 	end
 
 	[C, ia, ic] = unique({alignedData.stim_name});
-	num_C = numel(C);
+	if ~isempty(stimNames)
+		[stimNames,stimNameIDXinC,~]=intersect(C, stimNames);
+	% else
+	% 	C = stimNames;
+	end
+	stimNum = numel(stimNames);
 
 	f_trace_win = figure;
 	fig_position = [0.1 0.1 0.6 0.7];
@@ -46,11 +54,12 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 	else
 		tile_row_num = 2;
 	end
-	tlo = tiledlayout(f_trace_win, tile_row_num, num_C);
+	tlo = tiledlayout(f_trace_win, tile_row_num, stimNum);
 
-	for n = 1:num_C
-		stimName = C{n};
-		IDX_trial = find(ic == n);
+	for n = 1:stimNum
+		% stimName = C{n};
+		stimName = stimNames{stimNameIDXinC(n)};
+		IDX_trial = find(ic == stimNameIDXinC(n));
 		timeInfo = alignedData(IDX_trial(1)).time;
 		stim_range = {alignedData(IDX_trial(1)).stimInfo.UnifiedStimDuration.range_aligned};
 		% stim_range = {alignedData(IDX_trial(1)).stimInfo.time_range};

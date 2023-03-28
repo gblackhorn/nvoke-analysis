@@ -26,16 +26,24 @@
 % ins_rec_ventral_folder = fullfile(ins_recordings_folder, 'IO_virus_ventral approach'); % processed imaging data, including isxd, gpio, tiff, and csv files 
 
 %% ====================
+% 1. Locate the folders to find and save data 
 clearvars -except recdata_organized alignedData_allTrials seriesData_sync
 
-PC_name = getenv('COMPUTERNAME'); 
-% set folders for different situation
-DataFolder = 'G:\Workspace\Inscopix_Seagate';
+GUI_chooseFolder = false; % true/false. Use GUI to locate the DataFolder and AnalysisFolder
 
-if strcmp(PC_name, 'GD-AW-OFFICE')
-	AnalysisFolder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
-elseif strcmp(PC_name, 'LAPTOP-84IERS3H')
-	AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
+if GUI_chooseFolder
+	DataFolder = uigetdir(matlabroot,'Choose a folder containing data and project folders');
+	AnalysisFolder = uigetdir(matlabroot,'Choose a folder containing analysis');
+else
+	PC_name = getenv('COMPUTERNAME'); 
+	% set folders for different situation
+	DataFolder = 'G:\Workspace\Inscopix_Seagate';
+
+	if strcmp(PC_name, 'GD-AW-OFFICE')
+		AnalysisFolder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
+	elseif strcmp(PC_name, 'LAPTOP-84IERS3H')
+		AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
+	end
 end
 
 [FolderPathVA] = set_folder_path_ventral_approach(DataFolder,AnalysisFolder);

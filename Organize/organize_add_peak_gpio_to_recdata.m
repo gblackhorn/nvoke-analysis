@@ -27,6 +27,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     stim_post_time = 10; % time (s) after stimuli end
     discard_noisy_roi = false;
     std_fold = 5;
+    stimStr_combine_order = {'og','ap'}; % this is used to make sure when combine stimName, og is always before ap
     plot_traces = 0; % 0: do not plot. 1: plot. 2: plot with pause
     save_traces = 0; % 0: do not save. 1: save
     [peak_properties_variable_names] = transient_properties_variable_names('peak', [1:18]);
@@ -125,7 +126,14 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     		[recdata_organized{rn, col_gpioinfo}, gpio_info_table] = organize_gpio_info(recdata{rn, col_gpioinfo},...
     			'modify_ch_name', true, 'round_digit_sig', 2); % round to N significant digits (counted from the leftmost digit)
             if ~isempty(gpio_info_table)
-    		    stim_str = char(join(gpio_info_table.stim_ch_str));
+                % re-order the stim strs for a consistent stim name combination
+                [stim_ch_name,ia,ic]=intersect(stimStr_combine_order,gpio_info_table.stim_ch_name,'stable');
+                if ~isempty(stim_ch_name)
+                    stim_ch_str = gpio_info_table.stim_ch_str(ic);
+                else
+                    stim_ch_str = gpio_info_table.stim_ch_str;
+                end
+    		    stim_str = char(join(stim_ch_str));
             else
                 stim_str = 'no-stim';
             end

@@ -152,7 +152,7 @@ end
 % Common settings for 9.1.1 - 9.1.2
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[0 1 nan], [1 nan nan], [0 nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+filters = {[nan 1 nan], [nan nan nan], [nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 
 
 %% ====================
@@ -162,7 +162,7 @@ filters = {[0 1 nan], [1 nan nan], [0 nan nan]}; % [ex in rb]. ex: excitation. i
 close all
 save_fig = true; % true/false
 
-norm_FluorData = true; % true/false. whether to normalize the FluroData
+norm_FluorData = false; % true/false. whether to normalize the FluroData
 sortROI = true; % true/false. Sort ROIs according to the event number: high to low
 hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins
 xtickInt_scale = 5; % xtickInt = hist_binsize * xtickInt_scale. Use by figure 2
@@ -179,7 +179,7 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 %9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 
 binWidth = 0.5; % the width of histogram bin. the default value is 1 s.
 
@@ -221,15 +221,6 @@ figTitleStr_1 = sprintf('diff between og-5s and og-5s ap-0.1s in %gs bins%s%s',b
 figTitleStr_2 = sprintf('diff between og-5s and ap-0.1s in %gs bins%s%s',binWidth,normToBaseStr,apCorrectionStr);
 figTitleStr_3 = sprintf('diff between ap-0.1s and og-5s ap-0.1s in %gs bins%s%s',binWidth,normToBaseStr,apCorrectionStr);
 
-% if normToBase
-% 	figTitleStr_1 = sprintf('diff between og-5s and og-5s ap-0.1s in %gs bins normToBase',binWidth);
-% 	figTitleStr_2 = sprintf('diff between og-5s and ap-0.1s in %gs bins normToBase',binWidth);
-% 	figTitleStr_3 = sprintf('diff between ap-0.1s and og-5s ap-0.1s in %gs bins normToBase',binWidth);
-% else
-% 	figTitleStr_1 = sprintf('diff between og-5s and og-5s ap-0.1s in %gs bins',binWidth);
-% 	figTitleStr_2 = sprintf('diff between og-5s and ap-0.1s in %gs bins',binWidth);
-% 	figTitleStr_3 = sprintf('diff between ap-0.1s and og-5s ap-0.1s in %gs bins',binWidth);
-% end
 
 [ttest_p_1,diffVal_1,scatterNum_1]=plot_diff_usingRawData(xData,ogData,ogapData,...
 	'legStrA','og-5s','legStrB','og-5s ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_1,...
@@ -245,19 +236,6 @@ ogapData_shift = ogapData(2:end);
 	'legStrA','ap-0.1s','legStrB','og-5s ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_3,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
 
-% diffVal_1 = plot_diff(xData,meanVal_og,meanVal_ogap,'errorA',steVal_og,'errorB',steVal_ogap,...
-% 	'legStrA','og-5s','legStrB','og-5s ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_1,...
-% 	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
-
-% diffVal_2 = plot_diff(xData,meanVal_og,meanVal_ap,'errorA',steVal_og,'errorB',steVal_ap,...
-% 	'legStrA','og-5s','legStrB','ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_2,...
-% 	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
-
-% % shift ogap data to 1 s left, so its ap is aligned with ap tirals ap
-% meanVal_ogap_new = meanVal_ogap(2:end);
-% diffVal_3 = plot_diff(xData,meanVal_ap,meanVal_ogap_new,'errorA',steVal_ap,'errorB',steVal_ogap,...
-% 	'legStrA','ap-0.1s','legStrB','og-5s ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_3,...
-% 	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
 
 %% ==================== 
 % 9.1.3 Get decay curve taus and plot them in histogram
@@ -307,6 +285,7 @@ tplot.y_range = [-20 30];
 tplot.stimEffectType = 'rebound'; % options: 'excitation', 'inhibition', 'rebound'
 tplot.section = []; % n/[]. specify the n-th repeat of stimWin. Set it to [] to plot all stimWin 
 tplot.sponNorm = false; % true/false
+stimNames = {'ap-0.1s','ap-0.1s og-5s','og-5s'};
 tplot.save_fig = false; % true/false
 tplot.save_dir = FolderPathVA.fig;
 
