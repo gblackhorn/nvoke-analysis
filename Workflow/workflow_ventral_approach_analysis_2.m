@@ -190,8 +190,8 @@ apCorrection = true; % true/false.
 
 PropName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
 stimIDX = []; % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
-preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
-postStim_duration = 5; % unit: second. include events happened after the end of stimulations
+preStim_duration = 0; % unit: second. include events happened before the onset of stimulations
+postStim_duration = 10; % unit: second. include events happened after the end of stimulations
 debug_mode = false; % true/false
 
 [barStat,FolderPathVA.fig] = plot_event_freq_alignedData_allTrials(alignedData_allTrials,'PropName',PropName,...
@@ -358,7 +358,7 @@ end
 %% ====================
 % 9.5.1.1 Create 'eventProp_all' according to stimulation and category 
 
-eprop.entry = 'roi'; % options: 'roi' or 'event'
+eprop.entry = 'event'; % options: 'roi' or 'event'
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 eprop.modify_stim_name = true; % true/false. Change the stimulation name, 

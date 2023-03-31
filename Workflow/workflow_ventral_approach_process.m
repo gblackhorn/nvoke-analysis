@@ -50,7 +50,7 @@ end
 
 
 %% ==================== 
-% 2. Preprocess (Down-sampling is possible), spatial filter, and motion corrected recordings with Inscopix API for matlab. And export them in tiff format.
+% 2.1 Preprocess (Down-sampling is possible), spatial filter, and motion corrected recordings with Inscopix API for matlab. And export them in tiff format.
 % 	Export gpio (stimulation) and recording time stamp information in csv format with IDPS
 
 % This step can be only done on local desktop installed IDPS
@@ -69,13 +69,23 @@ if recording_dir ~= 0
 	end
 end
 
-% 2.1. If recordings were created by the nVoke1 system. Use following line instead
-% nvoke_file_process;
+%% ==================== 
+% 2.2 Create DFF files from motion corrected files in a specified folder
+% Use keyword to filter MC files
+keyword = 'MC-PP.isxd'; % Use file name like this to look for motion corrected files
+overwrite = false; % true/false. Create new DFF files if this is true.
 
+MC_fileFolder = uigetdir(FolderPathVA.project,...
+	'Select a folder containing motion corrected files');
+if MC_fileFolder ~= 0
+	FolderPathVA.project = MC_fileFolder;
+	% batchMod_fileName(FolderPathVA.project,'MC-PP','MC-crop','keyword','MC-PP','overwrite',overwrite);
+	batchProcess_MC2DFF_nvokeFiles(FolderPathVA.project,'keyword',keyword,'overwrite',overwrite);
+end
 
 %% ==================== 
 % 3.1 Export nvoke movies to tiff files
-keywords = '2023-02-23*-MC.isxd'; % used to filter 
+keywords = '2023-03-30*-MC-PP-DFF.isxd'; % used to filter 
 overwrite = false;
 
 input_isxd_folder = uigetdir(FolderPathVA.project,...
@@ -207,6 +217,7 @@ uisave('recdata', fullfile(FolderPathVA.ventralApproach, 'recdata'));
 
 %% ====================
 % 8. Organize peaks and gpio information to data
+% Note: Signal processing toolbox and curve fitting toolbox are needed for this section
 clear opt
 % Defaults
 opt.lowpass_fpass = 1;
@@ -225,7 +236,7 @@ opt.criteria_slope = [3 2000]; % default: slice-[50 2000]
 opt.criteria_pnr = 3; % default: 3. peak-noise-ration (PNR): relative-peak-signal/std. std is calculated from highpassed data.
 opt.criteria_excitated = 1; % If a peak starts to rise in 0.5 sec since stimuli, it's a excitated peak
 opt.criteria_rebound = 1; % a peak is concidered as rebound if it starts to rise within 2s after stimulation end
-opt.stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start time point of stimuli can be extended
+opt.stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start time point of stimuli can be extended
 % use_criteria = true; % true or false. choose to use criteria or not for picking peaks
 opt.stim_pre_time = 10; % time (s) before stimuli start
 opt.stim_post_time = 10; % time (s) after stimuli end
