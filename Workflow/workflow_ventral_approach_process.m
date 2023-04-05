@@ -72,7 +72,7 @@ end
 %% ==================== 
 % 2.2 Create DFF files from motion corrected files in a specified folder
 % Use keyword to filter MC files
-keyword = 'MC-PP.isxd'; % Use file name like this to look for motion corrected files
+keyword = '0-PP.isxd'; % Use file name like this to look for motion corrected files
 overwrite = false; % true/false. Create new DFF files if this is true.
 
 MC_fileFolder = uigetdir(FolderPathVA.project,...
@@ -85,7 +85,7 @@ end
 
 %% ==================== 
 % 3.1 Export nvoke movies to tiff files
-keywords = '2023-03-30*-MC-PP-DFF.isxd'; % used to filter 
+keywords = '-MC-PP.isxd'; % used to filter 
 overwrite = false;
 
 input_isxd_folder = uigetdir(FolderPathVA.project,...

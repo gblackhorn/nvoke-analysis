@@ -179,9 +179,9 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 %9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 
-binWidth = 0.5; % the width of histogram bin. the default value is 1 s.
+binWidth = 1; % the width of histogram bin. the default value is 1 s.
 
 normToBase = false; % true/false. normalize the data to baseline (data before baseBinEdge)
 baseBinEdgestart = -1; % where to start to use the bin for calculating the baseline
@@ -190,7 +190,7 @@ apCorrection = true; % true/false.
 
 PropName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
 stimIDX = []; % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
-preStim_duration = 0; % unit: second. include events happened before the onset of stimulations
+preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 postStim_duration = 10; % unit: second. include events happened after the end of stimulations
 debug_mode = false; % true/false
 
@@ -416,8 +416,8 @@ end
 % 9.5.1.2 screen groups based on tags. Delete unwanted groups for event analysis
 
 % {'trig [EXog]','EXog','trig-AP',}
-tags_discard = {'spon','opto-delay','og&ap','rebound [ap','ap-0.25s','ap-0.5s','og-0.96s'}; % Discard groups containing these words. 
-tags_keep = {'trig','trig [og','rebound'}; % Keep groups containing these words
+tags_discard = {'spon','og&ap','rebound [ap','ap-0.25s','ap-0.5s','og-0.96s'}; % Discard groups containing these words. 'opto-delay',
+tags_keep = {'trig','trig [og','rebound','opto-delay [og-5s]'}; % Keep groups containing these words
 clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
 [grouped_event_info_filtered] = filter_entries_in_structure(grouped_event,'group',...
 	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);

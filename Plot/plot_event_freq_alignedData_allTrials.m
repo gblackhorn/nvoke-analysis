@@ -35,6 +35,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	postStim_duration = 5; % unit: second. include events happened after the end of stimulations
 	round_digit_sig = 2; % round to the Nth significant digit for duration
 
+	shadeColors = {'#F05BBD','#4DBEEE','#ED8564'}; % og, ap, others
+
 	save_fig = false;
 	save_dir = '';
 	gui_save = false;
@@ -132,7 +134,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		'fig_name',titleStr); % create a figure
 	tlo = tiledlayout(f,f_rowNum,f_colNum);
 	for stn = 1:stim_type_num
-		[EventFreqInBins,binEdges] = get_EventFreqInBins_trials(alignedData_filtered,stim_names{stn},'PropName',PropName,...
+		[EventFreqInBins,binEdges,stimShadeData,stimShadeName] = get_EventFreqInBins_trials(alignedData_filtered,stim_names{stn},'PropName',PropName,...
 			'binWidth',binWidth,'stimIDX',stimIDX,...
 			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 			'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
@@ -163,8 +165,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 				baseStart = baseBinEdgestart;
 			end
 
-			idxBaseBinEdgeEnd = find(binEdges==baseEnd); % the location of 0 in binEdge
-			idxBaseBinEdgeStart = find(binEdges==baseStart); % the location of 0 in binEdge
+			idxBaseBinEdgeEnd = find(binEdges==baseEnd); 
+			idxBaseBinEdgeStart = find(binEdges==baseStart); 
 			idxBaseData = [idxBaseBinEdgeStart:idxBaseBinEdgeEnd-1]; % idx of baseline data in every cell in ef_cell 
 			ef = ef/mean(ef(:,idxBaseData),'all'); 
 			barStat(stn).baseRange = [baseStart baseEnd];
@@ -177,6 +179,22 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		filterStr = NumArray2StringCell(filters{stn});
 		sub_titleStr = sprintf('%s: ex-%s in-%s rb-%s',stim_names{stn},filterStr{1},filterStr{2},filterStr{3}); % string for the subtitle
 		[barInfo] = barplot_with_stat(ef,'xdata',xdata,'plotWhere',gca);
+
+		% plot shade to indicate the stimulation period
+		hold on
+		for sn = 1:numel(stimShadeData)
+			if strcmpi(stimShadeName{sn},'og')
+				shadeColor = shadeColors{1};
+			elseif strcmpi(stimShadeName{sn},'ap')
+				shadeColor = shadeColors{2};
+			else
+				shadeColor = shadeColors{3};
+			end
+			draw_WindowShade(gca,stimShadeData{sn},'shadeColor',shadeColor);
+		end
+		hold off
+
+
 		xticks(binEdges);
 		xticklabels(NumArray2StringCell(binEdges));
 		title(sub_titleStr)

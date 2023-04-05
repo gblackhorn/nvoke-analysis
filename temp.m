@@ -692,3 +692,226 @@ hold off
 % Add legend for error bars only
 legend('show', 'Location', 'best', 'AutoUpdate', 'off');
 
+
+%% ==================== 
+% auto-correlogram
+
+close all
+% generate a sample signal
+fs = 100; % sampling rate
+t = 0:1/fs:10; % time vector
+x = sin(2*pi*50*t) + sin(2*pi*150*t); % signal with 50Hz and 150Hz components
+
+% calculate and plot the auto-correlogram
+[acor, lag] = xcorr(x, 'coeff');
+plot(lag, acor);
+xlabel('Lag (samples)');
+ylabel('Correlation coefficient');
+
+
+% % assume you have n recordings, each with spike times in a cell array
+% spike_times = {[10, 20, 30, 50, 70, 80, 90, 100, 120, 140, 150], ...
+%                [15, 25, 40, 60, 75, 85, 105, 125, 130, 135, 145], ...
+%                [20, 40, 55, 65, 70, 85, 95, 110, 125, 140, 155]};
+
+% spike_times_all = cat(1, spike_times{:}); % concatenate all spike times
+% max_lag = 10; % set the maximum lag to compute the autocorrelogram
+% [autocorr, lags] = xcorr(spike_times_all, max_lag);
+% plot(lags, autocorr);
+
+%% ==================== 
+% % the probability density function (PDF)
+close all
+% % Generate random calcium data
+% ca_data = sort(randn(1000,1)*5+50); % 1000 samples of random calcium data
+% 
+% % Calculate PDF using ksdensity
+% [f, xi] = ksdensity(ca_data); 
+% 
+% % Plot PDF
+% plot(xi, f);
+% xlabel('Calcium Value');
+% ylabel('Probability Density');
+% title('Calcium Recording PDF');
+
+% Generate some random data
+t = 0:0.01:100; % time vector
+firing_rate = 5*sin(t); % firing rate (in Hz)
+spike_times = poissrnd(firing_rate/1000); % simulate spike times (in ms)
+calcium_signal = conv(spike_times, exp(-t/1)); % convolve with exponential decay kernel
+calcium_signal = calcium_signal(1:length(t)); % remove extra points
+
+
+% Estimate the PDF of the calcium signal
+[f, x] = ksdensity(calcium_signal);
+
+
+% Plot the PDF of the calcium signal
+figure
+plot(x, f)
+xlabel('Fluorescence intensity')
+ylabel('Probability density')
+
+
+%%
+% close all
+% Generate sample data for three ROIs
+num_ROIs = 3;
+event_times = cell(num_ROIs, 1);
+for roi = 1:num_ROIs
+    % Generate random number of events between 50 and 100
+    num_events = randi([50 100]);
+    % Generate random event times between 0 and 300 seconds
+    event_times{roi} = sort(rand(num_events, 1)*300);
+end
+
+% Calculate inter-event times for each ROI
+ieis = cell(num_ROIs, 1);
+for roi = 1:num_ROIs
+    ieis{roi} = diff(event_times{roi});
+end
+
+% Plot histograms of inter-event times for each ROI
+figure;
+for roi = 1:num_ROIs
+    subplot(num_ROIs, 1, roi);
+    hold on
+    histogram(ieis{roi}, 20, 'Normalization', 'pdf');
+
+    pd = fitdist(ieis{roi}, 'Kernel', 'Kernel', 'normal');
+    x_values = linspace(min(ieis{roi}), max(ieis{roi}), 1000);
+    y_values = pdf(pd, x_values);
+    plot(x_values, y_values);
+
+    % [f, x] = ksdensity(ieis{roi});
+    % plot(x,f);
+
+    xlabel('Inter-Event Time (s)');
+    ylabel('Probability Density');
+    title(sprintf('ROI %d', roi));
+    hold off
+end
+
+% % Plot probability density functions (PDF) of inter-event times for each ROI
+% figure;
+% for roi = 1:num_ROIs
+%     subplot(num_ROIs, 1, roi);
+%     pd = fitdist(ieis{roi}, 'Kernel', 'Kernel', 'normal');
+%     x_values = linspace(min(ieis{roi}), max(ieis{roi}), 1000);
+%     y_values = pdf(pd, x_values);
+%     plot(x_values, y_values);
+%     xlabel('Inter-Event Time (s)');
+%     ylabel('Probability Density');
+%     title(sprintf('ROI %d', roi));
+% end
+
+%%
+% Example data
+recording1 = [0.1, 0.3, 0.8, 1.2, 2.5, 3.0, 3.5];
+recording2 = [0.2, 0.5, 0.7, 1.5, 2.0, 2.5, 3.2];
+recording3 = [0.4, 0.6, 1.0, 1.8, 2.2, 2.8, 3.3];
+all_recordings = {recording1, recording2, recording3};
+
+% Combine all inter-event times
+all_inter_event_times = [];
+for i = 1:length(all_recordings)
+    inter_event_times = diff(all_recordings{i});
+    all_inter_event_times = [all_inter_event_times, inter_event_times];
+end
+
+% Plot histogram of inter-event times
+figure;
+histogram(all_inter_event_times, 'Normalization', 'probability');
+xlabel('Inter-event time (s)');
+ylabel('Probability');
+title('Histogram of inter-event times');
+
+% Calculate and plot PDF of inter-event times
+[f, x] = ksdensity(all_inter_event_times);
+figure;
+plot(x, f);
+xlabel('Inter-event time (s)');
+ylabel('Probability density');
+title('PDF of inter-event times');
+
+%%
+close all
+% create a binary vector for stimulus presentation
+stim = [0 0 1 0 0 1 0 1 0 0];
+
+% generate some random calcium event times
+event_times = sort(rand(1, 50)*10);
+
+% find closest stimulus presentation times for each event time
+stim_times_before = interp1(find(stim), find(stim), event_times, 'previous');
+stim_times_after = interp1(find(stim), find(stim), event_times, 'next');
+
+% calculate time differences between event times and closest stimulus presentation times
+delta_t_before = event_times - stim_times_before;
+delta_t_after = stim_times_after - event_times;
+delta_t = [delta_t_before delta_t_after];
+
+% calculate auto-correlogram of delta_t
+max_lag = 10; % maximum lag time
+acf = xcorr(delta_t, max_lag, 'normalized');
+
+% plot auto-correlogram
+stem(-max_lag:max_lag, acf);
+xlabel('Lag (s)');
+ylabel('Normalized Auto-correlation');
+
+
+[eventIntAll] = get_eventTimeInt(alignedData_allTrials,'peak_time',...
+	'filter_roi_tf',true,'stim_names','ap-0.1s','filters',{[nan 1 nan], [1 nan nan], [nan nan nan]});
+
+[histHandle] = plot_NormHistWithPDF(eventIntAll,[0:0.5:20],...
+	'xlabelStr','time (s)','titleStr','Inter-event time [ap-0.1s ex]');
+
+
+
+
+filter_roi_tf = true; % true/false. If true, screen ROIs
+stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
+filters = {[nan 1 nan], [1 nan nan], [nan nan nan]}; % [ex in rb]
+eventType = 'peak_time';
+binsOrEdges = [0:0.5:20];
+plot_eventTimeInt_alignedData_allTrials(alignedData_allTrials,eventType,binsOrEdges,...
+	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters);
+
+
+%%
+close all
+eventType = 'peak_time';
+
+trialNum = numel(alignedData_og);
+eventTimeTrials = cell(1,trialNum);
+
+for tn = 1:trialNum
+	% get the events time (rise or peak) from all ROIs in a single trial
+	eventsTime = get_TrialEvents_from_alignedData(alignedData_og(tn),eventType);
+	
+	% concatenate ROIs' event intervals 
+	eventTimeTrials{tn} = eventsTime;
+end
+eventTimeAll = [eventTimeTrials{:}];
+
+% Assuming you have extracted calcium events from multiple neurons and stored them in a cell array called "events"
+% events{1} contains the events from neuron 1, events{2} contains the events from neuron 2, and so on.
+
+num_neurons = length(eventTimeAll);
+corr_all = []; % initialize a matrix to store the cross-correlations
+
+for i = 1:num_neurons
+    for j = i+1:num_neurons % only calculate the cross-correlation for distinct pairs of neurons
+        [corr, lags] = xcorr(eventTimeAll{i}, eventTimeAll{j}, 'none'); % calculate the cross-correlation and lags
+        corr_all = [corr_all; corr]; % store the correlation coefficients in a matrix
+    end
+end
+
+% Plot the average cross-correlation across all pairs of neurons
+figure;
+mean_corr = mean(corr_all, 1); % calculate the mean correlation across all pairs of neurons
+plot(lags, mean_corr);
+xlabel('Lags');
+ylabel('Cross-correlation coefficient');
+title('Average cross-correlation across multiple neurons');

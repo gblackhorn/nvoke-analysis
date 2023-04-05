@@ -65,6 +65,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 			'stim_names',stim_names,'filters',filters);
 		title_prefix = 'filtered';
 	else
+		alignedData_filtered = alignedData;
 		title_prefix = '';
 	end 
 
