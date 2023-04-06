@@ -915,3 +915,86 @@ plot(lags, mean_corr);
 xlabel('Lags');
 ylabel('Cross-correlation coefficient');
 title('Average cross-correlation across multiple neurons');
+
+acf = cell(1,5);
+lags = cell(1,5);
+bounds = cell(1,5);
+for n = 1:5
+	[acf{n},lags{n},bounds{n}] = autocorr(eventTimeAll{n},'NumLags',10);
+end
+et = eventTimeAll(1:5);
+
+
+figure
+hold on
+for m = 1:5
+	plot(acf{m})
+end
+hold off
+
+
+%%
+% Example data
+event_times = {[1, 5, 10, 15, 20], [2, 6, 11, 16, 21], [3, 7, 12, 17, 22], [4, 8, 13, 18, 23], [9, 14, 19, 24]};
+lags = 0:0.5:5; % specify lag bins
+
+% Initialize histogram counts
+hist_counts = zeros(length(lags)-1, 1);
+
+% Calculate histogram counts
+for i = 1:length(event_times)
+    acor = xcorr(event_times{i}-mean(event_times{i}), lags, 'none');
+    hist_counts = hist_counts + histcounts(acor, lags);
+end
+
+% Plot histogram
+histogram(hist_counts,lags(1:end-1));
+xlabel('Lags (s)');
+ylabel('Counts');
+title('Autocorrelation Histogram');
+
+
+%% 
+QTM_mat_path = 'G:\Workspace\Mocap\Mos1a_2023_03_31_matfiles_for_naming\MOS1a_S19_M5_MCL2_T2_TRE_2023_03_31.mat';
+QTM_mat = matfile(QTM_mat_path);
+
+
+
+
+[f,p] = uigetfile;
+isxdfile = fullfile(p,f);
+
+isdxMovie = isx.Movie.read(isxdfile);
+sampling_frequency = 1/isdxMovie.timing.period.secs_float;
+datetime = isdxMovie.timing.start.datetime;
+frameNum = isdxMovie.timing.num_samples;
+
+opts.downsampleFactor = 1;
+opts.newFilename = fullfile(p,'2023-03-30-18-26-47_video_trig_0.hdf5');
+ciapkg.inscopix.convertInscopixIsxdToHdf5(isxdfile,'options',opts)
+
+
+
+% Define the input timestamp
+timestamp = "2023-03-31, 13:04:41.533	5449.33313310";
+
+% Extract the date and time components from the timestamp
+dt = datetime(timestamp, 'InputFormat', 'yyyy-MM-dd, HH:mm:ss.SSS', 'TimeZone', 'local');
+
+% Convert the datetime object to a string in the desired format
+formatted_date = datestr(dt, 'yyyy-mm-dd-hh-MM-ss');
+
+% Display the formatted date
+disp(formatted_date);
+
+isxd_recStartTime = cellfun(@(x) x(1:19),names,'UniformOutput',false);
+isxd_dt = cellfun(@(x) datetime(x,'InputFormat', 'yyyy-MM-dd-HH-mm-ss', 'TimeZone', 'local'),...
+	isxd_recStartTime,'UniformOutput',false);
+mocap1_time = datetime(x(1).recStartTime,'InputFormat', 'yyyy-MM-dd-HH-mm-ss', 'TimeZone', 'local')
+
+
+QTMmatFolderPath = 'G:\Workspace\Mocap\Mos1a_2023_03_31_matfiles_for_naming';
+nVokeRawDataFolder = 'S:\PROCESSED_DATA_BACKUPS\nRIM_MEMBERS\Moscope\Moscope_CaImg\Raw_recordings\MOS1A_2023-03-31';
+nVokeRenameDataFolder = 'S:\PROCESSED_DATA_BACKUPS\nRIM_MEMBERS\Moscope\Moscope_CaImg\Raw_recordings_renamed';
+[nVoke_oldNew_filenames,debriefing] = batchMod_nVoke2_filenames('QTMmatFolderPath',QTMmatFolderPath,...
+	'nVokeRawDataFolder',nVokeRawDataFolder,'nVokeRenameDataFolder',nVokeRenameDataFolder);
