@@ -2,6 +2,11 @@ function [varargout] = batchMod_nVoke2_filenames(varargin)
     % Batch modify the file names in a selected folder
     % Replace the characters in the oldStr with the newStr
 
+    % This function will ask you:
+    %   1. Select a folder containing QTM mat files
+    %   2. Select a folder containing nVoke files
+    %   3. Select a folder to save the copies of renamed nVoke files after renaming
+
     % Defaults
     nVoke_name_repIDX = [1 19]; % This indicates the number of characters containing the datetime info at the beginning of nvoke file names 
 
