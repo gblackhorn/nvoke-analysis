@@ -16,8 +16,8 @@ function [varargout] = batchMod_nVoke2_filenames(varargin)
     nVokeRawDataFolder = ''; % Use GUI to browse a folder containing QTM mat files
     nVokeRenameDataFolder = ''; % Use GUI to browse a folder containing QTM mat files
 
-    timeError = 5; % the start time error between a pair of QTM and isxd recordings. unit: seconds
-% overwrite = false; % true/false. Create new DFF files if this is true.
+    timeError = 30; % the start time error between a pair of QTM and isxd recordings. unit: seconds
+    overwrite = false; % true/false. If true, copy the renamed file even there is with the same name in the target folder 
 
     % Optionals
     for ii = 1:2:(nargin)
@@ -31,6 +31,8 @@ function [varargout] = batchMod_nVoke2_filenames(varargin)
             nVokeRenameDataFolder = varargin{ii+1}; 
         elseif strcmpi('timeError', varargin{ii})
             timeError = varargin{ii+1};
+        % elseif strcmpi('overwrite', varargin{ii})
+        %     overwrite = varargin{ii+1};
         % elseif strcmpi('nonstimMean_pos', varargin{ii})
         %     nonstimMean_pos = varargin{ii+1};
         end
@@ -107,23 +109,56 @@ function [varargout] = batchMod_nVoke2_filenames(varargin)
     % Rename the nVoke files with the QTM filename and add -nVoke-video/gpio/imu to indicate what
     % recordings they are. Copy them to another folder.
     % Do not delete the original ones
-    fprintf('Rename files in folder 1 and save them to foler 2\n 1. %s\n 2. %s\n\n',...
+    fprintf('Save renamed copies of files in folder 1 to folder 2\n 1. %s\n 2. %s\n\n',...
         nVokeRawDataFolder,nVokeRenameDataFolder);
+    batchDecision = false; % true/false. if true, overwrite (true/false) will be applied to all files
     for m = 1:numel(nVoke_fileInfo)
         % rename the file and save it to the folder [nVokeRenameDataFolder] if the new name for it is not empty
         if ~isempty(nVoke_oldNew_filenames(m).newNames)
             oldFilePath = fullfile(nVokeRawDataFolder,nVoke_oldNew_filenames(m).oldNames);
             newFilePath = fullfile(nVokeRenameDataFolder,nVoke_oldNew_filenames(m).newNames);
-            copyfile(oldFilePath,newFilePath);
-            fprintf(' - %s >> %s\n',...
-                nVoke_oldNew_filenames(m).oldNames,nVoke_oldNew_filenames(m).newNames);
+
+            % If renamed file exists in the target folder, decide whether to overwrite it
+            if ~batchDecision
+                if exist(newFilePath, 'file') == 2
+                    sprintf('File already exists in target folder:\n - Original: %s\n - Renamed: %s\n',...
+                        oldFilePath,newFilePath);
+                    overwritePrompt = sprintf('Overwrite file in target folder Y/N/Ya(Yes to all)/Na(No to all) [Yes]:');
+                    overwriteInput = input(overwritePrompt,'s');
+                    if isempty(overwriteInput)
+                        overwriteInput = 'Y';
+                    end
+
+                    if strcmpi(overwriteInput,'Y')
+                        overwrite = true;
+                    elseif strcmpi(overwriteInput,'N')
+                        overwrite = false; 
+                    elseif strcmpi(overwriteInput,'Ya')
+                        overwrite = true; 
+                        batchDecision = true;
+                    elseif strcmpi(overwriteInput,'Na')
+                        overwrite = false; 
+                        batchDecision = true;
+                    else
+                        disp('Input is invalid. File will not be overwritten')
+                        overwrite = false;
+                    end
+                end
+            end
+
+            % if renamed file does not exist or overwrite was chosen, rename and copy
+            if exist(newFilePath, 'file') == 0 || overwrite
+                copyfile(oldFilePath,newFilePath);
+                fprintf(' - %s >> %s\n',...
+                    nVoke_oldNew_filenames(m).oldNames,nVoke_oldNew_filenames(m).newNames);
+            end
         end
     end
 
     % Save the old and new names of nVoke files as csv to the same folder of the renamed nVoke files 
     % Convert the structure to a table
     nVoke_oldNew_filenames_table = struct2table(nVoke_oldNew_filenames);
-    table_filepath = fullfile(nVokeRenameDataFolder,'OldNewFileNames.csv')
+    table_filepath = fullfile(nVokeRenameDataFolder,'OldNewFileNames.csv');
 
     % Save the table as a CSV file
     writetable(nVoke_oldNew_filenames_table, table_filepath);
