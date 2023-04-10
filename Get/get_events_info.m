@@ -32,8 +32,13 @@ function [event_info,varargout] = get_events_info(all_events_time,condition_win,
         event_time_cell = cell(win_num, 1);
         event_interval_time_cell = cell(win_num, 1);
         for n = 1:win_num
-            idx_in_peak_table_cell{n} = find(all_events_time>=condition_win(n, 1) & all_events_time<condition_win(n, 2))';
-            event_time_cell{n} = all_events_time(idx_in_peak_table_cell{n})';
+            eventIDX = find(all_events_time>=condition_win(n, 1) & all_events_time<condition_win(n, 2));
+            eventTime = all_events_time(idx_in_peak_table_cell{n});
+            idx_in_peak_table_cell{n} = eventIDX(:);
+            event_time_cell{n} = eventTime(:);
+
+            % idx_in_peak_table_cell{n} = find(all_events_time>=condition_win(n, 1) & all_events_time<condition_win(n, 2))';
+            % event_time_cell{n} = all_events_time(idx_in_peak_table_cell{n})';
             event_interval_time_cell{n} = diff(event_time_cell{n});
         end
 

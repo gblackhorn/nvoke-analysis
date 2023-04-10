@@ -88,7 +88,9 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
         stimShadeName = cell(size(stimInfo));
         for sn = 1:numel(stimInfo) % go through every stimulation in the recording
             stimShadeData{sn} = stimInfo(sn).patch_coor(1:4,1:2); % Get the first 4 rows for the first repeat of stimulation
-            stimShadeData{sn}(:,1) = stimShadeData{sn}(:,1) - stimShadeData{sn}(1,1); % Modify the time, so the shade time starts from 0
+            stimShadeData{sn}(1:2,1) = stimInfo(sn).range_aligned(1); % Replace the first 2 x values (stimu gpio rising) with the 1st element from range_aligned
+            stimShadeData{sn}(3:4,1) = stimInfo(sn).range_aligned(2); % Replace the last 2 x values (stimu gpio falling) with the 2nd element from range_aligned
+            % stimShadeData{sn}(:,1) = stimShadeData{sn}(:,1) - stimShadeData{sn}(1,1); % Modify the time, so the shade time starts from 0
             stimShadeName{sn} = stimInfo(sn).type; % Get the stimulation type 
         end
 

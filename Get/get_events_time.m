@@ -51,7 +51,7 @@ function [events_time,varargout] = get_events_time(event_spec_table,varargin)
 		case 'event_cat'
 			if exist('cat_keywords', 'var') && ~isempty(cat_keywords)
 				kw_num = numel(cat_keywords); % number of keywords
-				cats = event_spec_table.peak_category;
+				cats = {event_spec_table.peak_category};
 				catPos_idx = [];
 				for i = 1:kw_num
 					spell = cat_keywords{i};
