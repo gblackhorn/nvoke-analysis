@@ -1,4 +1,4 @@
-function [varargout] = plot_eventTimeInt_alignedData_allTrials(alignedData,eventType,binsOrEdges,varargin)
+function [eventIntAll,varargout] = plot_eventTimeInt_alignedData_allTrials(alignedData,eventType,binsOrEdges,varargin)
 	%Get the event time and calculate their intervals 
 
 	% intervals are calculated in each ROI, and the data from all ROIs from all trials are concatenated
@@ -24,6 +24,10 @@ function [varargout] = plot_eventTimeInt_alignedData_allTrials(alignedData,event
 	ylabelStr = 'Probability Density';
 	% titleStr = 'Hist with PDF';
 
+	saveFig = false;
+	save_dir = '';
+	gui_save = false;
+
 	% Optionals
 	for ii = 1:2:(nargin-3)
 		if strcmpi('filter_roi_tf', varargin{ii})
@@ -32,12 +36,12 @@ function [varargout] = plot_eventTimeInt_alignedData_allTrials(alignedData,event
 		    stim_names = varargin{ii+1}; % number array. An index of ROI traces will be collected 
 		elseif strcmpi('filters', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
 		    filters = varargin{ii+1}; % normalize every FluoroData trace with its max value
-	    % elseif strcmpi('xlabelStr', varargin{ii})
-        %     xlabelStr = varargin{ii+1};
-	    % elseif strcmpi('ylabelStr', varargin{ii})
-        %     ylabelStr = varargin{ii+1};
-	    % elseif strcmpi('titleStr', varargin{ii})
-        %     titleStr = varargin{ii+1};
+		elseif strcmpi('saveFig', varargin{ii})
+            saveFig = varargin{ii+1};
+	    elseif strcmpi('save_dir', varargin{ii})
+            save_dir = varargin{ii+1};
+	    elseif strcmpi('gui_save', varargin{ii})
+            gui_save = varargin{ii+1};
 	    end
 	end
 
@@ -56,9 +60,9 @@ function [varargout] = plot_eventTimeInt_alignedData_allTrials(alignedData,event
 		'fig_name',titleStr); % create a figure
 	tloPDF = tiledlayout(fPDF,fPDF_rowNum,fPDF_colNum);
 
-	[fACF,fACF_rowNum,fACF_colNum] = fig_canvas(stim_type_num,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
-		'fig_name',titleStr); % create a figure
-	tloACF = tiledlayout(fACF,fACF_rowNum,fACF_colNum);
+	% [fACF,fACF_rowNum,fACF_colNum] = fig_canvas(stim_type_num,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
+	% 	'fig_name',titleStr); % create a figure
+	% tloACF = tiledlayout(fACF,fACF_rowNum,fACF_colNum);
 	for stn = 1:stim_type_num
 		% Get all the inter-event time from 
 		[eventIntAll] = get_eventTimeInt(alignedData,eventType,...
@@ -74,14 +78,28 @@ function [varargout] = plot_eventTimeInt_alignedData_allTrials(alignedData,event
 			'xlabelStr',xlabelStr,'ylabelStr',ylabelStr,...
 			'titleStr',sub_titleStr);
 
-		% Plot the auto-correlogram for inter-event time
-		ax = nexttile(tloACF);
-		[acf_values,lag_values] = autocorr(eventIntAll,'NumLags',200);
-		stem(lag_values,acf_values);
-		xlabel('lag (bins)')
-		ylabel('auto-correlation')
-		title(sub_titleStr)
+		% % Plot the auto-correlogram for inter-event time
+		% ax = nexttile(tloACF);
+		% [acf_values,lag_values] = autocorr(eventIntAll,'NumLags',200);
+		% stem(lag_values,acf_values);
+		% xlabel('lag (bins)')
+		% ylabel('auto-correlation')
+		% title(sub_titleStr)
 	end
 	sgtitle(fPDF,['PDF ',titleStr],'FontSize', fontSize_sgTitle)
-    sgtitle(fACF,['ACF ',titleStr],'FontSize', fontSize_sgTitle)
+    % sgtitle(fACF,['ACF ',titleStr],'FontSize', fontSize_sgTitle)
+
+
+    if saveFig
+    	if isempty(save_dir)
+    		gui_save = 'on';
+    	end
+    	msg = 'Choose a folder to save probability density function of inter-event time';
+    	save_dir = savePlot(fPDF,'save_dir',save_dir,'guiSave',gui_save,...
+    		'guiInfo',msg,'fname',titleStr);
+    	save(fullfile(save_dir, [titleStr, '_data']),...
+    	    'eventIntAll');
+    end 
+
+    varargout{1} = save_dir;
 end

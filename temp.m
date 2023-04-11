@@ -998,3 +998,10 @@ nVokeRawDataFolder = 'S:\PROCESSED_DATA_BACKUPS\nRIM_MEMBERS\Moscope\Moscope_CaI
 nVokeRenameDataFolder = 'S:\PROCESSED_DATA_BACKUPS\nRIM_MEMBERS\Moscope\Moscope_CaImg\Raw_recordings_renamed';
 [nVoke_oldNew_filenames,debriefing] = batchMod_nVoke2_filenames('QTMmatFolderPath',QTMmatFolderPath,...
 	'nVokeRawDataFolder',nVokeRawDataFolder,'nVokeRenameDataFolder',nVokeRenameDataFolder);
+
+
+[bin_Events] = plot_autoCorrelogramEvents(alignedData_allTrials,...
+			'timeType','rise_time','stimName','ap-0.1s','stimEventCat','trig',...
+			'remove_centerEvents',true,'binWidth',0.25,'normData',true,'saveFig',true);
+
+

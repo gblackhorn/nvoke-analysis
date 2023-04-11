@@ -24,7 +24,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	stat = false; % true if want to run anova when plotting bars
 	stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 
-	FontSize = 18;
+	FontSize = 12;
 	FontWeight = 'bold';
 
 	% Optionals

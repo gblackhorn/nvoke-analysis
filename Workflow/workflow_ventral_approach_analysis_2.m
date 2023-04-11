@@ -238,7 +238,50 @@ ogapData_shift = ogapData(2:end);
 
 
 %% ==================== 
-% 9.1.3 Get decay curve taus and plot them in histogram
+% 9.1.3 Plot the auto-correlogram of events and the probability density function of inter-event time
+close all
+saveFig = true; % true/false
+% gui_save = false;
+timeType = 'rise_time'; % rise_time/peak_time
+preEventDuration = 3;
+postEventDuration = 3;
+remove_centerEvents = true;
+binWidth = 0.1;
+normData = true;
+ACG_stimEvents(1).stim = 'ap-0.1s'; 
+ACG_stimEvents(1).eventCat = 'trig'; 
+ACG_stimEvents(2).stim = 'og-5s'; 
+ACG_stimEvents(2).eventCat = 'rebound'; 
+ACG_stimEvents(3).stim = 'og-5s ap-0.1s'; 
+ACG_stimEvents(3).eventCat = 'rebound'; 
+ACG_stimEvents(4).stim = 'og-5s ap-0.1s'; 
+ACG_stimEvents(4).eventCat = 'interval-trigger'; 
+
+if saveFig
+	save_dir = uigetdir(FolderPathVA.fig,'Choose a folder to save autoCorrelograms');
+end
+
+% auto-correlogram of events
+binnedACG_cell = cell(numel(ACG_stimEvents),1);
+for n = 1:numel(ACG_stimEvents)
+	[binnedACG_cell{n},FolderPathVA.fig] = plot_autoCorrelogramEvents(alignedData_allTrials,...
+				'timeType',timeType,'stimName',ACG_stimEvents(n).stim,'stimEventCat',ACG_stimEvents(n).eventCat,...
+				'remove_centerEvents',remove_centerEvents,'binWidth',binWidth,'normData',normData,...
+				'preEventDuration',preEventDuration,'postEventDuration',postEventDuration,...
+				'saveFig',saveFig,'save_dir',save_dir,'gui_save',false);
+end
+binnedACG = vertcat(binnedACG_cell{:});
+
+% probability density function of inter-event time
+
+binsOrEdges = [0:binWidth:10];
+plot_eventTimeInt_alignedData_allTrials(alignedData_allTrials,timeType,binsOrEdges,...
+	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
+	'saveFig',saveFig,'save_dir',save_dir,'gui_save',false);
+
+
+%% ==================== 
+% 9.1.4 Get decay curve taus and plot them in histogram
 close all
 filter_roi_tf = true;
 stimName = 'og-5s';
@@ -416,8 +459,8 @@ end
 % 9.5.1.2 screen groups based on tags. Delete unwanted groups for event analysis
 
 % {'trig [EXog]','EXog','trig-AP',}
-tags_discard = {'spon','og&ap','rebound [ap','ap-0.25s','ap-0.5s','og-0.96s'}; % Discard groups containing these words. 'opto-delay',
-tags_keep = {'trig','trig [og','rebound','opto-delay [og-5s]'}; % Keep groups containing these words
+tags_discard = {'spon','rebound [ap','ap-0.25s','ap-0.5s','og-0.96s'}; % Discard groups containing these words. 'opto-delay','og&ap'
+tags_keep = {'trig','trig [og','rebound','opto-delay [og-5s]','trig-ap'}; % Keep groups containing these words
 clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
 [grouped_event_info_filtered] = filter_entries_in_structure(grouped_event,'group',...
 	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);

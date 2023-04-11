@@ -20,7 +20,7 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 	TickAngle = 45;
 	EdgeColor = 'none';
 	FaceColor = '#4D4D4D';
-	FontSize = 18;
+	FontSize = 12;
 	FontWeight = 'bold';
 
 	plotWhere = [];

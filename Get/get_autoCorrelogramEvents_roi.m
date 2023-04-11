@@ -107,6 +107,8 @@ function [ACG_Events,varargout] = get_autoCorrelogramEvents_roi(eventSpecStruct,
 		ACG_Events{n} = aroundEventsTime;
 	end
 
+	ACG_Events = [ACG_Events{:}];
+
 	% % Find empty cells in ACG_Events: no around events
 	% emptyCells = find(cellfun(@isempty, ACG_Events));
 

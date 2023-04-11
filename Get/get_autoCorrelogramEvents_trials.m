@@ -15,6 +15,7 @@ function [ACG_events_struct,varargout] = get_autoCorrelogramEvents_trials(aligne
 	preEventDuration = 3; % unit: s. find other events in this duration before the event
 	postEventDuration = 3; % unit: s. find other events in this duration after the event
 	excludOGpost = 1; % exclude this amount of time after the end of OG stimulation
+	remove_centerEvents = false; % true/false. Remove the center events
 
 	debugMode = false; % true/false
 
@@ -55,6 +56,7 @@ function [ACG_events_struct,varargout] = get_autoCorrelogramEvents_trials(aligne
 		% stimEventsFieldName = strrep(stimEventsFieldName, ' ', '_');   % replace ' ' with '_'
 
 		stimEventsFieldName = sprintf('%sEvents',stimEventCat);
+		stimEventsFieldName = strrep(stimEventsFieldName, '-', '_');    % replace '-' with '_'
 		ACG_events_structFields = {'trialName','stimName','sponEvents',stimEventsFieldName};
 	else
 		getStimEvents = false;
@@ -100,14 +102,16 @@ function [ACG_events_struct,varargout] = get_autoCorrelogramEvents_trials(aligne
 			% get the ACG events for spontaneous events
 			[ACG_events_spon_ROIs{rn},cEventSponNum] = get_autoCorrelogramEvents_roi(eventSpecTable,...
 				'win_range',sponWins,'timeType',timeType,...
-				'preEventDuration',preEventDuration,'postEventDuration',postEventDuration);
+				'preEventDuration',preEventDuration,'postEventDuration',postEventDuration,...
+				'remove_centerEvents',remove_centerEvents);
 			cEventSponTotalNum = cEventSponTotalNum+cEventSponNum;
 
 			% get the ACG events for stimulation related ones
 			if getStimEvents
 				[ACG_events_stim_ROIs{rn},cEventStimNum] = get_autoCorrelogramEvents_roi(eventSpecTable,...
 					'cat_keywords',{stimEventCat},'timeType',timeType,...
-					'preEventDuration',preEventDuration,'postEventDuration',postEventDuration);
+					'preEventDuration',preEventDuration,'postEventDuration',postEventDuration,...
+					'remove_centerEvents',remove_centerEvents);
 				cEventStimTotalNum = cEventStimTotalNum+cEventStimNum;
 			end
 		end
@@ -117,6 +121,10 @@ function [ACG_events_struct,varargout] = get_autoCorrelogramEvents_trials(aligne
 			ACG_events_struct(n).(stimEventsFieldName) = [ACG_events_stim_ROIs{:}];
 		end
 	end
-	varargout{1} = cEventSponTotalNum;
-	varargout{2} = cEventStimTotalNum;
+
+	cEventTotalNum.sponEvents = cEventSponTotalNum;
+	cEventTotalNum.(stimEventsFieldName) = cEventStimTotalNum;
+	varargout{1} = cEventTotalNum;
+	% varargout{1} = cEventSponTotalNum;
+	% varargout{2} = cEventStimTotalNum;
 end
