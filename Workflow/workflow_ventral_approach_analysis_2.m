@@ -179,19 +179,20 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 %9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 
 binWidth = 1; % the width of histogram bin. the default value is 1 s.
-
-normToBase = false; % true/false. normalize the data to baseline (data before baseBinEdge)
-baseBinEdgestart = -1; % where to start to use the bin for calculating the baseline
-baseBinEdgeEnd = 0;
-apCorrection = true; % true/false.
 
 PropName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
 stimIDX = []; % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
 preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 postStim_duration = 10; % unit: second. include events happened after the end of stimulations
+
+normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
+baseBinEdgestart = -preStim_duration; % where to start to use the bin for calculating the baseline. -1
+baseBinEdgeEnd = -2; % 0
+apCorrection = false; % true/false.
+
 debug_mode = false; % true/false
 
 [barStat,FolderPathVA.fig] = plot_event_freq_alignedData_allTrials(alignedData_allTrials,'PropName',PropName,...
@@ -242,9 +243,9 @@ ogapData_shift = ogapData(2:end);
 close all
 saveFig = true; % true/false
 % gui_save = false;
-timeType = 'rise_time'; % rise_time/peak_time
+timeType = 'peak_time'; % rise_time/peak_time
 preEventDuration = 3;
-postEventDuration = 3;
+postEventDuration = 5;
 remove_centerEvents = true;
 binWidth = 0.1;
 normData = true;

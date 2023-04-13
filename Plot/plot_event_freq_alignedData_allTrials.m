@@ -154,20 +154,25 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 
 		ef = vertcat(ef_cell{:}); % concatenate ef_cell contents and create a number array
 
+
+		% Find the start and end of time for baseline data
+		% if stimulation is 'ap-0.1s', use an earlier bin for normalization
+		if strcmpi(stim_names{stn},'ap-0.1s') && apCorrection
+			baseEnd = baseBinEdgeEnd+baseBinEdgeEnd_apCorrection;
+			baseStart = baseBinEdgestart+baseBinEdgeEnd_apCorrection;
+		else
+			baseEnd = baseBinEdgeEnd;
+			baseStart = baseBinEdgestart;
+		end
+		idxBaseBinEdgeEnd = find(binEdges==baseEnd); 
+		idxBaseBinEdgeStart = find(binEdges==baseStart); 
+		idxBaseData = [idxBaseBinEdgeStart:idxBaseBinEdgeEnd-1]; % idx of baseline data in every cell in ef_cell 
+
+		baseRangeStr = sprintf('%g to %g s',binEdges(idxBaseBinEdgeStart),binEdges(idxBaseBinEdgeEnd));
+
+
 		% normalized all data to baseline level
 		if normToBase
-			% if stimulation is 'ap-0.1s', use an earlier bin for normalization
-			if strcmpi(stim_names{stn},'ap-0.1s') && apCorrection
-				baseEnd = baseBinEdgeEnd+baseBinEdgeEnd_apCorrection;
-				baseStart = baseBinEdgestart+baseBinEdgeEnd_apCorrection;
-			else
-				baseEnd = baseBinEdgeEnd;
-				baseStart = baseBinEdgestart;
-			end
-
-			idxBaseBinEdgeEnd = find(binEdges==baseEnd); 
-			idxBaseBinEdgeStart = find(binEdges==baseStart); 
-			idxBaseData = [idxBaseBinEdgeStart:idxBaseBinEdgeEnd-1]; % idx of baseline data in every cell in ef_cell 
 			ef = ef/mean(ef(:,idxBaseData),'all'); 
 			barStat(stn).baseRange = [baseStart baseEnd];
 		else
@@ -204,6 +209,15 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		barStat(stn).multiComp = barInfo.stat.c;
 		barStat(stn).data = barInfo.data;
 		barStat(stn).binEdges = binEdges;
+
+		% combine baseline data and run anova to compare baseline and the rest bins
+		xdataStr_combineBase = NumArray2StringCell(xdata);
+		[xdataStr_combineBase{idxBaseData}] = deal(baseRangeStr);
+		efDataCell = num2cell(ef,1);
+		[efArray,xdataStr_combineBaseArray] = createDataAndGroupNameArray(efDataCell,xdataStr_combineBase);
+		stat_combineBase = anova1_with_multiComp(efArray,xdataStr_combineBaseArray);
+
+		barStat(stn).anovaCombineBase = stat_combineBase;
 	end
 	sgtitle(titleStr)
 	varargout{1} = barStat;

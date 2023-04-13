@@ -110,8 +110,8 @@ function [binnedACG,varargout] = plot_autoCorrelogramEvents(alignedData,varargin
 
 	% loop through eventFieldNames and plot
 	eventFieldNum = numel(eventFieldNames);
-	titleStr = sprintf('autoCorrelogram of calcium events [%s %s] binwidth-%gs %s',...
-		stimNameStr,stimEventCat,binWidth,normVal);
+	titleStr = sprintf('autoCorrelogram of calcium events %s [%s %s] binwidth-%gs %s',...
+		timeType,stimNameStr,stimEventCat,binWidth,normVal);
 	titleStr = strrep(titleStr,'_',' ');
 	[f,f_rowNum,f_colNum] = fig_canvas(eventFieldNum,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
 		'fig_name',titleStr); % create a figure
