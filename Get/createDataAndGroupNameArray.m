@@ -49,5 +49,4 @@ function [dataArray,dataGroupArray,varargout] = createDataAndGroupNameArray(data
     end
     dataArray = [dataCell{:}];
     dataGroupArray = [dataGroupCell{:}];
-
 end

@@ -30,32 +30,6 @@ save(fullfile(save_dir, [dt, '_ProcessedData_ogEx']),...
     'recdata_organized','alignedData_allTrials','opt','adata');
 % 'recdata_organized','alignedData_allTrials','grouped_event','adata','grouped_event_setting','opt','adata'
 
-%% ====================
-% 8.4 Select a specific group of data from recdata_group for further analysis
-recdata_organized = select_grouped_data(recdata_group);
-
-%% ====================
-% 9.1 Examine peak detection with plots 
-% close all
-% SavePlot = false; % true or false
-% PauseTrial = false; % true or false
-% traceNum_perFig = 10; % number of traces/ROIs per figure
-% SaveTo = FolderPathVA.fig;
-% vis = 'off'; % on/off. set the 'visible' of figures
-% decon = false; % true/false plot decon trace
-% marker = false; % true/false plot markers
-
-% [SaveTo] = plotTracesFromAllTrials(recdata_organized,...
-% 	'PauseTrial', PauseTrial,...
-% 	'traceNum_perFig', traceNum_perFig, 'decon', decon, 'marker', marker,...
-% 	'SavePlot', SavePlot, 'SaveTo', SaveTo,...
-% 	'vis', vis);
-
-% [SaveTo] = plot_ROIevent_raster_from_trial_all(recdata_organized,...
-% 	'plotInterval',5,'sz',10,'save_fig',SavePlot,'save_dir',SaveTo);
-% if SaveTo~=0
-% 	FolderPathVA.fig = SaveTo;
-% end
 
 %% ====================
 % 8.5 manually discard rois or trial 
@@ -79,16 +53,8 @@ for rn = 1:recN
 	end
 end
 recdata_organized(dis_idx, :) = [];
-%% ====================
-% Discarding certain ROIs according to what calcium spikes they don't have will be executed in the next section on alignedData
-% % 9.1.3 Discard rois (in recdata_organized) if they are lack of certain types of events
-% dis.stims = {'GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s GPIO-1-1s'};
-% dis.eventCats = {{'trigger'},...
-% 		{'trigger', 'rebound'},...
-% 		{'trigger-beforeStim', 'trigger-interval', 'delay-trigger', 'rebound-interval'}};
-% debug_mode = false; % true/false
-% recdata_organized_bk = recdata_organized;
-% [recdata_organized] = discard_recData_roi(recdata_organized,'stims',dis.stims,'eventCats',dis.eventCats,'debug_mode',debug_mode);
+
+
 %% ====================
 % 8.7 Align traces from all trials. Also collect the properties of events
 adata.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
@@ -103,7 +69,7 @@ adata.pre_event_time = 5; % unit: s. event trace starts at 1s before event onset
 adata.post_event_time = 10; % unit: s. event trace ends at 2s after event onset
 adata.stim_section = true; % true: use a specific section of stimulation to calculate the calcium level delta. For example the last 1s
 adata.ss_range = 1; % single number (last n second) or a 2-element array (start and end. 0s is stimulation onset)
-adata.stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
+adata.stim_time_error = 0.2; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 adata.mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
 adata.caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
@@ -154,8 +120,24 @@ filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
 filters = {[nan 1 nan], [nan nan nan], [nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 
+% % Use structure below to substitute the 'stim_names' and 'filters' to filter ROIs when have time
+% stimEffectFilters = empty_content_struct({'stimName','ex','in','offStimEvents'});
+% stimEffectFilters(1).stimName = 'og-5s';
+% stimEffectFilters(1).ex = nan;
+% stimEffectFilters(1).in = 1;
+% stimEffectFilters(1).offStimEvents = nan;
+% stimEffectFilters(2).stimName = 'ap-0.1s';
+% stimEffectFilters(2).ex = nan;
+% stimEffectFilters(2).in = nan;
+% stimEffectFilters(2).offStimEvents = nan;
+% stimEffectFilters(2).stimName = 'og-5s ap-0.1s';
+% stimEffectFilters(2).ex = nan;
+% stimEffectFilters(2).in = nan;
+% stimEffectFilters(2).offStimEvents = nan;
+
 
 %% ====================
+% Fig 2
 % 9.1.1 Plot calcium signal as traces and color array, and calcium events with hist-count.
 % Note: ROIs of all trials in alignedData_allTrials can be plotted. 
 %	Use 'filter' to screen ROIs based on the effect of stimulation
@@ -176,6 +158,7 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 
 
 %% ==================== 
+% Fig 2
 %9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
@@ -239,6 +222,7 @@ ogapData_shift = ogapData(2:end);
 
 
 %% ==================== 
+% Fig 5 or supplementary data
 % 9.1.3 Plot the auto-correlogram of events and the probability density function of inter-event time
 close all
 saveFig = true; % true/false
@@ -282,6 +266,7 @@ plot_eventTimeInt_alignedData_allTrials(alignedData_allTrials,timeType,binsOrEdg
 
 
 %% ==================== 
+% Fig 5?
 % 9.1.4 Get decay curve taus and plot them in histogram
 close all
 filter_roi_tf = true;
@@ -295,12 +280,26 @@ norm_FluorData = false; % true/false. whether to normalize the FluroData
 histogram([roi_tauInfo.tauMean],20);
 FolderPathVA.fig = savePlot(gcf,'guiSave','on','save_dir',FolderPathVA.fig,'fname','hist_tau_mean');
 
+
+%% ==================== 
+% Filter the ROIs in all trials using stimulation effect
+% the filtered alignedData will be used in the following plotting sections
+stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
+filters = {[0 nan nan], [nan nan nan], [nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+[alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
+	'stim_names',stim_names,'filters',filters);
+title_prefix = 'filtered';
+
+
 %% ====================
+% Fig 2
 % 9.1.5 Plot traces and stim-aligned traces
 % Note: set adata.event_type to 'stimWin' when creating alignedData_allTrials
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 pause_after_trial = false;
+
+filter_roi_tf = true; % true/false. If true, screen ROIs
 TraceType = 'aligned'; % 'full'/'aligned'. Plot the full trace or stimulation aligned trace
 markers_name = {}; % of which will be labled in trace plot: 'peak_loc', 'rise_loc'
 if save_fig
@@ -309,11 +308,27 @@ if save_fig
 		FolderPathVA.fig = save_dir;
 	end 
 end
-trial_num = numel(alignedData_allTrials);
+
+if filter_roi_tf
+	alignedDataTrials_plot = alignedData_filtered;
+else
+	alignedDataTrials_plot = alignedData_allTrials;
+end
+
+trial_num = numel(alignedDataTrials_plot);
 for tn = 1:trial_num
-	alignedData = alignedData_allTrials(tn);
+    close all
+	alignedData = alignedDataTrials_plot(tn);
+	% trialNameParts = split(alignedData.trialName, '_');
+	% subfolderName = trialNameParts{1};
+	% subfolderPath = fullfile(save_dir,subfolderName);
+	% mkdir(subfolderPath);
+
 	PlotTraceFromAlignedDataVar(alignedData,'TraceType',TraceType,'markers_name',markers_name,...
 		'save_fig',save_fig,'save_dir',save_dir);
+	if pause_after_trial
+		pause
+	end
 end
 
 
@@ -323,17 +338,23 @@ end
 % 9.2.1.1 Check trace aligned to stim window
 % note: 'event_type' for alignedData_allTrials must be 'stimWin'
 close all
-tplot.save_fig = false; % true/false
+filter_roi_tf = true; % true/false. If true, screen ROIs
 tplot.plot_combined_data = false; % true/false
 tplot.plot_stim_shade = true; % true/false
 tplot.y_range = [-20 30];
 tplot.stimEffectType = 'rebound'; % options: 'excitation', 'inhibition', 'rebound'
 tplot.section = []; % n/[]. specify the n-th repeat of stimWin. Set it to [] to plot all stimWin 
 tplot.sponNorm = false; % true/false
-stimNames = {'ap-0.1s','ap-0.1s og-5s','og-5s'};
+tplot.save_fig = false; % true/false
 tplot.save_dir = FolderPathVA.fig;
 
-fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedData_allTrials,...
+if filter_roi_tf
+	alignedDataTrials_plot = alignedData_filtered;
+else
+	alignedDataTrials_plot = alignedData_allTrials;
+end
+
+fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedDataTrials_plot,...
 	'plot_combined_data',tplot.plot_combined_data,'plot_stim_shade',tplot.plot_stim_shade,'section',tplot.section,...
 	'y_range',tplot.y_range,'stimEffectType',tplot.stimEffectType,'sponNorm',tplot.sponNorm);
 if tplot.save_fig
@@ -402,7 +423,7 @@ end
 %% ====================
 % 9.5.1.1 Create 'eventProp_all' according to stimulation and category 
 
-eprop.entry = 'event'; % options: 'roi' or 'event'
+eprop.entry = 'roi'; % options: 'roi' or 'event'
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 eprop.modify_stim_name = true; % true/false. Change the stimulation name, 
@@ -418,7 +439,7 @@ mgSetting.sponOnly = false; % true/false. If eventType is 'roi', and mgSetting.s
 mgSetting.seperate_spon = true; % true/false. Whether to seperated spon according to stimualtion
 mgSetting.dis_spon = false; % true/false. Discard spontaneous events
 mgSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
-mgSetting.groupField = {'stim_name', 'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+mgSetting.groupField = {'stim_name','peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
 
 % if strcmp('stim_name',mgSetting.groupField) && strcmp('roi',eprop.entry)
 % 	keep_eventcat = 'spon'; % only keep spon events to avoid duplicated values when eprop.entry is "roi"
