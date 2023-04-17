@@ -36,26 +36,26 @@ recdata_organized = select_grouped_data(recdata_group);
 
 %% ====================
 % 9.1 Examine peak detection with plots 
-% close all
-% SavePlot = false; % true or false
-% PauseTrial = false; % true or false
-% traceNum_perFig = 10; % number of traces/ROIs per figure
-% SaveTo = FolderPathVA.fig;
-% vis = 'off'; % on/off. set the 'visible' of figures
-% decon = false; % true/false plot decon trace
-% marker = false; % true/false plot markers
+close all
+SavePlot = false; % true or false
+PauseTrial = true; % true or false
+traceNum_perFig = 10; % number of traces/ROIs per figure
+SaveTo = FolderPathVA.fig;
+vis = 'off'; % on/off. set the 'visible' of figures
+decon = true; % true/false plot decon trace
+marker = false; % true/false plot markers
 
-% [SaveTo] = plotTracesFromAllTrials(recdata_organized,...
-% 	'PauseTrial', PauseTrial,...
-% 	'traceNum_perFig', traceNum_perFig, 'decon', decon, 'marker', marker,...
-% 	'SavePlot', SavePlot, 'SaveTo', SaveTo,...
-% 	'vis', vis);
+[SaveTo] = plotTracesFromAllTrials(recdata_organized,...
+	'PauseTrial', PauseTrial,...
+	'traceNum_perFig', traceNum_perFig, 'decon', decon, 'marker', marker,...
+	'SavePlot', SavePlot, 'SaveTo', SaveTo,...
+	'vis', vis);
 
-% [SaveTo] = plot_ROIevent_raster_from_trial_all(recdata_organized,...
-% 	'plotInterval',5,'sz',10,'save_fig',SavePlot,'save_dir',SaveTo);
-% if SaveTo~=0
-% 	FolderPathVA.fig = SaveTo;
-% end
+[SaveTo] = plot_ROIevent_raster_from_trial_all(recdata_organized,...
+	'plotInterval',5,'sz',10,'save_fig',SavePlot,'save_dir',SaveTo);
+if SaveTo~=0
+	FolderPathVA.fig = SaveTo;
+end
 
 %% ====================
 % 8.5 manually discard rois or trial 

@@ -76,7 +76,7 @@ for fn = 1:nFig
     roi_num_end = min([nROIs, fn*traceNum_perFig]);
 
     if isempty(plotwhere) || traceNum_perFig>1
-        f(fn) =  fig_canvas(1,'unit_width',0.9,unit_height,0.9);
+        f(fn) =  fig_canvas(1,'unit_width',0.9,'unit_height',0.9);
     else
         plotwhere;
     end
