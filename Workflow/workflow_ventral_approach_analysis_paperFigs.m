@@ -437,8 +437,8 @@ else
 	alignedData = alignedData_allTrials;
 end
 
-[eventProp_all]=collect_events_from_alignedData(alignedData,...
-	'entry',eprop.entry,'modify_stim_name',eprop.modify_stim_name);
+% [eventProp_all]=collect_events_from_alignedData(alignedData,...
+% 	'entry',eprop.entry,'modify_stim_name',eprop.modify_stim_name);
 
 
 % Rename stim name of og to EXog if og-5s exhibited excitation effect
@@ -463,27 +463,31 @@ mgSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', '
 mgSetting.sort_order_plus = {'ap', 'EXopto'};
 debug_mode = false; % true/false
 
-[grouped_event,grouped_event_setting] = mod_and_group_eventProp(eventProp_all,eventType,adata,...
-	'mgSetting',mgSetting,'debug_mode',debug_mode);
-[grouped_event_setting.TrialRoiList] = get_roiNum_from_eventProp_fieldgroup(eventProp_all,'stim_name'); % calculate all roi number
-if strcmpi(eprop.entry,'roi')
-	GroupNum = numel(grouped_event);
-	% GroupName = {grouped_event.group};
-	for gn = 1:GroupNum
-		EventInfo = grouped_event(gn).event_info;
-		fovIDs = {EventInfo.fovID};
-		roi_num = numel(fovIDs);
-		fovIDs_unique = unique(fovIDs);
-		fovIDs_unique_num = numel(fovIDs_unique);
-		fovID_count_struct = empty_content_struct({'fovID','numROI','perc'},fovIDs_unique_num);
-		[fovID_count_struct.fovID] = fovIDs_unique{:};
-		for fn = 1:fovIDs_unique_num
-			fovID_count_struct(fn).numROI = numel(find(contains(fovIDs,fovID_count_struct(fn).fovID)));
-			fovID_count_struct(fn).perc = fovID_count_struct(fn).numROI/roi_num;
-		end
-		grouped_event(gn).fovCount = fovID_count_struct;
-	end
-end
+[grouped_event] = getAndGroup_eventsProp(alignedData,...
+	'entry',eprop.entry,'modify_stim_name',eprop.modify_stim_name,...
+	'mgSetting',mgSetting,'adata',adata,'debug_mode',debug_mode);
+
+% [grouped_event,grouped_event_setting] = mod_and_group_eventProp(eventProp_all,eventType,adata,...
+% 	'mgSetting',mgSetting,'debug_mode',debug_mode);
+% [grouped_event_setting.TrialRoiList] = get_roiNum_from_eventProp_fieldgroup(eventProp_all,'stim_name'); % calculate all roi number
+% if strcmpi(eprop.entry,'roi')
+% 	GroupNum = numel(grouped_event);
+% 	% GroupName = {grouped_event.group};
+% 	for gn = 1:GroupNum
+% 		EventInfo = grouped_event(gn).event_info;
+% 		fovIDs = {EventInfo.fovID};
+% 		roi_num = numel(fovIDs);
+% 		fovIDs_unique = unique(fovIDs);
+% 		fovIDs_unique_num = numel(fovIDs_unique);
+% 		fovID_count_struct = empty_content_struct({'fovID','numROI','perc'},fovIDs_unique_num);
+% 		[fovID_count_struct.fovID] = fovIDs_unique{:};
+% 		for fn = 1:fovIDs_unique_num
+% 			fovID_count_struct(fn).numROI = numel(find(contains(fovIDs,fovID_count_struct(fn).fovID)));
+% 			fovID_count_struct(fn).perc = fovID_count_struct(fn).numROI/roi_num;
+% 		end
+% 		grouped_event(gn).fovCount = fovID_count_struct;
+% 	end
+% end
 
 
 %% ====================
@@ -565,7 +569,7 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 % 9.5.2.1 Plot event parameters. Grouped according to categories
 % [9.3] eventProp_all: entry is 'events'
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 plot_combined_data = false;
 parNames = {'rise_duration','FWHM','peak_mag_delta','sponNorm_peak_mag_delta',...
     'baseDiff','baseDiff_stimWin','val_rise','rise_delay','peak_delay'}; % entry: event

@@ -38,15 +38,24 @@ function [dataArray,dataGroupArray,varargout] = createDataAndGroupNameArray(data
         error('Input_1 and input_2 must be cell arrays')
     end
 
+    % Make sure that dataCell is a vertical cell array 
+    dataCell = dataCell(:);
+
     % loop through cells and make group names for every data point
     groupNum = numel(dataCell);
     dataGroupCell = cell(size(dataCell));
     for n = 1:groupNum
         groupName = groupNames{n};
 
+        % Make sure that components in each cell of dataCell is vertical
+        dataCell{n} = dataCell{n}(:);
+
         dataGroupCell{n} = cell(size(dataCell{n}));
         [dataGroupCell{n}{:}] = deal(groupName);
     end
-    dataArray = [dataCell{:}];
-    dataGroupArray = [dataGroupCell{:}];
+    % dataArray = [dataCell{:}];
+    % dataGroupArray = [dataGroupCell{:}];
+
+    dataArray = vertcat(dataCell{:});
+    dataGroupArray = vertcat(dataGroupCell{:});
 end

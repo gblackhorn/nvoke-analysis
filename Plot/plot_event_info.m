@@ -26,6 +26,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 
 	FontSize = 10;
 	FontWeight = 'bold';
+	TickAngle = 15; 
 
 	% Optionals
 	for ii = 1:2:(nargin-1)
@@ -115,7 +116,10 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 
 	%% bar plot
 	f_bar = figure('Name', 'bar plots');
-    f_stat = figure('Name', 'bar stat');;
+    f_stat = figure('Name', 'bar stat');
+    f_box = figure('Name', 'box plots');
+    f_violin = figure('Name', 'violin plots');
+
 	if par_num == 1
 		fig_position = [0.1 0.1 0.2 0.6]; % left, bottom, width, height
 	else
@@ -123,25 +127,37 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	end
 	set(f_bar, 'Units', 'normalized', 'Position', fig_position)
     set(f_stat, 'Units', 'normalized', 'Position', fig_position)
-	tlo = tiledlayout(f_bar, ceil(par_num/4), 4);
+    set(f_box, 'Units', 'normalized', 'Position', fig_position)
+    set(f_violin, 'Units', 'normalized', 'Position', fig_position)
+
+	tlo_bar = tiledlayout(f_bar, ceil(par_num/4), 4);
 	tlo_barstat = tiledlayout(f_stat, ceil(par_num/4), 4);
+	tlo_box = tiledlayout(f_box, ceil(par_num/4), 4);
+	tlo_violin = tiledlayout(f_violin, ceil(par_num/4), 4);
+
+	groupNames = {event_info_struct.group};
+	% group_num = numel(groupNames);
+
 	for pn = 1:par_num
-		ax = nexttile(tlo);
+
+		% bar plot and statistics
+		ax_bar = nexttile(tlo_bar);
 		ax_stat = nexttile(tlo_barstat);
 		par = parNames{pn};
 		if group_num >1
 			[bar_data.(par), bar_stat.(par)] = plot_event_info_bar(event_info_struct,par,...
-				'plotWhere',ax,'stat',stat,'stat_fig',stat_fig,'FontSize',FontSize,'FontWeight',FontWeight);
+				'plotWhere',ax_bar,'stat',stat,'stat_fig',stat_fig,'FontSize',FontSize,'FontWeight',FontWeight);
 			title(replace(par, '_', '-'));
 
 			% Plot multiCompare statistics in a single figure
 			uit_pos = get(ax_stat,'Position');
 			uit_unit = get(ax_stat,'Units');
 			% delete(ax_stat);
-			MultCom_stat = bar_stat.(par).multCompare;
+			MultCom_stat = bar_stat.(par).multCompare(:,["g1","g2","p","h"]);
 			uit = uitable(f_stat,'Data',table2cell(MultCom_stat),...
 				'ColumnName',MultCom_stat.Properties.VariableNames,...
 				'Units',uit_unit,'Position',uit_pos);
+% 			title(replace(par, '_', '-'));
 			% delete(ax_stat);
 
 			jScroll = findjobj(uit);
@@ -149,45 +165,105 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 			jTable.setAutoResizeMode(jTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
 			drawnow;
 		end
-	end
-	if save_fig
-		fname = sprintf('bar_plots-%s',fname_suffix);
-		savePlot(f_bar,...
-			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
 
-		fname_stat = sprintf('bar_stat-%s',fname_suffix);
-		savePlot(f_stat,...
-			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname_stat);
-	end
-
-	%% box plot
-	f_box = figure('Name', 'box plots');
-	if par_num == 1
-		fig_position = [0.1 0.1 0.2 0.6];
-	else
-		fig_position = [0.1 0.1 0.8 0.8];
-	end 
-	set(gcf, 'Units', 'normalized', 'Position', fig_position)
-	tlo = tiledlayout(f_box, ceil(par_num/4), 4);
-	groupNames = {event_info_struct.group};
-	group_num = numel(groupNames);
-	for pn = 1:par_num
-		ax = nexttile(tlo);
-		par = parNames{pn};
+		% box plot
+		ax_box = nexttile(tlo_box);
 		event_info_cell = cell(1, group_num);
 		for gn = 1:group_num
 			event_info_cell{gn} = [event_info_struct(gn).event_info.(par)]';
 		end
 		[~, box_stat.(par)] = boxPlot_with_scatter(event_info_cell, 'groupNames', groupNames,...
-			'plotWhere', ax, 'stat', true, 'FontSize', FontSize,'FontWeight',FontWeight);
+			'plotWhere', ax_box, 'stat', true, 'FontSize', FontSize,'FontWeight',FontWeight);
+		title(replace(par, '_', '-'));
+
+		% violin plot
+		ax_violin = nexttile(tlo_violin);
+		[violinData,violinGroups] = createDataAndGroupNameArray(event_info_cell,groupNames);
+		violinplot(violinData,violinGroups);
+		set(gca, 'box', 'off');
+		set(gca,'TickDir','out');
+		set(gca, 'FontSize', FontSize);
+		set(gca, 'FontWeight', FontWeight);
+		xtickangle(TickAngle);
 		title(replace(par, '_', '-'));
 	end
 	if save_fig
+		fname_bar = sprintf('bar_plots-%s',fname_suffix);
+		savePlot(f_bar,...
+			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname_bar);
+
+		fname_stat = sprintf('bar_stat-%s',fname_suffix);
+		savePlot(f_stat,...
+			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname_stat);
+
 		% fname = 'box_plots';
-		fname = sprintf('box_plots-%s',fname_suffix);
+		fname_box = sprintf('box_plots-%s',fname_suffix);
 		savePlot(f_box,...
-			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
+			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname_box);
+
+		fname_violin = sprintf('violin_plots-%s',fname_suffix);
+		savePlot(f_violin,...
+			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname_violin);
 	end
+
+	% %% box plot
+	% f_box = figure('Name', 'box plots');
+	% if par_num == 1
+	% 	fig_position = [0.1 0.1 0.2 0.6];
+	% else
+	% 	fig_position = [0.1 0.1 0.8 0.8];
+	% end 
+	% set(gcf, 'Units', 'normalized', 'Position', fig_position)
+	% tlo = tiledlayout(f_box, ceil(par_num/4), 4);
+	% groupNames = {event_info_struct.group};
+	% group_num = numel(groupNames);
+	% for pn = 1:par_num
+	% 	ax = nexttile(tlo);
+	% 	par = parNames{pn};
+	% 	event_info_cell = cell(1, group_num);
+	% 	for gn = 1:group_num
+	% 		event_info_cell{gn} = [event_info_struct(gn).event_info.(par)]';
+	% 	end
+	% 	[~, box_stat.(par)] = boxPlot_with_scatter(event_info_cell, 'groupNames', groupNames,...
+	% 		'plotWhere', ax, 'stat', true, 'FontSize', FontSize,'FontWeight',FontWeight);
+	% 	title(replace(par, '_', '-'));
+	% end
+	% if save_fig
+	% 	% fname = 'box_plots';
+	% 	fname = sprintf('box_plots-%s',fname_suffix);
+	% 	savePlot(f_box,...
+	% 		'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
+	% end
+
+	% %% violin plot
+	% f_violin = figure('Name', 'box plots');
+	% if par_num == 1
+	% 	fig_position = [0.1 0.1 0.2 0.6];
+	% else
+	% 	fig_position = [0.1 0.1 0.8 0.8];
+	% end 
+	% set(gcf, 'Units', 'normalized', 'Position', fig_position)
+	% tlo = tiledlayout(f_violin, ceil(par_num/4), 4);
+	% groupNames = {event_info_struct.group};
+	% group_num = numel(groupNames);
+	% for pn = 1:par_num
+	% 	ax = nexttile(tlo);
+	% 	par = parNames{pn};
+	% 	event_info_cell = cell(1, group_num);
+	% 	for gn = 1:group_num
+	% 		event_info_cell{gn} = [event_info_struct(gn).event_info.(par)]';
+	% 	end
+	% 	[~, box_stat.(par)] = boxPlot_with_scatter(event_info_cell, 'groupNames', groupNames,...
+	% 		'plotWhere', ax, 'stat', true, 'FontSize', FontSize,'FontWeight',FontWeight);
+	% 	title(replace(par, '_', '-'));
+	% end
+	% if save_fig
+	% 	% fname = 'box_plots';
+	% 	fname = sprintf('box_plots-%s',fname_suffix);
+	% 	savePlot(f_box,...
+	% 		'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
+	% end
+
 
 	%% cumulative plot
 	f_cd = figure('Name', 'cumulative distribution plots'); 
