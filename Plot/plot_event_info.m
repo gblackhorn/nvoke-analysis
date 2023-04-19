@@ -153,7 +153,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 			uit_pos = get(ax_stat,'Position');
 			uit_unit = get(ax_stat,'Units');
 			% delete(ax_stat);
-			MultCom_stat = bar_stat.(par).multCompare(:,["g1","g2","p","h"]);
+			MultCom_stat = bar_stat.(par).c(:,["g1","g2","p","h"]);
 			uit = uitable(f_stat,'Data',table2cell(MultCom_stat),...
 				'ColumnName',MultCom_stat.Properties.VariableNames,...
 				'Units',uit_unit,'Position',uit_pos);

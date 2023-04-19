@@ -128,8 +128,8 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 		fig_title{1} = sprintf('%s %s fluorescence signal',title_str_stem,norm_str); % Create the title string
 		f(1) = fig_canvas(2,'unit_width',plot_unit_width,'unit_height',plot_unit_height,...
 			'column_lim',1,'fig_name',fig_title{1}); % create a figure
-		tlo = tiledlayout(f, 2, 1); % setup tiles
-		ax = nexttile(tlo); % activate the ax for trace plot
+		tlo = tiledlayout(f, 3, 1); % setup tiles
+		ax = nexttile(tlo,[2,1]); % activate the ax for trace plot
 		plot_TemporalData_Trace(gca,timeData,FluroData,...
 			'ylabels',rowNames,'plot_marker',true,...
 			'marker1_xData',event_peakTime,'marker2_xData',event_riseTime,'shadeData',patchCoor);

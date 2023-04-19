@@ -8,6 +8,7 @@ function [alignedData_filtered,varargout] = filter_eventProp_followEvents_trials
     followEventDuration = 5; % unit: s. Following event(s) will be found in this time duration after the event with specified category
     followEventNum = 1; % number of following event for each specified category event.
     timeType = 'rise_time';
+    debugMode = false; % true/false
 
 
     % Optionals for inputs
@@ -20,6 +21,8 @@ function [alignedData_filtered,varargout] = filter_eventProp_followEvents_trials
             followEventNum = varargin{ii+1}; % rebound filter. 
         elseif strcmpi('timeType', varargin{ii}) 
             timeType = varargin{ii+1}; % rebound filter. 
+        elseif strcmpi('debugMode', varargin{ii}) 
+            debugMode = varargin{ii+1}; % rebound filter. 
         end
     end
 
@@ -28,17 +31,28 @@ function [alignedData_filtered,varargout] = filter_eventProp_followEvents_trials
     % Loop through trials
     trialNum = numel(alignedData_filtered);
     for tn = 1:trialNum
-        ROIsInfo = alignedData_filtered.traces(tn);
+        ROIsInfo = alignedData_filtered(tn).traces;
         roiNum = numel(ROIsInfo);
+
+        if debugMode
+            fprintf('trial %g/%g: %s\n',tn,trialNum,alignedData_filtered(tn).trialName);
+            if tn == 16
+                pause
+            end
+        end
 
         % loop through trials
         for rn = 1:roiNum
+            if debugMode
+                fprintf('trial %g/%g: %s\n',rn,roiNum,ROIsInfo(rn).roi);
+            end
+
             eventProp = ROIsInfo(rn).eventProp;
             NeweventProp = get_followingEvent(eventProp,eventCat,followEventCat,...
                 'followEventDuration',followEventDuration);
             ROIsInfo(rn).eventProp = NeweventProp;
         end
-        alignedData_filtered.traces(tn) = ROIsInfo;
+        alignedData_filtered(tn).traces = ROIsInfo;
     end
 end
 

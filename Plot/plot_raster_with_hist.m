@@ -51,11 +51,11 @@ function [f,varargout] = plot_raster_with_hist(rasterData,x_window,varargin)
 	% Creat a figure to plot raster (first ax) and histogram (second ax)
 	f = fig_canvas(2,'unit_width',0.4,'unit_height',0.4,'column_lim',1,...
 		'fig_name',titleStr); % create a figure
-	tlo = tiledlayout(f, 2, 1); % setup tiles
+	tlo = tiledlayout(f, 3, 1); % setup tiles
 	xtickInt = hist_binsize*xtickInt_scale;
 
 	% Create raster plot in the first ax
-	ax = nexttile(tlo);
+	ax = nexttile(tlo,[2,1]);
 	plotWhere = gca;
 	plot_TemporalRaster(plotWhere,rasterData,...
 		'rowNames',rowNames,'x_window',x_window,'xtickInt',xtickInt,...

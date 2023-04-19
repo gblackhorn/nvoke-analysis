@@ -287,7 +287,7 @@ FolderPathVA.fig = savePlot(gcf,'guiSave','on','save_dir',FolderPathVA.fig,'fnam
 % Filter the ROIs in all trials using stimulation effect
 % the filtered alignedData will be used in the following plotting sections
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[0 nan nan], [1 nan nan], [0 nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+filters = {[nan nan nan], [1 nan nan], [nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 [alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
 	'stim_names',stim_names,'filters',filters);
 title_prefix = 'filtered';
@@ -430,7 +430,7 @@ eprop.entry = 'event'; % options: 'roi' or 'event'
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 eprop.modify_stim_name = true; % true/false. Change the stimulation name, 
                             % such as GPIOxxx and OG-LEDxxx (output from nVoke), to simpler ones (ap, og, etc.)
-filter_roi_tf = false;
+filter_roi_tf = true; % true/false
 if filter_roi_tf
 	alignedData = alignedData_filtered;
 else
@@ -444,7 +444,7 @@ end
 % Rename stim name of og to EXog if og-5s exhibited excitation effect
 eventType = eprop.entry; % 'roi' or 'event'. The entry type in eventProp
 mgSetting.sponOnly = false; % true/false. If eventType is 'roi', and mgSetting.sponOnly is true. Only keep spon entries
-mgSetting.seperate_spon = true; % true/false. Whether to seperated spon according to stimualtion
+mgSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
 mgSetting.dis_spon = false; % true/false. Discard spontaneous events
 mgSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
 mgSetting.groupField = {'stim_name','peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
@@ -559,7 +559,7 @@ savePlot(gcf,'guiSave','off','save_dir',FolderPathVA.fig,'fname','CaLevel violin
 
 % {'trig [EXog]','EXog','trig-AP',}
 tags_discard = {'rebound [ap','ap-0.25s','ap-0.5s','og-0.96s','opto-delay','og&ap'}; % Discard groups containing these words. 'spon','opto-delay','og&ap'
-tags_keep = {'trig','trig [og','rebound','opto-delay [og-5s]','trig-ap'}; % Keep groups containing these words
+tags_keep = {'trig','trig [og','rebound','opto-delay [og-5s]','trig-ap','spon'}; % Keep groups containing these words
 clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
 [grouped_event_info_filtered] = filter_entries_in_structure(grouped_event,'group',...
 	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);
@@ -572,7 +572,7 @@ close all
 save_fig = true; % true/false
 plot_combined_data = false;
 parNames = {'rise_duration','FWHM','peak_mag_delta','sponNorm_peak_mag_delta',...
-    'baseDiff','baseDiff_stimWin','val_rise','rise_delay','peak_delay'}; % entry: event
+    'rise_delay','peak_delay'}; % entry: event
         % 'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
         % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
     
@@ -601,6 +601,78 @@ if save_fig
 	dt = datestr(now, 'yyyymmdd');
 	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
 end
+
+%% ====================
+% Fig 3. Compare off-stim(rebound) events and their following spon events
+eventCat = 'rebound';
+followEventCat = 'spon';
+eventCatField = 'peak_category';
+followEventDuration = 5; % unit: s. Following event(s) will be found in this time duration after the event with specified category
+followEventNum = 1; % number of following event for each specified category event.
+timeType = 'rise_time';
+[alignedData_allTrials_followEvents] = filter_eventProp_followEvents_trials(alignedData_allTrials,...
+	eventCat,followEventCat,'followEventDuration',followEventDuration);
+
+eprop.entry = 'event'; % options: 'roi' or 'event'
+                % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
+                % 'event': events are seperated (struct length = events_num). mean values were not calculated
+eprop.modify_stim_name = true; % true/false. Change the stimulation name, 
+                            % such as GPIOxxx and OG-LEDxxx (output from nVoke), to simpler ones (ap, og, etc.)
+filter_roi_tf = false;
+eventType = eprop.entry; % 'roi' or 'event'. The entry type in eventProp
+mgSetting.sponOnly = false; % true/false. If eventType is 'roi', and mgSetting.sponOnly is true. Only keep spon entries
+mgSetting.seperate_spon = true; % true/false. Whether to seperated spon according to stimualtion
+mgSetting.dis_spon = false; % true/false. Discard spontaneous events
+mgSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
+mgSetting.groupField = {'stim_name','peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+mgSetting.mark_EXog = false; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
+mgSetting.og_tag = {'og', 'og&ap'}; % find og events with these strings. 'og' to 'Exog', 'og&ap' to 'EXog&ap'
+mgSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', 'rebound', 'delay'
+mgSetting.sort_order_plus = {'ap', 'EXopto'};
+debug_mode = false; % true/false
+
+if filter_roi_tf
+	alignedData = alignedData_filtered;
+else
+	alignedData = alignedData_allTrials;
+end
+
+[grouped_event] = getAndGroup_eventsProp(alignedData_allTrials_followEvents,...
+	'entry',eprop.entry,'modify_stim_name',eprop.modify_stim_name,...
+	'mgSetting',mgSetting,'adata',adata,'debug_mode',debug_mode);
+
+tags_discard = {'og-5s ap-0.1s'};
+tags_keep = {'og-5s'}; % Keep groups containing these words
+clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
+[grouped_event_info_filtered] = filter_entries_in_structure(grouped_event,'group',...
+	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry); % 'tags_discard',tags_discard,
+
+% PLot
+close all
+save_fig = true; % true/false
+plot_combined_data = false;
+parNames = {'rise_duration','FWHM','peak_mag_delta','sponNorm_peak_mag_delta'}; % entry: event
+save_dir = FolderPathVA.fig;
+stat = true; % true if want to run anova when plotting bars
+stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
+
+% grouped_event = grouped_event_bk;
+[save_dir, plot_info] = plot_event_info(grouped_event_info_filtered,...
+	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
+	'save_fig', save_fig, 'save_dir', save_dir);
+if save_dir~=0
+	FolderPathVA.fig = save_dir;
+end
+
+if save_fig
+	% plot_stat_info.grouped_event_info_option = grouped_event_info_option;
+	plot_stat_info.grouped_event_info_filtered = grouped_event_info_filtered;
+	plot_stat_info.plot_info = plot_info;
+	dt = datestr(now, 'yyyymmdd');
+	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
+end
+
+
 
 %% ====================
 % 9.5.2.2 

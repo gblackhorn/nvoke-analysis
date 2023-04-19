@@ -8,6 +8,7 @@ function [NeweventProp,varargout] = get_followingEvent(eventProp,eventCat,follow
     followEventDuration = 5; % unit: s. Following event(s) will be found in this time duration after the event with specified category
     followEventNum = 1; % number of following event for each specified category event.
     timeType = 'rise_time';
+    debugMode = false; % true/false
 
 
     % Optionals for inputs
@@ -51,29 +52,34 @@ function [NeweventProp,varargout] = get_followingEvent(eventProp,eventCat,follow
         end
 
         for n = 1:sEventNum
-            % Get a specified-cat event and its following event(s)
-            NewEventPropCell{n} = eventProp([sEventsIDX(n):sEventsIDX(n)+followEventNum]);
+
+            if sEventsIDX(n) < structLength
+                % Get a specified-cat event and its following event(s)
+                NewEventPropCell{n} = eventProp([sEventsIDX(n):sEventsIDX(n)+followEventNum]);
 
 
-            % Check if the following window(s) belong to the 'followEventCat'
-            fEvents = NewEventPropCell{n}(2:end);
-            fEventsCat = {fEvents.(eventCatField)};
-            fEventsCatTF = strcmpi(fEventsCat,followEventCat);
-            if ~all(fEventsCatTF==true)
-                NewEventPropCell{n} = [];
-            end
-
-            % Check if the following window(s) is in the time range of 'followEventDuration'
-            if ~isempty(NewEventPropCell{n})
-                sEvent = NewEventPropCell{n}(1);
-                sEventTime = sEvent.(timeType);
-                fEventsTime = [fEvents.(timeType)];
-                fEventsTimeRelative = fEventsTime-sEventTime;
-
-                if ~all(fEventsTimeRelative<=followEventDuration)
+                % Check if the following window(s) belong to the 'followEventCat'
+                fEvents = NewEventPropCell{n}(2:end);
+                fEventsCat = {fEvents.(eventCatField)};
+                fEventsCatTF = strcmpi(fEventsCat,followEventCat);
+                if ~all(fEventsCatTF==true)
                     NewEventPropCell{n} = [];
                 end
-            end
+
+                % Check if the following window(s) is in the time range of 'followEventDuration'
+                if ~isempty(NewEventPropCell{n})
+                    sEvent = NewEventPropCell{n}(1);
+                    sEventTime = sEvent.(timeType);
+                    fEventsTime = [fEvents.(timeType)];
+                    fEventsTimeRelative = fEventsTime-sEventTime;
+
+                    if ~all(fEventsTimeRelative<=followEventDuration)
+                        NewEventPropCell{n} = [];
+                    end
+                end
+            else
+                NewEventPropCell{n} = [];
+            end  
         end
 
         % combine cell array and 
