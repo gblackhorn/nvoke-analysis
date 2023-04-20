@@ -13,16 +13,19 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
 	% rebound: events appearing immediatly after the end of a stim
     
     % Defaults
+    eventTimeType = 'peak_time'; % peak_time/rise_time
     stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
-    criteria_excitated = 2; % triggered peak: peak start to rise in 2s from onset of stim
-    criteria_rebound = 1; % rebound peak: peak start to rise in 1s from end of stim
+    criteria_excitated = 2; % triggered event: time from onset of stim
+    criteria_rebound = 1; % rebound event: time from end of stim
     % peak_cat_str = {'noStim', 'noStimFar', 'triggered', 'triggered_delay', 'rebound', 'interval'};
     % peak_cat_str = eventCatStr;
     [peak_cat_str] = event_category_names;
 
     % Optionals
     for ii = 1:2:(nargin-2)
-    	if strcmpi('stim_time_error', varargin{ii})
+    	if strcmpi('eventTimeType', varargin{ii})
+    		eventTimeType = varargin{ii+1}; %
+    	elseif strcmpi('stim_time_error', varargin{ii})
     		stim_time_error = varargin{ii+1}; %
 		elseif strcmpi('criteria_excitated', varargin{ii})
 		    criteria_excitated = varargin{ii+1};
@@ -33,8 +36,8 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
 
     % Main contents
     % fetch info from input
-    peak_rise_time = peak_properties_table.rise_time; % at which time, peak start to rise
-    peak_category = cell(length(peak_rise_time), 1); % allocate ram
+    eventTime = peak_properties_table.(eventTimeType); % 
+    peak_category = cell(length(eventTime), 1); % allocate ram
     if ~isempty(gpio_info_table)
 	    stim_ch_name = gpio_info_table.stim_ch_name{:};
 	    stim_time_range = gpio_info_table.stim_ch_time_range{:}; % 2-col matrix. [train_start_time train_end_time]
@@ -55,7 +58,7 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
 	    stim_time_range(:, 1) = stim_time_range(:, 1)-stim_time_error;
 	    stim_time_range(:, 2) = stim_time_range(:, 2)+stim_time_error;
 
-	    % Define windows for peak category
+	    % Define windows for event category
 	    inter_end(1:(stim_train_num-1), 1) = stim_time_range(2:stim_train_num, 1);
 	    inter_end(stim_train_num, 1) = stim_time_range(end, 2)+stim_train_inter;
 	    win_befor_1st_stim = [0, stim_time_range(1, 1)];
@@ -80,18 +83,34 @@ function [peak_category,varargout] = organize_category_peaks(peak_properties_tab
 	    win_inter = [win_rebound(:, 2), inter_end];
 	    time_after_last_stim = [stim_time_range(end, 2)+stim_train_inter]; % last_stim+stim_train_inter : end_of_rec
 
-	    % Find index of peaks fall in various windows for peak category
-	    idx_befor_1st_stim = find(peak_rise_time>=win_befor_1st_stim(1) & peak_rise_time<win_befor_1st_stim(2));
-	    idx_after_last_stim = find(peak_rise_time>=time_after_last_stim);
+	    % Find index of peaks fall in various windows for event category
+	    idx_befor_1st_stim = find(eventTime>=win_befor_1st_stim(1) & eventTime<win_befor_1st_stim(2));
+	    idx_after_last_stim = find(eventTime>=time_after_last_stim);
 	    % idx_beforeStim = [idx_befor_1st_stim; idx_after_last_stim];
 	    idx_beforeStim = idx_befor_1st_stim;
+	    idx_extraInter = [];
 	    for wn = 1:stim_train_num
-	    	idx_trig{wn} = find(peak_rise_time>=win_trig(wn, 1) & peak_rise_time<win_trig(wn, 2));
+	    	events_trigWin = find(eventTime>=win_trig(wn, 1) & eventTime<win_trig(wn, 2));
+	    	if ~isempty(events_trigWin)
+	    		idx_trig{wn} = events_trigWin(1);
+	    		if numel(events_trigWin) > 1
+	    			idx_extraInter = [idx_extraInter;events_trigWin(2:end)];
+	    		end
+	    	end
+	    	% idx_trig{wn} = find(eventTime>=win_trig(wn, 1) & eventTime<win_trig(wn, 2),1);
 	    	if stim_train_duration(wn) >= criteria_excitated
-		    	idx_delay{wn} = find(peak_rise_time>=win_trig_delay(wn, 1) & peak_rise_time<win_trig_delay(wn, 2));
+		    	idx_delay{wn} = find(eventTime>=win_trig_delay(wn, 1) & eventTime<win_trig_delay(wn, 2));
 		    end
-		    idx_rebound{wn} = find(peak_rise_time>=win_rebound(wn, 1) & peak_rise_time<win_rebound(wn, 2));
-		    idx_inter{wn} = find(peak_rise_time>=win_inter(wn, 1) & peak_rise_time<win_inter(wn, 2));
+		    events_reboundWin = find(eventTime>=win_rebound(wn, 1) & eventTime<win_rebound(wn, 2));
+		    if ~isempty(events_reboundWin)
+		    	idx_rebound{wn} = events_reboundWin(1);
+		    	if numel(events_reboundWin) > 1
+		    		idx_extraInter = [idx_extraInter;events_reboundWin(2:end)];
+		    	end
+		    end
+
+		    events_interWin = find(eventTime>=win_inter(wn, 1) & eventTime<win_inter(wn, 2));
+		    idx_inter{wn} = [events_interWin;idx_extraInter];
 	    end
 	    idx_trig = cell2mat(idx_trig);
 	    idx_delay = cell2mat(idx_delay);

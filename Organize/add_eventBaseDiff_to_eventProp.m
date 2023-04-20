@@ -7,6 +7,7 @@ function [eventProp_new,varargout] = add_eventBaseDiff_to_eventProp(eventProp,st
 	% roiTrace: trace data for a single roi. It has the same length as the timeInfo
 
 	% Defaults
+	eventTimeType = 'peak_time'; % peak_time/rise_time
 	base_timeRange = 2; % default 2s. 
     stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 
@@ -16,6 +17,8 @@ function [eventProp_new,varargout] = add_eventBaseDiff_to_eventProp(eventProp,st
 	        base_timeRange = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
         elseif strcmpi('stim_time_error', varargin{ii})
 	        stim_time_error = varargin{ii+1};
+        elseif strcmpi('eventTimeType', varargin{ii})
+	        eventTimeType = varargin{ii+1};
 	    end
 	end	
 
@@ -31,7 +34,7 @@ function [eventProp_new,varargout] = add_eventBaseDiff_to_eventProp(eventProp,st
 			val_event = [];
 			baseInfo = {};
 		else
-			eventTime = eventProp_new(n).rise_time;
+			eventTime = eventProp_new(n).(eventTimeType);
 			stimWin= get_stimWin_for_event(eventTime,stimRange);
 			stimStartTime = stimWin(:, 1);
 			stimEndTime = stimWin(:, 2);

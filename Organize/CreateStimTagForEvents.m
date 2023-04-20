@@ -13,6 +13,7 @@ function [tags,varargout] = CreateStimTagForEvents(StimRange,EventsTime,varargin
 	StimType = 'stim'; % prefix of tags. For example, 'stim 1s'
 	SkipTag_keyword = 'spon'; % default tag char. If EventCat element contains this char, tag the event with NoTag_char
 	NoTag_char = '';
+	debugMode = false;
 
 	% Optionals
 	for ii = 1:2:(nargin-2)
@@ -52,6 +53,9 @@ function [tags,varargout] = CreateStimTagForEvents(StimRange,EventsTime,varargin
 	if UseCat
 		RangeEnds = StimDuration.range(:,2);
 		for en = 1:EventNum
+			if debugMode
+            	fprintf('eventNum: %g/%g\n',en,EventNum);
+            end
 			if ~contains(EventCat{en},SkipTag_keyword,'IgnoreCase',true)
 				[closestValue,ClosestLoc] = find_closest_in_array(EventsTime(en),RangeEnds(:));
 				TagChar = sprintf('%s-%.2gs',StimType,StimDuration.array(ClosestLoc));

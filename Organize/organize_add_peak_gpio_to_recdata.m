@@ -19,6 +19,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     							% slice default: [50 2000]
     % criteria_mag = 3; % default: 3. peak_mag_normhp
     criteria_pnr = 10; % default: 3. peak-noise-ration (PNR): relative-peak-signal/std. std is calculated from highpassed data.
+    eventTimeType = 'peak_time'; % peak_time/rise_time. Use this value to categorize event
     criteria_excitated = 2; % If a peak starts to rise in 2 sec since stimuli, it's a excitated peak
     criteria_rebound = 1; % a peak is concidered as rebound if it starts to rise within 2s after stimulation end
     stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
@@ -59,8 +60,10 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 			criteria_slope = varargin{ii+1};
 		elseif strcmpi('criteria_pnr', varargin{ii})
 			criteria_pnr = varargin{ii+1};
-		elseif strcmpi('criteria_excitated', varargin{ii}) % needed for smooth process
-			criteria_excitated = varargin{ii+1};
+		elseif strcmpi('eventTimeType', varargin{ii}) % needed for smooth process
+			eventTimeType = varargin{ii+1};
+        elseif strcmpi('criteria_excitated', varargin{ii}) % needed for smooth process
+            criteria_excitated = varargin{ii+1};
 		elseif strcmpi('criteria_rebound', varargin{ii}) % needed for smooth process
 			criteria_rebound = varargin{ii+1};
 		elseif strcmpi('stim_time_error', varargin{ii}) % needed for smooth process
@@ -102,7 +105,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
         % Debugging
         fprintf(' - recording_num: %d/%d (%s)\n', rn, recording_num, recording_name);
         if debug_mode
-            if rn == 3
+            if rn == 1
                 disp('pause for debugging')
                 pause
             end
@@ -204,10 +207,10 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 		% [peak_category] = organize_category_peaks(peak_properties_table,gpio_info_table,varargin)
         % Peak Categories: {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'};
 		[peak_properties_lowpass] = organize_category_peaks_multirois(peak_properties_lowpass,...
-			gpio_info_table, 'stim_time_error', stim_time_error,...
+			gpio_info_table,'eventTimeType',eventTimeType, 'stim_time_error', stim_time_error,...
             'criteria_excitated',criteria_excitated,'criteria_rebound',criteria_rebound);
 		[peak_properties_smooth] = organize_category_peaks_multirois(peak_properties_smooth,...
-			gpio_info_table, 'stim_time_error', stim_time_error,...
+			gpio_info_table,'eventTimeType',eventTimeType, 'stim_time_error', stim_time_error,...
             'criteria_excitated',criteria_excitated,'criteria_rebound',criteria_rebound);
 
         % % Calculate event frequencies

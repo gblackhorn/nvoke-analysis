@@ -23,6 +23,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	% win_range = []; 
 	cat_keywords =[]; % % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 
+	eventTimeType = 'peak_time'; % rise_time/peak_time. pick one of the for event time.
 	rebound_duration = 1; % default 1s. Used to extend events screen window when 'stimWin' is used for 'event_type'
 	mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 	stim_section = false; % true: use a specific section of stimulation. For example the last 1s
@@ -149,8 +150,8 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 
 		if debug_mode
 			fprintf(' - roi %d/%d %s\n', n, roi_num, roiName)
-			if n == 15
-% 				pause
+			if n == 17
+				pause
 			end
 		end
 
@@ -183,7 +184,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 
 						condition_win = combine_stimRange;
 						condition_win(:, 2) = condition_win(:, 2)+rebound_duration;
-						events_time = roi_event_spec_table.rise_time;
+						events_time = roi_event_spec_table.(eventTimeType);
 						if ~isempty(events_time)
 							% [eventProp] = get_events_info(events_time,condition_win,roi_event_spec_table,'style','event');
 							[eventProp] = get_events_info(events_time,[],roi_event_spec_table,'style','event');
@@ -207,7 +208,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 				[alignedData.traces(n).eventProp] = mod_str_TBLorSTRUCT(alignedData.traces(n).eventProp,'peak_category',...
 					cat_setting.old,cat_setting.new);	
 				StimTags = CreateStimTagForEvents(alignedData.stimInfo.UnifiedStimDuration.range,...
-					[alignedData.traces(n).eventProp.rise_time],'EventCat',{alignedData.traces(n).eventProp.peak_category},...
+					[alignedData.traces(n).eventProp.(eventTimeType)],'EventCat',{alignedData.traces(n).eventProp.peak_category},...
 					'StimType',alignedData.stimInfo.UnifiedStimDuration.type,...
 					'SkipTag_keyword','spon','NoTag_char',''); % Create stimulation tags for each events for further sorting
 				[alignedData.traces(n).eventProp.stim_tags] = StimTags{:}; % Add stimulation tags
@@ -229,7 +230,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			end
 
 			% get the event number and frequency (spontaneous events and event during stimulation)
-			events_time = [alignedData.traces(n).eventProp.rise_time];
+			events_time = [alignedData.traces(n).eventProp.(eventTimeType)];
 			if contains(alignedData.stim_name, 'GPIO-1', 'IgnoreCase',true)
 				exclude_duration = 0; % exclude the duration after stimulation window from "spontaneuous window"
 				exepWinDur = 0; % exclude a time window with the specified duration after stimulation window in case the stimulation has a prolonged effect 

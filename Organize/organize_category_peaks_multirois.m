@@ -8,6 +8,7 @@ function [peak_properties_tables_with_cat,varargout] = organize_category_peaks_m
     % {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'};
     
     % Defaults
+    eventTimeType = 'peak_time'; % peak_time/rise_time. Use this value to categorize event
     stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
     criteria_excitated = 2; % triggered peak: peak start to rise in 2s from onset of stim
     criteria_rebound = 1; % rebound peak: peak start to rise in 1s from end of stim
@@ -16,8 +17,10 @@ function [peak_properties_tables_with_cat,varargout] = organize_category_peaks_m
 
     % Optionals
     for ii = 1:2:(nargin-2)
-    	if strcmpi('stim_time_error', varargin{ii})
-    		stim_time_error = varargin{ii+1};
+    	if strcmpi('eventTimeType', varargin{ii})
+    		eventTimeType = varargin{ii+1};
+        elseif strcmpi('stim_time_error', varargin{ii})
+            stim_time_error = varargin{ii+1};
         elseif strcmpi('criteria_excitated', varargin{ii})
             criteria_excitated = varargin{ii+1};
         elseif strcmpi('criteria_rebound', varargin{ii})
@@ -43,7 +46,7 @@ function [peak_properties_tables_with_cat,varargout] = organize_category_peaks_m
     	    	peak_category = cell(length(peak_properties_table_single.rise_time), stim_ch_num);
     	    	for sn = 1:stim_ch_num
     	    		[peak_category(:, sn)] = organize_category_peaks(peak_properties_table_single,...
-    	    			gpio_info_table(sn, :), 'stim_time_error', stim_time_error,...
+    	    			gpio_info_table(sn, :),'eventTimeType',eventTimeType, 'stim_time_error', stim_time_error,...
                         'criteria_excitated',criteria_excitated,'criteria_rebound',criteria_rebound);
     	    	end
     	    	if stim_ch_num == 2
@@ -55,7 +58,7 @@ function [peak_properties_tables_with_cat,varargout] = organize_category_peaks_m
     	    	end
     	    else
     	    	[peak_category] = organize_category_peaks(peak_properties_table_single,...
-    	    		gpio_info_table, 'stim_time_error', stim_time_error);
+    	    		gpio_info_table, 'eventTimeType',eventTimeType, 'stim_time_error', stim_time_error);
     	    end
             peak_properties_table_single = addvars(peak_properties_table_single,peak_category);
         end

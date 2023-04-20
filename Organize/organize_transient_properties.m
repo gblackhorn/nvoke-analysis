@@ -72,7 +72,7 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
         % disp(['roi_num: ', num2str(n)])
         if debug_mode
             fprintf('  roi_num: %d/%d\n', n, roi_num);
-            if n == 29
+            if n == 22
                 disp('pause for debugging')
                 pause
             end
