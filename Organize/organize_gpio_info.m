@@ -208,7 +208,32 @@ function [gpio_info_organized,varargout] = organize_gpio_info(gpio_info,varargin
 				% gpio_info_organized(stim_idx_start+cn-1).patch_coordinats = stim_ch_patch{cn};
 			end     
 	    end
-	    gpio_info_organized(numel(loc_ch_nonstim)+1:numel(loc_ch_nonstim)+stim_ch_num) = gpio_info(loc_ch_stim);
+
+	    % sort the stimulation channels, if there are more than one, using their start time (early to late)
+	    stimGPIOinfo = gpio_info(loc_ch_stim);
+	    stimChNum = numel(stimGPIOinfo);
+	    if stimChNum > 1
+	    	stim_start_time = NaN(1, stimChNum); % 
+	    	% stim_end_time = NaN(1, stimChNum); % 
+	    	for scn = 1:stimChNum
+	    		timeRanges = stimGPIOinfo(scn).stim_range;
+	    		[stimDuration(scn)] = CalculateStimDuration(timeRanges);
+	    		stimStartTime(scn) = stimDuration(scn).range(1,1); % the start time of very first stimulation for each type 
+	    	end
+	    	[~, stimStartOrder] = sort(stimStartTime); % When various stim applied, use the one start early as the stim_start
+	    	stimGPIOinfo = stimGPIOinfo(stimStartOrder);
+	    	stim_ch_name = stim_ch_name(stimStartOrder);
+	    	stim_ch_str = stim_ch_str(stimStartOrder);
+	    	stim_ch_time_range = stim_ch_time_range(stimStartOrder);
+	    	stim_ch_train_duration = stim_ch_train_duration(stimStartOrder);
+	    	stim_ch_train_inter = stim_ch_train_inter(stimStartOrder);
+	    	stim_ch_patch = stim_ch_patch(stimStartOrder);
+	    end
+
+	    gpio_info_organized(numel(loc_ch_nonstim)+1:numel(loc_ch_nonstim)+stim_ch_num) = stimGPIOinfo;
+	    % gpio_info_organized(numel(loc_ch_nonstim)+1:numel(loc_ch_nonstim)+stim_ch_num) = gpio_info(loc_ch_stim);
+
+
 	    gpio_info_table = table(stim_ch_name, stim_ch_str, stim_ch_time_range,...
 	    	stim_ch_train_duration, stim_ch_train_inter, stim_ch_patch);
 	else

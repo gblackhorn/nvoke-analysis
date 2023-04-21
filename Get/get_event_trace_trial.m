@@ -151,7 +151,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 		if debug_mode
 			fprintf(' - roi %d/%d %s\n', n, roi_num, roiName)
 			if n == 17
-				pause
+% 				pause
 			end
 		end
 

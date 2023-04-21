@@ -45,6 +45,7 @@ function [StimDuration,varargout] = ExtractStimDurationAndExtraInfo(StimRange,va
 	% Optionals
 	if nargin == 2
 		round_digit_sig = varargin{1};
+	end
 
 	%% Content
 	if iscell(StimRange)
