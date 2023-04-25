@@ -19,6 +19,14 @@ function [varargout] = plot_diff_usingRawData(xData,DataA,DataB,varargin)
 	ylabelStr = '';
 	figTitleStr = 'line plots with diff bar';
 
+	stimShadeDataA = {};
+	stimShadeDataB = {};
+	stimShadeColorA = {'#F05BBD','#4DBEEE','#ED8564'};
+	stimShadeColorB = {'#F05BBD','#4DBEEE','#ED8564'};
+	shadeHeightScale = 0.05; % percentage of y axes
+	shadeGapScale = 0.01; % diff between two shade in percentage of y axes
+	% yRangeShade = [];
+
 	errorBarColor = {'#ED8564', '#5872ED', '#EDBF34', '#40EDC3', '#5872ED'};
 	scatterColor = errorBarColor;
 	scatterSize = 20;
@@ -44,6 +52,14 @@ function [varargout] = plot_diff_usingRawData(xData,DataA,DataB,varargin)
 	        new_xticks = varargin{ii+1};
 	    elseif strcmpi('figTitleStr', varargin{ii})
 	        figTitleStr = varargin{ii+1};
+	    elseif strcmpi('stimShadeDataA', varargin{ii})
+	        stimShadeDataA = varargin{ii+1}; % by default, shade will be plot at the top of the axes
+	    elseif strcmpi('stimShadeDataB', varargin{ii})
+	        stimShadeDataB = varargin{ii+1}; % by default, shade will be plot at the top of the axes
+	    elseif strcmpi('stimShadeColorA', varargin{ii})
+	        stimShadeColorA = varargin{ii+1};
+	    elseif strcmpi('stimShadeColorB', varargin{ii})
+	        stimShadeColorB = varargin{ii+1};
 	    elseif strcmpi('save_fig', varargin{ii})
             save_fig = varargin{ii+1};
 	    elseif strcmpi('save_dir', varargin{ii})
@@ -109,10 +125,32 @@ function [varargout] = plot_diff_usingRawData(xData,DataA,DataB,varargin)
 	xticks(xticksVal);
 
 
+	% get the y lim
+	ylimVal = ylim(gca); 
+	yHeight = ylimVal(2)-ylimVal(1);
+	shadeHeight = yHeight*shadeHeightScale;
+	shadeGap = yHeight*shadeGapScale;
+
+
+	% draw stimulation shadeA
+	if ~isempty(stimShadeDataA)
+		yRangeShade = [ylimVal(2)-1*shadeHeight ylimVal(2)];
+		for sn = 1:numel(stimShadeDataA)
+			draw_WindowShade(gca,stimShadeDataA{sn},'shadeColor',stimShadeColorA{sn},'yRange',yRangeShade);
+		end
+	end
+	if ~isempty(stimShadeDataB)
+		yRangeShade = [ylimVal(2)-2*shadeHeight-shadeGap ylimVal(2)-1*shadeHeight-shadeGap];
+		for sn = 1:numel(stimShadeDataB)
+			draw_WindowShade(gca,stimShadeDataB{sn},'shadeColor',stimShadeColorB{sn},'yRange',yRangeShade);
+		end
+	end
+
 	% Add legend for error bars only
 	legStrA_scatterNum = sprintf('%s (n=%g)',legStrA,scatterNumA);
 	legStrB_scatterNum = sprintf('%s (n=%g)',legStrB,scatterNumB);
 	legend(legStrA_scatterNum, legStrB_scatterNum, diffLegStr,'Location', 'Best') % 'northeastoutside'
+
 
 	hold off
 

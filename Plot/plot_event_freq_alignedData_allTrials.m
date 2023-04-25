@@ -120,6 +120,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 
 		% Get the subplot number and create a title string for the figure
 	stim_type_num = numel(stim_names); % Get the number of stimulation types
+	stimShadeDataAll = empty_content_struct({'stimTypeName','shadeData','stimName','color'},stim_type_num);
 	% if normToBase
 	% 	titleStr = sprintf('event freq in %g s bins [%s] normToBase',binWidth,PropName);
 	% else
@@ -133,11 +134,18 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	[f,f_rowNum,f_colNum] = fig_canvas(stim_type_num,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
 		'fig_name',titleStr); % create a figure
 	tlo = tiledlayout(f,f_rowNum,f_colNum);
+	[fstat,fstat_rowNum,fstat_colNum] = fig_canvas(stim_type_num,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
+		'fig_name',titleStr); % create a figure
+	tloStat = tiledlayout(fstat,fstat_rowNum,fstat_colNum);
 	for stn = 1:stim_type_num
 		[EventFreqInBins,binEdges,stimShadeData,stimShadeName] = get_EventFreqInBins_trials(alignedData_filtered,stim_names{stn},'PropName',PropName,...
 			'binWidth',binWidth,'stimIDX',stimIDX,...
 			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 			'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
+
+		stimShadeDataAll(stn).stimTypeName = stim_names{stn};
+		stimShadeDataAll(stn).shadeData = stimShadeData;
+		stimShadeDataAll(stn).stimName = stimShadeName;
 		% [EventFreqInBins,binEdges] = get_EventFreqInBins_AllTrials(alignedData,stim_names{stn},'PropName',PropName,...
 		% 	'binWidth',binWidth,'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 		% 	'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
@@ -195,6 +203,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 			else
 				shadeColor = shadeColors{3};
 			end
+			stimShadeDataAll(stn).color{sn} = shadeColor;
 			draw_WindowShade(gca,stimShadeData{sn},'shadeColor',shadeColor);
 		end
 		hold off
@@ -218,9 +227,29 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		stat_combineBase = anova1_with_multiComp(efArray,xdataStr_combineBaseArray);
 
 		barStat(stn).anovaCombineBase = stat_combineBase;
+		% plot multiCompare stat on another figure
+		MultCom_stat = barStat(stn).anovaCombineBase.c(:,["g1","g2","p","h"]);
+		axStat = nexttile(tloStat);
+		% uit_pos = get(axStat,'Position');
+		% uit_unit = get(axStat,'Units');
+		% delete(axStat);
+		
+		% uit = uitable(fstat,'Data',table2cell(MultCom_stat),...
+		% 	'ColumnName',MultCom_stat.Properties.VariableNames,...
+		% 	'Units',uit_unit,'Position',uit_pos);
+		% % title(replace(par, '_', '-'));
+		% % delete(axStat);
+
+		% jScroll = findjobj(uit);
+		% jTable  = jScroll.getViewport.getView;
+		% jTable.setAutoResizeMode(jTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+		% drawnow;
+
+		plotUItable(fstat,axStat,MultCom_stat);
 	end
 	sgtitle(titleStr)
 	varargout{1} = barStat;
+	varargout{2} = stimShadeDataAll;
 
 
 	% Save figure and statistics
@@ -231,8 +260,11 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		msg = 'Choose a folder to save plots of event freq around stimulation and statistics';
 		save_dir = savePlot(f,'save_dir',save_dir,'guiSave',gui_save,...
 			'guiInfo',msg,'fname',titleStr);
+		save_dir = savePlot(fstat,'save_dir',save_dir,'guiSave','off',...
+			'guiInfo',msg,'fname',[titleStr,'_MultiComp']);
 		save(fullfile(save_dir, [titleStr, '_stat']),...
 		    'barStat');
 	end 
-	varargout{2} = save_dir;
+	
+	varargout{3} = save_dir;
 end

@@ -65,10 +65,10 @@ adata.event_align_point = 'rise'; % options: 'rise', 'peak'
 adata.rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes. Exclude these events from 'spon'
 adata.cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
-adata.pre_event_time = 5; % unit: s. event trace starts at 1s before event onset
-adata.post_event_time = 10; % unit: s. event trace ends at 2s after event onset
+adata.pre_event_time = 5; % unit: s. duration before stimulation in the aligned traces
+adata.post_event_time = 10; % unit: s. duration after stimulation in the aligned traces
 adata.stim_section = true; % true: use a specific section of stimulation to calculate the calcium level delta. For example the last 1s
-adata.ss_range = 1; % single number (last n second) or a 2-element array (start and end. 0s is stimulation onset)
+adata.ss_range = 1; % range of stim_section (compare the cal-level in baseline and here to examine the effect of the stimulation). single number (last n second during stimulation) or a 2-element array (start and end. 0s is stimulation onset)
 adata.stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 adata.mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
@@ -176,11 +176,11 @@ postStim_duration = 10; % unit: second. include events happened after the end of
 normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
 baseBinEdgestart = -preStim_duration; % where to start to use the bin for calculating the baseline. -1
 baseBinEdgeEnd = -2; % 0
-apCorrection = false; % true/false.
+apCorrection = false; % true/false. If true, correct baseline bin used for normalization. 
 
 debug_mode = false; % true/false
 
-[barStat,FolderPathVA.fig] = plot_event_freq_alignedData_allTrials(alignedData_filtered,'PropName',PropName,...
+[barStat,stimShadeDataAll,FolderPathVA.fig] = plot_event_freq_alignedData_allTrials(alignedData_filtered,'PropName',PropName,...
     'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,'stimIDX',stimIDX,...
     'normToBase',normToBase,'apCorrection',apCorrection,...
     'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
@@ -204,23 +204,53 @@ else
 	normToBaseStr = '';
 end
 figTitleStr_1 = sprintf('diff between og-5s and og-5s ap-0.1s in %gs bins%s%s',binWidth,normToBaseStr,apCorrectionStr);
-figTitleStr_2 = sprintf('diff between og-5s and ap-0.1s in %gs bins%s%s',binWidth,normToBaseStr,apCorrectionStr);
+% figTitleStr_2 = sprintf('diff between og-5s and ap-0.1s in %gs bins%s%s',binWidth,normToBaseStr,apCorrectionStr);
 figTitleStr_3 = sprintf('diff between ap-0.1s and og-5s ap-0.1s in %gs bins%s%s',binWidth,normToBaseStr,apCorrectionStr);
 
+% get shade info from stimShadeDataAll
+shadeStimTypeNames = {stimShadeDataAll.stimTypeName};
+IDXstimShade_og = find(strcmpi('og-5s',shadeStimTypeNames));
+IDXstimShade_ap = find(strcmpi('ap-0.1s',shadeStimTypeNames));
+IDXstimShade_ogap = find(strcmpi('og-5s ap-0.1s',shadeStimTypeNames));
+stimShade_og = stimShadeDataAll(IDXstimShade_og);
+stimShade_ap = stimShadeDataAll(IDXstimShade_ap);
+stimShade_ogap = stimShadeDataAll(IDXstimShade_ogap);
 
-[ttest_p_1,diffVal_1,scatterNum_1]=plot_diff_usingRawData(xData,ogData,ogapData,...
+[fDiff,fDiff_rowNum,fDiff_colNum] = fig_canvas(2,'unit_width',0.4,'unit_height',0.4,'column_lim',2,...
+	'fig_name','diff between event freq'); % create a figure
+tloDiff = tiledlayout(fDiff,fDiff_rowNum,fDiff_colNum);
+[fDiffStat,fDiff_rowNum,fDiff_colNum] = fig_canvas(2,'unit_width',0.4,'unit_height',0.4,'column_lim',2,...
+	'fig_name','diff between event freq'); % create a figure
+tloDiffStat = tiledlayout(fDiffStat,fDiff_rowNum,fDiff_colNum);
+
+ax = nexttile(tloDiff);
+[ttestP1,diffVal_1,scatterNum_1]=plot_diff_usingRawData(xData,ogData,ogapData,...
 	'legStrA','og-5s','legStrB','og-5s ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_1,...
-	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
+	'stimShadeDataA',stimShade_og.shadeData,'stimShadeDataB',stimShade_ogap.shadeData,...
+	'stimShadeColorA',stimShade_og.color,'stimShadeColorB',stimShade_ogap.color,...
+	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'plotWhere',gca);
+ax = nexttile(tloDiffStat);
+ttestP1TableVarNames = NumArray2StringCell(xData);
+ttestP1Table = array2table(ttestP1,'VariableNames',ttestP1TableVarNames);
+plotUItable(fDiffStat,ax,ttestP1Table);
 
-[ttest_p_2,diffVal_2,scatterNum_2]=plot_diff_usingRawData(xData,ogData,apData,...
-	'legStrA','og-5s','legStrB','ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_2,...
-	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
 
 % shift ogap data to 1 s left, so its ap is aligned with ap tirals ap
+ax = nexttile(tloDiff);
 ogapData_shift = ogapData(2:end);
-[ttest_p_3,diffVal_3,scatterNum_3]=plot_diff_usingRawData(xData,apData,ogapData_shift,...
+ogapShade_shift = stimShade_ogap.shadeData;
+for n = 1:numel(ogapShade_shift)
+	ogapShade_shift{n}(:,1) = ogapShade_shift{n}(:,1)-1;
+end
+[ttestP3,diffVal_3,scatterNum_3]=plot_diff_usingRawData(xData,apData,ogapData_shift,...
 	'legStrA','ap-0.1s','legStrB','og-5s ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_3,...
-	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
+	'stimShadeDataA',stimShade_ap.shadeData,'stimShadeDataB',ogapShade_shift,...
+	'stimShadeColorA',stimShade_ap.color,'stimShadeColorB',stimShade_ogap.color,...
+	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'plotWhere',gca);
+ax = nexttile(tloDiffStat);
+ttestP3TableVarNames = NumArray2StringCell(xData);
+ttestP3Table = array2table(ttestP3,'VariableNames',ttestP3TableVarNames(1:length(ttestP3)));
+plotUItable(fDiffStat,ax,ttestP3Table);
 
 
 %% ==================== 
