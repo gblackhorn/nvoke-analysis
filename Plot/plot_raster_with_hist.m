@@ -62,6 +62,15 @@ function [f,varargout] = plot_raster_with_hist(rasterData,x_window,varargin)
 		'yInterval',yInterval,'sz',sz); % Plot raster
 	scatter_xlim = xlim;
 
+	if ~isempty(shadeData)
+	    shade_type_num = numel(shadeData);
+	    for stn = 1:shade_type_num
+	        draw_WindowShade(gca,shadeData{stn},'shadeColor',shadeColor{stn});
+	    end
+	end
+	set(gca,'children',flipud(get(gca,'children')))
+
+
 
 	% Plot histogram to show the sum up of raster points in time bins
 	ax = nexttile(tlo);
