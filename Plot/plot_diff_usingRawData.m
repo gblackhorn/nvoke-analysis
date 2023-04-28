@@ -154,9 +154,9 @@ function [varargout] = plot_diff_usingRawData(xData,DataA,DataB,varargin)
 
 	hold off
 
-	ttest_p = unpaired_ttest_cellArray(DataA,DataB);
+	[ttest_p,ttest_h] = unpaired_ttest_cellArray(DataA,DataB);
 	scatterNum = [scatterNumA scatterNumB];
-	varargout{1} = ttest_p;
+	varargout{1} = vertcat(ttest_p,ttest_h);
 	varargout{2} = diffVal;
 	varargout{3} = scatterNum;
 

@@ -219,7 +219,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 				[alignedData.traces(n).eventProp,newFieldName,NFNtag] = add_tfTag_to_eventProp(alignedData.traces(n).eventProp,...
 					'peak_category','trig','newFieldName','stimTrig');
 				[alignedData.traces(n).eventProp] = add_riseDelay_to_eventProp(alignedData.traces(n).eventProp,...
-					combine_stimRange,'errCali',0);
+					combine_stimRange,'eventType',eventTimeType,'errCali',0);
 
 				% Get the possibility of stimulation related events: spike_num/stimulation number
 				% Each category of spikes is calculated separately.

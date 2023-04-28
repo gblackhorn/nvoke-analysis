@@ -106,7 +106,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 
 	% Filter the ROIs in all trials according to the stimulation effect
 	if filter_roi_tf
-		[alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData,...
+		[alignedData] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData,...
 			'stim_names',stim_names,'filters',filters);
 		title_prefix = 'filtered';
 	else
@@ -138,7 +138,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		'fig_name',titleStr); % create a figure
 	tloStat = tiledlayout(fstat,fstat_rowNum,fstat_colNum);
 	for stn = 1:stim_type_num
-		[EventFreqInBins,binEdges,stimShadeData,stimShadeName] = get_EventFreqInBins_trials(alignedData_filtered,stim_names{stn},'PropName',PropName,...
+		[EventFreqInBins,binEdges,stimShadeData,stimShadeName] = get_EventFreqInBins_trials(alignedData,stim_names{stn},'PropName',PropName,...
 			'binWidth',binWidth,'stimIDX',stimIDX,...
 			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 			'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
@@ -229,22 +229,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		barStat(stn).anovaCombineBase = stat_combineBase;
 		% plot multiCompare stat on another figure
 		MultCom_stat = barStat(stn).anovaCombineBase.c(:,["g1","g2","p","h"]);
+
 		axStat = nexttile(tloStat);
-		% uit_pos = get(axStat,'Position');
-		% uit_unit = get(axStat,'Units');
-		% delete(axStat);
-		
-		% uit = uitable(fstat,'Data',table2cell(MultCom_stat),...
-		% 	'ColumnName',MultCom_stat.Properties.VariableNames,...
-		% 	'Units',uit_unit,'Position',uit_pos);
-		% % title(replace(par, '_', '-'));
-		% % delete(axStat);
-
-		% jScroll = findjobj(uit);
-		% jTable  = jScroll.getViewport.getView;
-		% jTable.setAutoResizeMode(jTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
-		% drawnow;
-
 		plotUItable(fstat,axStat,MultCom_stat);
 	end
 	sgtitle(titleStr)

@@ -8,13 +8,14 @@ function [eventProp_new,varargout] = add_riseDelay_to_eventProp(eventProp,stimRa
 
 	% Defaults
 	errCali = 0; % calibrate the time if it was used to categorize events
+	eventType = 'peak_time'; % use rise_time/peak_time for event time
 
 	% Optionals
 	for ii = 1:2:(nargin-2)
 	    if strcmpi('errCali', varargin{ii})
 	        errCali = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
-        % elseif strcmpi('timeInfo', varargin{ii})
-	       %  timeInfo = varargin{ii+1};
+        elseif strcmpi('eventType', varargin{ii})
+	        eventType = varargin{ii+1};
 	    end
 	end	
 
@@ -24,7 +25,8 @@ function [eventProp_new,varargout] = add_riseDelay_to_eventProp(eventProp,stimRa
 
 	for n = 1:event_num
 		eventCat = eventProp_new(n).peak_category;
-		eventTime = eventProp_new(n).rise_time;
+		eventTime = eventProp_new(n).(eventType);
+		eventTime_rise = eventProp_new(n).rise_time;
 		eventTime_peak = eventProp_new(n).peak_time;
 		if strcmpi('spon', eventCat) 
 			rise_delay = [];
@@ -40,7 +42,7 @@ function [eventProp_new,varargout] = add_riseDelay_to_eventProp(eventProp,stimRa
 				ref = stimStartTime;
 			end
 
-			rise_delay = eventTime-ref;
+			rise_delay = eventTime_rise-ref;
 			peak_delay = eventTime_peak-ref;
 		end
 		eventProp_new(n).rise_delay = rise_delay;

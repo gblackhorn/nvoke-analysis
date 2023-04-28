@@ -9,7 +9,7 @@ function [alignedData_filtered,varargout] = Filter_AlignedDataTraces_withStimEff
 
 	% Defaults
 	stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-	filters = {[nan 1 nan], [1 nan nan], [nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+	filters = {[nan 1 nan nan], [1 nan nan nan], [nan nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: excitatory AP during OG
 		% filter number must be equal to stim_names
 
 	% Optionals
@@ -61,7 +61,7 @@ function [alignedData_filtered,varargout] = Filter_AlignedDataTraces_withStimEff
 		% Filter the ROIs in the trials using a specific filter 
 		if screen_data_tf
 			[trialData.traces,roi_idx] = Filter_AlignedDataTraces_withStimEffect(trialData.traces,...
-				'ex',filter_chosen(1),'in',filter_chosen(2),'rb',filter_chosen(3));
+				'ex',filter_chosen(1),'in',filter_chosen(2),'rb',filter_chosen(3),'exApOg',filter_chosen(4));
 
 			% Assign the filtered ROIs to alignedData_filtered.traces
 			alignedData_filtered(tn) = trialData;

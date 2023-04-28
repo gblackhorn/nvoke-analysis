@@ -15,6 +15,7 @@ function [alignedDataTraces_filtered,varargout] = Filter_AlignedDataTraces_withS
     ex = nan; % excitation filter. if is nan, filter won't be applied
     in = nan; % inhibition filter. if is nan, filter won't be applied
     rb = nan; % rebound filter. if is nan, filter won't be applied
+    exApOg = nan; % excitatory AP during OG . If is nan, filter won't be applied
 
     SE_name = 'stimEffect'; % default name of the stimEffect field
 
@@ -26,6 +27,8 @@ function [alignedDataTraces_filtered,varargout] = Filter_AlignedDataTraces_withS
             in = varargin{ii+1}; % inhibition filter.
         elseif strcmpi('rb', varargin{ii}) 
             rb = varargin{ii+1}; % rebound filter. 
+        elseif strcmpi('exApOg', varargin{ii}) 
+            exApOg = varargin{ii+1}; % rebound filter. 
         end
     end
 
@@ -38,7 +41,8 @@ function [alignedDataTraces_filtered,varargout] = Filter_AlignedDataTraces_withS
         stimEffect = stimEffect_all{rn};
         ex_tf = true; % default: do not discard
         in_tf = true; % default: do not discard
-        rb_tf = true; % default: do not discard                                                                     
+        rb_tf = true; % default: do not discard  
+        exApOg_tf = true; % default: do not discard                                                                 
 
         if ~isnan(ex) && stimEffect.excitation ~= ex % use 'ex' filter && the stim effect is different from the 'ex' filter
             ex_tf = false; % mark discard
@@ -52,7 +56,11 @@ function [alignedDataTraces_filtered,varargout] = Filter_AlignedDataTraces_withS
             rb_tf = false; % mark discard
         end
 
-        if ~ex_tf || ~in_tf || ~rb_tf % if the ROI receives "discard" tag for at least once
+        if ~isnan(rb) && stimEffect.exAP_eventCat ~= exApOg % use 'exApOg' filter && the stim effect is different from the 'exApOg' filter
+            exApOg_tf = false; % mark discard
+        end
+
+        if ~ex_tf || ~in_tf || ~rb_tf || ~exApOg_tf % if the ROI receives "discard" tag for at least once
             tf_idx(rn) = false; % mark the ROI with 'discard'
         end
     end

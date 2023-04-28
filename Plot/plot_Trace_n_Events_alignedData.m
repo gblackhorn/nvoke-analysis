@@ -39,8 +39,8 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 	        pick = varargin{ii+1}; % number array. An index of ROI traces will be collected 
 	    elseif strcmpi('norm_FluorData', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
 	        norm_FluorData = varargin{ii+1}; % normalize every FluoroData trace with its max value
-	    % elseif strcmpi('stim_effect_filter', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
-	    %     stim_effect_filter = varargin{ii+1}; % normalize every FluoroData trace with its max value
+	    elseif strcmpi('event_type', varargin{ii}) % 
+	        event_type = varargin{ii+1}; % 
 	    elseif strcmpi('sortROI', varargin{ii})
             sortROI = varargin{ii+1};
 	    elseif strcmpi('plot_unit_width', varargin{ii})
@@ -107,6 +107,12 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 			event_peakTime = event_peakTime(descendIDX);
 		end
 
+		if strcmpi(event_type,'rise_time')
+			eventTime = event_riseTime;
+		elseif strcmpi(event_type,'peak_time')
+			eventTime = event_peakTime;
+		end
+
 
 		% Compose the stem part of figure title
 		trialName = alignedData_trials.trialName(1:15); % Get the date (yyyymmdd-hhmmss) part from trial name
@@ -145,8 +151,8 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 
 
 		% Figure 2: Plot the calcium events as scatter and show the events number in a histogram (2 plots)
-		fig_title{2} = sprintf('%s event raster and histbin',title_str_stem);
-		f(2) = plot_raster_with_hist(event_riseTime,trace_xlim,'shadeData',patchCoor,...
+		fig_title{2} = sprintf('%s event [%s] raster and histbin',title_str_stem,event_type);
+		f(2) = plot_raster_with_hist(eventTime,trace_xlim,'shadeData',patchCoor,...
 			'rowNames',rowNames,'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...
 			'titleStr',fig_title{2});
 		sgtitle(fig_title{2})

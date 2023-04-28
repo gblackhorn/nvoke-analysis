@@ -157,7 +157,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 			uit = uitable(f_stat,'Data',table2cell(MultCom_stat),...
 				'ColumnName',MultCom_stat.Properties.VariableNames,...
 				'Units',uit_unit,'Position',uit_pos);
-% 			title(replace(par, '_', '-'));
+			% title(replace(par, '_', '-'));
 			% delete(ax_stat);
 
 			jScroll = findjobj(uit);

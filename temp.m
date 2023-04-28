@@ -1005,3 +1005,10 @@ nVokeRenameDataFolder = 'S:\PROCESSED_DATA_BACKUPS\nRIM_MEMBERS\Moscope\Moscope_
 			'remove_centerEvents',true,'binWidth',0.25,'normData',true,'saveFig',true);
 
 
+%%
+offStimData = grouped_event_info_filtered(2).event_info;
+followData = grouped_event_info_filtered(1).event_info;
+[pairedStat.rise_duration.h,pairedStat.rise_duration.p] = ttest([followData.rise_duration],[offStimData.rise_duration]);
+[pairedStat.FWHM.h,pairedStat.FWHM.p] = ttest([followData.FWHM],[offStimData.FWHM]);
+[pairedStat.peak_mag_delta.h,pairedStat.peak_mag_delta.p] = ttest([followData.peak_mag_delta],[offStimData.peak_mag_delta]);
+[pairedStat.sponnorm_peak_mag_delta.h,pairedStat.sponnorm_peak_mag_delta.p] = ttest([followData.sponnorm_peak_mag_delta],[offStimData.sponnorm_peak_mag_delta]);
