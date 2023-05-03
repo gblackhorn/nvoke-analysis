@@ -70,7 +70,9 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 	% Main contents
 
 	% Get the stimulation patch info for plotting the shades to indicate stimulation
-	[patchCoor,stimName,stimTypeNum] = get_TrialStimPatchCoor_from_alignedData(alignedData_trials);
+	[patchCoor,stimTypes,stimTypeNum] = get_TrialStimPatchCoor_from_alignedData(alignedData_trials);
+	% combinedStimRange = alignedData_trials.stimInfo.UnifiedStimDuration.range;
+	stimInfo = alignedData_trials.stimInfo;
 
 	% Filter ROIs if 'pick' is input as varargin
 	trace_event_data = alignedData_trials.traces; % roi names, calcium fluorescence data, events' time info are all in the field 'traces'
@@ -121,7 +123,7 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 			title_prefix = sprintf('%s ', title_prefix); % add a space after the title_prefix in increase the readibility when combine with other strings
 		end
 		title_str_stem = sprintf('%s %s',trialName,stimName); % compose a stem str used for both fig 1 and 2
-		fig_title = cell(1,2);
+		fig_title = cell(1,3);
 
 
 		% Figure 1: Plot the calcium fluorescence as traces and color (2 plots)
@@ -131,10 +133,15 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 		else
 			norm_str = '';
 		end
-		fig_title{1} = sprintf('%s %s fluorescence signal',title_str_stem,norm_str); % Create the title string
+		if sortROI
+			sortStr = 'Sorted-with-eventNum';
+		else
+			sortStr = '';
+		end
+		fig_title{1} = sprintf('%s %s fluorescence signal %s',title_str_stem,norm_str,sortStr); % Create the title string
 		f(1) = fig_canvas(2,'unit_width',plot_unit_width,'unit_height',plot_unit_height,...
 			'column_lim',1,'fig_name',fig_title{1}); % create a figure
-		tlo = tiledlayout(f, 3, 1); % setup tiles
+		tlo = tiledlayout(f(1), 3, 1); % setup tiles
 		ax = nexttile(tlo,[2,1]); % activate the ax for trace plot
 		plot_TemporalData_Trace(gca,timeData,FluroData,...
 			'ylabels',rowNames,'plot_marker',true,...
@@ -151,11 +158,27 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 
 
 		% Figure 2: Plot the calcium events as scatter and show the events number in a histogram (2 plots)
-		fig_title{2} = sprintf('%s event [%s] raster and histbin',title_str_stem,event_type);
+		fig_title{2} = sprintf('%s event [%s] raster and histbin %s',title_str_stem,event_type,sortStr);
 		f(2) = plot_raster_with_hist(eventTime,trace_xlim,'shadeData',patchCoor,...
 			'rowNames',rowNames,'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...
 			'titleStr',fig_title{2});
 		sgtitle(fig_title{2})
+
+
+		% Figure 3: Plot a color plot. Difference between this one and the one in figure 1 is every
+		% ROI trace is cut to several sections using stimulation repeat. One row contains the start
+		% of stim to the start of the next stim. Each ROI contains the stim repeat number of rows
+		fig_title{3} = sprintf('%s %s single-stim fluorescence signal %s',title_str_stem,norm_str,sortStr); % Create the title string
+		% f(3) = fig_canvas(2,'unit_width',plot_unit_width,'unit_height',plot_unit_height,...
+		% 	'column_lim',1,'fig_name',fig_title{3}); % create a figure
+		% tlo = tiledlayout(f(3), 9, 1); % setup tiles
+		
+		f(3) = plot_TemporalData_Color_seperateStimRepeats(gca,FluroData,timeData,stimInfo,...
+			'rowNames',rowNames,'show_colorbar',show_colorbar,...
+			'titleStr',fig_title{3}); % ,'shadeData',patchCoor,'stimTypes',stimTypes
+		sgtitle(fig_title{3})
+
+
 
 
 		% Save figures

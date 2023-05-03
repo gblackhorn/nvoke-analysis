@@ -81,7 +81,7 @@ adata.sponfreqFilter.status = true; % true/false. If true, use the following set
 adata.sponfreqFilter.field = 'sponfq'; % 
 adata.sponfreqFilter.thresh = 0.06; % Hz
 adata.sponfreqFilter.direction = 'high';
-debug_mode = true; % true/false
+debug_mode = false; % true/false
 
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
 	'traceData_type', adata.traceData_type, 'event_data_group', adata.event_data_group,'eventTimeType',adata.eventTimeType,...
@@ -166,19 +166,19 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_filter
 %9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 gui_save = 'on';
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[nan 1 nan nan], [1 nan nan nan], [nan nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 diffPair = {[1 3], [2 3]}; % binned freq will be compared between stimualtion groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
 
 propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
 binWidth = 1; % the width of histogram bin. the default value is 1 s.
 stimIDX = []; % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
 preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
-postStim_duration = 10; % unit: second. include events happened after the end of stimulations
+postStim_duration = 15; % unit: second. include events happened after the end of stimulations
 
 normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
 baseBinEdgestart = -preStim_duration; % where to start to use the bin for calculating the baseline. -1
@@ -271,10 +271,10 @@ title_prefix = 'filtered';
 % 9.1.5 Plot traces and stim-aligned traces
 % Note: set adata.event_type to 'stimWin' when creating alignedData_allTrials
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 pause_after_trial = false;
 
-filter_roi_tf = true; % true/false. If true, screen ROIs
+filter_roi_tf = false; % true/false. If true, screen ROIs
 TraceType = 'aligned'; % 'full'/'aligned'. Plot the full trace or stimulation aligned trace
 markers_name = {}; % of which will be labled in trace plot: 'peak_loc', 'rise_loc'
 if save_fig
@@ -282,6 +282,8 @@ if save_fig
 	if save_dir~=0
 		FolderPathVA.fig = save_dir;
 	end 
+else
+	save_dir = '';
 end
 
 if filter_roi_tf
@@ -366,23 +368,36 @@ end
 % 9.2.2 Check aligned trace of events belong to the same category
 % note: 'event_type' for alignedData_allTrials must be 'detected_events'
 close all
-tplot.save_fig = false; % true/false
+tplot.save_fig = true; % true/false
 tplot.plot_combined_data = true; % mean value and std of all traces
 tplot.plot_raw_races = false; % true/false. true: plot every single trace
-tplot.y_range = [-3 7];
-tplot.eventCat = {'spon','rebound','trig'}; % options: 'trig', 'spon', 'rebound'
+tplot.shadeType = 'ste'; % plot the shade using std/ste
+tplot.y_range = [-5 10];
+tplot.eventCat = {'trig','trig-ap'}; % options: 'trig', 'spon', 'rebound'
+tplot.stimDiscard = {'ap-varied','og-0.96s'}; % 'og-5s',
 tplot.sponNorm = false; % true/false
 tplot.save_dir = FolderPathVA.fig;
+
+if tplot.plot_combined_data
+	meanDataStr = sprintf('_withMeanAndShade[%s]',tplot.shadeType);
+else
+	meanDataStr = '';
+end
+if tplot.plot_raw_races
+	rawDataStr = sprintf('_withSingleTraces');
+else
+	rawDataStr = '';
+end
 
 stimAlignedTrace_means = empty_content_struct({'event_group','trace'},numel(tplot.eventCat));
 for cn = 1:numel(tplot.eventCat)
 	stimAlignedTrace_means(cn).event_group = tplot.eventCat{cn};
-	tplot.fname = sprintf('aligned_catTraces_%s',tplot.eventCat{cn});
+	tplot.fname = sprintf('%s-aligned_traces_%s%s%s',adata.event_align_point,tplot.eventCat{cn},meanDataStr,rawDataStr);
 	[fHandle_stimAlignedTrace,stimAlignedTrace_means(cn).trace] = plot_aligned_catTraces(alignedData_allTrials,...
 		'plot_combined_data',tplot.plot_combined_data,'plot_raw_races',tplot.plot_raw_races,...
-		'eventCat',tplot.eventCat{cn},'y_range',tplot.y_range,'sponNorm',tplot.sponNorm); % 'fname',fname,
+		'eventCat',tplot.eventCat{cn},'stimDiscard',tplot.stimDiscard,'shadeType',tplot.shadeType,...
+		'y_range',tplot.y_range,'sponNorm',tplot.sponNorm,'fname',tplot.fname); % 'fname',fname,
 	if tplot.save_fig
-        
 		if cn == 1
 			tplot.guiSave = 'on';
 		elseif cn > 1

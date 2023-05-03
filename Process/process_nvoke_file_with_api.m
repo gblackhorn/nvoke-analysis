@@ -39,6 +39,7 @@ function [outputArg1,outputArg2] = process_nvoke_file_with_api(file_fullpath,var
     [filepath, filename_wo_ext, fileext] = fileparts(file_fullpath);
     file_fullpath_wo_ext = fullfile(filepath, filename_wo_ext);
     gpio_file = [file_fullpath_wo_ext, '.gpio'];
+    imu_file = [file_fullpath_wo_ext, '.imu'];
     file_fullpath_wo_ext_output = fullfile(project_dir, filename_wo_ext);
     pp_file_output = [file_fullpath_wo_ext_output, '-PP.isxd'];  
     bp_file_output = [file_fullpath_wo_ext_output, '-PP-BP.isxd'];  
@@ -47,6 +48,7 @@ function [outputArg1,outputArg2] = process_nvoke_file_with_api(file_fullpath,var
     mc_crop_file_output = [file_fullpath_wo_ext_output, '-PP-BP-MC-crop.isxd']; % crop rectangle info applied to the motion corrected movie
     dff_file_output = [file_fullpath_wo_ext_output, '-PP-BP-MC-DFF.isxd'];  
     gpio_file_output = [file_fullpath_wo_ext_output, '.gpio']; 
+    imu_file_output = [file_fullpath_wo_ext_output, '.imu']; 
 
     % process files with preprocess
     if ~exist(pp_file_output, 'file') || overwrite == true
@@ -71,17 +73,22 @@ function [outputArg1,outputArg2] = process_nvoke_file_with_api(file_fullpath,var
     	disp([' - Output: ', mc_file_output])
     end
 
-    % Run dF/F on the motion corrected movies
-    if ~exist(dff_file_output, 'file') || overwrite == true
-    	isx.dff(mc_file_output, dff_file_output,...
-			'f0_type', 'mean');
-    	disp([' - Output: ', dff_file_output])
-    end
+    % % Run dF/F on the motion corrected movies
+    % if ~exist(dff_file_output, 'file') || overwrite == true
+    % 	isx.dff(mc_file_output, dff_file_output,...
+	% 		'f0_type', 'mean');
+    % 	disp([' - Output: ', dff_file_output])
+    % end
 
     % copy the GPIO file to output folder if it is not there
     if ~exist(gpio_file_output, 'file')
     	copyfile(gpio_file, gpio_file_output);
     	disp([' - Output: ', gpio_file_output])
+    end
+    
+    if ~exist(imu_file_output, 'file')
+        copyfile(imu_file, imu_file_output);
+        disp([' - Output: ', imu_file_output])
     end
 end
 

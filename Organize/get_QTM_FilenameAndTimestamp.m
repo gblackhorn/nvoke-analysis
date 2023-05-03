@@ -36,6 +36,9 @@ function [QTM_FilenameAndTimestamp,varargout] = get_QTM_FilenameAndTimestamp(var
     QTM_FilenameAndTimestamp_fields = {'QTM_filenames','recStartTime'};
     QTM_FilenameAndTimestamp = empty_content_struct(QTM_FilenameAndTimestamp_fields,fileNum);
 
+    % Print out the mat file folder and tell the user it is currently working on it
+    fprintf('\nReading QTM mat files from the folder: %s\n',QTMmatFolderPath);
+
     for n = 1:fileNum
         % Read QTM mat file and get the metaData
         mat_fullPath = fullfile(QTM_matFilesInfo(n).folder,QTM_matFilesInfo(n).name);

@@ -6,6 +6,7 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	% Defaults
 	eventCat = 'spon';
 	plot_combined_data = true; % plot the mean value of all trace and add a shade using std
+	shadeType = 'std'; % std/ste
 	plot_raw_races = true; % true: plot the traces in the trace_data
 	y_range = [-20 30];
 	sponNorm = false; % true/false
@@ -13,10 +14,14 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	tickInt_time = 1; % interval of tick for timeInfo (x axis)
 	fig_position = [0.1 0.1 0.9 0.6]; % [left bottom width height]
 
+	stimDiscard = {''};
+
 	% Optionals
 	for ii = 1:2:(nargin-1)
 	    if strcmpi('plot_combined_data', varargin{ii})
 	        plot_combined_data = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
+	    elseif strcmpi('shadeType', varargin{ii})
+	        shadeType = varargin{ii+1}; 
 	    elseif strcmpi('plot_raw_races', varargin{ii})
 	        plot_raw_races = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
         elseif strcmpi('eventCat', varargin{ii})
@@ -31,6 +36,10 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	        tile_row_num = varargin{ii+1};
         elseif strcmpi('sponNorm', varargin{ii})
 	        sponNorm = varargin{ii+1};
+        elseif strcmpi('stimKeep', varargin{ii})
+	        stimKeep = varargin{ii+1};
+        elseif strcmpi('stimDiscard', varargin{ii})
+	        stimDiscard = varargin{ii+1};
 	    end
 	end
 
@@ -41,6 +50,15 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	% if sponNorm
 	% 	y_range = [-5 5]; % overwrite the y range of plot if sponNorm data is used
 	% end
+
+	if ~exist('stimKeep','var')
+		stimKeep = unique({alignedData.stim_name});
+	end
+
+	% filter the recordings according to the stimulations applied to them
+	[alignedData] = filter_entries_in_structure(alignedData,'stim_name',...
+		'tags_discard',stimDiscard,'tags_keep',stimKeep);
+
 
 	[C, ia, ic] = unique({alignedData.stim_name});
 	num_C = numel(C);
@@ -82,16 +100,26 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 		end
 		traceData_trials = [traceData_cell_trials{:}];
 		traceData_trials_mean = mean(traceData_trials, 2, 'omitnan');
+		stimRepeatNum = size(traceData_trials,2);
 		% traceData_trials_shade = std(traceData_trials, 0, 2, 'omitnan');
-		traceData_trials_shade = std(traceData_trials, 0, 2, 'omitnan')/sqrt(size(traceData_trials,2));
+		switch shadeType
+			case 'std'
+				traceData_trials_shade = std(traceData_trials, 0, 2, 'omitnan');
+			case 'ste'
+				traceData_trials_shade = std(traceData_trials, 0, 2, 'omitnan')/sqrt(stimRepeatNum);
+			otherwise
+				error('invalid shadeType. It must be either std or ste')
+		end
 
 		ax = nexttile(tlo);
 
-		plot_trace(timeInfo, traceData_trials, 'plotWhere', ax,...
-			'plot_combined_data', plot_combined_data,...
-			'mean_trace', traceData_trials_mean, 'mean_trace_shade', traceData_trials_shade,...
-	        'plot_raw_races',plot_raw_races,'y_range', y_range,'tickInt_time',tickInt_time); % 'y_range', y_range
-		titleName = sprintf('%s-%s',stimName,eventCat);
+		if ~isempty(traceData_trials)
+			plot_trace(timeInfo, traceData_trials, 'plotWhere', ax,...
+				'plot_combined_data', plot_combined_data,...
+				'mean_trace', traceData_trials_mean, 'mean_trace_shade', traceData_trials_shade,...
+		        'plot_raw_races',plot_raw_races,'y_range', y_range,'tickInt_time',tickInt_time); % 'y_range', y_range
+		end
+		titleName = sprintf('%s-%s traceNum-%g',stimName,eventCat,stimRepeatNum);
 		title(titleName)
 
 		trace_means(n).group = titleName;

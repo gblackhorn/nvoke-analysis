@@ -14,12 +14,15 @@
 
 % Default folder paths. GUI will use the following folder to start.
 % Modify them if necessary
-QTMmatFolderPath = 'S:\PROCESSED_DATA_BACKUPS\nRIM_MEMBERS\Moscope\MoScope_raw_matfiles_for_naming';
+QTMmatFolderPath = 'S:\PROCESSED_DATA_BACKUPS\Moscope\MoScope_name_corrected_qtm_files\MATFILES';
 nVokeRawDataFolder = 'S:\RAW_BACKUPS\INSCOPIX\MoScope';
-nVokeRenameDataFolder = 'S:\PROCESSED_DATA_BACKUPS\nRIM_MEMBERS\Moscope\Moscope_CaImg\Raw_recordings_renamed';
+nVokeRenameDataFolder = 'S:\PROCESSED_DATA_BACKUPS\Moscope\INSCOPIX_renamed';
 
 % Rename and save nVoke2 data files
 % nVoke_oldNew_filenames: a structure containing the original and new file names
 % debriefing: containing the selected folder paths
 [nVoke_oldNew_filenames,debriefing] = batchMod_nVoke2_filenames('QTMmatFolderPath',QTMmatFolderPath,...
 	'nVokeRawDataFolder',nVokeRawDataFolder,'nVokeRenameDataFolder',nVokeRenameDataFolder);
+
+% Add how many files were renamed and copied and how many of them not to
+% the debriefing output
