@@ -207,7 +207,7 @@ debug_mode = false; % true/false.
 
 %% ====================
 % 6.2 If trials are from nvoke2, expecially when they are mixed with nvoke1 data. rename the nvoke 2 trials
-recdata_backup = recdata;
+recdata_backup = recdata; %recdata
 [recdata] = renameFileNamesInROI(recdata);
 
 %% ====================
@@ -268,7 +268,7 @@ debug_mode = false; % true/false.
 %% ====================
 % 8.1.1 Copy the FOV_loc struct-field from a sourceData, if exists, to a newly formed recdata_organized
 recdata_target = recdata_organized; % The data receiving FOV info
-recdata_source = recdata_organized_nonseries; % The data giving FOV info
+recdata_source = recdata_old; % The data giving FOV info
 
 [recdata_target_with_fov,trial_list_wo_fov] = copy_fovInfo(recdata_source,recdata_target);
 recdata_organized = recdata_target_with_fov;

@@ -86,8 +86,6 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	    end
 	end
 
-	% ====================
-	% Main contents
 
 
 	% Use the settings below to modify the title string for figures 

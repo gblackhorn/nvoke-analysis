@@ -145,7 +145,7 @@ filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan nan]}; % [ex in rb exApO
 % Note: ROIs of all trials in alignedData_allTrials can be plotted. 
 %	Use 'filter' to screen ROIs based on the effect of stimulation
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 
 event_type = 'peak_time'; % rise_time/peak_time
 norm_FluorData = true; % true/false. whether to normalize the FluroData
