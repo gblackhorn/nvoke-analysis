@@ -27,8 +27,8 @@ pars_envs = struct('memory_size_to_use', 256, ...   % default=8, GB, memory spac
 % -   Average principal IO diameter is about 5-6, dorsal IO is slightly
 % bigger
 
-gSig = 10;           % default=3, pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
-gSiz = 20;          % default=13, pixel, neuron diameter
+gSig = 8;           % default=3, pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
+gSiz = 16;          % default=13, pixel, neuron diameter
 ssub = 1;           % default=1, spatial downsampling factor
 with_dendrites = false;   % with dendrites or not
 if with_dendrites
@@ -88,26 +88,26 @@ merge_thr_spatial = [1e-1, 0.65, 0];  % default [0.8, 0.4, -inf]. merge componen
 
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
-min_corr = 0.9;     % default=0.8. minimum local correlation for a seeding pixel
-min_pnr = 10;       % default=8. minimum peak-to-noise ratio for a seeding pixel
+min_corr = 0.8;     % default=0.8. minimum local correlation for a seeding pixel
+min_pnr = 8;       % default=8. minimum peak-to-noise ratio for a seeding pixel
 min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % default=0, number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 frame_range = [];   % when [], uses all frames
 save_initialization = false;    % save the initialization procedure as a video.
 use_parallel = true;    % use parallel computation for parallel computing
-show_init = true;   % show initialization results
+show_init = false;   % show initialization results
 choose_params = false; % manually choose parameters
 center_psf = true;  % set the value as true when the background fluctuation is large (usually 1p data)
 % set the value as false when the background fluctuation is small (2p)
 
 % -------------------------  Residual   -------------------------  %
-min_corr_res = 0.9; % default=0.7
-min_pnr_res = 10; % default=6
+min_corr_res = 0.7; % default=0.7
+min_pnr_res = 6; % default=6
 seed_method_res = 'auto';  % method for initializing neurons from the residual
 update_sn = true;
 
 % ----------------------  WITH MANUAL INTERVENTION  --------------------  %
-with_manual_intervention = true;
+with_manual_intervention = false;
 
 % -------------------------  FINAL RESULTS   -------------------------  %
 save_demixed = true;    % save the demixed file or not
@@ -154,12 +154,14 @@ end
 
 [center, Cn, PNR] = neuron.initComponents_parallel(K, frame_range, save_initialization, use_parallel);
 neuron.compactSpatial();
+
 % if show_init
 %     figure();
 %     ax_init= axes();
 %     imagesc(Cn, [0, 1]); colormap gray;
 %     hold on;
 %     plot(center(:, 2), center(:, 1), '.r', 'markersize', 10);
+%     pause
 % end
 
 if ~isempty(neuron.ids) 

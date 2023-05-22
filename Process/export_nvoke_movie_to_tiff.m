@@ -41,17 +41,27 @@ function [] = export_nvoke_movie_to_tiff(input_folder, output_folder, varargin)
 	input_fileinfo = dir(fullfile(input_folder, ['*',keyword]));
 	movie_num = numel(input_fileinfo);
 	exported_num = 0;
+
+	startMSG = sprintf('\nExporting %g movies (isxd files) to tiff files\n - input folder: %s\n - output folder: %s',...
+	    movie_num,input_folder,output_folder);
+	disp(startMSG)
+	disp('Tiff file list:')
+
 	for mn = 1:movie_num
 		input_file_fullpath = fullfile(input_folder, input_fileinfo(mn).name);
 
 		[~, file_name_stem, ~] = fileparts(input_file_fullpath);
-		output_file_fullpath = fullfile(output_folder, [file_name_stem, '.tiff']);
+		output_filename = [file_name_stem, '.tiff'];
+		output_file_fullpath = fullfile(output_folder, output_filename);
 
 		tiff_exist = dir(output_file_fullpath);
 
 		if isempty(tiff_exist) || overwrite
 			isx.export_movie_to_tiff(input_file_fullpath, output_file_fullpath);
 			exported_num = exported_num+1;
+
+			reportTiff = sprintf(' - movie (%d/%d): %s',mn,movie_num,output_filename);
+			disp(reportTiff)
 		end
 	end
 	fprintf('\n%d movies were exported to\n  %s\n', exported_num, output_folder);

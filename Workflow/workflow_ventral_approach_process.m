@@ -70,6 +70,29 @@ if recording_dir ~= 0
 end
 
 %% ==================== 
+% 2.1.1 Crop isxd files in a chosen folder and saved to another folder
+movieKeyword = 'M9'; % no need to add .isxd
+cropRectangle = [145 620 606 1054]; % [top, left, bottom, right]
+
+[FolderPathVA.recordingVA,FolderPathVA.project,chosenStatus] = getInputOutputFolders('inputFolder',FolderPathVA.recordingVA,...
+	'outputFolder',FolderPathVA.project,'inputMSG','Chose a recording folder');
+
+if chosenStatus
+	crop_nVokeRec(FolderPathVA.recordingVA,FolderPathVA.project,cropRectangle,...
+		'keyword',movieKeyword,'overwrite',false);
+end
+
+%% ==================== 
+% 2.1.2 Spatial filter and motion correct the movies
+movieKeyword = 'M9*-crop'; % no need to add .isxd
+[movieFolder,~,chosenStatus] = getInputOutputFolders('inputFolder',FolderPathVA.project,...
+	'outputFolder',FolderPathVA.project,'inputMSG','Chose a folder containing cropped files');
+
+if chosenStatus
+	motionCorrect_nVokeRec(movieFolder,'keyword',movieKeyword,'overwrite',false);
+end
+
+%% ==================== 
 % 2.2 Create DFF files from motion corrected files in a specified folder
 % Use keyword to filter MC files
 keyword = '0-PP-BP-MC.isxd'; % Use file name like this to look for motion corrected files
@@ -85,7 +108,7 @@ end
 
 %% ==================== 
 % 3.1 Export nvoke movies to tiff files
-keywords = '-MC.isxd'; % used to filter 
+keywords = 'M9*crop-BP-MC.isxd'; % used to filter 
 overwrite = false;
 
 input_isxd_folder = uigetdir(FolderPathVA.project,...

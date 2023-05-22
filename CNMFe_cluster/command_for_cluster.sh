@@ -11,21 +11,35 @@ cd /flash/UusisaariU/GD/
 less slurm-xxxxxxxx.out
 
 # update codes
-cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMFe_cluster/*.sh /flash/UusisaariU/GD/
-cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMFe_cluster/*.m /flash/UusisaariU/GD/code/
-cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/Organize/ /flash/UusisaariU/GD/code/
+bucketCodeDir='/bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMFe_cluster/'
+flashCodeDir='/flash/UusisaariU/GD/code/' 
+flashHomeDir='/flash/UusisaariU/GD/'
+
+    # sync code from bucket to flash
+rsync -av --include '*/' --include '*.m' --exclude '*' deigo:$bucketCodeDir/ $flashCodeDir/
+rsync -av --include '*/' --include '*.sh' --exclude '*' deigo:$bucketCodeDir/ $flashHomeDir/
+    # sync code from flash to bucket 
+rsync -av --include '*/' --include '*.m' --exclude '*' $flashCodeDir/ deigo:$bucketCodeDir/ 
+rsync -av --include '*/' --include '*.sh' --exclude '*' $flashHomeDir/ deigo:$bucketCodeDir/ 
+
+
+
+# cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMFe_cluster/*.sh /flash/UusisaariU/GD/
+# cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMFe_cluster/*.m /flash/UusisaariU/GD/code/
+# cp -r /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/Organize/ /flash/UusisaariU/GD/code/
 
 
 # Set folder path on Bucket to Copy data from bucket to /flash
-bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2023-02-23/'
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/Moscope/M9_BMC/'
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/Moscope/INSCOPIX_tiff/M9_BMC/'
 
 # If folder does not exist, creat one
 # flashdatadir=$(mktemp -d /flash/UusisaariU/GD/data_folder20220927.XXXXXX) 
-mktemp -d /flash/UusisaariU/GD/data_folder20230219.XXXXXX
+mktemp -d /flash/UusisaariU/GD/data_MOS_M9_BMC.XXXXXX
 # assign the new dir to 'flashdatadir'
 
 # If folder exists on cluster, specify it 
-flashdatadir='/flash/UusisaariU/GD/data_folder20230219.zErjoE'
+flashdatadir='/flash/UusisaariU/GD/data_MOS_M9_BMC.1U26sa'
 
 
 # Copy the content in bucketdatadir to flashdatadir
@@ -48,6 +62,7 @@ rsync -av --no-group --no-perms deigo:$bucketdatadir/ $flashdatadir/
 
 # start an automatic job
 sbatch batch_nocopy_cnmfe_process.slurm.sh 
+sbatch batch_figure_video.slurm.sh
 
 
 
@@ -72,6 +87,10 @@ rsync -av --no-group --no-perms $flashdatadir/ deigo:$bucketdatadir/
 
 
 
+# update codes on bucket when changes were made on cluster
+cp -r /flash/UusisaariU/GD/*.sh  /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMFe_cluster/
+cp -r /flash/UusisaariU/GD/code/*.m  /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMFe_cluster/
+cp -r /flash/UusisaariU/GD/code/ /bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/Organize/ 
 
 
 

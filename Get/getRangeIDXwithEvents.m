@@ -1,4 +1,4 @@
-function [posRangeIDX,varargout] = getRangeIDXwithEvents(eventTime,timeRanges,varargin)
+function [posTimeRanges,posRangeIDX,varargout] = getRangeIDXwithEvents(eventsTime,timeRanges,varargin)
     % Giving events time, time ranges, returns in which ranges the events can be found
 
     % timeRanges must be a n*2 number array. The first column contains the start of range, and the
@@ -27,7 +27,7 @@ function [posRangeIDX,varargout] = getRangeIDXwithEvents(eventTime,timeRanges,va
     % Loop through the timeRanges, and find out which ranges contain events, which do not
     for n = 1:timeRangesNum
         timeRange = timeRanges(n,:);
-        eventInRange = find(eventTime>=timeRange(1) & eventTime<=timeRange(2));
+        eventInRange = find(eventsTime>=timeRange(1) & eventsTime<=timeRange(2));
 
         % Mark the ranges with events
         if ~isempty(eventInRange)
@@ -37,6 +37,8 @@ function [posRangeIDX,varargout] = getRangeIDXwithEvents(eventTime,timeRanges,va
 
     posRangeIDX = find(rangeIDX_tf==true);
     negRangeIDX = find(rangeIDX_tf==false);
+
+    posTimeRanges = timeRanges(posRangeIDX,:);
 
     varargout{1} = negRangeIDX;
 end
