@@ -145,18 +145,30 @@ filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan nan]}; % [ex in rb exApO
 % Note: ROIs of all trials in alignedData_allTrials can be plotted. 
 %	Use 'filter' to screen ROIs based on the effect of stimulation
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 
 event_type = 'peak_time'; % rise_time/peak_time
 norm_FluorData = true; % true/false. whether to normalize the FluroData
 sortROI = true; % true/false. Sort ROIs according to the event number: high to low
+preTime = 5; % fig3 include time before stimulation starts for plotting
+postTime = []; % fig3 include time after stimulation ends for plotting. []: until the next stimulation starts
+activeHeatMap = true; % true/false. If true, only plot the traces with specified events in figure 3
+stimEvents(1).stimName = 'og-5s';
+stimEvents(1).eventName = 'rebound';
+stimEvents(2).stimName = 'ap-0.1s';
+stimEvents(2).eventName = 'trig';
+stimEvents(3).stimName = 'og-5s ap-0.1s';
+stimEvents(3).eventName = 'rebound';
+eventsTimeSort = 'all'; % 'off'/'inROI','all'. sort traces according to eventsTime
 hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins
 xtickInt_scale = 5; % xtickInt = hist_binsize * xtickInt_scale. Use by figure 2
-debug_mode = false;
+debug_mode = true; % true/false. 
 
 FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_filtered,...
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
 	'norm_FluorData',norm_FluorData,'sortROI',sortROI,...
+	'preTime',preTime,'postTime',postTime,...
+	'activeHeatMap',activeHeatMap,'stimEvents',stimEvents,'eventsTimeSort',eventsTimeSort,...
 	'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'debug_mode',debug_mode);
 
@@ -1040,7 +1052,7 @@ end
 close all
 tplot.plot_combined_data = true;
 tplot.parNames_roi = {'sponfq', 'sponInterval'};
-tplot.save_fig = true; % true/false
+tplot.save_fig = false; % true/false
 tplot.save_dir = FolderPathVA.fig;
 tplot.stat = true; % true if want to run anova when plotting bars
 tplot.stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not

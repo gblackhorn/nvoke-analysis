@@ -30,5 +30,11 @@ function [event_info,varargout] = get_TrialEvents_from_alignedData(alignedData_t
 		fullEventProp = fullEventProp(pick);
 	end
 
-	event_info = cellfun(@(x) [x.(event_type)],fullEventProp,'UniformOutput',false);
+	% decide if the the fullEventProp.(event_type) are numbers or characters
+	firstContent = fullEventProp{1}(1).(event_type);
+	if isnumeric(firstContent)
+		event_info = cellfun(@(x) [x.(event_type)],fullEventProp,'UniformOutput',false);
+	elseif ischar(firstContent)
+		event_info = cellfun(@(x) {x.(event_type)},fullEventProp,'UniformOutput',false);
+	end
 end

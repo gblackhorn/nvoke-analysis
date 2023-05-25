@@ -16,6 +16,18 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 	norm_FluorData = false; % true/false. whether to normalize the FluroData
 	sortROI = false; % true/false. Sort ROIs according to the event number: high to low
 
+	preTime = 0; % fig3 include time before stimulation starts for plotting
+	postTime = []; % fig3 include time after stimulation ends for plotting. []: until the next stimulation starts
+
+	activeHeatMap = true; % true/false. If true, only plot the traces with specified events in figure 3
+	stimEvents(1).stimName = 'og-5s';
+	stimEvents(1).eventName = 'rebound';
+	stimEvents(2).stimName = 'ap-0.1s';
+	stimEvents(2).eventName = 'trig';
+	stimEvents(3).stimName = 'og-5s ap-0.1s';
+	stimEvents(3).eventName = 'rebound';
+	eventsTimeSort = 'off'; % 'off'/'inROI','all'. sort traces according to eventsTime
+
 	plot_unit_width = 0.4; % normalized size of a single plot to the display
 	plot_unit_height = 0.4; % nomralized size of a single plot to the display
 
@@ -42,6 +54,16 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
             norm_FluorData = varargin{ii+1};
 	    elseif strcmpi('sortROI', varargin{ii})
             sortROI = varargin{ii+1};
+        elseif strcmpi('preTime', varargin{ii})
+            preTime = varargin{ii+1}; 
+        elseif strcmpi('postTime', varargin{ii})
+        	postTime = varargin{ii+1}; 
+	    elseif strcmpi('activeHeatMap', varargin{ii})
+            activeHeatMap = varargin{ii+1};
+	    elseif strcmpi('stimEvents', varargin{ii})
+            stimEvents = varargin{ii+1};
+	    elseif strcmpi('eventsTimeSort', varargin{ii})
+            eventsTimeSort = varargin{ii+1};
 	    elseif strcmpi('plot_unit_width', varargin{ii})
             plot_unit_width = varargin{ii+1};
 	    elseif strcmpi('plot_unit_height', varargin{ii})
@@ -85,16 +107,19 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 	trial_num = numel(alignedData_filtered);
 	for tn = 1:trial_num
 		pause_plot = true;
+		close all
 
 		if debug_mode
 			fprintf('trial %d/%d: %s\n',tn,trial_num,alignedData_filtered(tn).trialName)
-			if tn == 21
+			if tn == 3
 				pause
 			end
 		end
 
 		plot_Trace_n_Events_alignedData(alignedData_filtered(tn),...
 			'event_type',event_type,'norm_FluorData',norm_FluorData,'sortROI',sortROI,...
+			'preTime',preTime,'postTime',postTime,...
+			'activeHeatMap',activeHeatMap,'stimEvents',stimEvents,'eventsTimeSort',eventsTimeSort,...
 			'plot_unit_width',plot_unit_width,'plot_unit_height',plot_unit_height,...
 			'show_colorbar',show_colorbar,'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...
 			'title_prefix',title_prefix,'save_fig',save_fig,'save_dir',save_dir,...

@@ -21,7 +21,7 @@ mlab_cmd="matlab -nosplash -nodisplay -nodesktop"
 # tempdir=$(mktemp -d /flash/UusisaariU/GD/data_folder.XXXXXX) 
 
 # set inputs
-folder_to_process=/flash/UusisaariU/GD/data_folder20230223.pHpwaD/
+folder_to_process=/flash/UusisaariU/GD/data_MOS_M8.FYzJWT/
 Fs=20 # sampling frequency. default is 20 Hz 
 
 # enter the user directory on flash

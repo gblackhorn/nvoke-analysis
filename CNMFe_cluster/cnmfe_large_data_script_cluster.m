@@ -59,7 +59,7 @@ tsub = 1;           % temporal downsampling factor
 deconv_flag = true;     % run deconvolution or not 
 deconv_options = struct('type', 'ar2', ... % default=ar1, model of the calcium traces. {'ar1', 'ar2'}
     'method', 'foopsi', ... % method for running deconvolution {'foopsi', 'constrained', 'thresholded'}
-    'smin', -5, ...         % minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
+    'smin', -5, ...         % default: -5. minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
     'optimize_pars', true, ...  % optimize AR coefficients
     'optimize_b', true, ...% optimize the baseline);
     'max_tau', 100);    % default=100. maximum decay time (unit: frame);
@@ -155,14 +155,14 @@ end
 [center, Cn, PNR] = neuron.initComponents_parallel(K, frame_range, save_initialization, use_parallel);
 neuron.compactSpatial();
 
-% if show_init
-%     figure();
-%     ax_init= axes();
-%     imagesc(Cn, [0, 1]); colormap gray;
-%     hold on;
-%     plot(center(:, 2), center(:, 1), '.r', 'markersize', 10);
-%     pause
-% end
+if show_init
+    figure();
+    ax_init= axes();
+    imagesc(Cn, [0, 1]); colormap gray;
+    hold on;
+    plot(center(:, 2), center(:, 1), '.r', 'markersize', 10);
+    pause
+end
 
 if ~isempty(neuron.ids) 
     %% estimate the background components
@@ -276,7 +276,8 @@ if ~isempty(neuron.ids)
             multi_factor = 10;
             range_Y = 1300+[0, amp_ac*multi_factor];
 
-            avi_filename = neuron.show_demixed_video(save_demixed, kt, [], amp_ac, range_ac, range_Y, multi_factor);
+            avi_filename = neuron.show_demixed_video(save_demixed, kt, [], amp_ac, range_ac);
+            % avi_filename = neuron.show_demixed_video(save_demixed, kt, [], amp_ac, range_ac, range_Y, multi_factor);
 
             %% save neurons shapes
             neuron.save_neurons();

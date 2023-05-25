@@ -160,7 +160,7 @@ filters = {[nan nan nan], [nan nan nan], [nan nan nan]}; % [ex in rb]. ex: excit
 % Note: ROIs of all trials in alignedData_allTrials can be plotted. 
 %	Use 'filter' to screen ROIs based on the effect of stimulation
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 
 norm_FluorData = false; % true/false. whether to normalize the FluroData
 sortROI = true; % true/false. Sort ROIs according to the event number: high to low

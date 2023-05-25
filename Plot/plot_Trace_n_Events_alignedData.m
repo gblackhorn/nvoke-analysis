@@ -18,6 +18,18 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 
 	sortROI = false; % true/false. Sort ROIs according to the event number: high to low
 
+	preTime = 0; % fig3 include time before stimulation starts for plotting
+	postTime = []; % fig3 include time after stimulation ends for plotting. []: until the next stimulation starts
+
+	activeHeatMap = true; % true/false. If true, only plot the traces with specified events in figure 3
+	stimEvents(1).stimName = 'og-5s';
+	stimEvents(1).eventName = 'rebound';
+	stimEvents(2).stimName = 'ap-0.1s';
+	stimEvents(2).eventName = 'trig';
+	stimEvents(3).stimName = 'og-5s ap-0.1s';
+	stimEvents(3).eventName = 'rebound';
+	eventsTimeSort = 'off'; % 'off'/'inROI','all'. sort traces according to eventsTime
+
 	plot_unit_width = 0.4; % normalized size of a single plot to the display
 	plot_unit_height = 0.4; % nomralized size of a single plot to the display
 
@@ -41,8 +53,18 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 	        norm_FluorData = varargin{ii+1}; % normalize every FluoroData trace with its max value
 	    elseif strcmpi('event_type', varargin{ii}) % 
 	        event_type = varargin{ii+1}; % 
+        elseif strcmpi('preTime', varargin{ii})
+            preTime = varargin{ii+1}; 
+        elseif strcmpi('postTime', varargin{ii})
+        	postTime = varargin{ii+1}; 
 	    elseif strcmpi('sortROI', varargin{ii})
             sortROI = varargin{ii+1};
+	    elseif strcmpi('activeHeatMap', varargin{ii})
+            activeHeatMap = varargin{ii+1};
+	    elseif strcmpi('stimEvents', varargin{ii})
+            stimEvents = varargin{ii+1};
+	    elseif strcmpi('eventsTimeSort', varargin{ii})
+            eventsTimeSort = varargin{ii+1};
 	    elseif strcmpi('plot_unit_width', varargin{ii})
             plot_unit_width = varargin{ii+1};
 	    elseif strcmpi('plot_unit_height', varargin{ii})
@@ -97,6 +119,8 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 		% Get the events' time
 		[event_riseTime] = get_TrialEvents_from_alignedData(alignedData_trials,'rise_time');
 		[event_peakTime] = get_TrialEvents_from_alignedData(alignedData_trials,'peak_time');
+		[event_eventCat] = get_TrialEvents_from_alignedData(alignedData_trials,'peak_category');
+
 
 
 		% Calculate the numbers of events in each roi and sort the order of roi according to this (descending)
@@ -107,12 +131,35 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 			FluroData = FluroData(:,descendIDX);
 			event_riseTime = event_riseTime(descendIDX);
 			event_peakTime = event_peakTime(descendIDX);
+            event_eventCat = event_eventCat(descendIDX);
+			% event_eventCat = event_eventCat(descendIDX);
 		end
 
 		if strcmpi(event_type,'rise_time')
 			eventTime = event_riseTime;
 		elseif strcmpi(event_type,'peak_time')
 			eventTime = event_peakTime;
+		end
+
+
+		if ~activeHeatMap || isempty(stimEvents)  % no filter for stimEvents (~activeHeatMap) or the information of stim and related events are missing
+			StimEventsTime = NaN;
+		else
+			% find the location of trial stim name in the stimEvents.stimName
+			stimEventsIDX = find(strcmpi({stimEvents.stimName},alignedData_trials.stim_name));
+			if ~isempty(stimEventsIDX)
+				eventName = stimEvents(stimEventsIDX).eventName;
+				eventsIDX = cellfun(@(x) find(strcmpi(x,eventName)),event_eventCat,'UniformOutput',false);
+
+				% get the stimEventTime for each roi
+				StimEventsTime = cell(size(eventsIDX));
+				for rn = 1:numel(trace_event_data)
+					StimEventsTime{rn} = eventTime{rn}(eventsIDX{rn});
+				end
+			else
+				StimEventsTime = NaN;
+				activeHeatMap = false;
+			end
 		end
 
 
@@ -168,17 +215,17 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 		% Figure 3: Plot a color plot. Difference between this one and the one in figure 1 is every
 		% ROI trace is cut to several sections using stimulation repeat. One row contains the start
 		% of stim to the start of the next stim. Each ROI contains the stim repeat number of rows
-		fig_title{3} = sprintf('%s %s single-stim fluorescence signal %s',title_str_stem,norm_str,sortStr); % Create the title string
+		fig_title{3} = sprintf('%s %s single-stim fluorescence signal %s stimEventsDelaySort-%s',...
+		title_str_stem,norm_str,sortStr,eventsTimeSort); % Create the title string
 		% f(3) = fig_canvas(2,'unit_width',plot_unit_width,'unit_height',plot_unit_height,...
 		% 	'column_lim',1,'fig_name',fig_title{3}); % create a figure
 		% tlo = tiledlayout(f(3), 9, 1); % setup tiles
 		
 		f(3) = plot_TemporalData_Color_seperateStimRepeats(gca,FluroData,timeData,stimInfo,...
-			'rowNames',rowNames,'show_colorbar',show_colorbar,...
-			'titleStr',fig_title{3}); % ,'shadeData',patchCoor,'stimTypes',stimTypes
+			'preTime',preTime,'postTime',postTime,...
+			'eventsTime',StimEventsTime,'eventsTimeSort',eventsTimeSort,...
+			'rowNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{3},'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
 		sgtitle(fig_title{3})
-
-
 
 
 		% Save figures

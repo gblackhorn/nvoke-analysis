@@ -16,7 +16,7 @@ module load matlab
 mlab_cmd="matlab -nosplash -nodisplay -nodesktop"
 
 # set inputs
-folder_to_process=/flash/UusisaariU/GD/data_MOS_M9_BMC.1U26sa/
+folder_to_process=/flash/UusisaariU/GD/data_MOS_M8.FYzJWT/
 plot_contour=true
 plot_roi_traces=true
 creat_video=true

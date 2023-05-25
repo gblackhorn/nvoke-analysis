@@ -68,14 +68,15 @@ function [varargout] = cnmfe_gen_plot_video_cluster(varargin)
 			print(contours_fullpath, '-dpng');
 			
 
-			%% create a video for displaying the
+			%% create a video for displaying the activities
             kt = 3;
 			amp_ac = 140;
 			range_ac = 5+[0, amp_ac];
 			multi_factor = 10;
 			range_Y = 1300+[0, amp_ac*multi_factor];
 
-			avi_filename = neuron.show_demixed_video(save_demixed, kt, [], amp_ac, range_ac, range_Y, multi_factor);
+			avi_filename = neuron.show_demixed_video(save_demixed, kt, [], amp_ac, range_ac);
+			% avi_filename = neuron.show_demixed_video(save_demixed, kt, [], amp_ac, range_ac, range_Y, multi_factor);
 
 
 			%% save neurons shapes
