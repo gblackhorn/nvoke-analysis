@@ -15,7 +15,7 @@ function [varargout] = plot_diff_usingRawData(xData,DataA,DataB,varargin)
 	unit_width = 0.4; % normalized to display
 	unit_height = 0.4; % normalized to display
 	column_lim = 1; % number of axes column
-	xlabelStr = 'Time';
+	xlabelStr = 'Time (s)';
 	ylabelStr = '';
 	figTitleStr = 'line plots with diff bar';
 

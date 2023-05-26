@@ -18,6 +18,14 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 	postStim_duration = 10; % unit: second. include events happened after the end of stimulations
 
+	stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
+	stimEvents(1).stimName = 'og-5s';
+	stimEvents(1).eventCat = 'rebound';
+	stimEvents(2).stimName = 'ap-0.1s';
+	stimEvents(2).eventCat = 'trig';
+	stimEvents(3).stimName = 'og-5s ap-0.1s';
+	stimEvents(3).eventCat = 'rebound';
+
 	normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
 	baseBinEdgestart = -preStim_duration; % where to start to use the bin for calculating the baseline. -1
 	baseBinEdgeEnd = -2; % 0
@@ -47,6 +55,10 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	        preStim_duration = varargin{ii+1};
         elseif strcmpi('postStim_duration', varargin{ii})
 	        postStim_duration = varargin{ii+1};
+        elseif strcmpi('stimEventsPos', varargin{ii})
+	        stimEventsPos = varargin{ii+1};
+        elseif strcmpi('stimEvents', varargin{ii})
+	        stimEvents = varargin{ii+1};
         elseif strcmpi('normToBase', varargin{ii})
 	        normToBase = varargin{ii+1};
         elseif strcmpi('baseBinEdgestart', varargin{ii})
@@ -66,11 +78,22 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	    end
 	end	
 
+	% Create the label string
+	if normToBase
+		normToBaseStr = ' normToBase';
+	else
+		normToBaseStr = '';
+	end
+	ylabelStr = sprintf('eventFreq %s',normToBaseStr);
+	xlabelStr = 'time (s)';
+
 	% plot the peri-stim event frequencies in bins for all the stimulation types in alignedData
 	[barStat,stimShadeDataAll,save_dir] = plot_event_freq_alignedData_allTrials(alignedData,'propName',propName,...
 	    'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,'stimIDX',stimIDX,...
 	    'normToBase',normToBase,'apCorrection',apCorrection,...
 	    'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
+	    'xlabelStr',xlabelStr,'ylabelStr',ylabelStr,...
+        'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 		'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'binWidth',binWidth,...
 		'save_fig',save_fig,'save_dir',save_dir,'gui_save',gui_save,'debug_mode',debug_mode);
 
@@ -96,12 +119,6 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	[fDiffStat,fDiff_rowNum,fDiff_colNum] = fig_canvas(diffPairNum,'unit_width',0.4,'unit_height',0.4,'column_lim',2,...
 		'fig_name','diff between event freq stat'); % create a figure
 	tloDiffStat = tiledlayout(fDiffStat,fDiff_rowNum,fDiff_colNum);
-
-	if normToBase
-		normToBaseStr = ' normToBase';
-	else
-		normToBaseStr = '';
-	end
 
 	for dpn = 1:diffPairNum
 		ax = nexttile(tloDiff);
@@ -152,7 +169,8 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 			diffStat(dpn).groupA,diffStat(dpn).groupB,binWidth,normToBaseStr);
 
 		[ttestVal,diffVal,scatterNum]=plot_diff_usingRawData(diffStat(dpn).xA,diffStat(dpn).dataA,diffStat(dpn).dataB,...
-			'legStrA',diffStat(dpn).groupA,'legStrB',diffStat(dpn).groupB,'new_xticks',diffStat(dpn).binA,'figTitleStr',figTitleStrCell{dpn},...
+			'legStrA',diffStat(dpn).groupA,'legStrB',diffStat(dpn).groupB,'new_xticks',diffStat(dpn).binA,...
+			'ylabelStr',ylabelStr,'figTitleStr',figTitleStrCell{dpn},...
 			'stimShadeDataA',diffStat(dpn).shadeA.shadeData,'stimShadeDataB',diffStat(dpn).shadeB.shadeData,...
 			'stimShadeColorA',diffStat(dpn).shadeA.color,'stimShadeColorB',diffStat(dpn).shadeB.color,...
 			'save_fig',false,'save_dir',save_dir,'plotWhere',gca);

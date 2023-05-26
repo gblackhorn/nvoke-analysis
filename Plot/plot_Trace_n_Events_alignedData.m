@@ -1,11 +1,11 @@
-function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,varargin)
+function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varargin)
 	% Plot calcium fluorescence as traces and color, and plot calcium events using scatter
 	% (show the event number in time bins in the histogram). Use the data from one trial in the
 	% format of aligneData (a structure var) accquired from function "get_event_trace_allTrials"
 
 	% Example:
-	%	[f1,f2] = plot_trace_events_alignedData(alignedData_trials,'pick',[1 3 5 7],'norm_FluorData',true); 
-	%		get the 1st, 3rd, 5th and 7th roi traces from alignedData_trials and normalize them with their
+	%	[f1,f2] = plot_trace_events_alignedData(alignedData_trial,'pick',[1 3 5 7],'norm_FluorData',true); 
+	%		get the 1st, 3rd, 5th and 7th roi traces from alignedData_trial and normalize them with their
 	% 		max values
 
 	% Defaults
@@ -23,11 +23,11 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 
 	activeHeatMap = true; % true/false. If true, only plot the traces with specified events in figure 3
 	stimEvents(1).stimName = 'og-5s';
-	stimEvents(1).eventName = 'rebound';
+	stimEvents(1).eventCat = 'rebound';
 	stimEvents(2).stimName = 'ap-0.1s';
-	stimEvents(2).eventName = 'trig';
+	stimEvents(2).eventCat = 'trig';
 	stimEvents(3).stimName = 'og-5s ap-0.1s';
-	stimEvents(3).eventName = 'rebound';
+	stimEvents(3).eventCat = 'rebound';
 	eventsTimeSort = 'off'; % 'off'/'inROI','all'. sort traces according to eventsTime
 
 	plot_unit_width = 0.4; % normalized size of a single plot to the display
@@ -92,34 +92,34 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 	% Main contents
 
 	% Get the stimulation patch info for plotting the shades to indicate stimulation
-	[patchCoor,stimTypes,stimTypeNum] = get_TrialStimPatchCoor_from_alignedData(alignedData_trials);
-	% combinedStimRange = alignedData_trials.stimInfo.UnifiedStimDuration.range;
-	stimInfo = alignedData_trials.stimInfo;
+	[patchCoor,stimTypes,stimTypeNum] = get_TrialStimPatchCoor_from_alignedData(alignedData_trial);
+	% combinedStimRange = alignedData_trial.stimInfo.UnifiedStimDuration.range;
+	stimInfo = alignedData_trial.stimInfo;
 
 	% Filter ROIs if 'pick' is input as varargin
-	trace_event_data = alignedData_trials.traces; % roi names, calcium fluorescence data, events' time info are all in the field 'traces'
+	trace_event_data = alignedData_trial.traces; % roi names, calcium fluorescence data, events' time info are all in the field 'traces'
 	if ~isnan(pick)
 		trace_event_data = trace_event_data(pick);
 	end
 	% [trace_event_data] = Filter_AlignedDataTraces_withStimEffect(trace_event_data,...
 	% 	'ex',stim_effect_filter(1),'in',stim_effect_filter(2),'rb',stim_effect_filter(3));
-	alignedData_trials.traces = trace_event_data; % replace the trace_event_data with the filtered one
+	alignedData_trial.traces = trace_event_data; % replace the trace_event_data with the filtered one
 
 	
 	% Get the ROI names
-	rowNames = {alignedData_trials.traces.roi};
+	rowNames = {alignedData_trial.traces.roi};
 
 
 	% Get the time information and traces
-	[timeData,FluroData] = get_TrialTraces_from_alignedData(alignedData_trials,...
+	[timeData,FluroData] = get_TrialTraces_from_alignedData(alignedData_trial,...
 		'norm_FluorData',norm_FluorData); 
 
 
 	if ~isempty(FluroData)
 		% Get the events' time
-		[event_riseTime] = get_TrialEvents_from_alignedData(alignedData_trials,'rise_time');
-		[event_peakTime] = get_TrialEvents_from_alignedData(alignedData_trials,'peak_time');
-		[event_eventCat] = get_TrialEvents_from_alignedData(alignedData_trials,'peak_category');
+		[event_riseTime] = get_TrialEvents_from_alignedData(alignedData_trial,'rise_time');
+		[event_peakTime] = get_TrialEvents_from_alignedData(alignedData_trial,'peak_time');
+		[event_eventCat] = get_TrialEvents_from_alignedData(alignedData_trial,'peak_category');
 
 
 
@@ -146,10 +146,10 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 			StimEventsTime = NaN;
 		else
 			% find the location of trial stim name in the stimEvents.stimName
-			stimEventsIDX = find(strcmpi({stimEvents.stimName},alignedData_trials.stim_name));
+			stimEventsIDX = find(strcmpi({stimEvents.stimName},alignedData_trial.stim_name));
 			if ~isempty(stimEventsIDX)
-				eventName = stimEvents(stimEventsIDX).eventName;
-				eventsIDX = cellfun(@(x) find(strcmpi(x,eventName)),event_eventCat,'UniformOutput',false);
+				eventCat = stimEvents(stimEventsIDX).eventCat;
+				eventsIDX = cellfun(@(x) find(strcmpi(x,eventCat)),event_eventCat,'UniformOutput',false);
 
 				% get the stimEventTime for each roi
 				StimEventsTime = cell(size(eventsIDX));
@@ -164,8 +164,8 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trials,
 
 
 		% Compose the stem part of figure title
-		trialName = alignedData_trials.trialName(1:15); % Get the date (yyyymmdd-hhmmss) part from trial name
-		stimName = alignedData_trials.stim_name; % Get the stimulation name
+		trialName = alignedData_trial.trialName(1:15); % Get the date (yyyymmdd-hhmmss) part from trial name
+		stimName = alignedData_trial.stim_name; % Get the stimulation name
 		if ~isempty(title_prefix)
 			title_prefix = sprintf('%s ', title_prefix); % add a space after the title_prefix in increase the readibility when combine with other strings
 		end

@@ -21,11 +21,11 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 
 	activeHeatMap = true; % true/false. If true, only plot the traces with specified events in figure 3
 	stimEvents(1).stimName = 'og-5s';
-	stimEvents(1).eventName = 'rebound';
+	stimEvents(1).eventCat = 'rebound';
 	stimEvents(2).stimName = 'ap-0.1s';
-	stimEvents(2).eventName = 'trig';
+	stimEvents(2).eventCat = 'trig';
 	stimEvents(3).stimName = 'og-5s ap-0.1s';
-	stimEvents(3).eventName = 'rebound';
+	stimEvents(3).eventCat = 'rebound';
 	eventsTimeSort = 'off'; % 'off'/'inROI','all'. sort traces according to eventsTime
 
 	plot_unit_width = 0.4; % normalized size of a single plot to the display

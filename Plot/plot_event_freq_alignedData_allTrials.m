@@ -35,6 +35,16 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	postStim_duration = 5; % unit: second. include events happened after the end of stimulations
 	round_digit_sig = 2; % round to the Nth significant digit for duration
 
+	stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
+	stimEvents(1).stimName = 'og-5s';
+	stimEvents(1).eventCat = 'rebound';
+	stimEvents(2).stimName = 'ap-0.1s';
+	stimEvents(2).eventCat = 'trig';
+	stimEvents(3).stimName = 'og-5s ap-0.1s';
+	stimEvents(3).eventCat = 'rebound';
+
+	xlabelStr = 'Time (s)';
+	ylabelStr = '';
 	shadeColors = {'#F05BBD','#4DBEEE','#ED8564'}; % og, ap, others
 
 	save_fig = false;
@@ -69,12 +79,20 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
             preStim_duration = varargin{ii+1};
 	    elseif strcmpi('postStim_duration', varargin{ii})
             postStim_duration = varargin{ii+1};
+	    elseif strcmpi('stimEventsPos', varargin{ii})
+            stimEventsPos = varargin{ii+1};
+	    elseif strcmpi('stimEvents', varargin{ii})
+            stimEvents = varargin{ii+1};
 	    elseif strcmpi('round_digit_sig', varargin{ii})
             round_digit_sig = varargin{ii+1};
 	    elseif strcmpi('plot_unit_width', varargin{ii})
             plot_unit_width = varargin{ii+1};
 	    elseif strcmpi('plot_unit_height', varargin{ii})
             plot_unit_height = varargin{ii+1};
+	    elseif strcmpi('xlabelStr', varargin{ii})
+            xlabelStr = varargin{ii+1};
+	    elseif strcmpi('ylabelStr', varargin{ii})
+            ylabelStr = varargin{ii+1};
 	    elseif strcmpi('save_fig', varargin{ii})
             save_fig = varargin{ii+1};
 	    elseif strcmpi('save_dir', varargin{ii})
@@ -111,8 +129,6 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		title_prefix = '';
 	end 
 
-
-
 	% Show the event frequencies in time bins with bar plot
 	% one plot for one stimulation type
 
@@ -136,9 +152,10 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		'fig_name',titleStr); % create a figure
 	tloStat = tiledlayout(fstat,fstat_rowNum,fstat_colNum);
 	for stn = 1:stim_type_num
-		[EventFreqInBins,binEdges,stimShadeData,stimShadeName] = get_EventFreqInBins_trials(alignedData,stim_names{stn},'PropName',PropName,...
+		[EventFreqInBins,binEdges,stimShadeData,stimShadeName,stimEventCatName] = get_EventFreqInBins_trials(alignedData,stim_names{stn},'PropName',PropName,...
 			'binWidth',binWidth,'stimIDX',stimIDX,...
 			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
+			'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 			'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
 
 		stimShadeDataAll(stn).stimTypeName = stim_names{stn};
@@ -188,7 +205,14 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 
 		ax = nexttile(tlo);
 		filterStr = NumArray2StringCell(filters{stn});
-		sub_titleStr = sprintf('%s: ex-%s in-%s rb-%s',stim_names{stn},filterStr{1},filterStr{2},filterStr{3}); % string for the subtitle
+		if stimEventsPos
+			stimEventsStr = stimEventCatName;
+		else
+			stimEventsStr = 'none';
+		end
+
+		sub_titleStr = sprintf('%s: ex-%s in-%s rb-%s stimEventsPos-%s',...
+		stim_names{stn},filterStr{1},filterStr{2},filterStr{3},stimEventsStr); % string for the subtitle
 		[barInfo] = barplot_with_stat(ef,'xdata',xdata,'plotWhere',gca);
 
 		% plot shade to indicate the stimulation period
@@ -209,6 +233,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 
 		xticks(binEdges);
 		xticklabels(NumArray2StringCell(binEdges));
+		xlabel(xlabelStr)
+		ylabel(ylabelStr)
 		title(sub_titleStr)
 
 		barStat(stn).stim = stim_names{stn};

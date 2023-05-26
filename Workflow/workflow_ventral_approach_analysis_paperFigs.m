@@ -154,11 +154,11 @@ preTime = 5; % fig3 include time before stimulation starts for plotting
 postTime = []; % fig3 include time after stimulation ends for plotting. []: until the next stimulation starts
 activeHeatMap = true; % true/false. If true, only plot the traces with specified events in figure 3
 stimEvents(1).stimName = 'og-5s';
-stimEvents(1).eventName = 'rebound';
+stimEvents(1).eventCat = 'rebound';
 stimEvents(2).stimName = 'ap-0.1s';
-stimEvents(2).eventName = 'trig';
+stimEvents(2).eventCat = 'trig';
 stimEvents(3).stimName = 'og-5s ap-0.1s';
-stimEvents(3).eventName = 'rebound';
+stimEvents(3).eventCat = 'rebound';
 eventsTimeSort = 'all'; % 'off'/'inROI','all'. sort traces according to eventsTime
 hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins
 xtickInt_scale = 5; % xtickInt = hist_binsize * xtickInt_scale. Use by figure 2
@@ -178,7 +178,7 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_filter
 %9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 gui_save = 'on';
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
@@ -192,6 +192,14 @@ stimIDX = []; % []/vector. specify stimulation repeats around which the events w
 preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 postStim_duration = 15; % unit: second. include events happened after the end of stimulations
 
+stimEventsPos = true; % true/false. If true, only use the peri-stim ranges with stimulation related events
+stimEvents(1).stimName = 'og-5s';
+stimEvents(1).eventCat = 'rebound';
+stimEvents(2).stimName = 'ap-0.1s';
+stimEvents(2).eventCat = 'trig';
+stimEvents(3).stimName = 'og-5s ap-0.1s';
+stimEvents(3).eventCat = 'rebound';
+
 normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
 baseBinEdgestart = -preStim_duration; % where to start to use the bin for calculating the baseline. -1
 baseBinEdgeEnd = -2; % 0
@@ -203,6 +211,7 @@ debug_mode = false; % true/false
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'diffPair',diffPair,...
 	'binWidth',binWidth,'stimIDX',stimIDX,'normToBase',normToBase,...
 	'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
+	'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 	'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on','debug_mode',debug_mode);
 
