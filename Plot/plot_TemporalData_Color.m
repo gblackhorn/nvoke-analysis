@@ -14,6 +14,7 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
     colorLUT = 'turbo'; % default look up table (LUT)/colormap. Other sets are: 'parula','hot','jet', etc.
     show_colorbar = true; % true/false. Show color next to the plot if true.
     xtickInt = 10; % interval between x ticks
+    breakerLine = NaN; % Input a row index. below this row, a horizontal line will be draw to seperate the heatmap
 
     % Optionals for inputs
     for ii = 1:2:(nargin-2)
@@ -25,6 +26,8 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
             xtickInt = varargin{ii+1}; % a single number to set the interval between x ticks
         % elseif strcmpi('x_rescale', varargin{ii})
         %     x_rescale = varargin{ii+1}; % a single number to set the interval between x ticks
+        elseif strcmpi('breakerLine', varargin{ii})
+            breakerLine = varargin{ii+1}; % 
         elseif strcmpi('colorLUT', varargin{ii})
             colorLUT = varargin{ii+1}; % look up table (LUT)/colormap: 'turbo','parula','hot','jet', etc.
         elseif strcmpi('show_colorbar', varargin{ii})
@@ -55,6 +58,20 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
         set(gca,'xtick',[])
         set(gca,'xticklabel',[])
     end
+
+
+    % Draw a breaker line
+    if ~isnan(breakerLine)
+        % Get the x-axis limits
+        xLimits = xlim;
+
+        % Calculate the y-coordinate for the line
+        yCoord = breakerLine + 0.5;
+
+        % Draw the horizontal line
+        line(xLimits, [yCoord, yCoord], 'Color', 'red', 'LineWidth', 1);
+    end
+
     set(gca,'box','off')
     yticks([y_range(1):y_range(end)]); % only tick the value in y_range
     yticklabels(rowNames); % label yticks
