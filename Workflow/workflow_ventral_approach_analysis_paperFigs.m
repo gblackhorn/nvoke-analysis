@@ -158,7 +158,7 @@ stimEvents(1).eventCat = 'rebound';
 stimEvents(2).stimName = 'ap-0.1s';
 stimEvents(2).eventCat = 'trig';
 stimEvents(3).stimName = 'og-5s ap-0.1s';
-stimEvents(3).eventCat = 'rebound';
+stimEvents(3).eventCat = 'trig-ap';
 eventsTimeSort = 'all'; % 'off'/'inROI','all'. sort traces according to eventsTime
 hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins
 xtickInt_scale = 5; % xtickInt = hist_binsize * xtickInt_scale. Use by figure 2
