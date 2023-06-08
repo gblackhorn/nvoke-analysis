@@ -119,7 +119,7 @@ end
 % Common settings for 9.1.1 - 9.1.2
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan 1]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 [alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
 			'stim_names',stim_names,'filters',filters);
 
@@ -155,14 +155,17 @@ postTime = []; % fig3 include time after stimulation ends for plotting. []: unti
 activeHeatMap = true; % true/false. If true, only plot the traces with specified events in figure 3
 stimEvents(1).stimName = 'og-5s';
 stimEvents(1).eventCat = 'rebound';
+stimEvents(1).eventCatFollow = 'spon'; % The category of first event following the eventCat one
 stimEvents(2).stimName = 'ap-0.1s';
 stimEvents(2).eventCat = 'trig';
+stimEvents(2).eventCatFollow = 'spon'; % The category of first event following the eventCat one
 stimEvents(3).stimName = 'og-5s ap-0.1s';
-stimEvents(3).eventCat = 'trig-ap';
+stimEvents(3).eventCat = 'rebound';
+stimEvents(3).eventCatFollow = 'spon'; % The category of first event following the eventCat one
 eventsTimeSort = 'all'; % 'off'/'inROI','all'. sort traces according to eventsTime
 hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins
 xtickInt_scale = 5; % xtickInt = hist_binsize * xtickInt_scale. Use by figure 2
-debug_mode = true; % true/false. 
+debug_mode = false; % true/false. 
 
 FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_filtered,...
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
@@ -183,7 +186,7 @@ gui_save = 'on';
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan 1]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 diffPair = {[1 3], [2 3]}; % binned freq will be compared between stimualtion groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
 
 propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
@@ -195,10 +198,13 @@ postStim_duration = 15; % unit: second. include events happened after the end of
 stimEventsPos = true; % true/false. If true, only use the peri-stim ranges with stimulation related events
 stimEvents(1).stimName = 'og-5s';
 stimEvents(1).eventCat = 'rebound';
+stimEvents(1).eventCatFollow = 'spon'; % The category of first event following the eventCat one
 stimEvents(2).stimName = 'ap-0.1s';
 stimEvents(2).eventCat = 'trig';
+stimEvents(2).eventCatFollow = 'spon'; % The category of first event following the eventCat one
 stimEvents(3).stimName = 'og-5s ap-0.1s';
 stimEvents(3).eventCat = 'rebound';
+stimEvents(3).eventCatFollow = 'spon'; % The category of first event following the eventCat one
 
 normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
 baseBinEdgestart = -preStim_duration; % where to start to use the bin for calculating the baseline. -1

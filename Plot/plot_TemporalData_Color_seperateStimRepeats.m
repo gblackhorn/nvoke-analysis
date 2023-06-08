@@ -13,6 +13,8 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	postTime = []; % include time after stimulation ends for plotting. []: until the next stimulation starts
 	eventsTime = NaN; % -1: do not filter stimRanges with eventsTime. Use all of them
 	eventsTimeSort = 'off'; % 'off'/'inROI','all'. sort traces according to eventsTime
+	followEventsTime = NaN; % time of the following events
+	followDelayType = 'stimEvent'; % stim/stimEvent. Calculate the delay of the following events using the stimulation start or the stim-evoked event time
 
 	shadeData = {};
 	shadeColor = {'#F05BBD','#4DBEEE','#ED8564'};
@@ -33,6 +35,8 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
             eventsTime = varargin{ii+1}; 
         elseif strcmpi('eventsTimeSort', varargin{ii})
             eventsTimeSort = varargin{ii+1}; % 
+        elseif strcmpi('followEventsTime', varargin{ii})
+            followEventsTime = varargin{ii+1}; % 
         elseif strcmpi('xtickInt', varargin{ii})
             xtickInt = varargin{ii+1}; % a single number to set the interval between x ticks
         elseif strcmpi('colorLUT', varargin{ii})
@@ -71,14 +75,24 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
     % stimPlusRange(:,2) = stimRanges(:,2)+postTime;
 
 
-    % Only plot traces with stimulation related events if eventsTime exists and is a cell var
+    % Screen the traces with stimulation related events if eventsTime exists and is a cell var
     if exist('eventsTime','var') && iscell(eventsTime)
     	filterStim = true;
-    	eventsTimeDelay = cell(size(eventsTime));
-    	eventsTimeDelaySortROI = cell(size(eventsTime));
+    	eventsTimesToStim = cell(size(eventsTime));
+    	eventsTimesToStimSortROI = cell(size(eventsTime));
     	posRowIDX = cell(size(eventsTime));
+    	negRowIDX = cell(size(eventsTime));
     else
     	filterStim = false;
+    end
+
+    if exist('followEventsTime','var') && iscell(followEventsTime)
+    	filterFollow = true;
+    	followEventsTimesDelay = cell(size(followEventsTime));
+    	followEventsTimesDelaySortROI = cell(size(followEventsTime));
+    	% posRowIDX = cell(size(followEventsTime));
+    else
+    	filterFollow = false;
     end
 
     f = fig_canvas(2,'unit_width',0.4,'unit_height',0.4,'column_lim',1,...
@@ -88,18 +102,18 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	    stimNum = size(stimRanges,1);
 	    stimPlusRangeIDX = NaN(size(stimRanges));
 	    [stimPlusRange(:,1),stimPlusRangeIDX(:,1)] = find_closest_in_array(stimPlusRange(:,1),timeData);
-	    [stimRange(:,1),stimRangeIDX(:,1)] = find_closest_in_array(stimRanges(:,1),timeData);
+	    [stimRanges(:,1),stimRangesIDX(:,1)] = find_closest_in_array(stimRanges(:,1),timeData);
 	    if ~isempty(postTime)
 		    [stimPlusRange(:,2),stimPlusRangeIDX(:,2)] = find_closest_in_array(stimPlusRange(:,2),timeData);
 		end
 
 
-	    % Get the number of data points for the first stim start to the second stim start. And use this
+	    % Get the number of data points for the first stim start to the first stim end. And use this
 	    % number for all the following stimulations
 	    plotRangeIDX = NaN(size(stimRanges));
 	    plotRangeIDX(1,1) = stimPlusRangeIDX(1,1); % start from the 1st stimulation 
 	    if isempty(postTime)
-	    	plotRangeIDX(1,2) = stimRangeIDX(2,1)-1; % end just before the 2nd stimulation
+	    	plotRangeIDX(1,2) = stimRangesIDX(2,1)-1; % end just before the 2nd stimulation
 	    else
 	    	plotRangeIDX(1,2) = stimPlusRangeIDX(1,2);
 	    end
@@ -126,11 +140,44 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	    	end
 	    	% Filter stimRanges with events
 	    	if filterStim
-	    		[PosStimPlusRange,posRangeIDX,negRangeIDX] = getRangeIDXwithEvents(eventsTime{rn},stimPlusRange);
+	    		[posStimPlusRange,posRangeIDX,negRangeIDX] = getRangeIDXwithEvents(eventsTime{rn},stimPlusRange);
+
+	    		posStimRange = stimRanges(posRangeIDX,:);
+	    		negRangeIDX = reshape(negRangeIDX,[],1); % make sure that negRangeIDX is a column vector
+	    		if filterFollow && ~isempty(eventsTime{rn})
+	    			falsePosRangeIDX = [];
+	    			for en = 1:numel(eventsTime{rn})
+	    				if followEventsTime{rn}(en) > posStimPlusRange(en,2) % following event time is after the end of trace time range
+	    					falsePosRangeIDX = [falsePosRangeIDX;en];
+	    					% eventsTime{rn}(en) = []; % delete
+	    					% posStimPlusRange(en,:) = []; % delete the range
+	    					% negRangeIDX = [negRangeIDX;posRangeIDX(en)] % add the range index to the negRangeIDX list
+	    					% posRangeIDX(en) = []; % delete the range index from the posRangeIDX list
+	    				end
+	    			end
+	    			eventsTime{rn}(falsePosRangeIDX) = []; % delete eventsTime if the following events cannot be found in the time window
+	    			followEventsTime{rn}(falsePosRangeIDX) = [];
+	    			posStimPlusRange(falsePosRangeIDX,:) = []; % delete the range
+	    			posStimRange(falsePosRangeIDX,:) = []; % delete the range
+	    			negRangeIDX = sort([negRangeIDX;posRangeIDX(falsePosRangeIDX)]); % add the range index to the negRangeIDX list
+	    			posRangeIDX(falsePosRangeIDX) = []; % delete the range index from the posRangeIDX list
+	    		end
+
 	    		eventsTimeROI = reshape(eventsTime{rn},1,[]);
-	    		stimStartTimeROI = reshape(PosStimPlusRange(:,1),1,[]);
-	    		eventsTimeDelay{rn} =  eventsTimeROI-stimStartTimeROI;
-	    		[~,eventsTimeDelaySortROI{rn}] = sort(eventsTimeDelay{rn});
+	    		stimStartTimeROI = reshape(posStimRange(:,1),1,[]);
+	    		eventsTimesToStim{rn} =  eventsTimeROI-stimStartTimeROI;
+	    		[~,eventsTimesToStimSortROI{rn}] = sort(eventsTimesToStim{rn});
+
+	    		% Calculate the delay of the following events in a ROI using either the stimulation time or the stim-related events time
+	    		if filterFollow && ~isempty(followEventsTime{rn})
+	    			switch followDelayType
+	    				case 'stim'
+	    					followEventsTimesDelay{rn} =  reshape(followEventsTime{rn},1,[])-stimStartTimeROI;
+	    				case 'stimEvent'
+	    					followEventsTimesDelay{rn} = reshape(followEventsTime{rn},1,[])-eventsTimeROI;
+	    			end
+	    			[~,followEventsTimesDelaySortROI{rn}] = sort(followEventsTimesDelay{rn});
+	    		end
 	    	end
 
 	    	for sn = 1:stimNum
@@ -143,31 +190,49 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	    	% discard stim ranges without stimulation related events
 	    	if filterStim
 	    		posRowIDX{rn} = arrayfun(@(x) (rn-1)*stimNum+x,posRangeIDX);
+	    		negRowIDX{rn} = arrayfun(@(x) (rn-1)*stimNum+x,negRangeIDX);
 	    	end
 	    	if strcmpi(eventsTimeSort,'inROI')
-	    		posRowIDX{rn} = posRowIDX{rn}(eventsTimeDelaySortROI{rn});
+	    		posRowIDX{rn} = posRowIDX{rn}(eventsTimesToStimSortROI{rn});
 	    	end
 	    end
 	    % convert posRowIDX from cell to number array and reshape it to a column vector
 	    % posRowIDX = cell2mat(posRowIDX);
 	    % posRowIDX = reshape(posRowIDX,[],1);
 	    posRowIDX = vertcat(posRowIDX{:});
+	    negRowIDX = vertcat(negRowIDX{:});
+	    posNegRowIDX = vertcat(posRowIDX,negRowIDX);
 
 	    % delete traces and row names without stimulation related events
 	    if filterStim 
-	    	rowNamesSection = rowNamesSection(posRowIDX);
-	    	fdSection = fdSection(posRowIDX,:);
+	    	rowNamesSectionPos = rowNamesSection(posRowIDX);
+	    	fdSectionPos = fdSection(posRowIDX,:);
+	    	rowNamesSectionNeg = rowNamesSection(negRowIDX);
+	    	fdSectionNeg = fdSection(negRowIDX,:);
+
+	    	posNum = numel(posRowIDX);
+	    	negNum = numel(negRowIDX);
 	    end
 
 	    % sort all traces using the stimulation related event time delay
 	    if filterStim && strcmpi(eventsTimeSort,'all')
-	    	eventsTimeDelay = cell2mat(eventsTimeDelay);
-	    	eventsTimeDelay = reshape(eventsTimeDelay,[],1);
-	    	[~,sortAllStimEventsTime] = sort(eventsTimeDelay);
-	    	rowNamesSection = rowNamesSection(sortAllStimEventsTime);
-	    	fdSection = fdSection(sortAllStimEventsTime,:);
+	    	eventsTimesToStim = cell2mat(eventsTimesToStim);
+	    	eventsTimesToStim = reshape(eventsTimesToStim,[],1);
+
+	    	if filterFollow
+	    		followEventsTimesDelay = reshape(cell2mat(followEventsTimesDelay),[],1); % combine all the delay time and reshape array to a column vector
+	    		[~,sortFollowEventDelay] = sort(followEventsTimesDelay);
+	    		rowNamesSectionPos = rowNamesSectionPos(sortFollowEventDelay);
+	    		fdSectionPos = fdSectionPos(sortFollowEventDelay,:);
+	    	else
+	    		[~,sortAllStimEventsTime] = sort(eventsTimesToStim);
+	    		rowNamesSectionPos = rowNamesSectionPos(sortAllStimEventsTime);
+	    		fdSectionPos = fdSectionPos(sortAllStimEventsTime,:);
+	    	end
 	    end 
 
+		rowNamesSection = vertcat(rowNamesSectionPos,rowNamesSectionNeg);
+		fdSection = vertcat(fdSectionPos,fdSectionNeg);
 
 	    % plot the heatmap using function [plot_TemporalData_Color]
 	    % Creat a figure to plot raster (first ax) and histogram (second ax)
@@ -175,9 +240,12 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 % 	    	'fig_name',titleStr); % create a figure
 	    tlo = tiledlayout(f, 11, 1); % setup tiles
 	    ax = nexttile(tlo,[10 1]); % activate the ax for color plot
+	    if ~exist('posNum','var')
+	    	posNum = NaN;
+	    end
 	    plot_TemporalData_Color(gca,fdSection,...
 				'rowNames',rowNamesSection,'x_window',[-preTime -preTime+timeRange],'xtickInt',xtickInt,...
-				'show_colorbar',show_colorbar);
+				'show_colorbar',show_colorbar,'breakerLine',posNum);
 	    xlabel('time (s)')
 
 	    	% add a shade plot to display the stimulation range

@@ -111,7 +111,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 
 		if debug_mode
 			fprintf('trial %d/%d: %s\n',tn,trial_num,alignedData_filtered(tn).trialName)
-			if tn == 3
+			if tn == 20
 				pause
 			end
 		end

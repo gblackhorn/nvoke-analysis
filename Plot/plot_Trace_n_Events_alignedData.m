@@ -24,10 +24,13 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,v
 	activeHeatMap = true; % true/false. If true, only plot the traces with specified events in figure 3
 	stimEvents(1).stimName = 'og-5s';
 	stimEvents(1).eventCat = 'rebound';
+	stimEvents(1).eventCatFollow = 'spon'; % The category of first event following the eventCat one
 	stimEvents(2).stimName = 'ap-0.1s';
 	stimEvents(2).eventCat = 'trig';
+	stimEvents(2).eventCatFollow = 'spon'; % The category of first event following the eventCat one
 	stimEvents(3).stimName = 'og-5s ap-0.1s';
 	stimEvents(3).eventCat = 'rebound';
+	stimEvents(3).eventCatFollow = 'spon'; % The category of first event following the eventCat one
 	eventsTimeSort = 'off'; % 'off'/'inROI','all'. sort traces according to eventsTime
 
 	plot_unit_width = 0.4; % normalized size of a single plot to the display
@@ -144,20 +147,42 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,v
 
 		if ~activeHeatMap || isempty(stimEvents)  % no filter for stimEvents (~activeHeatMap) or the information of stim and related events are missing
 			StimEventsTime = NaN;
+			firstSponEventsTime = NaN;
 		else
 			% find the location of trial stim name in the stimEvents.stimName
 			stimEventsIDX = find(strcmpi({stimEvents.stimName},alignedData_trial.stim_name));
+			% sponEventsIDX = find(strcmpi({stimEvents.eventCatFollow},alignedData_trial.stim_name));
 			if ~isempty(stimEventsIDX)
 				eventCat = stimEvents(stimEventsIDX).eventCat;
+				eventCatFollow = stimEvents(stimEventsIDX).eventCatFollow; 
 				eventsIDX = cellfun(@(x) find(strcmpi(x,eventCat)),event_eventCat,'UniformOutput',false);
+				followEventCatIDX = cellfun(@(x) find(strcmpi(x,eventCatFollow)),event_eventCat,'UniformOutput',false); % the index of events with eventCatFollow
+				followEventIDX = cellfun(@(x) x+1,eventsIDX,'UniformOutput',false); % the index of events after the stim-related events
 
 				% get the stimEventTime for each roi
 				StimEventsTime = cell(size(eventsIDX));
+				followEventsTime = cell(size(eventsIDX));
 				for rn = 1:numel(trace_event_data)
 					StimEventsTime{rn} = eventTime{rn}(eventsIDX{rn});
+					eventNumROI = numel(eventTime{rn}); % number of stim events in the current ROI
+
+					if ~isempty(followEventCatIDX{rn}) % && ~isempty(afterStimSponIDX{rn})
+						for m = 1:numel(followEventIDX{rn})
+							if isempty(find(followEventCatIDX{rn}==followEventIDX{rn}(m)))
+								followEventIDX{rn}(m) = NaN;
+								followEventsTime{rn}(m) = NaN;
+							else
+								followEventsTime{rn}(m) = eventTime{rn}(followEventIDX{rn}(m));
+							end
+						end
+					end
+					% firstSponIDX_outOfRange = find(followEventIDX{rn}>eventNumROI);
+					% followEventIDX{rn}(firstSponIDX_outOfRange) = NaN;
+					% followEventsTime{rn} = eventTime{rn}(followEventIDX{rn});
 				end
 			else
 				StimEventsTime = NaN;
+				followEventsTime = NaN;
 				activeHeatMap = false;
 			end
 		end
@@ -216,7 +241,7 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,v
 		% ROI trace is cut to several sections using stimulation repeat. One row contains the start
 		% of stim to the start of the next stim. Each ROI contains the stim repeat number of rows
 		fig_title{3} = sprintf('%s %s single-stim fluorescence signal %s stimEventsDelaySort-%s',...
-		title_str_stem,norm_str,sortStr,eventsTimeSort); % Create the title string
+			title_str_stem,norm_str,sortStr,eventsTimeSort); % Create the title string
 		% f(3) = fig_canvas(2,'unit_width',plot_unit_width,'unit_height',plot_unit_height,...
 		% 	'column_lim',1,'fig_name',fig_title{3}); % create a figure
 		% tlo = tiledlayout(f(3), 9, 1); % setup tiles
@@ -226,6 +251,14 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,v
 			'eventsTime',StimEventsTime,'eventsTimeSort',eventsTimeSort,...
 			'rowNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{3},'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
 		sgtitle(fig_title{3})
+		
+		fig_title{4} = sprintf('%s %s single-stim fluorescence signal %s firstSponAfterStimDelaySort-%s',...
+			title_str_stem,norm_str,sortStr,eventsTimeSort); % Create the title string
+		f(4) = plot_TemporalData_Color_seperateStimRepeats(gca,FluroData,timeData,stimInfo,...
+			'preTime',preTime,'postTime',postTime,...
+			'eventsTime',StimEventsTime,'eventsTimeSort',eventsTimeSort,'followEventsTime',followEventsTime,...
+			'rowNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{4},'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
+		sgtitle(fig_title{4})
 
 
 		% Save figures
