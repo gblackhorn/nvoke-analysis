@@ -81,11 +81,11 @@ end
 % Top = 176;
 % Width = 424;
 % Height = 444;
-movieKeyword = '2021-03-26'; % no need to add .isxd
-Left = 373;
-Top = 162;
-Width = 593;
-Height = 465;
+movieKeyword = '2021-04-09-13-03-56'; % no need to add .isxd
+Left = 376;
+Top = 114;
+Width = 708;
+Height = 547;
 Bottom = Top+Height;
 Right = Left+Width;
 cropRectangle = [Top Left Bottom Right]; % [top, left, bottom, right]
@@ -100,12 +100,13 @@ end
 
 %% ==================== 
 % 2.1.2 Spatial filter and motion correct the movies
-movieKeyword = '2021-03-26*-crop'; % no need to add .isxd
+movieKeyword = '-crop'; % no need to add .isxd
+rmBPfile = true; % true/false. Remove the spatial filtered file ('bp_file') after creating the motion-corrected video
 [movieFolder,~,chosenStatus] = getInputOutputFolders('inputFolder',FolderPathVA.project,...
 	'outputFolder',FolderPathVA.project,'inputMSG','Chose a folder containing cropped files');
 
 if chosenStatus
-	motionCorrect_nVokeRec(movieFolder,'keyword',movieKeyword,'overwrite',false);
+	motionCorrect_nVokeRec(movieFolder,'keyword',movieKeyword,'overwrite',false,'rmBPfile',rmBPfile);
 end
 
 %% ==================== 

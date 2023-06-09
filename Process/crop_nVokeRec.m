@@ -56,6 +56,18 @@ function [varargout] = crop_nVokeRec(recFolder,outputFolder,cropRectangle,vararg
                 % reportCrop = sprintf('file: %s\n - output file: %s\n - cropRectangle: [%s] [top left bottom right]',...
                 %     input_fileinfo(mn).name,output_filename,num2str(cropRectangle));
                 disp(reportCrop)
+
+
+                % Save cropping parameters
+                cropWidth = cropRectangle(4)-cropRectangle(2);
+                cropHeight = cropRectangle(3)-cropRectangle(1);
+                cropInfo = [cropRectangle cropWidth cropHeight];
+                colNames = {'Top', 'Left', 'Bottom', 'Right', 'Width', 'Height'};  % Column names
+                tbl = array2table(cropInfo, 'VariableNames', colNames);
+
+                % Save the table as a CSV file
+                cropInfoFile = [file_name_stem,'-cropInfo.csv'];
+                writetable(tbl, cropInfoFile, 'Delimiter', ',');
             end
         end
         % fprintf('\n%d movies were cropped and saved to\n %s\n',exported_num,output_folder);

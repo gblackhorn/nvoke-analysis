@@ -12,6 +12,7 @@ function [varargout] = motionCorrect_nVokeRec(movieFolder,varargin)
     global_registration_weight = 1;
     max_translation = 20; 
     reference_segment_index = 0;
+    rmBPfile = false; % true/false. Remove the spatial filtered file ('bp_file') after creating the motion-corrected video
     % useGUI = false; % true/false. If to use a GUI interface to choose where to load the 
 % 
     % Optionals for inputs
@@ -26,6 +27,8 @@ function [varargout] = motionCorrect_nVokeRec(movieFolder,varargin)
             high_cutoff = varargin{ii+1};
         elseif strcmpi('mc_reference_frame', varargin{ii})
             mc_reference_frame = varargin{ii+1};
+        elseif strcmpi('rmBPfile', varargin{ii})
+            rmBPfile = varargin{ii+1};
         end
     end
 
@@ -66,6 +69,12 @@ function [varargout] = motionCorrect_nVokeRec(movieFolder,varargin)
             % reportCrop = sprintf('file: %s\n - output file: %s\n - cropRectangle: [%s] [top left bottom right]',...
             %     input_fileinfo(mn).name,output_filename,num2str(cropRectangle));
             disp(reportProcess)
+
+            if rmBPfile
+                delete(bp_file_fullpath);
+                rmBPfileMsg = sprintf(' - delete BP file to release disk space');
+                disp(rmBPfileMsg)
+            end
         end
     end
     % fprintf('\n%d movies were cropped and saved to\n %s\n',exported_num,output_folder);
