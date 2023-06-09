@@ -14,7 +14,7 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	eventsTime = NaN; % -1: do not filter stimRanges with eventsTime. Use all of them
 	eventsTimeSort = 'off'; % 'off'/'inROI','all'. sort traces according to eventsTime
 	followEventsTime = NaN; % time of the following events
-	followDelayType = 'stimEvent'; % stim/stimEvent. Calculate the delay of the following events using the stimulation start or the stim-evoked event time
+	followDelayType = 'stim'; % stim/stimEvent. Calculate the delay of the following events using the stimulation start or the stim-evoked event time
 
 	shadeData = {};
 	shadeColor = {'#F05BBD','#4DBEEE','#ED8564'};
@@ -37,6 +37,8 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
             eventsTimeSort = varargin{ii+1}; % 
         elseif strcmpi('followEventsTime', varargin{ii})
             followEventsTime = varargin{ii+1}; % 
+        elseif strcmpi('followDelayType', varargin{ii})
+            followDelayType = varargin{ii+1}; % 
         elseif strcmpi('xtickInt', varargin{ii})
             xtickInt = varargin{ii+1}; % a single number to set the interval between x ticks
         elseif strcmpi('colorLUT', varargin{ii})

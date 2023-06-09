@@ -26,6 +26,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 	stimEvents(2).eventCat = 'trig';
 	stimEvents(3).stimName = 'og-5s ap-0.1s';
 	stimEvents(3).eventCat = 'rebound';
+	followDelayType = 'stimEvent'; % stim/stimEvent. Calculate the delay of the following events using the stimulation start or the stim-evoked event time
 	eventsTimeSort = 'off'; % 'off'/'inROI','all'. sort traces according to eventsTime
 
 	plot_unit_width = 0.4; % normalized size of a single plot to the display
@@ -62,6 +63,8 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
             activeHeatMap = varargin{ii+1};
 	    elseif strcmpi('stimEvents', varargin{ii})
             stimEvents = varargin{ii+1};
+	    elseif strcmpi('followDelayType', varargin{ii})
+            followDelayType = varargin{ii+1};
 	    elseif strcmpi('eventsTimeSort', varargin{ii})
             eventsTimeSort = varargin{ii+1};
 	    elseif strcmpi('plot_unit_width', varargin{ii})
@@ -118,7 +121,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 
 		plot_Trace_n_Events_alignedData(alignedData_filtered(tn),...
 			'event_type',event_type,'norm_FluorData',norm_FluorData,'sortROI',sortROI,...
-			'preTime',preTime,'postTime',postTime,...
+			'preTime',preTime,'postTime',postTime,'followDelayType',followDelayType,...
 			'activeHeatMap',activeHeatMap,'stimEvents',stimEvents,'eventsTimeSort',eventsTimeSort,...
 			'plot_unit_width',plot_unit_width,'plot_unit_height',plot_unit_height,...
 			'show_colorbar',show_colorbar,'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...

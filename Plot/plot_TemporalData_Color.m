@@ -69,7 +69,7 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
         yCoord = breakerLine + 0.5;
 
         % Draw the horizontal line
-        line(xLimits, [yCoord, yCoord], 'Color', 'red', 'LineWidth', 1);
+        line(xLimits, [yCoord, yCoord], 'Color', 'red', 'LineWidth', 2);
     end
 
     set(gca,'box','off')

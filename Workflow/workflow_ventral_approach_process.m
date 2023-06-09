@@ -76,11 +76,16 @@ end
 % Top = 136;
 % Width = 474;
 % Height = 400;
-movieKeyword = 'M9'; % no need to add .isxd
-Left = 607;
-Top = 176;
-Width = 424;
-Height = 444;
+% movieKeyword = 'M9'; % no need to add .isxd
+% Left = 607;
+% Top = 176;
+% Width = 424;
+% Height = 444;
+movieKeyword = '2021-03-26'; % no need to add .isxd
+Left = 373;
+Top = 162;
+Width = 593;
+Height = 465;
 Bottom = Top+Height;
 Right = Left+Width;
 cropRectangle = [Top Left Bottom Right]; % [top, left, bottom, right]
@@ -95,7 +100,7 @@ end
 
 %% ==================== 
 % 2.1.2 Spatial filter and motion correct the movies
-movieKeyword = 'S40_M9_MC3_T3_FL2*-crop'; % no need to add .isxd
+movieKeyword = '2021-03-26*-crop'; % no need to add .isxd
 [movieFolder,~,chosenStatus] = getInputOutputFolders('inputFolder',FolderPathVA.project,...
 	'outputFolder',FolderPathVA.project,'inputMSG','Chose a folder containing cropped files');
 
@@ -134,6 +139,15 @@ if input_isxd_folder ~= 0
 			'keyword', keywords, 'overwrite', overwrite);
 	end
 end
+
+%% ==================== 
+% 3.1.1 Delete some .isxd files to release the space in the hard disk
+keyword = '*BP.isxd';
+showFileList = true;
+FolderPathVA.project = rmFilesWithKeywords(FolderPathVA.project,'*BP.isxd',...
+	'showFileList',showFileList);
+
+
 
 %% ==================== 
 % 3.2 make subfolders for each tiff file with their date and time information for following CNMFe process

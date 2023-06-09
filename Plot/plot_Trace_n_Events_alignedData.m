@@ -31,6 +31,7 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,v
 	stimEvents(3).stimName = 'og-5s ap-0.1s';
 	stimEvents(3).eventCat = 'rebound';
 	stimEvents(3).eventCatFollow = 'spon'; % The category of first event following the eventCat one
+	followDelayType = 'stimEvent'; % stim/stimEvent. Calculate the delay of the following events using the stimulation start or the stim-evoked event time
 	eventsTimeSort = 'off'; % 'off'/'inROI','all'. sort traces according to eventsTime
 
 	plot_unit_width = 0.4; % normalized size of a single plot to the display
@@ -66,6 +67,8 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,v
             activeHeatMap = varargin{ii+1};
 	    elseif strcmpi('stimEvents', varargin{ii})
             stimEvents = varargin{ii+1};
+	    elseif strcmpi('followDelayType', varargin{ii})
+            followDelayType = varargin{ii+1};
 	    elseif strcmpi('eventsTimeSort', varargin{ii})
             eventsTimeSort = varargin{ii+1};
 	    elseif strcmpi('plot_unit_width', varargin{ii})
@@ -257,6 +260,7 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,v
 		f(4) = plot_TemporalData_Color_seperateStimRepeats(gca,FluroData,timeData,stimInfo,...
 			'preTime',preTime,'postTime',postTime,...
 			'eventsTime',StimEventsTime,'eventsTimeSort',eventsTimeSort,'followEventsTime',followEventsTime,...
+			'followDelayType',followDelayType,...
 			'rowNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{4},'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
 		sgtitle(fig_title{4})
 
