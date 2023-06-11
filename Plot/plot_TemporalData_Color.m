@@ -15,6 +15,10 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
     show_colorbar = true; % true/false. Show color next to the plot if true.
     xtickInt = 10; % interval between x ticks
     breakerLine = NaN; % Input a row index. below this row, a horizontal line will be draw to seperate the heatmap
+    markerIDX = NaN;
+    markerColors = '#332F2E';
+    markerShapes = {'o','+','*','|'};
+    markerSize = 5;
 
     % Optionals for inputs
     for ii = 1:2:(nargin-2)
@@ -22,6 +26,8 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
             rowNames = varargin{ii+1}; % cell array containing strings used to label y_ticks
         elseif strcmpi('x_window', varargin{ii})
             x_window = varargin{ii+1}; % [a b] numerical array. Used to display time
+        elseif strcmpi('markerIDX', varargin{ii})
+            markerIDX = varargin{ii+1}; % [a b] numerical array. Used to display time
         elseif strcmpi('xtickInt', varargin{ii})
             xtickInt = varargin{ii+1}; % a single number to set the interval between x ticks
         % elseif strcmpi('x_rescale', varargin{ii})
@@ -59,6 +65,25 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
         set(gca,'xticklabel',[])
     end
 
+    hold on
+
+
+    % draw markers
+    if iscell(markerIDX)
+        % loop through marker groups
+        for n = 1:numel(markerIDX) 
+            markerIDXsingleGroup = markerIDX{n};
+            if ~isempty(markerIDXsingleGroup)
+                % loop through sections (rows)
+                for sn = 1:numel(markerIDXsingleGroup)
+                    markerIDXrow = markerIDXsingleGroup{sn};
+                    plot(markerIDXrow,sn,...
+                        'Marker',markerShapes{n},'MarkerSize',markerSize,'MarkerEdgeColor',markerColors);
+                end
+            end
+        end
+    end
+
 
     % Draw a breaker line
     if ~isnan(breakerLine)
@@ -71,6 +96,8 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
         % Draw the horizontal line
         line(xLimits, [yCoord, yCoord], 'Color', 'red', 'LineWidth', 2);
     end
+
+    hold off
 
     set(gca,'box','off')
     yticks([y_range(1):y_range(end)]); % only tick the value in y_range

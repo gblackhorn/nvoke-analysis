@@ -19,6 +19,18 @@ function [targetData_with_fovid,varargout] = copy_fovInfo(sourceData,targetData,
 	sourceData_trialNames = sourceData(:, 1);
 	targetData_trialNames = targetData(:, 1);
 
+
+	% Get the date and time info in the trial name
+	% example fileName: '20211008-150406_video_sched_0-PP-BP-MC-ROI.csv'. 
+	% Take the first part, '20211008-150406', separated by '_'
+	sourceData_trialNames_sep = cellfun(@(x) strsplit(x),sourceData_trialNames,'UniformOutput',false);
+	targetData_trialNames_sep = cellfun(@(x) strsplit(x),targetData_trialNames,'UniformOutput',false);
+
+	sourceData_trialNames = cellfun(@(x) x{1},sourceData_trialNames_sep,'UniformOutput',false);
+	targetData_trialNames = cellfun(@(x) x{1},targetData_trialNames_sep,'UniformOutput',false);
+
+
+	% Copy the fovInfo if the targetData_trialNames can be found in sourceData_trialNames_sep
 	targetData_with_fovid = targetData;
 	copy_num = 0;
 	targetData_fov_num = zeros(targetData_num, 1);

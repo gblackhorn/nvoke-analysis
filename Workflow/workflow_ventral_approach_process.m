@@ -125,7 +125,7 @@ end
 
 %% ==================== 
 % 3.1 Export nvoke movies to tiff files
-keywords = 'S30_M9_MC3_T3_FL2*-crop-BP-MC.isxd'; % used to filter 
+keywords = '-crop-BP-MC.isxd'; % used to filter 
 overwrite = false;
 
 input_isxd_folder = uigetdir(FolderPathVA.project,...
@@ -204,25 +204,12 @@ cnmfe_process_batch('folder',  organized_tiff_folder, 'Fs', Fs);
 % So recording information in each subfolder can be integrated into a single mat file later
 % Manually Export *gpio.csv and *ROI.csv from Inscopix Data processing
 % (ISDP) software (Write code with inscopix matlab API to simplify this step)
-input_folder = uigetdir(FolderPathVA.ExportTiff,...
-	'Select a folder containing processed recording files organized in subfolders');
-if input_folder ~= 0
-	FolderPathVA.ExportTiff = input_folder;
-else
-	disp('Input folder not selected')
-	return
-end
+[FolderPathVA.ExportTiff,FolderPathVA.cnmfe] = getInputOutputFolders('inputFolder',FolderPathVA.ExportTiff,...
+	'outputFolder',FolderPathVA.cnmfe,...
+	'inputMSG','Select a folder containing CNMFe results in its subfolders',...
+	'outputMSG','Select a folder to save mat files and its related csv files for further analysis');
 
-output_folder = uigetdir(FolderPathVA.cnmfe,...
-	'Select a folder to save *results.mat, *gpio.csv, and *ROI.csv files from subfolders of input location');
-if output_folder ~= 0
-	FolderPathVA.cnmfe = output_folder;
-else
-	disp('Output folder not selected')
-	return
-end
-
-[not_organized_recordings] = organize_processed_files(input_folder, output_folder);
+[not_organized_recordings] = organize_processed_files(FolderPathVA.ExportTiff, FolderPathVA.cnmfe);
 
 
 
@@ -317,7 +304,7 @@ debug_mode = false; % true/false.
 %% ====================
 % 8.1.1 Copy the FOV_loc struct-field from a sourceData, if exists, to a newly formed recdata_organized
 recdata_target = recdata_organized; % The data receiving FOV info
-recdata_source = recdata_old; % The data giving FOV info
+recdata_source = recdata_organized_old; % The data giving FOV info
 
 [recdata_target_with_fov,trial_list_wo_fov] = copy_fovInfo(recdata_source,recdata_target);
 recdata_organized = recdata_target_with_fov;

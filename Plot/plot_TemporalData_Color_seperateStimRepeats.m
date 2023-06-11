@@ -16,6 +16,7 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	followEventsTime = NaN; % time of the following events
 	followDelayType = 'stim'; % stim/stimEvent. Calculate the delay of the following events using the stimulation start or the stim-evoked event time
 
+
 	shadeData = {};
 	shadeColor = {'#F05BBD','#4DBEEE','#ED8564'};
     colorLUT = 'turbo'; % default look up table (LUT)/colormap. Other sets are: 'parula','hot','jet', etc.
@@ -80,6 +81,7 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
     % Screen the traces with stimulation related events if eventsTime exists and is a cell var
     if exist('eventsTime','var') && iscell(eventsTime)
     	filterStim = true;
+    	eventsFrame = cellfun(@(x) time2frame(x,timeData),eventsTime,'UniformOutput',false); % get the locations of events in timeData
     	eventsTimesToStim = cell(size(eventsTime));
     	eventsTimesToStimSortROI = cell(size(eventsTime));
     	posRowIDX = cell(size(eventsTime));
@@ -90,6 +92,7 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 
     if exist('followEventsTime','var') && iscell(followEventsTime)
     	filterFollow = true;
+    	followEventsFrame = cellfun(@(x) time2frame(x,timeData),followEventsTime,'UniformOutput',false); % get the locations of events in timeData
     	followEventsTimesDelay = cell(size(followEventsTime));
     	followEventsTimesDelaySortROI = cell(size(followEventsTime));
     	% posRowIDX = cell(size(followEventsTime));
@@ -133,6 +136,8 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	    roiNum = size(fluroData,2);
 	    fdSection = NaN(roiNum*stimNum,datapointNum);
 	    rowNamesSection = cell(roiNum*stimNum,1);
+	    eventsMark = cell(roiNum*stimNum,1);
+	    followEventsMark = cell(roiNum*stimNum,1);
 	    for rn = 1:roiNum
 	    	if debug_mode
 	    		fprintf(' - roi %d/%d: %s\n',rn,roiNum,rowNames{rn})
@@ -149,7 +154,7 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	    		if filterFollow && ~isempty(eventsTime{rn})
 	    			falsePosRangeIDX = [];
 	    			for en = 1:numel(eventsTime{rn})
-	    				if followEventsTime{rn}(en) > posStimPlusRange(en,2) % following event time is after the end of trace time range
+	    				if isnan(followEventsTime{rn}(en)) || followEventsTime{rn}(en) > posStimPlusRange(en,2) % following event time is after the end of trace time range
 	    					falsePosRangeIDX = [falsePosRangeIDX;en];
 	    					% eventsTime{rn}(en) = []; % delete
 	    					% posStimPlusRange(en,:) = []; % delete the range
@@ -158,7 +163,9 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	    				end
 	    			end
 	    			eventsTime{rn}(falsePosRangeIDX) = []; % delete eventsTime if the following events cannot be found in the time window
+	    			eventsFrame{rn}(falsePosRangeIDX) = []; % delete eventsTime if the following events cannot be found in the time window
 	    			followEventsTime{rn}(falsePosRangeIDX) = [];
+	    			followEventsFrame{rn}(falsePosRangeIDX) = [];
 	    			posStimPlusRange(falsePosRangeIDX,:) = []; % delete the range
 	    			posStimRange(falsePosRangeIDX,:) = []; % delete the range
 	    			negRangeIDX = sort([negRangeIDX;posRangeIDX(falsePosRangeIDX)]); % add the range index to the negRangeIDX list
@@ -188,6 +195,20 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	    		sTrace = fluroData((plotRangeIDX(sn,1):plotRangeIDX(sn,2)),rn); % Get a section trace from one ROI from fluroData
 	    		sTraceRow = reshape(sTrace,[1,numel(sTrace)]); % ensure that sTraceRow is a row vector
 	    		fdSection(rowIDX,:) = sTraceRow;
+
+	    		% Calculate the indices of events in the sections
+	    		if filterStim
+	    			eventsMark{rowIDX} = eventsTime{rn}(find(eventsTime{rn}>=stimPlusRange(sn,1) & eventsTime{rn}<=stimPlusRange(sn,2)));
+	    			eventsMark{rowIDX} = eventsMark{rowIDX}-stimPlusRange(sn,1)-preTime;
+	    			% eventsMark{rowIDX} = eventsFrame{rn}(find(eventsFrame{rn}>=plotRangeIDX(sn,1) & eventsFrame{rn}<=plotRangeIDX(sn,2)));
+	    			% eventsMark{rowIDX} = eventsMark{rowIDX}-plotRangeIDX(sn,1)+1;
+	    		end
+	    		if filterFollow
+	    			followEventsMark{rowIDX} = followEventsTime{rn}(find(followEventsTime{rn}>=stimPlusRange(sn,1) & followEventsTime{rn}<=stimPlusRange(sn,2)));
+	    			followEventsMark{rowIDX} = followEventsMark{rowIDX}-stimPlusRange(sn,1)-preTime;
+	    			% followEventsMark{rowIDX} = followEventsFrame{rn}(find(followEventsFrame{rn}>=plotRangeIDX(sn,1) & followEventsFrame{rn}<=plotRangeIDX(sn,2)));
+	    			% followEventsMark{rowIDX} = followEventsMark{rowIDX}-plotRangeIDX(sn,1)+1;
+	    		end
 	    	end
 	    	% discard stim ranges without stimulation related events
 	    	if filterStim
@@ -206,14 +227,22 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	    posNegRowIDX = vertcat(posRowIDX,negRowIDX);
 
 	    % delete traces and row names without stimulation related events
+	    eventsMarkPos = {};
+	    followEventsMarkPos = {};
 	    if filterStim 
 	    	rowNamesSectionPos = rowNamesSection(posRowIDX);
 	    	fdSectionPos = fdSection(posRowIDX,:);
+	    	eventsMarkPos = eventsMark(posRowIDX);
+	    	
 	    	rowNamesSectionNeg = rowNamesSection(negRowIDX);
 	    	fdSectionNeg = fdSection(negRowIDX,:);
 
 	    	posNum = numel(posRowIDX);
 	    	negNum = numel(negRowIDX);
+
+	    	if filterFollow
+	    		followEventsMarkPos = followEventsMark(posRowIDX);
+	    	end
 	    end
 
 	    % sort all traces using the stimulation related event time delay
@@ -226,12 +255,26 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	    		[~,sortFollowEventDelay] = sort(followEventsTimesDelay);
 	    		rowNamesSectionPos = rowNamesSectionPos(sortFollowEventDelay);
 	    		fdSectionPos = fdSectionPos(sortFollowEventDelay,:);
+	    		eventsMarkPos = eventsMarkPos(sortFollowEventDelay);
+	    		followEventsMarkPos = followEventsMarkPos(sortFollowEventDelay);
 	    	else
 	    		[~,sortAllStimEventsTime] = sort(eventsTimesToStim);
 	    		rowNamesSectionPos = rowNamesSectionPos(sortAllStimEventsTime);
 	    		fdSectionPos = fdSectionPos(sortAllStimEventsTime,:);
+	    		eventsMarkPos = eventsMarkPos(sortAllStimEventsTime);
+	    		% followEventsMarkPos = followEventsMarkPos(sortAllStimEventsTime);
 	    	end
 	    end 
+
+	    % Collect the eventsMarkPos and the followEventsMarkPos to mark events in the heatmap
+	    % created by 'plot_TemporalData_Color'
+	    markerIDX = {eventsMarkPos,followEventsMarkPos};
+	    emptyTFmarkerIDX = cellfun(@(x) isempty(x),markerIDX);
+	    % emptyTFmarkerIDX = cellfun(@(x) isempty(x),markerIDX,'UniformOutput',false);
+	    if all(emptyTFmarkerIDX)
+	    	markerIDX = NaN;
+	    end
+
 
 		rowNamesSection = vertcat(rowNamesSectionPos,rowNamesSectionNeg);
 		fdSection = vertcat(fdSectionPos,fdSectionNeg);
@@ -247,7 +290,7 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	    end
 	    plot_TemporalData_Color(gca,fdSection,...
 				'rowNames',rowNamesSection,'x_window',[-preTime -preTime+timeRange],'xtickInt',xtickInt,...
-				'show_colorbar',show_colorbar,'breakerLine',posNum);
+				'show_colorbar',show_colorbar,'breakerLine',posNum,'markerIDX',markerIDX);
 	    xlabel('time (s)')
 
 	    	% add a shade plot to display the stimulation range
@@ -272,9 +315,6 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	        box off; % remove the box around the plot
 	        title('stimulation(s)')
 	    end
-
-
-
 
 	    sgtitle(titleStr)
 
