@@ -144,7 +144,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	titleStr = strrep(titleStr,'_',' ');
 
 		% Create a figure and start to plot 
-	barStat = empty_content_struct({'stim','method','multiComp','data','binEdges','baseRange'},stim_type_num);
+	barStat = empty_content_struct({'stim','method','multiComp','data','binEdges','baseRange','recNum','recDateNum','roiNum','stimRepeatNum'},...
+		stim_type_num);
 	[f,f_rowNum,f_colNum] = fig_canvas(stim_type_num,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
 		'fig_name',titleStr); % create a figure
 	tlo = tiledlayout(f,f_rowNum,f_colNum);
@@ -157,6 +158,11 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 			'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 			'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
+
+		% Calculate the number of recordings, the number of dates
+		% (animal number), the number of neurons and the number of
+		% stimulation repeats
+		[barStat(stn).recNum,barStat(stn).recDateNum,barStat(stn).roiNum,barStat(stn).stimRepeatNum] = calcDataNum(EventFreqInBins);
 
 		stimShadeDataAll(stn).stimTypeName = stim_names{stn};
 		stimShadeDataAll(stn).shadeData = stimShadeData;
@@ -211,8 +217,9 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 			stimEventsStr = 'none';
 		end
 
-		sub_titleStr = sprintf('%s: ex-%s in-%s rb-%s stimEventsPos-%s',...
-		stim_names{stn},filterStr{1},filterStr{2},filterStr{3},stimEventsStr); % string for the subtitle
+		sub_titleStr = sprintf('%s: ex-%s in-%s rb-%s stimEventsPos-%s [%g animals %g cells %g stims]',...
+		stim_names{stn},filterStr{1},filterStr{2},filterStr{3},stimEventsStr,...
+		barStat(stn).recDateNum,barStat(stn).roiNum,barStat(stn).stimRepeatNum); % string for the subtitle
 		[barInfo] = barplot_with_stat(ef,'xdata',xdata,'plotWhere',gca);
 
 		% plot shade to indicate the stimulation period
@@ -277,4 +284,29 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	end 
 	
 	varargout{3} = save_dir;
+end
+
+function [recNum,recDateNum,roiNum,stimRepeatNum] = calcDataNum(EventFreqInBins)
+	% calculte the n numbers using the structure var 'EventFreqInBins'
+
+	% each entry of EventFreqInBins contains data for one roi
+	% find the empty roi entries
+	EventFqInBinsAll = {EventFreqInBins.EventFqInBins};
+	emptyEntryIDX = find(cellfun(@(x) isempty(x),EventFqInBinsAll));
+	EventFreqInBins(emptyEntryIDX) = [];
+
+	% get the date and time info from trial names
+	% one specific date-time (exp. 20230101-150320) represent one recording
+	% one date, in general, represent one animal
+	trialNamesAll = {EventFreqInBins.TrialNames};
+	trialNamesAllDateTime = cellfun(@(x) x(1:15),trialNamesAll,'UniformOutput',false);
+	trialNamesAllDate = cellfun(@(x) x(1:8),trialNamesAll,'UniformOutput',false);
+	trialNameUniqueDateTime = unique(trialNamesAllDateTime);
+	trialNameUniqueDate = unique(trialNamesAllDate);
+
+	% get all the n numbers
+	recNum = numel(trialNameUniqueDateTime);
+	recDateNum = numel(trialNameUniqueDate);
+	roiNum = numel(trialNamesAll);
+	stimRepeatNum = sum([EventFreqInBins.stimNum]);
 end
