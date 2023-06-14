@@ -207,6 +207,53 @@ debug_mode = false; % true/false
 	'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on','debug_mode',debug_mode);
 
+%% ====================
+% Fig 2 violin plot of specific bins in periStim event frequency
+close all
+save_fig = true; % true/false
+gui_save = 'on';
+
+propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
+% binWidth = 1; % the width of histogram bin. the default value is 1 s.
+preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
+postStim_duration = 5; % unit: second. include events happened after the end of stimulations
+normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
+baseStart = -preStim_duration; % where to start to use the bin for calculating the baseline. -1
+baseEnd = -2; % 0
+
+filter_roi_tf = true; % true/false. If true, screen ROIs
+stimTypeNum = 3;
+winDuration = 2; % seconds
+startTime1 = 1; % second
+startTime2 = 0; % second
+binRange = empty_content_struct({'stim','startTime'},stimTypeNum);
+binRange(1).stim = 'og-5s';
+binRange(1).filters = [0 nan nan nan]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+binRange(1).startTime = startTime1; % Use data in [startTime startTime+winDuration] range
+binRange(2).stim = 'ap-0.1s';
+binRange(2).filters = [1 nan nan nan]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+binRange(2).startTime = startTime2; 
+binRange(3).stim = 'og-5s ap-0.1s';
+binRange(3).filters = [0 nan nan nan]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+binRange(3).startTime = startTime1; 
+
+stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
+stimEvents(1).stimName = 'og-5s';
+stimEvents(1).eventCat = 'rebound';
+stimEvents(2).stimName = 'ap-0.1s';
+stimEvents(2).eventCat = 'trig';
+stimEvents(3).stimName = 'og-5s ap-0.1s';
+stimEvents(3).eventCat = 'trig-ap';
+
+debug_mode = false; % true/false
+
+[violinData,statInfo,FolderPathVA.fig] = violinplotPeriStimFreq(alignedData_allTrials,...
+	'filter_roi_tf',filter_roi_tf,'binRange',binRange,'PropName',propName,'winDuration',winDuration,...
+	'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
+	'normToBase',normToBase,'baseStart',baseStart,'baseEnd',baseEnd,...
+	'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
+	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save',gui_save);
+
 
 
 %% ==================== 

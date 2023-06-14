@@ -13,7 +13,7 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq(alignedData,va
     otherBinWidth = 1; % second. width of bins other than data used for violin plot [startTime startTime+winDuration]
     preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
     postStim_duration = 5; % unit: second. include events happened after the end of stimulations
-    PropName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
+    propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
     round_digit_sig = 2; % round to the Nth significant digit for duration
     normToBase = false; % normalize the data to baseline (data before baseBinEdgeEnd)
     baseStart = -preStim_duration; % where to start to use the bin for calculating the baseline. -1
@@ -21,19 +21,15 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq(alignedData,va
 
 
     binRange = empty_content_struct({'stim','startTime'},stimTypeNum);
-    % binRange = empty_content_struct({'stim','startTime','winDuration'},stimTypeNum);
     binRange(1).stim = 'og-5s';
     binRange(1).filters = [nan nan nan nan]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
     binRange(1).startTime = startTime1; % Use data in [startTime startTime+winDuration] range
-    % binRange(1).winDuration = winDuration; 
     binRange(2).stim = 'ap-0.1s';
     binRange(2).filters = [nan nan nan nan]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
     binRange(2).startTime = startTime2; 
-    % binRange(2).winDuration = winDuration; 
     binRange(3).stim = 'og-5s ap-0.1s';
     binRange(3).filters = [nan nan nan nan]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
     binRange(3).startTime = startTime1; 
-    % binRange(3).winDuration = winDuration; 
 
     stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
     stimEvents(1).stimName = 'og-5s';
@@ -43,11 +39,12 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq(alignedData,va
     stimEvents(3).stimName = 'og-5s ap-0.1s';
     stimEvents(3).eventCat = 'rebound';
 
-    plot_unit_width = 0.45; % normalized size of a single plot to the display
-    plot_unit_height = 0.45; % nomralized size of a single plot to the display
+    plot_unit_width = 0.4; % normalized size of a single plot to the display
+    plot_unit_height = 0.4; % nomralized size of a single plot to the display
     titleStr = sprintf('eventFreq [onset-of-airpuff to %gs after]',winDuration);
     save_fig = false;
     save_dir = [];
+    gui_save = 'off';
 
     debug_mode = false;
 
@@ -57,14 +54,28 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq(alignedData,va
             binRange = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
         elseif strcmpi('winDuration', varargin{ii})
             winDuration = varargin{ii+1};
+        elseif strcmpi('propName', varargin{ii})
+            propName = varargin{ii+1};
+        elseif strcmpi('normToBase', varargin{ii})
+            normToBase = varargin{ii+1};
+        elseif strcmpi('baseStart', varargin{ii})
+            baseStart = varargin{ii+1};
+        elseif strcmpi('baseEnd', varargin{ii})
+            baseEnd = varargin{ii+1};
         elseif strcmpi('filter_roi_tf', varargin{ii})
             filter_roi_tf = varargin{ii+1};
         elseif strcmpi('titleStr', varargin{ii})
             titleStr = varargin{ii+1};
+        elseif strcmpi('stimEventsPos', varargin{ii})
+            stimEventsPos = varargin{ii+1};
+        elseif strcmpi('stimEvents', varargin{ii})
+            stimEvents = varargin{ii+1};
         elseif strcmpi('save_fig', varargin{ii})
             save_fig = varargin{ii+1};
         elseif strcmpi('save_dir', varargin{ii})
             save_dir = varargin{ii+1};
+        elseif strcmpi('gui_save', varargin{ii})
+            gui_save = varargin{ii+1};
         end
     end 
 
@@ -103,7 +114,7 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq(alignedData,va
 
         % Get the event frequency in the specified range window
         [EventFreqInBins,binEdges] = get_EventFreqInBins_trials(alignedData,violinData(stn).stim,...
-            'PropName',PropName,'binWidth',otherBinWidth,'specialBin',violinData(stn).range,...
+            'propName',propName,'binWidth',otherBinWidth,'specialBin',violinData(stn).range,...
             'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
             'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
             'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
@@ -190,15 +201,14 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq(alignedData,va
     if save_fig
         if isempty(save_dir)
             gui_save = 'on';
-        else
-            gui_save = 'off';
         end
         msg = 'Choose a folder to save the plot and the statistics';
         save_dir = savePlot(f,'save_dir',save_dir,'guiSave',gui_save,...
             'guiInfo',msg,'fname',titleStr);
         save(fullfile(save_dir, [titleStr, '_dataStat']),...
-            'violinData');
+            'violinData','statInfo');
     end 
+    varargout{1} = save_dir;
 end
 
 function [recNum,recDateNum,roiNum,stimRepeatNum] = calcDataNum(EventFreqInBins)
