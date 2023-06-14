@@ -1012,3 +1012,97 @@ followData = grouped_event_info_filtered(1).event_info;
 [pairedStat.FWHM.h,pairedStat.FWHM.p] = ttest([followData.FWHM],[offStimData.FWHM]);
 [pairedStat.peak_mag_delta.h,pairedStat.peak_mag_delta.p] = ttest([followData.peak_mag_delta],[offStimData.peak_mag_delta]);
 [pairedStat.sponnorm_peak_mag_delta.h,pairedStat.sponnorm_peak_mag_delta.p] = ttest([followData.sponnorm_peak_mag_delta],[offStimData.sponnorm_peak_mag_delta]);
+
+%% Delete the recordings with names in the trialNamesDiscard
+trialNamesDiscard = {'20210326-150725_video_sched_0-PP-BP-MC-ROI.csv',...
+'20210326-151454_video_sched_0-PP-BP-MC-ROI.csv','20210326-152008_video_sched_0-PP-BP-MC-ROI.csv',...
+'20210329-135544_video_sched_0-PP-BP-MC-ROI.csv','20210329-140143_video_sched_0-PP-BP-MC-ROI.csv',...
+'20210329-141943_video_sched_0-PP-BP-MC-ROI.csv','20210329-142437_video_sched_0-PP-BP-MC-ROI.csv',...
+'20210329-142928_video_sched_0-PP-BP-MC-ROI.csv','20210405-134049_video_sched_0-PP-BP-MC-ROI.csv',...
+'20210409-130356_video_sched_0-PP-BP-MC-ROI.csv'};
+trialNames = recdata_organized_old_part(:,1);
+trialNamesDiscardIDX = cellfun(@(x) find(strcmpi(x,trialNames)),trialNamesDiscard);
+recdata_organized_old_part(trialNamesDiscardIDX,:) = [];
+
+
+%% Copy the stimulation name and the gpio info from the old recdata
+trialNamesDiscard = {'20210326-150725_video_sched_0-PP-BP-MC-ROI.csv',...
+'20210326-151454_video_sched_0-PP-BP-MC-ROI.csv','20210326-152008_video_sched_0-PP-BP-MC-ROI.csv',...
+'20210329-135544_video_sched_0-PP-BP-MC-ROI.csv','20210329-140143_video_sched_0-PP-BP-MC-ROI.csv',...
+'20210329-141943_video_sched_0-PP-BP-MC-ROI.csv','20210329-142437_video_sched_0-PP-BP-MC-ROI.csv',...
+'20210329-142928_video_sched_0-PP-BP-MC-ROI.csv','20210405-134049_video_sched_0-PP-BP-MC-ROI.csv',...
+'20210409-130356_video_sched_0-PP-BP-MC-ROI.csv'};
+trialNames = recdata_organized_old_part(:,1);
+trialNamesDiscardIDX = cellfun(@(x) find(strcmpi(x,trialNames)),trialNamesDiscard);
+for n = 1:numel(trialNamesDiscard)
+	recdata{n,3} = recdata_organized_old{trialNamesDiscardIDX(n),3};
+	recdata{n,4} = recdata_organized_old{trialNamesDiscardIDX(n),4};
+end
+
+%%
+recdata_organized = [recdata_organized_old_part;recdata_organized];
+
+% Original cell array of strings
+trialNamesDiscard = {
+    '20210326-150725_video_sched_0-PP-BP-MC-ROI.csv', ...
+    '20210326-151454_video_sched_0-PP-BP-MC-ROI.csv', ...
+    '20210326-152008_video_sched_0-PP-BP-MC-ROI.csv', ...
+    '20210329-135544_video_sched_0-PP-BP-MC-ROI.csv', ...
+    '20210329-140143_video_sched_0-PP-BP-MC-ROI.csv', ...
+    '20210329-141943_video_sched_0-PP-BP-MC-ROI.csv', ...
+    '20210329-142437_video_sched_0-PP-BP-MC-ROI.csv', ...
+    '20210329-142928_video_sched_0-PP-BP-MC-ROI.csv', ...
+    '20210405-134049_video_sched_0-PP-BP-MC-ROI.csv', ...
+    '20210409-130356_video_sched_0-PP-BP-MC-ROI.csv'
+};
+
+% Extract date and time portions and convert to datetime format
+datesAndTimes = cellfun(@(str) datetime(str(1:15), 'InputFormat', 'yyyyMMdd-HHmmss'), trialNamesDiscard);
+
+% Sort the strings based on date and time
+[sortedDatesAndTimes, sortedIndices] = sort(datesAndTimes);
+
+% Sort the original cell array using the sorted indices
+sortedTrialNamesDiscard = trialNamesDiscard(sortedIndices);
+
+
+%% ====================
+close all
+% save_fig = false; % true/false
+% gui_save = 'on';
+
+filter_roi_tf = true; % true/false. If true, screen ROIs
+stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
+filters = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+diffPair = {[1 3], [2 3]}; % binned freq will be compared between stimualtion groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
+
+propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
+binWidth = 1; % the width of histogram bin. the default value is 1 s.
+stimIDX = []; % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
+preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
+postStim_duration = 15; % unit: second. include events happened after the end of stimulations
+
+stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
+stimEvents(1).stimName = 'og-5s';
+stimEvents(1).eventCat = 'rebound';
+stimEvents(1).eventCatFollow = 'spon'; % The category of first event following the eventCat one
+stimEvents(2).stimName = 'ap-0.1s';
+stimEvents(2).eventCat = 'trig';
+stimEvents(2).eventCatFollow = 'spon'; % The category of first event following the eventCat one
+stimEvents(3).stimName = 'og-5s ap-0.1s';
+stimEvents(3).eventCat = 'rebound';
+stimEvents(3).eventCatFollow = 'spon'; % The category of first event following the eventCat one
+
+normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
+baseBinEdgestart = -preStim_duration; % where to start to use the bin for calculating the baseline. -1
+baseBinEdgeEnd = -2; % 0
+apCorrection = false; % true/false. If true, correct baseline bin used for normalization. 
+
+debug_mode = false; % true/false
+
+[violinData,statInfo] = violinplotPeriStimFreq(alignedData_allTrials);
+violinDataStruct = empty_content_struct({violinData.stimMod},1);
+for n = 1:numel(violinData)
+	violinDataStruct.(violinData(n).stimMod) = violinData(n).eventFreq;
+end
+violinplot(violinDataStruct);

@@ -9,7 +9,7 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	% Defaults
 	filter_roi_tf = false; % true/false. If true, screen ROIs
 	stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-	filters = {[0 nan nan], [1 nan nan], [0 nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+	filters = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 	diffPair = {[1 3], [2 3]}; % binned freq will be compared between stimualtion groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
 
 	propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events

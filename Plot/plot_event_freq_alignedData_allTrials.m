@@ -13,11 +13,10 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	% Defaults
 	filter_roi_tf = false; % do not filter ROIs by default
 	stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-	filters = {[nan 1 nan], [1 nan nan], [nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
-
+	filters = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 
 	plot_unit_width = 0.45; % normalized size of a single plot to the display
-	plot_unit_height = 0.4; % nomralized size of a single plot to the display
+	plot_unit_height = 0.45; % nomralized size of a single plot to the display
 
 	normToBase = false; % normalize the data to baseline (data before baseBinEdgeEnd)
 	baseBinEdgestart = -1; % where to start to use the bin for calculating the baseline
@@ -170,17 +169,11 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		% [EventFreqInBins,binEdges] = get_EventFreqInBins_AllTrials(alignedData,stim_names{stn},'PropName',PropName,...
 		% 	'binWidth',binWidth,'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 		% 	'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
+		
+
+		% collect event frequencies from all rois and combine them to a matrix 
 		ef_cell = {EventFreqInBins.EventFqInBins}; % collect EventFqInBins in a cell array
 		ef_cell = ef_cell(:); % make sure that ef_cell is a vertical array
-
-		% if normToBase
-		% 	idxBinEdges = find(binEdges==baseBinEdgeEnd); % the location of 0 in binEdge
-		% 	idxBaseData = [1:idxBinEdges-1]; % idx of baseline data in every cell in ef_cell 
-
-		% 	% Normalize data in each cell with their own baseline data	
-		% 	% ef_cell = cellfun(@(x) x/mean(x(idxBaseData)),ef_cell,'UniformOutput',false); 
-		% end
-
 		ef = vertcat(ef_cell{:}); % concatenate ef_cell contents and create a number array
 
 

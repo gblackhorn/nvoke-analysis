@@ -8,6 +8,7 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_roi(EventsPeriStimulu
 
     % Defaults
     binWidth = 1; % the width of single histogram bin. the default value is 1 s.
+    binEdges = [];
     plotHisto = false; % true/false [default].Plot histogram if true.
 
     % Optionals for inputs
@@ -20,8 +21,8 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_roi(EventsPeriStimulu
             stimRepeats = varargin{ii+1}; % the repeat number of stimulation
         elseif strcmpi('plotHisto', varargin{ii})
             plotHisto = varargin{ii+1}; % specify the duration of stimulations. only a single number is valid
-        % elseif strcmpi('round_digit_sig', varargin{ii})
-        %     round_digit_sig = varargin{ii+1}; % round to the Nth significant digit for duration
+        elseif strcmpi('binEdges', varargin{ii})
+            binEdges = varargin{ii+1}; 
         end
     end
 
@@ -35,14 +36,19 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_roi(EventsPeriStimulu
         end
     end
 
-    HistEdges = [PeriStimulusRange(1):binWidth:PeriStimulusRange(2)];
+    if ~isempty(binEdges)
+        HistEdges = binEdges;
+    else
+        HistEdges = [PeriStimulusRange(1):binWidth:PeriStimulusRange(2)];
+    end
+    binWidths = diff(HistEdges);
     % if PeriStimulusRange(2) > HistEdges(end) % if PeriStimulusRange is not long enough to make the last bin
     %     HistEdges = [HistEdges PeriStimulusRange(2)]; % add the end of PeriStimulusRange to the edges to keep the full PeriStimulusRange
     % end
 
     [eventCounts,HistEdges] = histcounts(EventsPeriStimulus,HistEdges); % get the event numbers in histbins
     eventCounts_mean = eventCounts/stimRepeats; % use the repeat number of stimulation as denominater to get the mean values of event counts
-    EventFreqInBins = eventCounts_mean/binWidth; % Get the event frequency using the binWidth (duration)
+    EventFreqInBins = eventCounts_mean./binWidths; % Get the event frequency using the binWidth (duration)
 
     if exist('denorm')==1 && ~isempty(denorm)
         EventFreqInBins = EventFreqInBins/denorm; % normalize the EventFreqInBins with an input, denorm.

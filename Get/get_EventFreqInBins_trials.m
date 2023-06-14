@@ -18,6 +18,7 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
     stim_rb = nan;
 
     binWidth = 1; % the width of histogram bin. the default value is 1 s.
+    specialBin = []; % not used if it is empty
     PropName = 'rise_time';
     % plotHisto = false; % true/false [default].Plot histogram if true.
 
@@ -46,6 +47,8 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
             stim_rb = varargin{ii+1}; % logical. stimulation effect: rebound 
         elseif strcmpi('binWidth', varargin{ii}) 
             binWidth = varargin{ii+1}; 
+        elseif strcmpi('specialBin', varargin{ii}) 
+            specialBin = varargin{ii+1}; 
         elseif strcmpi('PropName', varargin{ii}) 
             PropName = varargin{ii+1}; 
         elseif strcmpi('stimEventsPos', varargin{ii}) 
@@ -174,8 +177,15 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
                     'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
                     'round_digit_sig',round_digit_sig); % group event time stamps around stimulations
 
+                % construct the bin edges if specialBin is not empty
+                if ~isempty(specialBin)
+                    binEdges = [PeriStimulusRange(1):binWidth:specialBin(1) specialBin(2):binWidth:PeriStimulusRange(2)];
+                else
+                    binEdges = [];
+                end
+
                 [EventFreqInBins(rn).EventFqInBins,binEdges] = get_EventFreqInBins_roi(EventsPeriStimulus,PeriStimulusRange,...
-                    'binWidth',binWidth,'plotHisto',false); % calculate the event frequencies (in bins) in a roi and assigne the array to the EventFreqInBins
+                    'binWidth',binWidth,'plotHisto',false,'binEdges',binEdges); % calculate the event frequencies (in bins) in a roi and assigne the array to the EventFreqInBins
 
                 EventFreqInBins(rn).stimNum = size(StimRangesFinal,1); % number of stim repeats used for one roi
             end
