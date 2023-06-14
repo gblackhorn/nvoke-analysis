@@ -46,6 +46,8 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq(alignedData,va
     plot_unit_width = 0.45; % normalized size of a single plot to the display
     plot_unit_height = 0.45; % nomralized size of a single plot to the display
     titleStr = sprintf('eventFreq [onset-of-airpuff to %gs after]',winDuration);
+    save_fig = false;
+    save_dir = [];
 
     debug_mode = false;
 
@@ -59,6 +61,10 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq(alignedData,va
             filter_roi_tf = varargin{ii+1};
         elseif strcmpi('titleStr', varargin{ii})
             titleStr = varargin{ii+1};
+        elseif strcmpi('save_fig', varargin{ii})
+            save_fig = varargin{ii+1};
+        elseif strcmpi('save_dir', varargin{ii})
+            save_dir = varargin{ii+1};
         end
     end 
 
@@ -173,11 +179,26 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq(alignedData,va
     plotUItable(gcf,axInfo,figInfoTable);
 
     % plot filters
-    axInfo = nexttile(tlo,[1 2]);
-    filtersArray = vertcat({violinData.filters});
+    axInfo = nexttile(tlo,[1 1]);
+    filtersArrayCell = {violinData.filters};
+    filtersArray = vertcat(filtersArrayCell{:});
     filterstable = array2table(filtersArray,'VariableNames',{'ex','in','rb','exApOg'});
     plotUItable(gcf,axInfo,filterstable);
 
+    sgtitle(titleStr)
+    % Save figure and statistics
+    if save_fig
+        if isempty(save_dir)
+            gui_save = 'on';
+        else
+            gui_save = 'off';
+        end
+        msg = 'Choose a folder to save the plot and the statistics';
+        save_dir = savePlot(f,'save_dir',save_dir,'guiSave',gui_save,...
+            'guiInfo',msg,'fname',titleStr);
+        save(fullfile(save_dir, [titleStr, '_dataStat']),...
+            'violinData');
+    end 
 end
 
 function [recNum,recDateNum,roiNum,stimRepeatNum] = calcDataNum(EventFreqInBins)
