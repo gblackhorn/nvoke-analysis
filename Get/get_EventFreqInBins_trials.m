@@ -122,7 +122,7 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
         % Collect peri-stimulus events from every ROI and organized them in bins
         roi_num = numel(EventsProps); % number of ROIs
         TrialNames = repmat({TrialName},1,roi_num); % create a 1*roi_num cell containing the 'TrialNames' in every element
-        EventFreqInBins = emptyStruct({'TrialNames','roiNames','EventFqInBins'},[1, roi_num]); % create an empty structure
+        EventFreqInBins = emptyStruct({'TrialNames','roiNames','EventFqInBins','stimNum'},[1, roi_num]); % create an empty structure
         [EventFreqInBins.TrialNames] = TrialNames{:}; % add trial names in struct EventFreqInBins
         [EventFreqInBins.roiNames] = roiNames{:}; % add roi names in struct EventFreqInBins
 
@@ -176,14 +176,14 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
 
                 [EventFreqInBins(rn).EventFqInBins,binEdges] = get_EventFreqInBins_roi(EventsPeriStimulus,PeriStimulusRange,...
                     'binWidth',binWidth,'plotHisto',false); % calculate the event frequencies (in bins) in a roi and assigne the array to the EventFreqInBins
+
+                EventFreqInBins(rn).stimNum = size(StimRangesFinal,1); % number of stim repeats used for one roi
             end
         end
         EventFreqInBins_cell{tn} = EventFreqInBins;
         if roi_num == 0 && ~exist('binEdges','var')
             binEdges = [];
         end
-
-
     end
     EventFreqInBins = [EventFreqInBins_cell{:}];
     varargout{1} = binEdges;

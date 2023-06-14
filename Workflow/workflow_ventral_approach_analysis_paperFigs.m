@@ -123,21 +123,6 @@ filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan 1]}; % [ex in rb exApOg]
 [alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
 			'stim_names',stim_names,'filters',filters);
 
-% % Use structure below to substitute the 'stim_names' and 'filters' to filter ROIs when have time
-% stimEffectFilters = empty_content_struct({'stimName','ex','in','offStimEvents'});
-% stimEffectFilters(1).stimName = 'og-5s';
-% stimEffectFilters(1).ex = nan;
-% stimEffectFilters(1).in = 1;
-% stimEffectFilters(1).offStimEvents = nan;
-% stimEffectFilters(2).stimName = 'ap-0.1s';
-% stimEffectFilters(2).ex = nan;
-% stimEffectFilters(2).in = nan;
-% stimEffectFilters(2).offStimEvents = nan;
-% stimEffectFilters(2).stimName = 'og-5s ap-0.1s';
-% stimEffectFilters(2).ex = nan;
-% stimEffectFilters(2).in = nan;
-% stimEffectFilters(2).offStimEvents = nan;
-
 
 %% ====================
 % Fig 2
@@ -187,7 +172,7 @@ gui_save = 'on';
 
 filter_roi_tf = false; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan 1]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+filters = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 diffPair = {[1 3], [2 3]}; % binned freq will be compared between stimualtion groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
 
 propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
