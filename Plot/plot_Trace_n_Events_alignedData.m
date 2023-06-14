@@ -34,6 +34,7 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,v
 	followDelayType = 'stimEvent'; % stim/stimEvent. Calculate the delay of the following events using the stimulation start or the stim-evoked event time
 	eventsTimeSort = 'off'; % 'off'/'inROI','all'. sort traces according to eventsTime
 
+	plot_marker = true; % true/false. Mark events in traces and heatmap if this is true
 	plot_unit_width = 0.4; % normalized size of a single plot to the display
 	plot_unit_height = 0.4; % nomralized size of a single plot to the display
 
@@ -71,6 +72,8 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,v
             followDelayType = varargin{ii+1};
 	    elseif strcmpi('eventsTimeSort', varargin{ii})
             eventsTimeSort = varargin{ii+1};
+	    elseif strcmpi('plot_marker', varargin{ii})
+            plot_marker = varargin{ii+1};
 	    elseif strcmpi('plot_unit_width', varargin{ii})
             plot_unit_width = varargin{ii+1};
 	    elseif strcmpi('plot_unit_height', varargin{ii})
@@ -219,7 +222,7 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,v
 		tlo = tiledlayout(f(1), 3, 1); % setup tiles
 		ax = nexttile(tlo,[2,1]); % activate the ax for trace plot
 		plot_TemporalData_Trace(gca,timeData,FluroData,...
-			'ylabels',rowNames,'plot_marker',true,...
+			'ylabels',rowNames,'plot_marker',plot_marker,...
 			'marker1_xData',event_peakTime,'marker2_xData',event_riseTime,'shadeData',patchCoor);
 		trace_xlim = xlim;
 		f1_xticks = xticks;
@@ -251,7 +254,7 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,v
 		
 		f(3) = plot_TemporalData_Color_seperateStimRepeats(gca,FluroData,timeData,stimInfo,...
 			'preTime',preTime,'postTime',postTime,...
-			'eventsTime',StimEventsTime,'eventsTimeSort',eventsTimeSort,...
+			'eventsTime',StimEventsTime,'eventsTimeSort',eventsTimeSort,'markEvents',plot_marker,...
 			'rowNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{3},'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
 		sgtitle(fig_title{3})
 		
@@ -260,7 +263,7 @@ function [f1,f2,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,v
 		f(4) = plot_TemporalData_Color_seperateStimRepeats(gca,FluroData,timeData,stimInfo,...
 			'preTime',preTime,'postTime',postTime,...
 			'eventsTime',StimEventsTime,'eventsTimeSort',eventsTimeSort,'followEventsTime',followEventsTime,...
-			'followDelayType',followDelayType,...
+			'followDelayType',followDelayType,'markEvents',plot_marker,...
 			'rowNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{4},'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
 		sgtitle(fig_title{4})
 

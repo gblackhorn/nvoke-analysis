@@ -145,10 +145,10 @@ filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan 1]}; % [ex in rb exApOg]
 % Note: ROIs of all trials in alignedData_allTrials can be plotted. 
 %	Use 'filter' to screen ROIs based on the effect of stimulation
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 
 event_type = 'peak_time'; % rise_time/peak_time
-norm_FluorData = true; % true/false. whether to normalize the FluroData
+norm_FluorData = false; % true/false. whether to normalize the FluroData
 sortROI = true; % true/false. Sort ROIs according to the event number: high to low
 preTime = 5; % fig3 include time before stimulation starts for plotting
 postTime = []; % fig3 include time after stimulation ends for plotting. []: until the next stimulation starts
@@ -182,10 +182,10 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_filter
 %9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 gui_save = 'on';
 
-filter_roi_tf = true; % true/false. If true, screen ROIs
+filter_roi_tf = false; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
 filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan 1]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 diffPair = {[1 3], [2 3]}; % binned freq will be compared between stimualtion groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
@@ -196,7 +196,7 @@ stimIDX = []; % []/vector. specify stimulation repeats around which the events w
 preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 postStim_duration = 15; % unit: second. include events happened after the end of stimulations
 
-stimEventsPos = true; % true/false. If true, only use the peri-stim ranges with stimulation related events
+stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
 stimEvents(1).stimName = 'og-5s';
 stimEvents(1).eventCat = 'rebound';
 stimEvents(1).eventCatFollow = 'spon'; % The category of first event following the eventCat one
@@ -228,7 +228,7 @@ debug_mode = false; % true/false
 % Fig 5 or supplementary data
 % 9.1.3 Plot the auto-correlogram of events and the probability density function of inter-event time
 close all
-saveFig = true; % true/false
+saveFig = false; % true/false
 % gui_save = false;
 timeType = 'peak_time'; % rise_time/peak_time
 preEventDuration = 3;
@@ -453,9 +453,6 @@ else
 	alignedData = alignedData_allTrials;
 end
 
-% [eventProp_all]=collect_events_from_alignedData(alignedData,...
-% 	'entry',eprop.entry,'modify_stim_name',eprop.modify_stim_name);
-
 
 % Rename stim name of og to EXog if og-5s exhibited excitation effect
 eventType = eprop.entry; % 'roi' or 'event'. The entry type in eventProp
@@ -465,10 +462,6 @@ mgSetting.dis_spon = false; % true/false. Discard spontaneous events
 mgSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
 mgSetting.groupField = {'stim_name','peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
 
-% if strcmp('stim_name',mgSetting.groupField) && strcmp('roi',eprop.entry)
-% 	keep_eventcat = 'spon'; % only keep spon events to avoid duplicated values when eprop.entry is "roi"
-% 	eventProp_all = filter_structData(eventProp_all,'peak_category','spon',1);
-% end
 
 % rename the stimulation tag if og evokes spike at the onset of stimulation
 mgSetting.mark_EXog = false; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
@@ -483,35 +476,14 @@ debug_mode = false; % true/false
 	'entry',eprop.entry,'modify_stim_name',eprop.modify_stim_name,...
 	'mgSetting',mgSetting,'adata',adata,'debug_mode',debug_mode);
 
-% [grouped_event,grouped_event_setting] = mod_and_group_eventProp(eventProp_all,eventType,adata,...
-% 	'mgSetting',mgSetting,'debug_mode',debug_mode);
-% [grouped_event_setting.TrialRoiList] = get_roiNum_from_eventProp_fieldgroup(eventProp_all,'stim_name'); % calculate all roi number
-% if strcmpi(eprop.entry,'roi')
-% 	GroupNum = numel(grouped_event);
-% 	% GroupName = {grouped_event.group};
-% 	for gn = 1:GroupNum
-% 		EventInfo = grouped_event(gn).event_info;
-% 		fovIDs = {EventInfo.fovID};
-% 		roi_num = numel(fovIDs);
-% 		fovIDs_unique = unique(fovIDs);
-% 		fovIDs_unique_num = numel(fovIDs_unique);
-% 		fovID_count_struct = empty_content_struct({'fovID','numROI','perc'},fovIDs_unique_num);
-% 		[fovID_count_struct.fovID] = fovIDs_unique{:};
-% 		for fn = 1:fovIDs_unique_num
-% 			fovID_count_struct(fn).numROI = numel(find(contains(fovIDs,fovID_count_struct(fn).fovID)));
-% 			fovID_count_struct(fn).perc = fovID_count_struct(fn).numROI/roi_num;
-% 		end
-% 		grouped_event(gn).fovCount = fovID_count_struct;
-% 	end
-% end
 
 
 %% ====================
 % Fig 2: Plot violin of the event freq without and with OG stimulation
 % 9.5.5 Compare baseline and stimulation calcium signal change (one type of stimulaiton) using boxplot
 stim_name = 'og-5s';
-stimFilter = [0 nan nan nan]; % [ex in rb exApOg].
-[alignedData_ogExNeg] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
+stimFilter = [nan nan nan nan]; % [ex in rb exApOg].
+[alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
 			'stim_names',stim_name,'filters',stimFilter);
 %% Create grouped_event using code in '9.5.1.1' after filtering alignedData_allTrials
 % Using eventProp_all: entry is 'roi'. mgSetting.groupField = {'stim_name','peak_category'};

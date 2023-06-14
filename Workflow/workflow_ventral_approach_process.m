@@ -389,6 +389,20 @@ else
 end
 
 
+%% ====================
+% sort the recordings using date and time
+recdata_organized_bk = recdata_organized;
+recNames = recdata_organized(:,1);
+
+% Extract date and time portions and convert to datetime format
+datesAndTimes = cellfun(@(str) datetime(str(1:15), 'InputFormat', 'yyyyMMdd-HHmmss'), recNames);
+
+% Sort the strings based on date and time
+[sortedDatesAndTimes, sortedIndices] = sort(datesAndTimes);
+
+% Sort the original cell array using the sorted indices
+recdata_organized = recdata_organized(sortedIndices,:);
+
 
 %% ====================
 % 9 Clear temp variables to reclaim memory

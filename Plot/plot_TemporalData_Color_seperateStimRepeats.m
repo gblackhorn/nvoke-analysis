@@ -16,12 +16,17 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	followEventsTime = NaN; % time of the following events
 	followDelayType = 'stim'; % stim/stimEvent. Calculate the delay of the following events using the stimulation start or the stim-evoked event time
 
-
+	markEvents = true; % true/false. Mark events in the heatmap if true
 	shadeData = {};
 	shadeColor = {'#F05BBD','#4DBEEE','#ED8564'};
     colorLUT = 'turbo'; % default look up table (LUT)/colormap. Other sets are: 'parula','hot','jet', etc.
     show_colorbar = true; % true/false. Show color next to the plot if true.
     xtickInt = 1; % interval between x ticks
+
+    unit_width = 0.45; % normalized size of a single plot to the display
+    unit_height = 0.45; % nomralized size of a single plot to the display
+    column_lim = 1;
+
     debug_mode = false;
 
 	% Optionals
@@ -40,6 +45,8 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
             followEventsTime = varargin{ii+1}; % 
         elseif strcmpi('followDelayType', varargin{ii})
             followDelayType = varargin{ii+1}; % 
+        elseif strcmpi('markEvents', varargin{ii})
+            markEvents = varargin{ii+1}; % a single number to set the interval between x ticks
         elseif strcmpi('xtickInt', varargin{ii})
             xtickInt = varargin{ii+1}; % a single number to set the interval between x ticks
         elseif strcmpi('colorLUT', varargin{ii})
@@ -100,7 +107,7 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
     	filterFollow = false;
     end
 
-    f = fig_canvas(2,'unit_width',0.4,'unit_height',0.4,'column_lim',1,...
+    f = fig_canvas(2,'unit_width',unit_width,'unit_height',unit_height,'column_lim',1,...
 	    	'fig_name',titleStr); % create a figure
     if ~isempty(stimPlusRange) && ~stimInfo.UnifiedStimDuration.varied
 	    % Get the closest recording time for stimulation repeats
@@ -271,7 +278,7 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	    markerIDX = {eventsMarkPos,followEventsMarkPos};
 	    emptyTFmarkerIDX = cellfun(@(x) isempty(x),markerIDX);
 	    % emptyTFmarkerIDX = cellfun(@(x) isempty(x),markerIDX,'UniformOutput',false);
-	    if all(emptyTFmarkerIDX)
+	    if all(emptyTFmarkerIDX) || ~markEvents
 	    	markerIDX = NaN;
 	    end
 
@@ -283,8 +290,8 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	    % Creat a figure to plot raster (first ax) and histogram (second ax)
 % 	    f = fig_canvas(2,'unit_width',0.4,'unit_height',0.4,'column_lim',1,...
 % 	    	'fig_name',titleStr); % create a figure
-	    tlo = tiledlayout(f, 11, 1); % setup tiles
-	    ax = nexttile(tlo,[10 1]); % activate the ax for color plot
+	    tlo = tiledlayout(f, 13, 1); % setup tiles
+	    ax = nexttile(tlo,[12 1]); % activate the ax for color plot
 	    if ~exist('posNum','var')
 	    	posNum = NaN;
 	    end
