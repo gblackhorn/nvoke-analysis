@@ -8,7 +8,7 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	plot_combined_data = true; % plot the mean value of all trace and add a shade using std
 	shadeType = 'std'; % std/ste
 	plot_raw_races = true; % true: plot the traces in the trace_data
-	% y_range = [-20 30];
+	y_range = [-20 30];
 	yRangeMargin = 0.5; % yRange will be calculated using max and min of mean and shade data. This will increase the range as margin
 	sponNorm = false; % true/false
 	tile_row_num = 1;
@@ -17,7 +17,7 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 
 	stimDiscard = {''};
 
-	debugMode = true;
+	debugMode = false; % true/false
 
 	% Optionals
 	for ii = 1:2:(nargin-1)
@@ -31,8 +31,8 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	        eventCat = varargin{ii+1};
         elseif strcmpi('fname', varargin{ii})
 	        fname = varargin{ii+1};
-        % elseif strcmpi('y_range', varargin{ii})
-	    %     y_range = varargin{ii+1};
+        elseif strcmpi('y_range', varargin{ii})
+	        y_range = varargin{ii+1};
         elseif strcmpi('tickInt_time', varargin{ii})
 	        tickInt_time = varargin{ii+1};
         elseif strcmpi('tile_row_num', varargin{ii})
@@ -151,17 +151,18 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 
 		if ~isempty(traceData_trials)
 			% Use the shade area to decide the y_range
-			yUpperLim = max(traceData_trials_mean+traceData_trials_shade);
-			yLowerLim = min(traceData_trials_mean-traceData_trials_shade);
-			yDiff = yUpperLim-yLowerLim;
-			y_range = [yLowerLim-yDiff*yRangeMargin yUpperLim+yDiff*yRangeMargin];
+			% yUpperLim = max(traceData_trials_mean+traceData_trials_shade);
+			% yLowerLim = min(traceData_trials_mean-traceData_trials_shade);
+			% yDiff = yUpperLim-yLowerLim;
+			% y_range = [yLowerLim-yDiff*yRangeMargin yUpperLim+yDiff*yRangeMargin];
 
 			plot_trace(timeInfo, traceData_trials, 'plotWhere', ax,...
 				'plot_combined_data', plot_combined_data,...
 				'mean_trace', traceData_trials_mean, 'mean_trace_shade', traceData_trials_shade,...
 		        'plot_raw_races',plot_raw_races,'y_range', y_range,'tickInt_time',tickInt_time); % 'y_range', y_range
 		end
-		titleName = sprintf('%s-%s traceNum-%g',stimName,eventCat,traceInfo(n).tracesNum);
+		titleName = sprintf('%s-%s animal-%g roi-%g traceNum-%g',...
+			stimName,eventCat,traceInfo(n).recDateNum,traceInfo(n).roiNum,traceInfo(n).tracesNum);
 		title(titleName)
 
 		traceInfo(n).group = titleName;
