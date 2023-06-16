@@ -119,7 +119,7 @@ end
 % Common settings for 9.1.1 - 9.1.2
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan 1]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 [alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
 			'stim_names',stim_names,'filters',filters);
 
@@ -130,10 +130,10 @@ filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan 1]}; % [ex in rb exApOg]
 % Note: ROIs of all trials in alignedData_allTrials can be plotted. 
 %	Use 'filter' to screen ROIs based on the effect of stimulation
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 
 event_type = 'peak_time'; % rise_time/peak_time
-norm_FluorData = false; % true/false. whether to normalize the FluroData
+norm_FluorData = true; % true/false. whether to normalize the FluroData
 sortROI = true; % true/false. Sort ROIs according to the event number: high to low
 preTime = 5; % fig3 include time before stimulation starts for plotting
 postTime = []; % fig3 include time after stimulation ends for plotting. []: until the next stimulation starts
@@ -141,12 +141,15 @@ activeHeatMap = true; % true/false. If true, only plot the traces with specified
 stimEvents(1).stimName = 'og-5s';
 stimEvents(1).eventCat = 'rebound';
 stimEvents(1).eventCatFollow = 'spon'; % The category of first event following the eventCat one
+stimEvents(1).stimRefType = 'end'; % The category of first event following the eventCat one
 stimEvents(2).stimName = 'ap-0.1s';
 stimEvents(2).eventCat = 'trig';
 stimEvents(2).eventCatFollow = 'spon'; % The category of first event following the eventCat one
+stimEvents(2).stimRefType = 'start'; % The category of first event following the eventCat one
 stimEvents(3).stimName = 'og-5s ap-0.1s';
 stimEvents(3).eventCat = 'rebound';
 stimEvents(3).eventCatFollow = 'spon'; % The category of first event following the eventCat one
+stimEvents(3).stimRefType = 'end'; % The category of first event following the eventCat one
 followDelayType = 'stim'; % stim/stimEvent. Calculate the delay of the following events using the stimulation start or the stim-evoked event time
 eventsTimeSort = 'all'; % 'off'/'inROI','all'. sort traces according to eventsTime
 hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins

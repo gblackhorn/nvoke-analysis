@@ -1124,13 +1124,13 @@ end
 fluroData = horzcat(fluroData{:});
 stimInfo = alignedData_allTrials(1).stimInfo;
 preTime = 5;
-postTime = 5;
+postTime = 10;
 % eventCat = {alignedData_allTrials(1).traces(1).eventProp.peak_category};
 stimEventCat = 'rebound';
 followEventCat = 'spon';
 stimRefType = 'end';
 debugMode = false;
-[sortedIDX,sortedFdSection,sortedEventMarker,sortedEventNumIDX] = sortPeriStimTraces(fluroData,timeData,...
+[sortedIDX,sortedFdSection,sortedEventMarker,sortedRowNames,sortedEventNumIDX] = sortPeriStimTraces(fluroData,timeData,...
 		eventsTime,stimInfo,'preTime',preTime,'postTime',postTime,...
 		'eventCat',eventCat,'stimEventCat',stimEventCat,'followEventCat',followEventCat,...
 		'stimRefType',stimRefType,'debugMode',debugMode);

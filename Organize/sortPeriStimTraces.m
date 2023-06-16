@@ -1,4 +1,4 @@
-function [sortedIDX,sortedFdSection,sortedEventMarker,varargout] = sortPeriStimTraces(traceData,timeInfo,eventsTime,stimInfo,varargin)
+function [sortedIDX,sortedFdSection,sortedEventMarker,sortedRowNames,timeDuration,posNum,varargout] = sortPeriStimTraces(traceData,timeInfo,eventsTime,stimInfo,varargin)
 	% Sort the peri-stimulation traces according to the events time
 
 	% First event's time after the stimulation (start/end)
@@ -70,8 +70,10 @@ function [sortedIDX,sortedFdSection,sortedEventMarker,varargout] = sortPeriStimT
 		switch stimRefType
 			case 'start'
 				stimRef = stimRanges(:,1);
+				eventTimeCorrection = 0;
 			case 'end'
 				stimRef = stimRanges(:,2);
+				eventTimeCorrection = stimRanges(1,2)-stimRanges(1,1);
 			otherwise
 				error('stimRefType must be [start] or [end]')
 		end
@@ -82,6 +84,8 @@ function [sortedIDX,sortedFdSection,sortedEventMarker,varargout] = sortPeriStimT
 		stimNum = size(timeRanges,1);
 		rowNum = roiNum*stimNum; % traces will be cutting into this number of pieces
 		fdSection = NaN(roiNum*stimNum,datapointNum);
+		% delay2StimMatrix{fn} = NaN(roiNum*stimNum,nthDelay);
+		% delay2StimEventMatrix{fn} = NaN(roiNum*stimNum,nthDelay);
 		rowNamesSection = cell(rowNum,1);
 		eventsDelay2Stim = cell(rowNum,1);
 		eventsDelay2StimEvent = cell(rowNum,1);
@@ -106,9 +110,9 @@ function [sortedIDX,sortedFdSection,sortedEventMarker,varargout] = sortPeriStimT
 				for sn = 1:stimNum
 					if debugMode
 						fprintf('  - section %d/%d\n',sn,stimNum)
-						if sn == 6
-							pause
-						end
+						% if sn == 6
+						% 	pause
+						% end
 					end
 					if ~isempty(rangEventsIDX{sn})
 						rangEventsCat{sn} = {eventCat{rn}{rangEventsIDX{sn}}};
@@ -145,12 +149,22 @@ function [sortedIDX,sortedFdSection,sortedEventMarker,varargout] = sortPeriStimT
 				% calculate the delay of events' time to stimRef
 				eventsDelay2Stim{rowIDX} = rangEventsTime{sn}-stimRef(sn);
 
+				% discard the events before the stimulation
+				afterStimEventsIDX = find(eventsDelay2Stim{rowIDX} >= 0);
+				eventsDelay2Stim{rowIDX} = eventsDelay2Stim{rowIDX}(afterStimEventsIDX)+eventTimeCorrection;
+				rangEventsTime{sn} = rangEventsTime{sn}(afterStimEventsIDX)+eventTimeCorrection;
+				if ~isempty(rangEventsCat)
+					if ~isempty(rangEventsCat{sn})
+						rangEventsCat{sn} = rangEventsCat{sn}(afterStimEventsIDX);
+					end
+				end
+
 
 				% calculate the delay of events' time to the stim-related event if it exists
 				if ~isempty(eventCat) && ~isempty(stimEventCat)
-					stimEventCatIDX = find(strcmpi(rangEventsIDX{sn},stimEventCat));
+					stimEventCatIDX = find(strcmpi(rangEventsCat{sn},stimEventCat));
 					if ~isempty(stimEventCatIDX)
-						eventsDelay2StimEvent{rowIDX} = rangEventsTime{sn}-rangEventsTime{sn}(stimEventCatIDX);
+						eventsDelay2StimEvent{rowIDX} = eventsDelay2Stim{rowIDX}-eventsDelay2Stim{rowIDX}(stimEventCatIDX);
 						eventsDelay2StimEvent{rowIDX}(stimEventCatIDX) = []; % remove the delay of stim-related events itself 
 					end
 
@@ -213,50 +227,50 @@ function [sortedIDX,sortedFdSection,sortedEventMarker,varargout] = sortPeriStimT
 
 
 		% separate the data to pos and neg groups. 'f_': filtered 
-		f_fdSection = cell(2,1); 
+		% f_fdSection = cell(2,1); 
 		f_eventsDelay2Stim = cell(2,1); 
 		f_eventsDelay2StimEvent = cell(2,1); 
-		delay2StimMatrix = cell(2,1); 
-		delay2StimEventMatrix = cell(2,1); 
+		f_delay2StimMatrix = cell(2,1); 
+		f_delay2StimEventMatrix = cell(2,1); 
 		% sortedIDX = cell(2,1);
 		sortedIDX_delay2Stim = cell(2,1);
 		sortedIDX_delay2StimEvent = cell(2,1);
 		for fn = 1:numel(filteredIDX)
 			IDX = filteredIDX{fn};
 			if IDX ~= 0
-				f_fdSection{fn} = fdSection(IDX,:);
-				f_eventsDelay2Stim = eventsDelay2Stim(IDX);
+				% f_fdSection{fn} = fdSection(IDX,:);
+				f_eventsDelay2Stim{fn} = eventsDelay2Stim(IDX);
 
 				if strcmpi(filterType,'stimFollowEvents')
-					f_eventsDelay2StimEvent = eventsDelay2StimEvent(IDX);
+					f_eventsDelay2StimEvent{fn} = eventsDelay2StimEvent(IDX);
 				end
 
-				delay2StimMatrix{fn} = NaN(numel(IDX),nthDelay);
-				delay2StimEventMatrix{fn} = NaN(numel(IDX),nthDelay);
+				f_delay2StimMatrix{fn} = NaN(numel(IDX),nthDelay);
+				f_delay2StimEventMatrix{fn} = NaN(numel(IDX),nthDelay);
 				sortedIDX_delay2Stim{fn} = NaN(numel(IDX),nthDelay);
 				sortedIDX_delay2StimEvent{fn} = NaN(numel(IDX),nthDelay);
 				for i = 1:numel(IDX)
 					for m = 1:nthDelay
-						delay2StimNum = numel(f_eventsDelay2Stim{i});
+						delay2StimNum = numel(f_eventsDelay2Stim{fn}{i});
 						if delay2StimNum >= m
-							delay2StimMatrix{fn}(i,m) = f_eventsDelay2Stim{i}(m);
+							f_delay2StimMatrix{fn}(i,m) = f_eventsDelay2Stim{fn}{i}(m);
 						end
 
 						if strcmpi(filterType,'stimFollowEvents')
-							delay2StimEventNum = numel(f_eventsDelay2StimEvent{i});
+							delay2StimEventNum = numel(f_eventsDelay2StimEvent{fn}{i});
 							if delay2StimEventNum >= m
-								delay2StimEventMatrix{fn}(i,m) = f_eventsDelay2StimEvent{i}(m);
+								f_delay2StimEventMatrix{fn}(i,m) = f_eventsDelay2StimEvent{fn}{i}(m);
 							end
 						end
 					end
 				end
 
 				for m = 1:nthDelay
-					[~,nthSortedIDX] = sort(delay2StimMatrix{fn}(:,m));
+					[~,nthSortedIDX] = sort(f_delay2StimMatrix{fn}(:,m));
 					sortedIDX_delay2Stim{fn}(:,m) = reshape(IDX(nthSortedIDX),[],1);
 
 					if strcmpi(filterType,'stimFollowEvents')
-						[~,nthSortedIDX] = sort(delay2StimEventMatrix{fn}(:,m));
+						[~,nthSortedIDX] = sort(f_delay2StimEventMatrix{fn}(:,m));
 						sortedIDX_delay2StimEvent{fn}(:,m) = reshape(IDX(nthSortedIDX),[],1);
 					end
 				end
@@ -264,30 +278,49 @@ function [sortedIDX,sortedFdSection,sortedEventMarker,varargout] = sortPeriStimT
 		end
 
 		% combine the data from pos and neg groups together
-		f_fdSection = vertcat(f_fdSection{:});
+		% f_fdSection = vertcat(f_fdSection{:});
+		f_eventsDelay2Stim = vertcat(f_eventsDelay2Stim{:});
+		f_eventsDelay2StimEvent = vertcat(f_eventsDelay2StimEvent{:});
 		sortedIDX_delay2Stim = vertcat(sortedIDX_delay2Stim{:});
 		sortedIDX_delay2StimEvent = vertcat(sortedIDX_delay2StimEvent{:});
-		delay2StimMatrix = vertcat(delay2StimMatrix{:});
-		delay2StimEventMatrix = vertcat(delay2StimEventMatrix{:});
+		% delay2StimMatrix = vertcat(delay2StimMatrix{:});
+		% delay2StimEventMatrix = vertcat(delay2StimEventMatrix{:});
 		varargout{1} = sortedEventNumIDX;
 		switch filterType
 			case 'stimFollowEvents'
-				sortedIDX = sortedIDX_delay2StimEvent(:,1);
+				sortedIDX = sortedIDX_delay2Stim(:,2);
+				% sortedIDX = sortedIDX_delay2StimEvent(:,1);
 				sortedFdSection = fdSection(sortedIDX,:);
-				sortedEventMarker{1,1} = delay2StimMatrix(sortedIDX,1);
-				sortedEventMarker{1,2} = delay2StimEventMatrix(sortedIDX,1);
+				sortedRowNames = rowNamesSection(sortedIDX);
+				sortedEventMarker = eventsDelay2Stim(sortedIDX);
+				% sortedEventMarker{1,2} = num2cell(delay2StimMatrix(sortedIDX,2));
+				% sortedEventMarker{1,1} = num2cell(delay2StimMatrix(sortedIDX,1));
+				% sortedEventMarker{1,2} = num2cell(delay2StimMatrix(sortedIDX,2));
+				% sortedEventMarker{1,2} = num2cell(delay2StimEventMatrix(sortedIDX,1));
 
 				varargout{2} = sortedIDX_delay2StimEvent; % 1st to nth sorting. 1st column  = sortedIDX
-				varargout{3} = delay2StimMatrix; % un-sorted 'delay2Stim'. nth column = nth events in a fdSection
-				varargout{4} = delay2StimEventMatrix; % un-sorted 'delay2StimEvent'. nth column = nth events in a fdSection
+				% varargout{3} = delay2StimMatrix; % un-sorted 'delay2Stim'. nth column = nth events in a fdSection
+				% varargout{4} = delay2StimEventMatrix; % un-sorted 'delay2StimEvent'. nth column = nth events in a fdSection
 			case 'stimEvents'
 				sortedIDX = sortedIDX_delay2Stim(:,1);
-				sortedFdSection = fdSection(sortedIDX,1);
-				sortedEventMarker{1,1} = delay2StimMatrix(sortedIDX,1);
+				sortedFdSection = fdSection(sortedIDX,:);
+				sortedRowNames = rowNamesSection(sortedIDX);
+				sortedEventMarker = eventsDelay2Stim(sortedIDX);
+				% sortedEventMarker{1,1} = num2cell(delay2StimMatrix(sortedIDX,1));
 
 				varargout{2} = sortedIDX_delay2Stim; % 1st to nth sorting. 1st column  = sortedIDX
-				varargout{3} = delay2StimMatrix; % un-sorted 'delay2Stim'. nth column = nth events in a fdSection
-				varargout{4} = delay2StimEventMatrix; % un-sorted 'delay2StimEvent'. nth column = nth events in a fdSection
+				% varargout{3} = delay2StimMatrix; % un-sorted 'delay2Stim'. nth column = nth events in a fdSection
+				% varargout{4} = delay2StimEventMatrix; % un-sorted 'delay2StimEvent'. nth column = nth events in a fdSection
+			case 'noFilter'
+				sortedIDX = sortedIDX_delay2Stim(:,1);
+				sortedFdSection = fdSection(sortedIDX,:);
+				sortedRowNames = rowNamesSection(sortedIDX);
+				sortedEventMarker = eventsDelay2Stim(sortedIDX);
+				% sortedEventMarker{1,1} = num2cell(delay2StimMatrix(sortedIDX,1));
+
+				varargout{2} = sortedIDX_delay2Stim; % 1st to nth sorting. 1st column  = sortedIDX
+				% varargout{3} = delay2StimMatrix; % un-sorted 'delay2Stim'. nth column = nth events in a fdSection
+				% varargout{4} = delay2StimEventMatrix; % un-sorted 'delay2StimEvent'. nth column = nth events in a fdSection
 			otherwise
 		end
 
@@ -298,9 +331,16 @@ function [sortedIDX,sortedFdSection,sortedEventMarker,varargout] = sortPeriStimT
 		% sort the sections using the delay of events
 		% - events' time to the stim-related event
 	else
+		% sortedIDX,sortedFdSection,sortedEventMarker,sortedRowNames,timeDuration,posNum
+		sortedIDX = [];
+		sortedFdSection = [];
+		sortedEventMarker = [];
+		sortedRowNames = [];
+		timeDuration = [];
+		posNum = [];
 		varargout{1} = []; 
 		varargout{2} = []; 
-		varargout{3} = []; 
-		varargout{4} = [];
+		% varargout{3} = []; 
+		% varargout{4} = [];
 	end
 end

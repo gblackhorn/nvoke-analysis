@@ -17,7 +17,7 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
     breakerLine = NaN; % Input a row index. below this row, a horizontal line will be draw to seperate the heatmap
     markerIDX = NaN;
     markerColors = '#332F2E';
-    markerShapes = {'o','+','*','|'};
+    markerShapes = {'o','+','*','|','s','d','p','h','o','+','*','|','s','d','p','h'};
     markerSize = 5;
 
     % Optionals for inputs
@@ -70,18 +70,36 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
 
     % draw markers
     if iscell(markerIDX)
-        % loop through marker groups
-        for n = 1:numel(markerIDX) 
-            markerIDXsingleGroup = markerIDX{n};
-            if ~isempty(markerIDXsingleGroup)
-                % loop through sections (rows)
-                for sn = 1:numel(markerIDXsingleGroup)
-                    markerIDXrow = markerIDXsingleGroup{sn};
-                    plot(markerIDXrow,sn,...
-                        'Marker',markerShapes{n},'MarkerSize',markerSize,'MarkerEdgeColor',markerColors);
+        % loop through rows
+        for n = 1:numel(markerIDX)
+            rowMarker = markerIDX{n};
+            if ~isempty(rowMarker)
+                markerNum = numel(rowMarker);
+
+                % loop through markers in a single row
+                for mn = 1:markerNum
+                    % fprintf('   heatmap marker: row (%d/%d) marker (%d/%d)\n',...
+                    %     n,numel(markerIDX),mn,markerNum)
+                    plot(rowMarker(mn),n,...
+                        'Marker',markerShapes{mn},'MarkerSize',markerSize,'MarkerEdgeColor',markerColors);
                 end
             end
         end
+
+
+
+        % % loop through marker groups
+        % for n = 1:numel(markerIDX) 
+        %     markerIDXsingleGroup = markerIDX{n};
+        %     if ~isempty(markerIDXsingleGroup)
+        %         % loop through sections (rows)
+        %         for sn = 1:numel(markerIDXsingleGroup)
+        %             markerIDXrow = markerIDXsingleGroup{sn};
+        %             plot(markerIDXrow,sn,...
+        %                 'Marker',markerShapes{n},'MarkerSize',markerSize,'MarkerEdgeColor',markerColors);
+        %         end
+        %     end
+        % end
     end
 
 

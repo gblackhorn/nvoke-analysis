@@ -109,12 +109,12 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 	% (show the event number in time bins in the histogram) (fig2).
 	trial_num = numel(alignedData_filtered);
 	for tn = 1:trial_num
-		pause_plot = true;
+		pause_plot = false;
 		close all
 
 		if debug_mode
 			fprintf('trial %d/%d: %s\n',tn,trial_num,alignedData_filtered(tn).trialName)
-			if tn == 20
+			if tn == 34
 				pause
 			end
 		end
