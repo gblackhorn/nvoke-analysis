@@ -25,9 +25,13 @@ function [posTimeRanges,posRangeIDX,varargout] = getRangeIDXwithEvents(eventsTim
 
 
     % Loop through the timeRanges, and find out which ranges contain events, which do not
+    rangEventsTime = cell(timeRangesNum,1);
+    rangEventsIDX = cell(timeRangesNum,1);
     for n = 1:timeRangesNum
         timeRange = timeRanges(n,:);
         eventInRange = find(eventsTime>=timeRange(1) & eventsTime<=timeRange(2));
+        rangEventsTime{n} = eventsTime(eventInRange);
+        rangEventsIDX{n} = eventInRange;
 
         % Mark the ranges with events
         if ~isempty(eventInRange)
@@ -41,4 +45,6 @@ function [posTimeRanges,posRangeIDX,varargout] = getRangeIDXwithEvents(eventsTim
     posTimeRanges = timeRanges(posRangeIDX,:);
 
     varargout{1} = negRangeIDX;
+    varargout{2} = rangEventsTime; % cell var
+    varargout{3} = rangEventsIDX; % cell var
 end

@@ -1068,13 +1068,12 @@ sortedTrialNamesDiscard = trialNamesDiscard(sortedIndices);
 
 %% ====================
 close all
-% save_fig = false; % true/false
-% gui_save = 'on';
+save_fig = false; % true/false
+gui_save = 'on';
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
 filters = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
-diffPair = {[1 3], [2 3]}; % binned freq will be compared between stimualtion groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
 
 propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
 binWidth = 1; % the width of histogram bin. the default value is 1 s.
@@ -1096,13 +1095,42 @@ stimEvents(3).eventCatFollow = 'spon'; % The category of first event following t
 normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
 baseBinEdgestart = -preStim_duration; % where to start to use the bin for calculating the baseline. -1
 baseBinEdgeEnd = -2; % 0
-apCorrection = false; % true/false. If true, correct baseline bin used for normalization. 
 
 debug_mode = false; % true/false
 
 [violinData,statInfo] = violinplotPeriStimFreq(alignedData_allTrials);
-violinDataStruct = empty_content_struct({violinData.stimMod},1);
-for n = 1:numel(violinData)
-	violinDataStruct.(violinData(n).stimMod) = violinData(n).eventFreq;
+
+
+timeData = alignedData_allTrials(1).fullTime;
+stimInfo = alignedData_allTrials(1).stimInfo;
+[timeRanges,timeRangesIDX,stimRanges,stimRangesIDX,timeDuration,datapointNum] = createTimeRangesUsingStimInfo(timeData,stimInfo)
+eventsTime = [alignedData_allTrials(1).traces(1).eventProp.peak_time];
+[posTimeRanges,posRangeIDX,negRangeIDX,rangEventsTime,rangEventsIDX] = getRangeIDXwithEvents(eventsTime,timeRanges)
+
+
+alignedData = alignedData_allTrials(7);
+fluroData = alignedData.traces(1).fullTrace;
+timeData = alignedData.fullTime;
+% eventsTime = [alignedData.traces(1).eventProp.peak_time];
+roiNum = numel(alignedData.traces);
+fluroData = cell(1,roiNum);
+eventsTime = cell(roiNum,1);
+eventCat = cell(roiNum,1);
+for rn = 1:roiNum
+	fluroData{rn} = alignedData.traces(rn).fullTrace;
+	eventsTime{rn} = [alignedData.traces(rn).eventProp.peak_time];
+	eventCat{rn} = {alignedData.traces(rn).eventProp.peak_category};
 end
-violinplot(violinDataStruct);
+fluroData = horzcat(fluroData{:});
+stimInfo = alignedData_allTrials(1).stimInfo;
+preTime = 5;
+postTime = 5;
+% eventCat = {alignedData_allTrials(1).traces(1).eventProp.peak_category};
+stimEventCat = 'rebound';
+followEventCat = 'spon';
+stimRefType = 'end';
+debugMode = false;
+[sortedIDX,sortedFdSection,sortedEventMarker,sortedEventNumIDX] = sortPeriStimTraces(fluroData,timeData,...
+		eventsTime,stimInfo,'preTime',preTime,'postTime',postTime,...
+		'eventCat',eventCat,'stimEventCat',stimEventCat,'followEventCat',followEventCat,...
+		'stimRefType',stimRefType,'debugMode',debugMode);

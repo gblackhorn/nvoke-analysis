@@ -61,6 +61,13 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	end	
 
 
+	% Sort the peri-stimulation traces according to the events time
+	[sortedIDX,sortedFdSection,sortedEventMarker,sortedEventNumIDX] = sortPeriStimTraces(fluroData,timeData,...
+		eventsTime,stimInfo,'preTime',preTime,'postTime',postTime,...
+		'eventCat',eventCat,'stimEventCat',stimEventCat,'followEventCat',followEventCat,...
+		'stimRefType',stimRefType,'roiNames',roiNames);
+
+
 	% Create rowNames if it doesn't exist 
     if exist('rowNames')==0 || isempty(rowNames)
         rowNames = NumArray2StringCell(size(fluroData,2));
@@ -75,14 +82,7 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
     stimPlusRange(:,1) = stimRanges(:,1)-preTime;
     if ~isempty(postTime)
     	stimPlusRange(:,2) = stimRanges(:,2)+postTime;
-    % else
-    % 	postTime = stimRanges(2,1)-stimRanges(1,2);
-    % 	stimPlusRange(:,2) = stimRanges(:,2)+postTime;
     end
-    % if isempty(postTime)
-    % 	postTime = stimRanges(2,1)-stimRanges(1,2);
-    % end
-    % stimPlusRange(:,2) = stimRanges(:,2)+postTime;
 
 
     % Screen the traces with stimulation related events if eventsTime exists and is a cell var
