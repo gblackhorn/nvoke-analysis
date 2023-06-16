@@ -62,7 +62,7 @@ adata.eventTimeType = 'peak_time'; % rise_time/peak_time. Pick one for event tim
 adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 adata.event_data_group = 'peak_lowpass';
 adata.event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
-adata.event_align_point = 'peak'; % options: 'rise', 'peak'
+adata.event_align_point = 'rise'; % options: 'rise', 'peak'
 adata.rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes. Exclude these events from 'spon'
 adata.cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
@@ -130,7 +130,7 @@ filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan 1]}; % [ex in rb exApOg]
 % Note: ROIs of all trials in alignedData_allTrials can be plotted. 
 %	Use 'filter' to screen ROIs based on the effect of stimulation
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 
 event_type = 'peak_time'; % rise_time/peak_time
 norm_FluorData = false; % true/false. whether to normalize the FluroData
@@ -430,18 +430,24 @@ end
 close all
 tplot.save_fig = true; % true/false
 tplot.plot_combined_data = true; % mean value and std of all traces
-tplot.plot_raw_races = true; % true/false. true: plot every single trace
+tplot.plot_raw_races = false; % true/false. true: plot every single trace
 tplot.shadeType = 'std'; % plot the shade using std/ste
-tplot.y_range = [-5 3]; % [-10 5],[-3 5]
+tplot.y_range = [-1 2]; % [-10 5],[-3 5],[-2 1]
 tplot.eventCat = {'trig','trig-ap'}; % options: 'trig', 'spon', 'rebound'
 tplot.stimDiscard = {'ap-varied','og-0.96s'}; % 'og-5s',
-tplot.sponNorm = true; % true/false
+tplot.sponNorm = false; % true/false
+tplot.normalized = true; % true/false. normalize the traces to their own peak amplitudes.
 tplot.save_dir = FolderPathVA.fig;
 
 if tplot.sponNorm
 	sponNormStr = sprintf('sponNorm_');
 else
 	sponNormStr = '';
+end
+if tplot.normalized
+	NormStr = sprintf('Norm_');
+else
+	NormStr = '';
 end
 if tplot.plot_combined_data
 	meanDataStr = sprintf('_withMeanAndShade[%s]',tplot.shadeType);
@@ -457,12 +463,12 @@ end
 stimAlignedTrace_means = empty_content_struct({'event_group','trace'},numel(tplot.eventCat));
 for cn = 1:numel(tplot.eventCat)
 	stimAlignedTrace_means(cn).event_group = tplot.eventCat{cn};
-	tplot.fname = sprintf('%s%s-aligned_traces_%s%s%s',...
-		sponNormStr,adata.event_align_point,tplot.eventCat{cn},meanDataStr,rawDataStr);
+	tplot.fname = sprintf('%s%s%s-aligned_traces_%s%s%s',...
+		NormStr,sponNormStr,adata.event_align_point,tplot.eventCat{cn},meanDataStr,rawDataStr);
 	[fHandle_stimAlignedTrace,stimAlignedTrace_means(cn).trace] = plot_aligned_catTraces(alignedData_allTrials,...
 		'plot_combined_data',tplot.plot_combined_data,'plot_raw_races',tplot.plot_raw_races,...
 		'eventCat',tplot.eventCat{cn},'stimDiscard',tplot.stimDiscard,'shadeType',tplot.shadeType,...
-		'y_range',tplot.y_range,'sponNorm',tplot.sponNorm,'fname',tplot.fname); % 'fname',fname,
+		'y_range',tplot.y_range,'sponNorm',tplot.sponNorm,'normalized',tplot.normalized,'fname',tplot.fname); % 'fname',fname,
 	if tplot.save_fig
 		if cn == 1
 			tplot.guiSave = 'on';

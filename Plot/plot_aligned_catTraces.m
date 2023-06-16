@@ -11,6 +11,7 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	y_range = [-20 30];
 	yRangeMargin = 0.5; % yRange will be calculated using max and min of mean and shade data. This will increase the range as margin
 	sponNorm = false; % true/false
+	normalized = false; % true/false. normalize the traces to their own peak amplitudes.
 	tile_row_num = 1;
 	tickInt_time = 1; % interval of tick for timeInfo (x axis)
 	fig_position = [0.1 0.1 0.9 0.6]; % [left bottom width height]
@@ -39,6 +40,8 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	        tile_row_num = varargin{ii+1};
         elseif strcmpi('sponNorm', varargin{ii})
 	        sponNorm = varargin{ii+1};
+        elseif strcmpi('normalized', varargin{ii})
+	        normalized = varargin{ii+1};
         elseif strcmpi('stimKeep', varargin{ii})
 	        stimKeep = varargin{ii+1};
         elseif strcmpi('stimDiscard', varargin{ii})
@@ -115,6 +118,12 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 
 					traceData_cell_rois{nr} = traceInfo_trial(nr).value(:,event_idx);
 					eventProp_cell_rois{nr} = traceInfo_trial(nr).eventProp(event_idx);
+
+					if normalized
+						peakMagDelta = [traceInfo_trial(nr).eventProp(event_idx).peak_mag_delta];
+						peakMagDelta = reshape(peakMagDelta,1,[]);
+						traceData_cell_rois{nr} = traceData_cell_rois{nr}./peakMagDelta;
+					end
 
 					DateTimeRoi = sprintf('%s_%s',recDateTimeInfo,roiName);
 					[eventProp_cell_rois{nr}.DateTimeRoi] = deal(DateTimeRoi);
