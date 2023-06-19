@@ -9,6 +9,7 @@ function [eventProp_new,varargout] = add_riseDelay_to_eventProp(eventProp,stimRa
 	% Defaults
 	errCali = 0; % calibrate the time if it was used to categorize events
 	eventType = 'peak_time'; % use rise_time/peak_time for event time
+	stimEventCatPairs = '';
 
 	% Optionals
 	for ii = 1:2:(nargin-2)
@@ -16,6 +17,8 @@ function [eventProp_new,varargout] = add_riseDelay_to_eventProp(eventProp,stimRa
 	        errCali = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
         elseif strcmpi('eventType', varargin{ii})
 	        eventType = varargin{ii+1};
+        elseif strcmpi('stimEventCatPairs', varargin{ii})
+	        stimEventCatPairs = varargin{ii+1};
 	    end
 	end	
 
@@ -25,13 +28,24 @@ function [eventProp_new,varargout] = add_riseDelay_to_eventProp(eventProp,stimRa
 
 	for n = 1:event_num
 		eventCat = eventProp_new(n).peak_category;
-		eventTime = eventProp_new(n).(eventType);
+		eventTime = eventProp_new(n).peak_time;
+		% eventTime = eventProp_new(n).(eventType);
 		eventTime_rise = eventProp_new(n).rise_time;
 		eventTime_peak = eventProp_new(n).peak_time;
 		if strcmpi('spon', eventCat) 
 			rise_delay = [];
 			peak_delay = [];
 		else
+			% if input 'stimEventCatPairs' is not empty
+			if ~isempty(stimEventCatPairs)
+				% get the index of eventCat in stimEventCatPairs
+				idx = find(strcmpi(eventCat,{stimEventCatPairs.eventName}));
+
+				% overwrite the input 'stimRange' with the stimRange info from stimEventCatPairs
+				if ~isempty(stimEventCatPairs(idx).stimRanges)
+					stimRange = stimEventCatPairs(idx).stimRanges;
+				end
+			end
 			stimWin= get_stimWin_for_event(eventTime,stimRange);
 			stimStartTime = stimWin(:, 1);
 			stimEndTime = stimWin(:, 2);

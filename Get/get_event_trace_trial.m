@@ -121,6 +121,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 			stimStart = combine_stimRange(:, 1);
 			post_event_time = post_event_time+combine_stimDuration;
 		end
+		[stimEventCatPairs] = setStimEventCatPairs(alignedData.stimInfo.StimDuration); % the pairs of stimulations and their related event category
 	else
 		alignedData.stimInfo = 'NA';
 		combine_stimRange = [];
@@ -218,8 +219,10 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 					combine_stimRange,full_time,roi_trace_data,varargin);
 				[alignedData.traces(n).eventProp,newFieldName,NFNtag] = add_tfTag_to_eventProp(alignedData.traces(n).eventProp,...
 					'peak_category','trig','newFieldName','stimTrig');
+
+
 				[alignedData.traces(n).eventProp] = add_riseDelay_to_eventProp(alignedData.traces(n).eventProp,...
-					combine_stimRange,'eventType',eventTimeType,'errCali',0);
+					combine_stimRange,'eventType',eventTimeType,'errCali',0,'stimEventCatPairs',stimEventCatPairs);
 
 				% Get the possibility of stimulation related events: spike_num/stimulation number
 				% Each category of spikes is calculated separately.

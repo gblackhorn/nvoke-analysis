@@ -62,7 +62,7 @@ adata.eventTimeType = 'peak_time'; % rise_time/peak_time. Pick one for event tim
 adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 adata.event_data_group = 'peak_lowpass';
 adata.event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
-adata.event_align_point = 'rise'; % options: 'rise', 'peak'
+adata.event_align_point = 'peak'; % options: 'rise', 'peak'
 adata.rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes. Exclude these events from 'spon'
 adata.cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
@@ -133,7 +133,7 @@ close all
 save_fig = true; % true/false
 
 event_type = 'peak_time'; % rise_time/peak_time
-norm_FluorData = true; % true/false. whether to normalize the FluroData
+norm_FluorData = false; % true/false. whether to normalize the FluroData
 sortROI = true; % true/false. Sort ROIs according to the event number: high to low
 preTime = 5; % fig3 include time before stimulation starts for plotting
 postTime = []; % fig3 include time after stimulation ends for plotting. []: until the next stimulation starts
@@ -147,9 +147,9 @@ stimEvents(2).eventCat = 'trig';
 stimEvents(2).eventCatFollow = 'spon'; % The category of first event following the eventCat one
 stimEvents(2).stimRefType = 'start'; % The category of first event following the eventCat one
 stimEvents(3).stimName = 'og-5s ap-0.1s';
-stimEvents(3).eventCat = 'rebound';
+stimEvents(3).eventCat = 'trig-ap';
 stimEvents(3).eventCatFollow = 'spon'; % The category of first event following the eventCat one
-stimEvents(3).stimRefType = 'end'; % The category of first event following the eventCat one
+stimEvents(3).stimRefType = 'start'; % The category of first event following the eventCat one
 followDelayType = 'stim'; % stim/stimEvent. Calculate the delay of the following events using the stimulation start or the stim-evoked event time
 eventsTimeSort = 'all'; % 'off'/'inROI','all'. sort traces according to eventsTime
 hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins
@@ -428,14 +428,15 @@ if tplot.save_fig
 end
 
 %% ====================
+% Fig 3 
 % 9.2.2 Check aligned trace of events belong to the same category
 % note: 'event_type' for alignedData_allTrials must be 'detected_events'
 close all
 tplot.save_fig = true; % true/false
 tplot.plot_combined_data = true; % mean value and std of all traces
-tplot.plot_raw_races = false; % true/false. true: plot every single trace
-tplot.shadeType = 'std'; % plot the shade using std/ste
-tplot.y_range = [-1 2]; % [-10 5],[-3 5],[-2 1]
+tplot.plot_raw_races = true; % true/false. true: plot every single trace
+tplot.shadeType = 'ste'; % plot the shade using std/ste
+tplot.y_range = [-2 1]; % [-10 5],[-3 5],[-2 1]
 tplot.eventCat = {'trig','trig-ap'}; % options: 'trig', 'spon', 'rebound'
 tplot.stimDiscard = {'ap-varied','og-0.96s'}; % 'og-5s',
 tplot.sponNorm = false; % true/false
