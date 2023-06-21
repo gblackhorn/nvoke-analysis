@@ -429,15 +429,15 @@ end
 
 %% ====================
 % Fig 3 
-% 9.2.2 Check aligned trace of events belong to the same category
+% 9.2.2.1 Check aligned trace of events belong to the same category
 % note: 'event_type' for alignedData_allTrials must be 'detected_events'
 close all
-tplot.save_fig = true; % true/false
+tplot.save_fig = false; % true/false
 tplot.plot_combined_data = true; % mean value and std of all traces
-tplot.plot_raw_races = true; % true/false. true: plot every single trace
+tplot.plot_raw_races = false; % true/false. true: plot every single trace
 tplot.shadeType = 'ste'; % plot the shade using std/ste
 tplot.y_range = [-2 1]; % [-10 5],[-3 5],[-2 1]
-tplot.eventCat = {'trig','trig-ap'}; % options: 'trig', 'spon', 'rebound'
+tplot.eventCat = {'trig','trig-ap','rebound'}; % options: 'trig', 'spon', 'rebound'
 tplot.stimDiscard = {'ap-varied','og-0.96s'}; % 'og-5s',
 tplot.sponNorm = false; % true/false
 tplot.normalized = true; % true/false. normalize the traces to their own peak amplitudes.
@@ -482,6 +482,35 @@ for cn = 1:numel(tplot.eventCat)
 		end
 		FolderPathVA.fig = savePlot(fHandle_stimAlignedTrace,'guiSave',tplot.guiSave,'save_dir',tplot.save_dir,'fname',tplot.fname);
 	end
+end
+
+%% ====================
+% Fig 3 
+% 9.2.2.2 Replot the averaged traces (same category) using the data in stimAlignedTrace_means
+% This section can combine traces from different group
+close all
+save_fig = true; % true/false
+tplot.y_range = [-1 2]; % [-10 5],[-3 5],[-2 1]
+% {{stimName1,eventCat1},{stimName2,eventCat2}}. Combine the eventCat1 and eventCat2 from different stimNames
+stimNameEventCat = {{'og-5s','trig'},{'og-5s ap-0.1s','trig'}}; 
+[tracesInfo,stimCombine,eventCombine] = combineAlignedTraces(stimAlignedTrace_means,stimNameEventCat);
+tickInt_time = 1;
+
+% Create a figure name
+f_AAT_name = sprintf('%s%s%s-aligned_traces_%s[%s]%s%s',...
+	NormStr,sponNormStr,adata.event_align_point,tracesInfo.stim,eventCombine,meanDataStr,rawDataStr);
+
+% create a figure for the averaged aligned trace
+f_AAT = fig_canvas(3,'unit_width',0.3,'unit_height',0.2,...
+	'column_lim',1,'fig_name',f_AAT_name); % create a figure
+
+[tracesAverage,tracesShade,nNum,titleName] = plotAlignedTracesAverage(gca,tracesInfo.traces,tracesInfo.timeInfo,...
+	'eventsProps',tracesInfo.eventProps,'shadeType',tplot.shadeType,...
+	'plot_combined_data',tplot.plot_combined_data,'plot_raw_races',tplot.plot_raw_races,...
+	'y_range',tplot.y_range,'tickInt_time',tickInt_time,'stimName',tracesInfo.stim,'eventCat',eventCombine);
+
+if save_fig
+	FolderPathVA.fig = savePlot(f_AAT,'guiSave','on','save_dir',FolderPathVA.fig,'fname',f_AAT_name);
 end
 
 

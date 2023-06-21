@@ -14,7 +14,10 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	normalized = false; % true/false. normalize the traces to their own peak amplitudes.
 	tile_row_num = 1;
 	tickInt_time = 1; % interval of tick for timeInfo (x axis)
-	fig_position = [0.1 0.1 0.9 0.6]; % [left bottom width height]
+	% fig_position = [0.1 0.1 0.9 0.6]; % [left bottom width height]
+
+	plotUnitWidth = 0.25; % normalized size of a single plot to the display
+	plotUnitHeight = 0.4; % nomralized size of a single plot to the display
 
 	stimDiscard = {''};
 
@@ -69,13 +72,17 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	if ~exist('fname','var')
 		fname = sprintf('aligned_catTraces_%s',eventCat);
 	end
-	f_trace_win = figure('Name',fname);
-	set(gcf, 'Units', 'normalized', 'Position', fig_position)
+
+	f_trace_win = fig_canvas(3,'unit_width',plotUnitWidth,'unit_height',plotUnitHeight,...
+		'column_lim',3,'fig_name',fname); % create a figure
+
+	% f_trace_win = figure('Name',fname);
+	% set(gcf, 'Units', 'normalized', 'Position', fig_position)
 	
 	tile_col_num = ceil(num_C/tile_row_num);
 	tlo = tiledlayout(f_trace_win, tile_row_num, tile_col_num);
 
-	traceInfo_fields = {'group','timeInfo','mean_val','ste_val',...
+	traceInfo_fields = {'group','stim','timeInfo','mean_val','ste_val',...
 		'recNum','recDateNum','roiNum','tracesNum','eventProps'};
 	traceInfo = empty_content_struct(traceInfo_fields,num_C); 
 
@@ -136,51 +143,28 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 			traceData_cell_trials{nst} = [traceData_cell_rois{:}];
 			eventProp_cell_trials{nst} = [eventProp_cell_rois{:}];
 		end
-		traceData_trials = [traceData_cell_trials{:}];
+		tracesData = [traceData_cell_trials{:}];
 		eventProp_trials = [eventProp_cell_trials{:}];
-		traceData_trials_mean = mean(traceData_trials, 2, 'omitnan');
-		stimRepeatNum = size(traceData_trials,2);
-
-		% Calculate the number of recordings, the number of dates
-		% (animal number), the number of neurons and the number of
-		% traces
-		[traceInfo(n).recNum,traceInfo(n).recDateNum,traceInfo(n).roiNum,traceInfo(n).tracesNum] = calcDataNum(eventProp_trials);
-
-		% traceData_trials_shade = std(traceData_trials, 0, 2, 'omitnan');
-		switch shadeType
-			case 'std'
-				traceData_trials_shade = std(traceData_trials, 0, 2, 'omitnan');
-			case 'ste'
-				traceData_trials_shade = std(traceData_trials, 0, 2, 'omitnan')/sqrt(stimRepeatNum);
-			otherwise
-				error('invalid shadeType. It must be either std or ste')
-		end
 
 		ax = nexttile(tlo);
 
-		if ~isempty(traceData_trials)
-			% Use the shade area to decide the y_range
-			% yUpperLim = max(traceData_trials_mean+traceData_trials_shade);
-			% yLowerLim = min(traceData_trials_mean-traceData_trials_shade);
-			% yDiff = yUpperLim-yLowerLim;
-			% y_range = [yLowerLim-yDiff*yRangeMargin yUpperLim+yDiff*yRangeMargin];
+		[tracesAverage,tracesShade,nNum,titleName] = plotAlignedTracesAverage(gca,tracesData,timeInfo,...
+			'eventsProps',eventProp_trials,'shadeType',shadeType,...
+			'plot_combined_data',plot_combined_data,'plot_raw_races',plot_raw_races,...
+			'y_range',y_range,'tickInt_time',tickInt_time,'stimName',stimName,'eventCat',eventCat);
 
-			plot_trace(timeInfo, traceData_trials, 'plotWhere', ax,...
-				'plot_combined_data', plot_combined_data,...
-				'mean_trace', traceData_trials_mean, 'mean_trace_shade', traceData_trials_shade,...
-		        'plot_raw_races',plot_raw_races,'y_range', y_range,'tickInt_time',tickInt_time); % 'y_range', y_range
-		end
-		titleName = sprintf('%s-%s animal-%g roi-%g traceNum-%g',...
-			stimName,eventCat,traceInfo(n).recDateNum,traceInfo(n).roiNum,traceInfo(n).tracesNum);
-		title(titleName)
 
 		traceInfo(n).group = titleName;
+		traceInfo(n).stim = stimName;
 		traceInfo(n).timeInfo = timeInfo;
-		traceInfo(n).mean_val = traceData_trials_mean;
-		traceInfo(n).ste_val = traceData_trials_shade;
+		traceInfo(n).traces = tracesData;
+		traceInfo(n).mean_val = tracesAverage;
+		traceInfo(n).ste_val = tracesShade;
 		traceInfo(n).eventProps = eventProp_trials;
-
-
+		traceInfo(n).recNum = nNum.recNum;
+		traceInfo(n).recDateNum = nNum.recDateNum;
+		traceInfo(n).roiNum = nNum.roiNum;
+		traceInfo(n).tracesNum = nNum.tracesNum;
 	end
 	varargout{1} = gcf;
 	varargout{2} = traceInfo;
