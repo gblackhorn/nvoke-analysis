@@ -43,6 +43,8 @@ else
 		AnalysisFolder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
 	elseif strcmp(PC_name, 'LAPTOP-84IERS3H')
 		AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
+	elseif strcmp(PC_name,'DESKTOP-DVGTQ1P')
+	    AnalysisFolder = 'C:\Users\nRIM_lab\Documents\ExampleData_nVoke\Analysis'; % Ana
 	end
 end
 
@@ -100,7 +102,7 @@ end
 
 %% ==================== 
 % 2.1.2 Spatial filter and motion correct the movies
-movieKeyword = '-crop'; % no need to add .isxd
+movieKeyword = '-crop'; % no need to add .isxd. Code will search fo '*movieKeyword.isxd' files
 rmBPfile = true; % true/false. Remove the spatial filtered file ('bp_file') after creating the motion-corrected video
 [movieFolder,~,chosenStatus] = getInputOutputFolders('inputFolder',FolderPathVA.project,...
 	'outputFolder',FolderPathVA.project,'inputMSG','Chose a folder containing cropped files');
