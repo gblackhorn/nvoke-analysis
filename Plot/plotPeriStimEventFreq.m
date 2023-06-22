@@ -1,4 +1,4 @@
-function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargin)
+function [varargout] = plotPeriStimEventFreq(alignedData,varargin)
 	% Plot the event frequency in specified time bins to examine the effect of stimulation and
 	% compare each pair of bins
 	% ROIs can be filtered according to the effect of stimulations on them
@@ -24,7 +24,6 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	baseBinEdgeEnd_apCorrection = -1; % use an earlier bin for AP stimulation
 	apCorrection = true;
 	
-	binWidth = 1; % the width of histogram bin. the default value is 1 s.
 	PropName = 'rise_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
 	stimIDX = []; % specify stimulation repeats around which the events will be gathered 
 	% plotHisto = false; % true/false [default].Plot histogram if true.
@@ -141,6 +140,19 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	% end
 	titleStr = sprintf('event freq in %g s bins [%s]%s%s',binWidth,PropName,normToBaseStr,apCorrectionStr);
 	titleStr = strrep(titleStr,'_',' ');
+
+
+
+
+
+
+
+
+
+
+
+
+	
 
 		% Create a figure and start to plot 
 	barStat = empty_content_struct({'stim','method','multiComp','data','binEdges','baseRange','recNum','recDateNum','roiNum','stimRepeatNum'},...

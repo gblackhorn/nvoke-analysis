@@ -213,14 +213,14 @@ debug_mode = false; % true/false
 %% ====================
 % Fig 2 violin plot of specific bins in periStim event frequency
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 gui_save = 'on';
 
 propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
 % binWidth = 1; % the width of histogram bin. the default value is 1 s.
 preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 postStim_duration = 5; % unit: second. include events happened after the end of stimulations
-normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
+normToBase = false; % true/false. normalize the data to baseline (data before baseBinEdge)
 baseStart = -preStim_duration; % where to start to use the bin for calculating the baseline. -1
 baseEnd = -2; % 0
 
@@ -231,13 +231,13 @@ startTime1 = 1; % second
 startTime2 = 0; % second
 binRange = empty_content_struct({'stim','startTime'},stimTypeNum);
 binRange(1).stim = 'og-5s';
-binRange(1).filters = [0 nan nan nan]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+binRange(1).filters = [nan nan nan nan]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 binRange(1).startTime = startTime1; % Use data in [startTime startTime+winDuration] range
 binRange(2).stim = 'ap-0.1s';
 binRange(2).filters = [nan nan nan nan]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 binRange(2).startTime = startTime2; 
 binRange(3).stim = 'og-5s ap-0.1s';
-binRange(3).filters = [0 nan nan 1]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+binRange(3).filters = [nan nan nan nan]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 binRange(3).startTime = startTime1; 
 
 stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events

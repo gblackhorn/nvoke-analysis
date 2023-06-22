@@ -16,6 +16,7 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
     stim_ex = nan;
     stim_in = nan;
     stim_rb = nan;
+    stim_exApOg = nan; % excitatory AP during OG . If is nan, filter won't be applied
 
     binWidth = 1; % the width of histogram bin. the default value is 1 s.
     specialBin = []; % not used if it is empty
@@ -117,7 +118,7 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
 
         % Filter ROIs using their response to the stimulation: excitatory/inhibitory/rebound
         [alignedDataTraces_filtered] = Filter_AlignedDataTraces_withStimEffect(alignedData_filtered(tn).traces,...
-            'ex',stim_ex,'in',stim_in,'rb',stim_rb);
+            'ex',stim_ex,'in',stim_in,'rb',stim_rb,'exApOg',stim_exApOg);
         EventsProps = {alignedDataTraces_filtered.eventProp}; % get the event properties of rois from current trial
         roiNames = {alignedDataTraces_filtered.roi}; % get the roi names from current trial
 
