@@ -29,7 +29,7 @@ function [alignedData_filtered,varargout] = Filter_AlignedDataTraces_withStimEff
 		stim_names = {stim_names}; 
 	end
 
-	% if filters only has a 1*3 numerica array. Put the filters in a cell array
+	% if filters only has a 1*4 numerica array. Put the filters in a cell array
 	if isa(filters,'numeric')
 		filters = {filters};
 	end 

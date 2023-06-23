@@ -261,77 +261,6 @@ debug_mode = false; % true/false
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save',gui_save);
 
 
-
-%% ==================== 
-% Fig 5 or supplementary data
-% 9.1.3 Plot the auto-correlogram of events and the probability density function of inter-event time
-close all
-saveFig = false; % true/false
-% gui_save = false;
-timeType = 'peak_time'; % rise_time/peak_time
-preEventDuration = 3;
-postEventDuration = 5;
-remove_centerEvents = true;
-binWidth = 0.1;
-normData = true;
-ACG_stimEvents(1).stim = 'ap-0.1s'; 
-ACG_stimEvents(1).eventCat = 'trig'; 
-ACG_stimEvents(2).stim = 'og-5s'; 
-ACG_stimEvents(2).eventCat = 'rebound'; 
-ACG_stimEvents(3).stim = 'og-5s ap-0.1s'; 
-ACG_stimEvents(3).eventCat = 'rebound'; 
-ACG_stimEvents(4).stim = 'og-5s ap-0.1s'; 
-ACG_stimEvents(4).eventCat = 'interval-trigger'; 
-
-if saveFig
-	save_dir = uigetdir(FolderPathVA.fig,'Choose a folder to save autoCorrelograms');
-end
-
-% auto-correlogram of events
-binnedACG_cell = cell(numel(ACG_stimEvents),1);
-for n = 1:numel(ACG_stimEvents)
-	[binnedACG_cell{n},FolderPathVA.fig] = plot_autoCorrelogramEvents(alignedData_allTrials,...
-				'timeType',timeType,'stimName',ACG_stimEvents(n).stim,'stimEventCat',ACG_stimEvents(n).eventCat,...
-				'remove_centerEvents',remove_centerEvents,'binWidth',binWidth,'normData',normData,...
-				'preEventDuration',preEventDuration,'postEventDuration',postEventDuration,...
-				'saveFig',saveFig,'save_dir',save_dir,'gui_save',false);
-end
-binnedACG = vertcat(binnedACG_cell{:});
-
-% probability density function of inter-event time
-
-binsOrEdges = [0:binWidth:10];
-plot_eventTimeInt_alignedData_allTrials(alignedData_allTrials,timeType,binsOrEdges,...
-	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
-	'saveFig',saveFig,'save_dir',save_dir,'gui_save',false);
-
-
-%% ==================== 
-% Fig 5?
-% 9.1.4 Get decay curve taus and plot them in histogram
-close all
-filter_roi_tf = true;
-stimName = 'og-5s';
-stimEffect_filter = [nan 1 nan]; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
-rsquare_thresh = 0.7;
-norm_FluorData = false; % true/false. whether to normalize the FluroData
-
-[roi_tauInfo] = get_decayCurveTau(alignedData_allTrials,'rsquare_thresh',rsquare_thresh,...
- 	'filter_roi_tf',filter_roi_tf,'stimName',stimName,'stimEffect_filter',stimEffect_filter);
-histogram([roi_tauInfo.tauMean],20);
-FolderPathVA.fig = savePlot(gcf,'guiSave','on','save_dir',FolderPathVA.fig,'fname','hist_tau_mean');
-
-
-%% ==================== 
-% Filter the ROIs in all trials using stimulation effect
-% the filtered alignedData will be used in the following plotting sections
-stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
-[alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
-	'stim_names',stim_names,'filters',filters);
-title_prefix = 'filtered';
-
-
 %% ====================
 % Fig 2
 % 9.1.5 Plot traces and stim-aligned traces
@@ -374,61 +303,6 @@ for tn = 1:trial_num
 	end
 end
 
-
-%% ====================
-% Note: plot_stimAlignedTraces does not work properly if there are trials
-% applied with varied stim durations
-% 9.2.1.1 Check trace aligned to stim window
-% note: 'event_type' for alignedData_allTrials must be 'stimWin'
-close all
-filter_roi_tf = true; % true/false. If true, screen ROIs
-tplot.plot_combined_data = false; % true/false
-tplot.plot_stim_shade = true; % true/false
-tplot.y_range = [-20 30];
-tplot.stimEffectType = 'rebound'; % options: 'excitation', 'inhibition', 'rebound'
-tplot.section = []; % n/[]. specify the n-th repeat of stimWin. Set it to [] to plot all stimWin 
-tplot.sponNorm = false; % true/false
-tplot.save_fig = false; % true/false
-tplot.save_dir = FolderPathVA.fig;
-
-if filter_roi_tf
-	alignedDataTrials_plot = alignedData_filtered;
-else
-	alignedDataTrials_plot = alignedData_allTrials;
-end
-
-fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedDataTrials_plot,...
-	'plot_combined_data',tplot.plot_combined_data,'plot_stim_shade',tplot.plot_stim_shade,'section',tplot.section,...
-	'y_range',tplot.y_range,'stimEffectType',tplot.stimEffectType,'sponNorm',tplot.sponNorm);
-if tplot.save_fig
-	tplot.fname = sprintf('stimWin_aligned_traces');
-	FolderPathVA.fig = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',tplot.save_dir,'fname',tplot.fname);
-end
-
-%% ====================
-% 9.2.1.2 Check trace aligned to stim window for calcium level change. 
-% On y-axis, traces are aligned the the average of baseline before stimulation
-close all
-tplot.save_fig = false;
-tplot.plot_combined_data = true;
-tplot.plot_stim_shade = true;
-tplot.y_range = [-20 10];
-tplot.tickInt_time = 1;
-tplot.stimEffectType = 'excitation'; % options: 'excitation', 'inhibition', 'rebound'
-tplot.section = []; % n/[]. specify the n-th repeat of stimWin. Set it to [] to plot all stimWin 
-tplot.sponNorm = false; % true/false
-tplot.FN_trace = 'CaLevelTrace'; % field in alignedData.traces where the traces are stored
-tplot.FN_time = 'timeCaLevel'; % default field in alignedData where the timeinfo is stored
-tplot.save_dir = FolderPathVA.fig;
-
-fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedData_allTrials,...
-	'plot_combined_data',tplot.plot_combined_data,'plot_stim_shade',tplot.plot_stim_shade,'section',tplot.section,...
-	'y_range',tplot.y_range,'tickInt_time',tplot.tickInt_time,'stimEffectType',tplot.stimEffectType,'sponNorm',tplot.sponNorm,...
-	'FN_trace',tplot.FN_trace,'FN_time',tplot.FN_time);
-if tplot.save_fig
-	tplot.fname = sprintf('stimWin_aligned_traces');
-	FolderPathVA.fig = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',tplot.save_dir,'fname',tplot.fname);
-end
 
 %% ====================
 % Fig 3 
@@ -515,8 +389,6 @@ f_AAT = fig_canvas(3,'unit_width',0.3,'unit_height',0.2,...
 if save_fig
 	FolderPathVA.fig = savePlot(f_AAT,'guiSave','on','save_dir',FolderPathVA.fig,'fname',f_AAT_name);
 end
-
-
 
 %% ====================
 % 9.5.1.1 Create 'eventProp_all' according to stimulation and category 
@@ -679,6 +551,137 @@ if save_fig
 	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
 end
 
+
+
+%% ==================== 
+% Fig 5 or supplementary data
+% 9.1.3 Plot the auto-correlogram of events and the probability density function of inter-event time
+close all
+saveFig = false; % true/false
+% gui_save = false;
+timeType = 'peak_time'; % rise_time/peak_time
+preEventDuration = 3;
+postEventDuration = 5;
+remove_centerEvents = true;
+binWidth = 0.1;
+normData = true;
+ACG_stimEvents(1).stim = 'ap-0.1s'; 
+ACG_stimEvents(1).eventCat = 'trig'; 
+ACG_stimEvents(2).stim = 'og-5s'; 
+ACG_stimEvents(2).eventCat = 'rebound'; 
+ACG_stimEvents(3).stim = 'og-5s ap-0.1s'; 
+ACG_stimEvents(3).eventCat = 'rebound'; 
+ACG_stimEvents(4).stim = 'og-5s ap-0.1s'; 
+ACG_stimEvents(4).eventCat = 'interval-trigger'; 
+
+if saveFig
+	save_dir = uigetdir(FolderPathVA.fig,'Choose a folder to save autoCorrelograms');
+end
+
+% auto-correlogram of events
+binnedACG_cell = cell(numel(ACG_stimEvents),1);
+for n = 1:numel(ACG_stimEvents)
+	[binnedACG_cell{n},FolderPathVA.fig] = plot_autoCorrelogramEvents(alignedData_allTrials,...
+				'timeType',timeType,'stimName',ACG_stimEvents(n).stim,'stimEventCat',ACG_stimEvents(n).eventCat,...
+				'remove_centerEvents',remove_centerEvents,'binWidth',binWidth,'normData',normData,...
+				'preEventDuration',preEventDuration,'postEventDuration',postEventDuration,...
+				'saveFig',saveFig,'save_dir',save_dir,'gui_save',false);
+end
+binnedACG = vertcat(binnedACG_cell{:});
+
+% probability density function of inter-event time
+
+binsOrEdges = [0:binWidth:10];
+plot_eventTimeInt_alignedData_allTrials(alignedData_allTrials,timeType,binsOrEdges,...
+	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
+	'saveFig',saveFig,'save_dir',save_dir,'gui_save',false);
+
+
+%% ==================== 
+% Fig 5?
+% 9.1.4 Get decay curve taus and plot them in histogram
+close all
+filter_roi_tf = true;
+stimName = 'og-5s';
+stimEffect_filter = [nan 1 nan]; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+rsquare_thresh = 0.7;
+norm_FluorData = false; % true/false. whether to normalize the FluroData
+
+[roi_tauInfo] = get_decayCurveTau(alignedData_allTrials,'rsquare_thresh',rsquare_thresh,...
+ 	'filter_roi_tf',filter_roi_tf,'stimName',stimName,'stimEffect_filter',stimEffect_filter);
+histogram([roi_tauInfo.tauMean],20);
+FolderPathVA.fig = savePlot(gcf,'guiSave','on','save_dir',FolderPathVA.fig,'fname','hist_tau_mean');
+
+
+%% ==================== 
+% Filter the ROIs in all trials using stimulation effect
+% the filtered alignedData will be used in the following plotting sections
+stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
+filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+[alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
+	'stim_names',stim_names,'filters',filters);
+title_prefix = 'filtered';
+
+
+
+
+%% ====================
+% Note: plot_stimAlignedTraces does not work properly if there are trials
+% applied with varied stim durations
+% 9.2.1.1 Check trace aligned to stim window
+% note: 'event_type' for alignedData_allTrials must be 'stimWin'
+close all
+filter_roi_tf = true; % true/false. If true, screen ROIs
+tplot.plot_combined_data = false; % true/false
+tplot.plot_stim_shade = true; % true/false
+tplot.y_range = [-20 30];
+tplot.stimEffectType = 'rebound'; % options: 'excitation', 'inhibition', 'rebound'
+tplot.section = []; % n/[]. specify the n-th repeat of stimWin. Set it to [] to plot all stimWin 
+tplot.sponNorm = false; % true/false
+tplot.save_fig = false; % true/false
+tplot.save_dir = FolderPathVA.fig;
+
+if filter_roi_tf
+	alignedDataTrials_plot = alignedData_filtered;
+else
+	alignedDataTrials_plot = alignedData_allTrials;
+end
+
+fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedDataTrials_plot,...
+	'plot_combined_data',tplot.plot_combined_data,'plot_stim_shade',tplot.plot_stim_shade,'section',tplot.section,...
+	'y_range',tplot.y_range,'stimEffectType',tplot.stimEffectType,'sponNorm',tplot.sponNorm);
+if tplot.save_fig
+	tplot.fname = sprintf('stimWin_aligned_traces');
+	FolderPathVA.fig = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',tplot.save_dir,'fname',tplot.fname);
+end
+
+%% ====================
+% 9.2.1.2 Check trace aligned to stim window for calcium level change. 
+% On y-axis, traces are aligned the the average of baseline before stimulation
+close all
+tplot.save_fig = false;
+tplot.plot_combined_data = true;
+tplot.plot_stim_shade = true;
+tplot.y_range = [-20 10];
+tplot.tickInt_time = 1;
+tplot.stimEffectType = 'excitation'; % options: 'excitation', 'inhibition', 'rebound'
+tplot.section = []; % n/[]. specify the n-th repeat of stimWin. Set it to [] to plot all stimWin 
+tplot.sponNorm = false; % true/false
+tplot.FN_trace = 'CaLevelTrace'; % field in alignedData.traces where the traces are stored
+tplot.FN_time = 'timeCaLevel'; % default field in alignedData where the timeinfo is stored
+tplot.save_dir = FolderPathVA.fig;
+
+fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedData_allTrials,...
+	'plot_combined_data',tplot.plot_combined_data,'plot_stim_shade',tplot.plot_stim_shade,'section',tplot.section,...
+	'y_range',tplot.y_range,'tickInt_time',tplot.tickInt_time,'stimEffectType',tplot.stimEffectType,'sponNorm',tplot.sponNorm,...
+	'FN_trace',tplot.FN_trace,'FN_time',tplot.FN_time);
+if tplot.save_fig
+	tplot.fname = sprintf('stimWin_aligned_traces');
+	FolderPathVA.fig = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',tplot.save_dir,'fname',tplot.fname);
+end
+
+
+
 %% ====================
 % Fig 3. Compare off-stim(rebound) events and their following spon events
 eventCat = 'rebound';
@@ -726,7 +729,7 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 
 % PLot
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 plot_combined_data = false;
 parNames = {'rise_duration','FWHM','peak_mag_delta','sponNorm_peak_mag_delta'}; % entry: event
 save_dir = FolderPathVA.fig;
