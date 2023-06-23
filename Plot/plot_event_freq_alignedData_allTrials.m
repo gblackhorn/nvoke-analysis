@@ -34,6 +34,9 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	postStim_duration = 5; % unit: second. include events happened after the end of stimulations
 	round_digit_sig = 2; % round to the Nth significant digit for duration
 
+	customizeEdges = false; % customize the bins using function 'setPeriStimSectionForEventFreqCalc'
+	stimEffectDuration = 1; % unit: second. Use this to set the end for the stimulation effect range
+
 	stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
 	stimEvents(1).stimName = 'og-5s';
 	stimEvents(1).eventCat = 'rebound';
@@ -78,6 +81,12 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
             preStim_duration = varargin{ii+1};
 	    elseif strcmpi('postStim_duration', varargin{ii})
             postStim_duration = varargin{ii+1};
+        elseif strcmpi('customizeEdges', varargin{ii}) 
+            customizeEdges = varargin{ii+1}; 
+        elseif strcmpi('PeriBaseRange', varargin{ii}) 
+            PeriBaseRange = varargin{ii+1}; 
+        elseif strcmpi('stimEffectDuration', varargin{ii}) 
+            stimEffectDuration = varargin{ii+1}; 
 	    elseif strcmpi('stimEventsPos', varargin{ii})
             stimEventsPos = varargin{ii+1};
 	    elseif strcmpi('stimEvents', varargin{ii})
@@ -152,9 +161,11 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		'fig_name',titleStr); % create a figure
 	tloStat = tiledlayout(fstat,fstat_rowNum,fstat_colNum);
 	for stn = 1:stim_type_num
+		PeriBaseRange = [baseBinEdgestart baseBinEdgeEnd];
 		[EventFreqInBins,binEdges,stimShadeData,stimShadeName,stimEventCatName] = get_EventFreqInBins_trials(alignedData,stim_names{stn},'PropName',PropName,...
 			'binWidth',binWidth,'stimIDX',stimIDX,...
 			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
+			'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'PeriBaseRange',PeriBaseRange,...
 			'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 			'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
 

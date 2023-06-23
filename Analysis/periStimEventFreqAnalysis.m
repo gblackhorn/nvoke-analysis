@@ -18,6 +18,9 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 	postStim_duration = 10; % unit: second. include events happened after the end of stimulations
 
+	customizeEdges = false; % customize the bins using function 'setPeriStimSectionForEventFreqCalc'
+	stimEffectDuration = 1; % unit: second. Use this to set the end for the stimulation effect range
+
 	stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
 	stimEvents(1).stimName = 'og-5s';
 	stimEvents(1).eventCat = 'rebound';
@@ -55,6 +58,12 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	        preStim_duration = varargin{ii+1};
         elseif strcmpi('postStim_duration', varargin{ii})
 	        postStim_duration = varargin{ii+1};
+        elseif strcmpi('customizeEdges', varargin{ii}) 
+            customizeEdges = varargin{ii+1}; 
+        elseif strcmpi('PeriBaseRange', varargin{ii}) 
+            PeriBaseRange = varargin{ii+1}; 
+        elseif strcmpi('stimEffectDuration', varargin{ii}) 
+            stimEffectDuration = varargin{ii+1}; 
         elseif strcmpi('stimEventsPos', varargin{ii})
 	        stimEventsPos = varargin{ii+1};
         elseif strcmpi('stimEvents', varargin{ii})
@@ -92,6 +101,7 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	    'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,'stimIDX',stimIDX,...
 	    'normToBase',normToBase,'apCorrection',apCorrection,...
 	    'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
+	    'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,...
 	    'xlabelStr',xlabelStr,'ylabelStr',ylabelStr,...
         'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 		'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'binWidth',binWidth,...

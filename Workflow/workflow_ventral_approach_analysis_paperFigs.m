@@ -133,7 +133,7 @@ close all
 save_fig = true; % true/false
 
 event_type = 'peak_time'; % rise_time/peak_time
-norm_FluorData = false; % true/false. whether to normalize the FluroData
+norm_FluorData = true; % true/false. whether to normalize the FluroData
 sortROI = true; % true/false. Sort ROIs according to the event number: high to low
 preTime = 5; % fig3 include time before stimulation starts for plotting
 postTime = []; % fig3 include time after stimulation ends for plotting. []: until the next stimulation starts
@@ -170,12 +170,12 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_filter
 %9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 gui_save = 'on';
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 diffPair = {[1 3], [2 3]}; % binned freq will be compared between stimualtion groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
 
 propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
@@ -183,6 +183,8 @@ binWidth = 1; % the width of histogram bin. the default value is 1 s.
 stimIDX = []; % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
 preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 postStim_duration = 15; % unit: second. include events happened after the end of stimulations
+customizeEdges = true; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
+stimEffectDuration = 1; % unit: second. Use this to set the end for the stimulation effect range
 
 stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
 stimEvents(1).stimName = 'og-5s';
@@ -206,6 +208,7 @@ debug_mode = false; % true/false
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'diffPair',diffPair,...
 	'binWidth',binWidth,'stimIDX',stimIDX,'normToBase',normToBase,...
 	'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
+	'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,...
 	'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 	'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on','debug_mode',debug_mode);
@@ -625,9 +628,14 @@ savePlot(gcf,'guiSave','off','save_dir',FolderPathVA.fig,'fname','CaLevel violin
 % {'trig [EXog]','EXog','trig-AP',}
 tags_discard = {'rebound [ap','ap-0.25s','ap-0.5s','og-0.96s','opto-delay','rebound [og&ap-5s]'}; % Discard groups containing these words. 'spon','opto-delay','og&ap'
 tags_keep = {'trig','trig-ap'}; % Keep groups containing these words. {'trig [og','rebound','opto-delay [og-5s]',,'spon'}
+tagsForMerge = {'trig [og&ap-5s]','trig [og-5s]'};
+NewGroupName = 'opto-evoked all';
+NewtagName = 'opto-evoked [opto-5s opto-5s_air-0.1s]';
 clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
 [grouped_event_info_filtered] = filter_entries_in_structure(grouped_event,'group',...
 	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);
+[grouped_event_info_filtered] = mergeGroupedEventEntry(grouped_event_info_filtered,tagsForMerge,...
+	'NewGroupName',NewGroupName,'NewtagName',NewtagName);
 
 %% ====================
 % Fig 3
@@ -636,8 +644,8 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 close all
 save_fig = true; % true/false
 plot_combined_data = false;
-parNames = {'rise_duration','FWHM','peak_mag_delta','sponNorm_peak_mag_delta',...
-    'rise_delay','peak_delay'}; % entry: event
+parNames = {'rise_duration','FWHM','peak_mag_delta','peak_delay'}; % entry: event
+		% 'sponNorm_peak_mag_delta','rise_delay',
         % 'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
         % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
     
@@ -650,6 +658,10 @@ parNames = {'rise_duration','FWHM','peak_mag_delta','sponNorm_peak_mag_delta',..
 save_dir = FolderPathVA.fig;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
+
+% Modify the group name for labeling the plots
+[newStimNameEventCatCell] = modStimNameEventCat({grouped_event_info_filtered.group});
+[grouped_event_info_filtered.group] = newStimNameEventCatCell{:};
 
 % grouped_event = grouped_event_bk;
 [save_dir, plot_info] = plot_event_info(grouped_event_info_filtered,...
