@@ -552,6 +552,35 @@ if save_fig
 end
 
 
+%% ==================== 
+% New fig 2023-06-26 
+% Violin plot showing the difference of
+% stim-related-event_to_following_event_time and the spontaneous_event_interval
+close all
+save_fig = false; % true/false
+stimNameAll = {'og-5s','ap-0.1s'}; % 'og-5s' 'ap-0.1s'
+stimEventCatAll = {'rebound','trig'}; % 'rebound', 'trig'
+maxDiff = 3; % the max difference between the stim-related and the following events
+
+% loop through different stim-event pairs
+
+for n = 1:numel(stimNameAll) 
+	stimName = stimNameAll{n};
+	stimEventCat = stimEventCatAll{n};
+	[intData,eventIntMean,eventInt,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
+	'maxDiff',maxDiff);
+
+	if save_fig
+		if n == 1 
+			guiSave = 'on';
+		else
+			guiSave = 'off';
+		end
+		FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',guiSave,'fname',fname);
+		save(fullfile(FolderPathVA.fig, [fname,' data']),'intData','eventIntMean','eventInt');
+	end
+end
+
 
 %% ==================== 
 % Fig 5 or supplementary data

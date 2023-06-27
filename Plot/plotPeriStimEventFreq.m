@@ -140,18 +140,6 @@ function [varargout] = plotPeriStimEventFreq(alignedData,varargin)
 	% end
 	titleStr = sprintf('event freq in %g s bins [%s]%s%s',binWidth,PropName,normToBaseStr,apCorrectionStr);
 	titleStr = strrep(titleStr,'_',' ');
-
-
-
-
-
-
-
-
-
-
-
-
 	
 
 		% Create a figure and start to plot 
