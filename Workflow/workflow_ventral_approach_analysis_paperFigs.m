@@ -498,8 +498,8 @@ savePlot(gcf,'guiSave','off','save_dir',FolderPathVA.fig,'fname','CaLevel violin
 % 9.5.1.2 screen groups based on tags. Delete unwanted groups for event analysis
 
 % {'trig [EXog]','EXog','trig-AP',}
-tags_discard = {'rebound [ap','ap-0.25s','ap-0.5s','og-0.96s','opto-delay','rebound [og&ap-5s]'}; % Discard groups containing these words. 'spon','opto-delay','og&ap'
-tags_keep = {'trig','trig-ap'}; % Keep groups containing these words. {'trig [og','rebound','opto-delay [og-5s]',,'spon'}
+tags_discard = {'rebound [ap','ap-0.25s','ap-0.5s','og-0.96s','opto-delay'}; % Discard groups containing these words. 'spon','opto-delay','og&ap','rebound [og&ap-5s]'
+tags_keep = {'trig','trig-ap','rebound [og-5s]','rebound [og&ap-5s]'}; % Keep groups containing these words. {'trig [og','rebound','opto-delay [og-5s]',,'spon'}
 tagsForMerge = {'trig [og&ap-5s]','trig [og-5s]'};
 NewGroupName = 'opto-evoked all';
 NewtagName = 'opto-evoked [opto-5s opto-5s_air-0.1s]';
