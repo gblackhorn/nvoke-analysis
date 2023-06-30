@@ -5,6 +5,8 @@ function [tracesAverage,tracesShade,varargout] = plotAlignedTracesAverage(plotWh
     eventsProps = [];
     plot_combined_data = true; % mean value and std of all traces
     plot_raw_races = false; % true/false. true: plot every single trace
+    plot_median = false;
+    medianProp = 'FWHM';
     shadeType = 'ste'; % std/ste
     y_range = [];
     tickInt_time = 1; % interval of tick for timeInfo (x axis)
@@ -25,6 +27,10 @@ function [tracesAverage,tracesShade,varargout] = plotAlignedTracesAverage(plotWh
     		plot_combined_data = varargin{ii+1};
         elseif strcmpi('plot_raw_races', varargin{ii})
             plot_raw_races = varargin{ii+1};
+        elseif strcmpi('plot_median', varargin{ii})
+            plot_median = varargin{ii+1};
+        elseif strcmpi('medianProp', varargin{ii})
+            medianProp = varargin{ii+1};
         elseif strcmpi('y_range', varargin{ii})
             y_range = varargin{ii+1};
         elseif strcmpi('tickInt_time', varargin{ii})
@@ -44,6 +50,21 @@ function [tracesAverage,tracesShade,varargout] = plotAlignedTracesAverage(plotWh
     % traces
     if ~isempty(eventsProps)
         [nNum.recNum,nNum.recDateNum,nNum.roiNum,nNum.tracesNum] = calcDataNum(eventsProps);
+
+        % find the idx of median trace using 'medianProp' if plot_median is true
+        if plot_median
+            eventFieldNames = fieldnames(eventsProps);
+            if ~isempty(find(strcmpi(eventFieldNames,medianProp)))
+                propVal = [eventsProps.(medianProp)];
+                medianVal = median(propVal,2,'omitnan');
+                medianDiff = abs(propVal - medianVal);
+                [~, medianValIDX] = min(medianDiff);
+                % medianValIDX = find(propVal==medianVal);
+                medianTrace = tracesData(:,medianValIDX);
+            else
+                plot_median = false;
+            end
+        end
     else
         nNum.recNum = NaN;
         nNum.recDateNum = NaN;
@@ -75,6 +96,11 @@ function [tracesAverage,tracesShade,varargout] = plotAlignedTracesAverage(plotWh
             'plot_combined_data', plot_combined_data,...
             'mean_trace', tracesAverage, 'mean_trace_shade', tracesShade,...
             'plot_raw_races',plot_raw_races,'y_range', y_range,'tickInt_time',tickInt_time); % 'y_range', y_range
+
+        if plot_median
+            plot_trace(timeInfo,medianTrace,'plotWhere',plotWhere,...
+                'plot_combined_data',false,'plot_raw_races',true,'tickInt_time',tickInt_time);
+        end
     end
     titleName = sprintf('%s [%s] %g-animal %g-roi %g-trace',...
         stimName,eventCat,nNum.recDateNum,nNum.roiNum,nNum.tracesNum);

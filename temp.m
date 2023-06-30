@@ -1152,3 +1152,29 @@ x = periStimSections(sn,:)
 
 
 [intData] = stimEventSponEventIntAnalysis(alignedData,'ap-0.1s','trig')
+
+
+%% ====================
+figure
+plot(timeInfo,traceData);
+
+hold on
+
+preCloseHMTime = timeInfo(HMstartLoc);
+preCloseHMData = traceData(HMstartLoc);
+
+postCloseHMTime = timeInfo(HMendLoc);
+postCloseHMData = traceData(HMendLoc);
+
+nanIDX = find(isnan(HMendLoc));
+halfMax(nanIDX) = [];
+preCloseHMTime(nanIDX) = [];
+preCloseHMData(nanIDX) = [];
+postCloseHMTime(nanIDX) = [];
+postCloseHMData(nanIDX) = [];
+
+plot(preCloseHMTime,preCloseHMData,'ko');
+plot(postCloseHMTime,postCloseHMData,'k*');
+
+plot(timeAtHM(:,1),halfMax,'ro');
+plot(timeAtHM(:,2),halfMax,'r*');

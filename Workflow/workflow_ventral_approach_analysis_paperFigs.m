@@ -62,7 +62,7 @@ adata.eventTimeType = 'peak_time'; % rise_time/peak_time. Pick one for event tim
 adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 adata.event_data_group = 'peak_lowpass';
 adata.event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
-adata.event_align_point = 'peak'; % options: 'rise', 'peak'
+adata.event_align_point = 'rise'; % options: 'rise', 'peak'
 adata.rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes. Exclude these events from 'spon'
 adata.cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
@@ -309,11 +309,13 @@ end
 % 9.2.2.1 Check aligned trace of events belong to the same category
 % note: 'event_type' for alignedData_allTrials must be 'detected_events'
 close all
-tplot.save_fig = false; % true/false
+tplot.save_fig = true; % true/false
 tplot.plot_combined_data = true; % mean value and std of all traces
 tplot.plot_raw_races = false; % true/false. true: plot every single trace
+tplot.plot_median = true; % true/false. plot raw traces having a median value of the properties specified by 'tplot.medianProp'
+tplot.medianProp = 'FWHM'; % 
 tplot.shadeType = 'ste'; % plot the shade using std/ste
-tplot.y_range = [-2 1]; % [-10 5],[-3 5],[-2 1]
+tplot.y_range = [-1 2]; % [-10 5],[-3 5],[-2 1]
 tplot.eventCat = {'trig','trig-ap','rebound'}; % options: 'trig', 'spon', 'rebound'
 tplot.stimDiscard = {'ap-varied','og-0.96s'}; % 'og-5s',
 tplot.sponNorm = false; % true/false
@@ -348,6 +350,7 @@ for cn = 1:numel(tplot.eventCat)
 		NormStr,sponNormStr,adata.event_align_point,tplot.eventCat{cn},meanDataStr,rawDataStr);
 	[fHandle_stimAlignedTrace,stimAlignedTrace_means(cn).trace] = plot_aligned_catTraces(alignedData_allTrials,...
 		'plot_combined_data',tplot.plot_combined_data,'plot_raw_races',tplot.plot_raw_races,...
+		'plot_median',tplot.plot_median,'medianProp',tplot.medianProp,...
 		'eventCat',tplot.eventCat{cn},'stimDiscard',tplot.stimDiscard,'shadeType',tplot.shadeType,...
 		'y_range',tplot.y_range,'sponNorm',tplot.sponNorm,'normalized',tplot.normalized,'fname',tplot.fname); % 'fname',fname,
 	if tplot.save_fig
@@ -366,7 +369,7 @@ end
 % 9.2.2.2 Replot the averaged traces (same category) using the data in stimAlignedTrace_means
 % This section can combine traces from different group
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 tplot.y_range = [-1 2]; % [-10 5],[-3 5],[-2 1]
 % {{stimName1,eventCat1},{stimName2,eventCat2}}. Combine the eventCat1 and eventCat2 from different stimNames
 stimNameEventCat = {{'og-5s','trig'},{'og-5s ap-0.1s','trig'}}; 
