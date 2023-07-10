@@ -29,7 +29,7 @@ function [varargout] = crop_nVokeRec(recFolder,outputFolder,cropRectangle,vararg
         return
     else
 
-        input_fileInfo = dir(fullfile(recFolder,['*',keyword,'*.isxd']));
+        input_fileInfo = dir(fullfile(recFolder,keyword));
         movie_num = numel(input_fileInfo);
         cropped_num = 0;
 

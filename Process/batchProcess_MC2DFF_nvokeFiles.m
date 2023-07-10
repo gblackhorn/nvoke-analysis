@@ -24,7 +24,7 @@ function [] = batchProcess_MC2DFF_nvokeFiles(FolderPath,varargin)
 
 
 	% look for files using a keyword and prepare a list 
-	MC_fileInfo = dir(fullfile(FolderPath,['*',keyword]));
+	MC_fileInfo = dir(fullfile(FolderPath,keyword));
 	fileNum = numel(MC_fileInfo);
 
 
