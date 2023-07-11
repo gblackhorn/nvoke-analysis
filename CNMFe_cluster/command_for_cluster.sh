@@ -5,7 +5,7 @@
 ssh -X da-guo@deigo.oist.jp
 
 # Go to the personal folder
-cd /flash/UusisaariU/GD/
+cd /flash/UusisaariU/Ana/
 
 # Quickly read the cluster task report (slurm-xxxxxxxx.out) and bash files containing commands and tasks (.sh)
 less slurm-xxxxxxxx.out
@@ -15,10 +15,10 @@ bucketCodeDir='/bucket/UusisaariU/PERSONAL_FILES/Guoda/codes/nvoke-analysis/CNMF
 flashCodeDir='/flash/UusisaariU/GD/code/' 
 flashHomeDir='/flash/UusisaariU/GD/'
 
-    # sync code from bucket to flash
+# sync code from bucket to flash
 rsync -av --include '*/' --include '*.m' --exclude '*' deigo:$bucketCodeDir/ $flashCodeDir/
 rsync -av --include '*/' --include '*.sh' --exclude '*' deigo:$bucketCodeDir/ $flashHomeDir/
-    # sync code from flash to bucket 
+# sync code from flash to bucket 
 rsync -av --include '*/' --include '*.m' --exclude '*' $flashCodeDir/ deigo:$bucketCodeDir/ 
 rsync -av --include '*/' --include '*.sh' --exclude '*' $flashHomeDir/ deigo:$bucketCodeDir/ 
 

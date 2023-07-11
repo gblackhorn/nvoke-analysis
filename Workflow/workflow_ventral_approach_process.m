@@ -27,6 +27,7 @@
 
 %% ====================
 % 1. Locate the folders to find and save data 
+
 clearvars -except recdata_organized alignedData_allTrials seriesData_sync
 
 GUI_chooseFolder = false; % true/false. Use GUI to locate the DataFolder and AnalysisFolder
@@ -43,6 +44,8 @@ else
 		AnalysisFolder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
 	elseif strcmp(PC_name, 'LAPTOP-84IERS3H')
 		AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
+    elseif strcmp(PC_name,'DESKTOP-DVGTQ1P')
+        AnalysisFolder = 'C:\Users\nRIM_lab\Documents\ExampleData_nVoke\Analysis'; % Ana
 	end
 end
 
@@ -54,6 +57,7 @@ end
 % 	Export gpio (stimulation) and recording time stamp information in csv format with IDPS
 
 % This step can be only done on local desktop installed IDPS
+
 
 % Process all raw recording files in the same folder.
 % This is designed for the output of nVoke2
@@ -81,7 +85,7 @@ end
 % Top = 176;
 % Width = 424;
 % Height = 444;
-movieKeyword = '2021-04-09-13-03-56'; % no need to add .isxd
+movieKeyword = '2023-06-28'; % no need to add .isxd
 Left = 376;
 Top = 114;
 Width = 708;
@@ -100,7 +104,7 @@ end
 
 %% ==================== 
 % 2.1.2 Spatial filter and motion correct the movies
-movieKeyword = '-crop'; % no need to add .isxd
+movieKeyword = '2023-06-28*-PP'; % no need to add .isxd. Code will search for '*movieKeyword.isxd' files
 rmBPfile = true; % true/false. Remove the spatial filtered file ('bp_file') after creating the motion-corrected video
 [movieFolder,~,chosenStatus] = getInputOutputFolders('inputFolder',FolderPathVA.project,...
 	'outputFolder',FolderPathVA.project,'inputMSG','Chose a folder containing cropped files');
@@ -125,7 +129,7 @@ end
 
 %% ==================== 
 % 3.1 Export nvoke movies to tiff files
-keywords = '-crop-BP-MC.isxd'; % used to filter 
+keywords = '-BP-MC.isxd'; % used to filter 
 overwrite = false;
 
 input_isxd_folder = uigetdir(FolderPathVA.project,...
@@ -318,11 +322,11 @@ loc_opt.hemi = {'left', 'right'}; % hemisphere: IO with chrimsonR (pos) or witho
 loc_opt.hemi_ext = {'chR-pos', 'chR-neg'}; % hemisphere: IO with chrimsonR (pos) or without (neg)
 loc_opt.ml = {'medial', 'lateral'}; % medial lateral
 loc_opt.ap = {'anterior', 'intermediate', 'posterior'}; % anterior poterior. intermediate is not well defined in the experiment
-modify_info = 'no'; % yes, no or ask. modify the FOV location information if it exists
+modify_info = 'yes'; % yes, no or ask. modify the FOV location information if it exists
 
 fov_info_col = 2;
 
-% recordings = recdata_group.all;
+% recordings = recdata_group.all;3
 recordings = recdata_organized;
 rec_num = size(recordings, 1);
 

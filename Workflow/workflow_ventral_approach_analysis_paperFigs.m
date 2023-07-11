@@ -19,6 +19,8 @@ if strcmp(PC_name, 'GD-AW-OFFICE')
 	AnalysisFolder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
 elseif strcmp(PC_name, 'LAPTOP-84IERS3H')
 	AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
+elseif strcmp(PC_name,'DESKTOP-DVGTQ1P')
+    AnalysisFolder = 'C:\Users\nRIM_lab\Documents\ExampleData_nVoke\Analysis'; % Ana
 end
 
 [FolderPathVA] = set_folder_path_ventral_approach(DataFolder,AnalysisFolder);
@@ -117,7 +119,7 @@ end
 
 %% ====================
 % Common settings for 9.1.1 - 9.1.2
-filter_roi_tf = true; % true/false. If true, screen ROIs
+filter_roi_tf = false; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
 filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 [alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
@@ -130,7 +132,7 @@ filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan nan]}; % [ex in rb exApO
 % Note: ROIs of all trials in alignedData_allTrials can be plotted. 
 %	Use 'filter' to screen ROIs based on the effect of stimulation
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 
 event_type = 'peak_time'; % rise_time/peak_time
 norm_FluorData = false; % true/false. whether to normalize the FluroData
@@ -156,7 +158,7 @@ hist_binsize = 5; % the size of the histogram bin, used to calculate the edges o
 xtickInt_scale = 5; % xtickInt = hist_binsize * xtickInt_scale. Use by figure 2
 debug_mode = false; % true/false. 
 
-FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_filtered,...
+FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTrials,...
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
 	'norm_FluorData',norm_FluorData,'sortROI',sortROI,...
 	'preTime',preTime,'postTime',postTime,'followDelayType',followDelayType,...
