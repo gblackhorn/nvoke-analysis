@@ -143,7 +143,8 @@ function [sortedIDX,sortedFdSection,sortedEventMarker,sortedRowNames,timeDuratio
 				% get a section of traceData using the new time ranges
 				sTrace = traceData((timeRangesIDX(sn,1):timeRangesIDX(sn,2)),rn); % Get a section trace from one ROI from traceData
 				sTraceRow = reshape(sTrace,[1,numel(sTrace)]); % ensure that sTraceRow is a row vector
-				fdSection(rowIDX,:) = sTraceRow;
+				traceDataNum = numel(sTraceRow);
+				fdSection(rowIDX,1:traceDataNum) = sTraceRow;
 
 
 				% calculate the delay of events' time to stimRef

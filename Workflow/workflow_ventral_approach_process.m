@@ -47,6 +47,8 @@ else
 		AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
 	elseif strcmp(PC_name,'DESKTOP-DVGTQ1P')
 	    AnalysisFolder = 'C:\Users\nRIM_lab\Documents\ExampleData_nVoke\Analysis'; % Ana
+	else
+		error('set var GUI_chooseFolder to true to select default folders using GUI')
 	end
 end
 
@@ -300,7 +302,7 @@ uisave('recdata_organized', fullfile(FolderPathVA.ventralApproach, 'recdata_orga
 
 
 %% ====================
-% 7.1 Add FOV location information in second column of recdata
+% 6.3 Add FOV location information in second column of recdata
 % chrimsonR-pos vs neg, lateral vs medial, posterior vs anterior vs intermediate
 loc_opt.hemi = {'left', 'right'}; % hemisphere: IO with chrimsonR (pos) or without (neg)
 loc_opt.hemi_ext = {'chR-pos', 'chR-neg'}; % hemisphere: IO with chrimsonR (pos) or without (neg)
@@ -336,7 +338,7 @@ recdata_organized = recordings;
 
 
 %% ====================
-% 7.2 Generate mouseID and fovID base on recording date from trial names and FOV_loc in recording data 
+% 6.4 Generate mouseID and fovID base on recording date from trial names and FOV_loc in recording data 
 % 
 % Add FOV category code to FOV_loc
 % [recdata_organized] = add_fov_category(recdata_organized,...
@@ -351,7 +353,7 @@ overwrite = true; %options: true/false
 % Assign the new 'recdata_organized' to 'recdata_target': The data receiving FOV info
 % Load old 'recdata_organized' from a saved file
 
-% 7.3 Copy the FOV_loc struct-field from a sourceData, if exists, to a newly formed recdata_organized
+% 6.5 Copy the FOV_loc struct-field from a sourceData, if exists, to a newly formed recdata_organized
 % recdata_target = recdata_organized; % The data receiving FOV info
 recdata_source = recdata_organized; % The data giving FOV info
 
@@ -392,7 +394,7 @@ clear recdata_target recdata_source recdata_target_with_fov
 
 
 %% ====================
-% 8. sort the recordings using date and time
+% 6.6 sort the recordings using date and time
 recdata_organized_bk = recdata_organized;
 recNames = recdata_organized(:,1);
 
@@ -407,7 +409,7 @@ recdata_organized = recdata_organized(sortedIndices,:);
 
 
 %% ====================
-% 9. Save the modified 'recdata_organized'
+% 6.7 Save the modified 'recdata_organized'
 % This will 
 uisave('recdata_organized', fullfile(FolderPathVA.ventralApproach, 'recdata_organized'));
 

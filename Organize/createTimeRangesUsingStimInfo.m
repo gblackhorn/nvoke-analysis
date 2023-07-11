@@ -23,6 +23,9 @@ function [timeRanges,timeRangesIDX,stimRanges,stimRangesIDX,varargout] = createT
     % Get necessary information from stimInfo 
     stimRanges = stimInfo.UnifiedStimDuration.range;
 
+    % Get data point number from the timeData
+    maxDatapointNum = numel(timeData);
+
 
     % add the pre-time to the time ranges
     stimPlusRanges = NaN(size(stimRanges));
@@ -67,6 +70,11 @@ function [timeRanges,timeRangesIDX,stimRanges,stimRangesIDX,varargout] = createT
         for sn = 2:stimNum
             timeRangesIDX(sn,1) = stimPlusRangesIDX(sn,1);
             timeRangesIDX(sn,2) = stimPlusRangesIDX(sn,1)+datapointNum-1;
+
+            % use the maxDatapointNum as the range end if there is not enough data point
+            if timeRangesIDX(sn,2) > maxDatapointNum
+                timeRangesIDX(sn,2) = maxDatapointNum;
+            end
             timeRanges(sn,2) = timeData(timeRangesIDX(sn,2));
         end
     end
