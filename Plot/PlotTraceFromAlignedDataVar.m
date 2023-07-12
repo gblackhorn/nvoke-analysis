@@ -107,9 +107,15 @@ function [varargout] = PlotTraceFromAlignedDataVar(alignedData,varargin)
 					'yLabelName', yLabelName, 'stimRange', stimRange,...
 					'yShift', yShiftInt, 'mean_tracesInfo', aligned_tracesMean,'std_tracesInfo', aligned_tracesStd);
 		end
+
+		% create a title str
+		figNameStr = sprintf('%s_trace_%s_%s_%d',TraceType,alignedData.trialName(1:15),alignedData.stim_name,fn);
+		titleStr = sprintf('%s [yInt %g]',figNameStr,yShiftInt);
+		title(titleStr)
+
 		if save_fig
-			fname = sprintf('%s_trace_%s_%s_%d',TraceType,alignedData.trialName(1:15),alignedData.stim_name,fn);
-			savePlot(f(fn),'save_dir',save_dir,'fname',fname);
+			% fname = sprintf('%s_trace_%s_%s_%d',TraceType,alignedData.trialName(1:15),alignedData.stim_name,fn);
+			savePlot(f(fn),'save_dir',save_dir,'fname',figNameStr);
 		end
 	end
 end

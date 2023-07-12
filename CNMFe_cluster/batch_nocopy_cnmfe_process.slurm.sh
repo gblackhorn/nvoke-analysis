@@ -31,7 +31,7 @@ cd /flash/UusisaariU/GD/code
 # cp -r $folder_to_process/* $tempdir
 
 # Update batch.sh file in '/GD/' and matlab codes in '/GD/code'
-bash /flash/UusisaariU/GD/update_code_from_bucket.sh
+# bash /flash/UusisaariU/GD/update_code_from_bucket.sh
 
 # Run code for CNMFe process
 ${mlab_cmd} -r "folder='${folder_to_process}'; Fs=${Fs}; cnmfe_process_batch_cluster('folder', folder, 'Fs', Fs);"
