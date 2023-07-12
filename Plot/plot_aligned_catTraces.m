@@ -8,6 +8,9 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	plot_combined_data = true; % plot the mean value of all trace and add a shade using std
 	shadeType = 'std'; % std/ste
 	plot_raw_races = true; % true: plot the traces in the trace_data
+	plot_median = false;
+	medianProp = 'FWHM';
+
 	y_range = [-20 30];
 	yRangeMargin = 0.5; % yRange will be calculated using max and min of mean and shade data. This will increase the range as margin
 	sponNorm = false; % true/false
@@ -26,11 +29,15 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	% Optionals
 	for ii = 1:2:(nargin-1)
 	    if strcmpi('plot_combined_data', varargin{ii})
-	        plot_combined_data = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
+	        plot_combined_data = varargin{ii+1}; 
 	    elseif strcmpi('shadeType', varargin{ii})
 	        shadeType = varargin{ii+1}; 
 	    elseif strcmpi('plot_raw_races', varargin{ii})
-	        plot_raw_races = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
+	        plot_raw_races = varargin{ii+1}; 
+        elseif strcmpi('plot_median', varargin{ii})
+            plot_median = varargin{ii+1};
+        elseif strcmpi('medianProp', varargin{ii})
+            medianProp = varargin{ii+1};
         elseif strcmpi('eventCat', varargin{ii})
 	        eventCat = varargin{ii+1};
         elseif strcmpi('fname', varargin{ii})
@@ -150,6 +157,7 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 
 		[tracesAverage,tracesShade,nNum,titleName] = plotAlignedTracesAverage(gca,tracesData,timeInfo,...
 			'eventsProps',eventProp_trials,'shadeType',shadeType,...
+			'plot_median',plot_median,'medianProp',medianProp,...
 			'plot_combined_data',plot_combined_data,'plot_raw_races',plot_raw_races,...
 			'y_range',y_range,'tickInt_time',tickInt_time,'stimName',stimName,'eventCat',eventCat);
 

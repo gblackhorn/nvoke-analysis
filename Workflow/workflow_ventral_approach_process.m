@@ -26,10 +26,13 @@
 % ins_rec_ventral_folder = fullfile(ins_recordings_folder, 'IO_virus_ventral approach'); % processed imaging data, including isxd, gpio, tiff, and csv files 
 
 %% ====================
-% 1. Locate the folders to find and save data 
 
+% 1. Locate the folders to find and save data 
+% 0. clear varibles
 clearvars -except recdata_organized alignedData_allTrials seriesData_sync
 
+%% ====================
+% 1. Locate the folders to find and save data 
 GUI_chooseFolder = false; % true/false. Use GUI to locate the DataFolder and AnalysisFolder
 
 if GUI_chooseFolder
@@ -46,6 +49,8 @@ else
 		AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
     elseif strcmp(PC_name,'DESKTOP-DVGTQ1P')
         AnalysisFolder = 'C:\Users\nRIM_lab\Documents\ExampleData_nVoke\Analysis'; % Ana
+	else
+		error('set var GUI_chooseFolder to true to select default folders using GUI')
 	end
 end
 
@@ -53,12 +58,10 @@ end
 
 
 %% ==================== 
-% 2.1 Preprocess (Down-sampling is possible), spatial filter, and motion corrected recordings with Inscopix API for matlab. And export them in tiff format.
-% 	Export gpio (stimulation) and recording time stamp information in csv format with IDPS
+% % 2.1 Preprocess (Down-sampling is possible), spatial filter, and motion corrected recordings with Inscopix API for matlab. And export them in tiff format.
+% % 	Export gpio (stimulation) and recording time stamp information in csv format with IDPS
 
-% This step can be only done on local desktop installed IDPS
-
-
+% % This step can be only done on local desktop installed IDPS
 % Process all raw recording files in the same folder.
 % This is designed for the output of nVoke2
 recording_dir = uigetdir(FolderPathVA.recordingVA,...
@@ -73,8 +76,24 @@ if recording_dir ~= 0
 	end
 end
 
+% % Process all raw recording files in the same folder.
+% % This is designed for the output of nVoke2
+% recording_dir = uigetdir(FolderPathVA.recordingVA,...
+% 	'Select a folder containing raw recording files (.isxd) and gpio files (.gpio)');
+% if recording_dir ~= 0
+% 	FolderPathVA.recordingVA = recording_dir;
+% 	project_dir = uigetdir(FolderPathVA.project,...
+% 		'Select a folder to save processed recording files (PP, BP, MC, DFF)');
+% 	if FolderPathVA.project ~= 0 
+% 		FolderPathVA.project = project_dir;
+% 		process_nvoke_files(recording_dir, 'project_dir',project_dir);
+% 	end
+% end
+
 %% ==================== 
 % 2.1.1 Crop isxd files in a chosen folder and saved to another folder
+% crop info will be saved together with the cropped video files
+
 % M8: 
 % Left = 389;
 % Top = 136;
@@ -86,6 +105,7 @@ end
 % Width = 424;
 % Height = 444;
 movieKeyword = '2023-06-28'; % no need to add .isxd
+movieKeyword = '*2021-04-09-13-03-56*.isxd'; % crop file with names like this
 Left = 376;
 Top = 114;
 Width = 708;
@@ -105,6 +125,7 @@ end
 %% ==================== 
 % 2.1.2 Spatial filter and motion correct the movies
 movieKeyword = '2023-06-28*-PP'; % no need to add .isxd. Code will search for '*movieKeyword.isxd' files
+movieKeyword = '*-crop.isxd'; % Code will search for files with names like this and motion-correct them
 rmBPfile = true; % true/false. Remove the spatial filtered file ('bp_file') after creating the motion-corrected video
 [movieFolder,~,chosenStatus] = getInputOutputFolders('inputFolder',FolderPathVA.project,...
 	'outputFolder',FolderPathVA.project,'inputMSG','Chose a folder containing cropped files');
@@ -114,9 +135,10 @@ if chosenStatus
 end
 
 %% ==================== 
-% 2.2 Create DFF files from motion corrected files in a specified folder
+% 2.2 (Optional) Create DFF files from motion corrected files in a specified folder
+% DFF files can be examined in IDPS
 % Use keyword to filter MC files
-keyword = '0-PP-BP-MC.isxd'; % Use file name like this to look for motion corrected files
+movieKeyword = '*0-PP-BP-MC.isxd'; % Use file name like this to look for motion corrected files
 overwrite = false; % true/false. Create new DFF files if this is true.
 
 MC_fileFolder = uigetdir(FolderPathVA.project,...
@@ -124,12 +146,14 @@ MC_fileFolder = uigetdir(FolderPathVA.project,...
 if MC_fileFolder ~= 0
 	FolderPathVA.project = MC_fileFolder;
 	% batchMod_fileName(FolderPathVA.project,'MC-PP','MC-crop','keyword','MC-PP','overwrite',overwrite);
-	batchProcess_MC2DFF_nvokeFiles(FolderPathVA.project,'keyword',keyword,'overwrite',overwrite);
+	batchProcess_MC2DFF_nvokeFiles(FolderPathVA.project,'keyword',movieKeyword,'overwrite',overwrite);
 end
 
 %% ==================== 
 % 3.1 Export nvoke movies to tiff files
 keywords = '-BP-MC.isxd'; % used to filter 
+% 3.1.1 Export nvoke movies to tiff files for further work using ImageJ, matlab, etc.
+movieKeyword = '*-crop-BP-MC.isxd'; % used to filter 
 overwrite = false;
 
 input_isxd_folder = uigetdir(FolderPathVA.project,...
@@ -141,21 +165,21 @@ if input_isxd_folder ~= 0
 	if output_tiff_folder ~= 0
 		FolderPathVA.ExportTiff = output_tiff_folder;
 		export_nvoke_movie_to_tiff(input_isxd_folder, output_tiff_folder,...
-			'keyword', keywords, 'overwrite', overwrite);
+			'keyword', movieKeyword, 'overwrite', overwrite);
 	end
 end
 
 %% ==================== 
-% 3.1.1 Delete some .isxd files to release the space in the hard disk
-keyword = '*BP.isxd';
+% 3.1.2 Delete some .isxd files to release the space in the hard disk
+movieKeyword = '*BP.isxd';
 showFileList = true;
-FolderPathVA.project = rmFilesWithKeywords(FolderPathVA.project,'*BP.isxd',...
+FolderPathVA.project = rmFilesWithKeywords(FolderPathVA.project,movieKeyword,...
 	'showFileList',showFileList);
 
 
 
 %% ==================== 
-% 3.2 make subfolders for each tiff file with their date and time information for following CNMFe process
+% 3.2 Create subfolders for each tiff file with their date and time information for following CNMFe process
 key_string = 'video'; % Key_string is used to locate the end of string used for nameing subfolder
 num_idx_correct = -2; % key_string idx + num_idx_correct = idx of the end of string for subfolder name
 
@@ -173,6 +197,7 @@ end
 
 %% ==================== 
 % 3.3 Remove cnmfe generated files for a new process
+% Caution: This code will delete the files output be CNMFe! Backup data!
 dir_path_clear = FolderPathVA.ExportTiff;
 keywords_file = {'*contours*', '*results.mat'};
 keywords_dir = {'*source_extraction*'};
@@ -190,21 +215,19 @@ else
 end
 
 
-
 %% ==================== 
 % Better use deigo cluster for this step. Prepare files in the bucket for tranfering them to deigo
-% 4. Process recordings with CNMFe to extract ROI traces
-% NOTE: This step can be done with VDI, but it is way slower than deigo cluster
-organized_tiff_folder = FolderPathVA.ExportTiff; % This is a parent folder. Each recording has its own subfolder
-Fs = 20; % Hz. recording frequency
-cnmfe_process_batch('folder',  organized_tiff_folder, 'Fs', Fs);
+% Check file 'command_for_cluster.sh' for useful lines to run CNMFe on cluster
 
-
+% % 4. Process recordings with CNMFe to extract ROI traces
+% % NOTE: This step can be done with VDI, but it is way slower than deigo cluster
+% organized_tiff_folder = FolderPathVA.ExportTiff; % This is a parent folder. Each recording has its own subfolder
+% Fs = 20; % Hz. recording frequency
+% cnmfe_process_batch('folder',  organized_tiff_folder, 'Fs', Fs);
 
 
 %% ==================== 
-
-% 5. Copy *results.mat, *gpio.csv, and *ROI.csv files in each subfolders to another folder
+% 5.1 Copy *results.mat, *gpio.csv, and *ROI.csv files in each subfolders to another folder
 % So recording information in each subfolder can be integrated into a single mat file later
 % Manually Export *gpio.csv and *ROI.csv from Inscopix Data processing
 % (ISDP) software (Write code with inscopix matlab API to simplify this step)
@@ -219,8 +242,9 @@ cnmfe_process_batch('folder',  organized_tiff_folder, 'Fs', Fs);
 
 
 
+
 %% ====================
-% 6.1 Convert ROI info to matlab file (.m). 
+% 5.2 Convert ROI info to matlab file (.m). 
 % Place results.m from CNMFe, ROI info (csv files) and GPIO info (csv) from IDPS to the same folder, and run this
 % function
 % [ROIdata, recording_num, cell_num] = ROIinfo2matlab; % for data without CNMFe process
@@ -232,31 +256,19 @@ debug_mode = false; % true/false.
 	'output_dir', output_dir,'debug_mode',debug_mode); % for CNMFe processed data
 
 
-% % Check the gpio channel information and delete the false stimulation channels. 
-% % nVoke2 generated gpio may include channel activity from unsed channels
-% rec_num = size(recdata, 1);
-% for i = 1:rec_num
-% 	gpio_info = recdata{i, 4};
-
-% 	% Check and delete the false gpio channels
-% 	[gpio_info] = delete_false_gpio_info(gpio_info);
-
-% 	recdata{i, 4} = gpio_info;
-% end
-
 
 %% ====================
-% 6.2 If trials are from nvoke2, expecially when they are mixed with nvoke1 data. rename the nvoke 2 trials
+% 5.3 If trials are from nvoke2, expecially when they are mixed with nvoke1 data. rename the nvoke 2 trials
 recdata_backup = recdata; %recdata
 [recdata] = renameFileNamesInROI(recdata);
 
 %% ====================
-% 6.3 Save recdata before applying further processes
+% 5.4 Save recdata before applying further processes
 uisave('recdata', fullfile(FolderPathVA.ventralApproach, 'recdata'));
 
 
 %% ====================
-% 8. Organize peaks and gpio information to data
+% 6.1 Organize peaks and gpio information to data
 % Note: Signal processing toolbox and curve fitting toolbox are needed for this section
 clear opt
 % Defaults
@@ -306,17 +318,12 @@ debug_mode = false; % true/false.
 
 
 %% ====================
-% 8.1.1 Copy the FOV_loc struct-field from a sourceData, if exists, to a newly formed recdata_organized
-recdata_target = recdata_organized; % The data receiving FOV info
-recdata_source = recdata_organized_old; % The data giving FOV info
+% 6.2 Save the newly created 'recdata_organized'
+uisave('recdata_organized', fullfile(FolderPathVA.ventralApproach, 'recdata_organized'));
 
-[recdata_target_with_fov,trial_list_wo_fov] = copy_fovInfo(recdata_source,recdata_target);
-recdata_organized = recdata_target_with_fov;
-
-clear recdata_target recdata_source recdata_target_with_fov
 
 %% ====================
-% 8.1.2 Add FOV location information in second column of recdata
+% 6.3 Add FOV location information in second column of recdata
 % chrimsonR-pos vs neg, lateral vs medial, posterior vs anterior vs intermediate
 loc_opt.hemi = {'left', 'right'}; % hemisphere: IO with chrimsonR (pos) or without (neg)
 loc_opt.hemi_ext = {'chR-pos', 'chR-neg'}; % hemisphere: IO with chrimsonR (pos) or without (neg)
@@ -352,7 +359,7 @@ recdata_organized = recordings;
 
 
 %% ====================
-% 8.2 Generate mouseID and fovID base on recording date from trial names and FOV_loc in recording data 
+% 6.4 Generate mouseID and fovID base on recording date from trial names and FOV_loc in recording data 
 % 
 % Add FOV category code to FOV_loc
 % [recdata_organized] = add_fov_category(recdata_organized,...
@@ -362,39 +369,53 @@ overwrite = true; %options: true/false
 % [recdata_organized,mouseIDs,fovIDs] = auto_gen_mouseID_fovID(recdata_organized,'overwrite',overwrite);
 
 
-
 %% ====================
-% 8.3 Group recordings according to stimulation and save vars 'recdata_group' and 'opt'
-% stim_types = {'GPIO-1-1s', 'OG-LED-1s', 'OG-LED-5s', 'OG-LED-5s GPIO-1-1s'};
-% stim_types = unique(cellfun(@(x) char(x), recdata_organized(:,3), 'UniformOutput',false));
-group_info = organize_rec_group_info(recdata_organized);
-stim_types = {group_info.name};
-recdata_group.all = recdata_organized;
+% This section requires old recdata_organized containing FOV ID information
+% Assign the new 'recdata_organized' to 'recdata_target': The data receiving FOV info
+% Load old 'recdata_organized' from a saved file
 
-for gn = 1:numel(group_info)
-	fieldName = strrep(group_info(gn).name, '-', '_');
-	fieldName = strrep(fieldName, ' ', '_');
-	recdata_group.(fieldName) = recdata_organized(group_info(gn).idx, :);
+% 6.5 Copy the FOV_loc struct-field from a sourceData, if exists, to a newly formed recdata_organized
+% recdata_target = recdata_organized; % The data receiving FOV info
+recdata_source = recdata_organized; % The data giving FOV info
 
-end
+[recdata_target_with_fov,trial_list_wo_fov] = copy_fovInfo(recdata_source,recdata_target);
+recdata_organized = recdata_target_with_fov;
 
-
-% Save organized and calculate data 
-data_fullpath = fullfile(FolderPathVA.ventralApproach, '*.mat');
-[data_filename, FolderPathVA.ventralApproach] = uiputfile(data_fullpath,...
-            'Select a folder to save data');
-if isequal(data_filename, 0)
-	disp('User selected Cancel')
-else
-	data_fullpath = fullfile(FolderPathVA.ventralApproach, data_filename);
-	disp(['User selected ', data_fullpath]);
-	% save(data_fullpath, 'recdata_organized', 'opt')
-	save(data_fullpath, 'recdata_group', 'opt')
-end
+clear recdata_target recdata_source recdata_target_with_fov
 
 
 %% ====================
-% sort the recordings using date and time
+% % 8.3 Group recordings according to stimulation and save vars 'recdata_group' and 'opt'
+% % stim_types = {'GPIO-1-1s', 'OG-LED-1s', 'OG-LED-5s', 'OG-LED-5s GPIO-1-1s'};
+% % stim_types = unique(cellfun(@(x) char(x), recdata_organized(:,3), 'UniformOutput',false));
+% group_info = organize_rec_group_info(recdata_organized);
+% stim_types = {group_info.name};
+% recdata_group.all = recdata_organized;
+
+% for gn = 1:numel(group_info)
+% 	fieldName = strrep(group_info(gn).name, '-', '_');
+% 	fieldName = strrep(fieldName, ' ', '_');
+% 	recdata_group.(fieldName) = recdata_organized(group_info(gn).idx, :);
+
+% end
+
+
+% % Save organized and calculate data 
+% data_fullpath = fullfile(FolderPathVA.ventralApproach, '*.mat');
+% [data_filename, FolderPathVA.ventralApproach] = uiputfile(data_fullpath,...
+%             'Select a folder to save data');
+% if isequal(data_filename, 0)
+% 	disp('User selected Cancel')
+% else
+% 	data_fullpath = fullfile(FolderPathVA.ventralApproach, data_filename);
+% 	disp(['User selected ', data_fullpath]);
+% 	% save(data_fullpath, 'recdata_organized', 'opt')
+% 	save(data_fullpath, 'recdata_group', 'opt')
+% end
+
+
+%% ====================
+% 6.6 sort the recordings using date and time
 recdata_organized_bk = recdata_organized;
 recNames = recdata_organized(:,1);
 
@@ -409,5 +430,13 @@ recdata_organized = recdata_organized(sortedIndices,:);
 
 
 %% ====================
-% 9 Clear temp variables to reclaim memory
-clear recordings recdata_backup
+% 6.7 Save the modified 'recdata_organized'
+% This will 
+uisave('recdata_organized', fullfile(FolderPathVA.ventralApproach, 'recdata_organized'));
+
+
+
+
+%% ====================
+% % 9 Clear temp variables to reclaim memory
+% clear recordings recdata_backup

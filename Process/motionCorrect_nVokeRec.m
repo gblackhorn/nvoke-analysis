@@ -33,7 +33,7 @@ function [varargout] = motionCorrect_nVokeRec(movieFolder,varargin)
     end
 
 
-    input_fileInfo = dir(fullfile(movieFolder,['*',keyword,'.isxd']));
+    input_fileInfo = dir(fullfile(movieFolder,keyword));
     movie_num = numel(input_fileInfo);
     corrected_num = 0;
 

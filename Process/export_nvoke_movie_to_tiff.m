@@ -38,7 +38,7 @@ function [] = export_nvoke_movie_to_tiff(input_folder, output_folder, varargin)
 	% 	end
 	% end
 
-	input_fileinfo = dir(fullfile(input_folder, ['*',keyword]));
+	input_fileinfo = dir(fullfile(input_folder, keyword));
 	movie_num = numel(input_fileinfo);
 	exported_num = 0;
 

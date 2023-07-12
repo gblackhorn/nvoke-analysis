@@ -30,16 +30,24 @@ rsync -av --include '*/' --include '*.sh' --exclude '*' $flashHomeDir/ deigo:$bu
 
 
 # Set folder path on Bucket to Copy data from bucket to /flash
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/20230609_re-run_motion-correction/'
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/series_20230627/'
 bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/Moscope/M9_BMC/'
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/Moscope/INSCOPIX_tiff/M8/'
 bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/Moscope/INSCOPIX_tiff/M9_BMC/'
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/Moscope/INSCOPIX_tiff/M9_extra/'
 
 # If folder does not exist, creat one
 # flashdatadir=$(mktemp -d /flash/UusisaariU/GD/data_folder20220927.XXXXXX) 
-mktemp -d /flash/UusisaariU/GD/data_MOS_M9_BMC.XXXXXX
+mkdir /flash/UusisaariU/GD/data_series
+mktemp -d /flash/UusisaariU/GD/20230609_reMC_data.XXXXXX
 # assign the new dir to 'flashdatadir'
 
 # If folder exists on cluster, specify it 
+flashdatadir='/flash/UusisaariU/GD/data_series'
+flashdatadir='/flash/UusisaariU/GD/data_MOS_M8.FYzJWT'
 flashdatadir='/flash/UusisaariU/GD/data_MOS_M9_BMC.1U26sa'
+flashdatadir='/flash/UusisaariU/GD/data_MOS_M9_extra.qqRGrS'
 
 
 # Copy the content in bucketdatadir to flashdatadir
@@ -63,6 +71,7 @@ rsync -av --no-group --no-perms deigo:$bucketdatadir/ $flashdatadir/
 # start an automatic job
 sbatch batch_nocopy_cnmfe_process.slurm.sh 
 sbatch batch_figure_video.slurm.sh
+sbatch batch_nocopy_cnmfe_process.slurm.sh
 
 
 

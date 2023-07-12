@@ -1134,3 +1134,47 @@ debugMode = false;
 		eventsTime,stimInfo,'preTime',preTime,'postTime',postTime,...
 		'eventCat',eventCat,'stimEventCat',stimEventCat,'followEventCat',followEventCat,...
 		'stimRefType',stimRefType,'debugMode',debugMode);
+
+
+%% ====================
+timeInfo = alignedData_allTrials(2).fullTime;
+stimInfo = alignedData_allTrials(2).stimInfo;
+
+[periStimSections] = setPeriStimSectionForEventFreqCalc(timeInfo,stimInfo);
+
+x = periStimSections(sn,:)
+[y,closestIndex] = find_closest_in_array(x,timeInfo)
+
+
+[stimFollowEventsPair] = getStimEventFollowEventROI(alignedData(1),'trig','spon')
+
+[sponEventsInt,osr,osrNum] = getSponEventsInt(alignedData(1))
+
+
+[intData] = stimEventSponEventIntAnalysis(alignedData,'ap-0.1s','trig')
+
+
+%% ====================
+figure
+plot(timeInfo,traceData);
+
+hold on
+
+preCloseHMTime = timeInfo(HMstartLoc);
+preCloseHMData = traceData(HMstartLoc);
+
+postCloseHMTime = timeInfo(HMendLoc);
+postCloseHMData = traceData(HMendLoc);
+
+nanIDX = find(isnan(HMendLoc));
+halfMax(nanIDX) = [];
+preCloseHMTime(nanIDX) = [];
+preCloseHMData(nanIDX) = [];
+postCloseHMTime(nanIDX) = [];
+postCloseHMData(nanIDX) = [];
+
+plot(preCloseHMTime,preCloseHMData,'ko');
+plot(postCloseHMTime,postCloseHMData,'k*');
+
+plot(timeAtHM(:,1),halfMax,'ro');
+plot(timeAtHM(:,2),halfMax,'r*');

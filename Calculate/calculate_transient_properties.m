@@ -57,13 +57,17 @@ function [transient_properties,varargout] = calculate_transient_properties(roi_t
             peak_val = roi_trace(peak_loc);
             rise_val = roi_trace(rise_loc);
 
-            halfwidth_loc = calculate_halfwidth_loc(roi_trace,rise_loc,peak_loc,decay_loc);
-            FWHM = NaN(size(peak_loc));
-            for hwn = 1:size(halfwidth_loc, 1)
-                if ~isnan(halfwidth_loc(hwn, 1))
-                    FWHM(hwn) = time_info(halfwidth_loc(hwn,2))-time_info(halfwidth_loc(hwn,1));
-                end
-            end
+            % % calculate the full-width at half maximum (FWHM)
+            [FWHM,timeAtHM] = calcFWHM(roi_trace,time_info,rise_loc,peak_loc,...
+                'freq',recFreq,'maxTimeRange',5);
+            % halfwidth_loc = calculate_halfwidth_loc(roi_trace,rise_loc,peak_loc,decay_loc);
+            % FWHM = NaN(size(peak_loc));
+            % for hwn = 1:size(halfwidth_loc, 1)
+            %     if ~isnan(halfwidth_loc(hwn, 1))
+            %         FWHM(hwn) = time_info(halfwidth_loc(hwn,2))-time_info(halfwidth_loc(hwn,1));
+            %     end
+            % end
+
 
         	peakMag_delta = peakMag-roi_trace(rise_loc); % delta peakmag: subtract rising point value
         	peakMag_10per_target = peakMag_delta*slope_per_low+roi_trace(rise_loc); % 10% peakmag value

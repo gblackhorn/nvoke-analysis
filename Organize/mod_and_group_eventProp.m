@@ -89,9 +89,10 @@ function [grouped_event,grouped_event_setting,varargout] = mod_and_group_eventPr
         end
         % [grouped_event(gn).numTrial,grouped_event(gn).numRoi,grouped_event(gn).numRoiVec] = get_num_fieldUniqueContent(grouped_event(gn).event_info,...
         %     'fn_1', 'trialName', 'fn_2', 'roiName');
-        [TrialRoiList] = get_roiNum_from_eventProp(grouped_event(gn).event_info);
-        grouped_event(gn).numTrial = numel(TrialRoiList);
-        grouped_event(gn).numRoi = sum([TrialRoiList.roi_num]);
+        [TrialRoiList,recNum,animalNum,roiNum] = get_roiNum_from_eventProp(grouped_event(gn).event_info);
+        grouped_event(gn).numTrial = recNum;
+        grouped_event(gn).animalNum = animalNum;
+        grouped_event(gn).numRoi = roiNum;
         grouped_event(gn).TrialRoiList = TrialRoiList;
 
         if strcmp(eventType,'roi') && ~contains(group_name,'spon') && ~contains(group_name,'varied')

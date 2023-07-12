@@ -1,4 +1,4 @@
-function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargin)
+function [varargout] = plotPeriStimEventFreq(alignedData,varargin)
 	% Plot the event frequency in specified time bins to examine the effect of stimulation and
 	% compare each pair of bins
 	% ROIs can be filtered according to the effect of stimulations on them
@@ -24,7 +24,6 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	baseBinEdgeEnd_apCorrection = -1; % use an earlier bin for AP stimulation
 	apCorrection = true;
 	
-	binWidth = 1; % the width of histogram bin. the default value is 1 s.
 	PropName = 'rise_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
 	stimIDX = []; % specify stimulation repeats around which the events will be gathered 
 	% plotHisto = false; % true/false [default].Plot histogram if true.
@@ -33,9 +32,6 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 	postStim_duration = 5; % unit: second. include events happened after the end of stimulations
 	round_digit_sig = 2; % round to the Nth significant digit for duration
-
-	customizeEdges = false; % customize the bins using function 'setPeriStimSectionForEventFreqCalc'
-	stimEffectDuration = 1; % unit: second. Use this to set the end for the stimulation effect range
 
 	stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
 	stimEvents(1).stimName = 'og-5s';
@@ -81,12 +77,6 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
             preStim_duration = varargin{ii+1};
 	    elseif strcmpi('postStim_duration', varargin{ii})
             postStim_duration = varargin{ii+1};
-        elseif strcmpi('customizeEdges', varargin{ii}) 
-            customizeEdges = varargin{ii+1}; 
-        elseif strcmpi('PeriBaseRange', varargin{ii}) 
-            PeriBaseRange = varargin{ii+1}; 
-        elseif strcmpi('stimEffectDuration', varargin{ii}) 
-            stimEffectDuration = varargin{ii+1}; 
 	    elseif strcmpi('stimEventsPos', varargin{ii})
             stimEventsPos = varargin{ii+1};
 	    elseif strcmpi('stimEvents', varargin{ii})
@@ -150,6 +140,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	% end
 	titleStr = sprintf('event freq in %g s bins [%s]%s%s',binWidth,PropName,normToBaseStr,apCorrectionStr);
 	titleStr = strrep(titleStr,'_',' ');
+	
 
 		% Create a figure and start to plot 
 	barStat = empty_content_struct({'stim','method','multiComp','data','binEdges','baseRange','recNum','recDateNum','roiNum','stimRepeatNum'},...
@@ -161,11 +152,9 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		'fig_name',titleStr); % create a figure
 	tloStat = tiledlayout(fstat,fstat_rowNum,fstat_colNum);
 	for stn = 1:stim_type_num
-		PeriBaseRange = [baseBinEdgestart baseBinEdgeEnd];
 		[EventFreqInBins,binEdges,stimShadeData,stimShadeName,stimEventCatName] = get_EventFreqInBins_trials(alignedData,stim_names{stn},'PropName',PropName,...
 			'binWidth',binWidth,'stimIDX',stimIDX,...
 			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
-			'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'PeriBaseRange',PeriBaseRange,...
 			'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 			'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
 

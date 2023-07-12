@@ -1,10 +1,9 @@
-function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
-	% Return a new eventProp including event baseDiff 
+function [varargout] = periStimEventFreqAnalysis2(alignedData,varargin)
+	% Analyze the peri-stim event frequency.
 
-	% eventProp: a structure containing event properties for a single ROI
-	% stimRange: a n x 2 array. n is the repeat times of a stim in a trial
-	% timeInfo: time information for a single trial recording
-	% roiTrace: trace data for a single roi. It has the same length as the timeInfo
+	% Different from the 'periStimEventFreqAnalysis': This function is for irregular stimulation time
+	% For example: in OG-AP, the AP delay is different in each stimulation repeat
+
 
 	% Defaults
 	filter_roi_tf = false; % true/false. If true, screen ROIs
@@ -13,13 +12,10 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	diffPair = {[1 3], [2 3]}; % binned freq will be compared between stimualtion groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
 
 	propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
-	binWidth = 1; % the width of histogram bin. the default value is 1 s.
+	% binWidth = 1; % the width of histogram bin. the default value is 1 s.
 	stimIDX = []; % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
 	preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
 	postStim_duration = 10; % unit: second. include events happened after the end of stimulations
-
-	customizeEdges = false; % customize the bins using function 'setPeriStimSectionForEventFreqCalc'
-	stimEffectDuration = 1; % unit: second. Use this to set the end for the stimulation effect range
 
 	stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
 	stimEvents(1).stimName = 'og-5s';
@@ -50,20 +46,14 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	        filters = varargin{ii+1};
         elseif strcmpi('propName', varargin{ii})
 	        propName = varargin{ii+1};
-        elseif strcmpi('binWidth', varargin{ii})
-	        binWidth = varargin{ii+1};
+        % elseif strcmpi('binWidth', varargin{ii})
+	    %     binWidth = varargin{ii+1};
         elseif strcmpi('stimIDX', varargin{ii})
 	        stimIDX = varargin{ii+1};
         elseif strcmpi('preStim_duration', varargin{ii})
 	        preStim_duration = varargin{ii+1};
         elseif strcmpi('postStim_duration', varargin{ii})
 	        postStim_duration = varargin{ii+1};
-        elseif strcmpi('customizeEdges', varargin{ii}) 
-            customizeEdges = varargin{ii+1}; 
-        elseif strcmpi('PeriBaseRange', varargin{ii}) 
-            PeriBaseRange = varargin{ii+1}; 
-        elseif strcmpi('stimEffectDuration', varargin{ii}) 
-            stimEffectDuration = varargin{ii+1}; 
         elseif strcmpi('stimEventsPos', varargin{ii})
 	        stimEventsPos = varargin{ii+1};
         elseif strcmpi('stimEvents', varargin{ii})
@@ -93,6 +83,17 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	else
 		normToBaseStr = '';
 	end
+
+
+
+
+
+
+
+
+
+
+
 	ylabelStr = sprintf('eventFreq %s',normToBaseStr);
 	xlabelStr = 'time (s)';
 
@@ -101,7 +102,6 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	    'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,'stimIDX',stimIDX,...
 	    'normToBase',normToBase,'apCorrection',apCorrection,...
 	    'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
-	    'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,...
 	    'xlabelStr',xlabelStr,'ylabelStr',ylabelStr,...
         'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 		'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'binWidth',binWidth,...

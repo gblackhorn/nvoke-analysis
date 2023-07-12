@@ -16,8 +16,8 @@ pars_envs = struct('memory_size_to_use', 256, ...   % GB, memory space you allow
     'patch_dims', [256, 256],...  %GB, patch size 
     'batch_frames', 6000);           % ('batch_frames', 6000) number of frames per batch 
   % -------------------------      SPATIAL      -------------------------  %
-gSig = 12;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
-gSiz = 24;          % pixel, neuron diameter
+gSig = 15;           % pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
+gSiz = 30;          % pixel, neuron diameter
 ssub = 1;           % spatial downsampling factor
 with_dendrites = false;   % with dendrites or not
 if with_dendrites
@@ -46,11 +46,11 @@ if exist('opt', 'var')
     if isfield(opt, 'keyword')
         keyword = opt.keyword;
     else
-        keyword = 'ap1s';
+        keyword = 'ap';
     end
 else
     Fs = 20;
-    keyword = 'ap1s';
+    keyword = 'ap';
 end
 tsub = 1;           % temporal downsampling factor
 deconv_options = struct('type', 'ar1', ... % model of the calcium traces. {'ar1', 'ar2'}
@@ -76,14 +76,14 @@ num_neighbors = []; % number of neighbors for each neuron
 show_merge = false;  % if true, manually verify the merging step
 merge_thr = 0.65;     % thresholds for merging neurons; [spatial overlap ratio, temporal correlation of calcium traces, spike correlation]
 method_dist = 'max';   % method for computing neuron distances {'mean', 'max'}
-dmin = 10;       % previous_val = 5. minimum distances between two neurons. it is used together with merge_thr
-dmin_only = 2;  % merge neurons if their distances are smaller than dmin_only.
+dmin = 15;       % previous_val = 5. minimum distances between two neurons. it is used together with merge_thr
+dmin_only = 10;  % merge neurons if their distances are smaller than dmin_only.
 merge_thr_spatial = [1e-1, 0.65, 0];  % pre_val = [0.8, 0.4, -inf]. merge components with highly correlated spatial shapes (corr=0.8) and small temporal correlations (corr=0.1)
 
 % -------------------------  INITIALIZATION   -------------------------  %
 K = [];             % maximum number of neurons per patch. when K=[], take as many as possible.
-min_corr = 0.9;     % default=0.8. minimum local correlation for a seeding pixel
-min_pnr = 10;       % default=8. minimum peak-to-noise ratio for a seeding pixel
+min_corr = 0.8;     % default=0.8. minimum local correlation for a seeding pixel
+min_pnr = 8;       % default=8. minimum peak-to-noise ratio for a seeding pixel
 min_pixel = gSig^2;      % minimum number of nonzero pixels for each neuron
 bd = 0;             % number of rows/columns to be ignored in the boundary (mainly for motion corrected data)
 frame_range = [];   % when [], uses all frames
@@ -95,8 +95,8 @@ center_psf = true;  % set the value as true when the background fluctuation is l
 % set the value as false when the background fluctuation is small (2p)
 
 % -------------------------  Residual   -------------------------  %
-min_corr_res = 0.9; % default=0.7
-min_pnr_res = 10; % default=6
+min_corr_res = 0.8; % default=0.7
+min_pnr_res = 8; % default=6
 seed_method_res = 'auto';  % method for initializing neurons from the residual
 update_sn = true;
 
@@ -212,9 +212,14 @@ for mbatch = 1:nbatches
     batch_k = neuron.batches{mbatch};
     neuron_bat = batch_k.neuron;
 
+    amp_ac = 140;
+    range_ac = 5+[0, amp_ac];
+    multi_factor = 10;
+    range_Y = 1300+[0, amp_ac*multi_factor];
+
     fprintf('\ncreating video for batch %d/%d\n', mbatch, nbatches);
     % avi_filename = neuron_bat.show_demixed_video(save_demixed, kt, [], amp_ac, range_ac, range_Y, multi_factor);
-    avi_filename = neuron_bat.show_demixed_video(save_demixed, kt, []);
+    avi_filename = neuron_bat.show_demixed_video(save_demixed, kt, [],amp_ac,range_ac);
 end
 
 

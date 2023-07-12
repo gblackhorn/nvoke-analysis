@@ -4,9 +4,10 @@ function [varargout] = cnmfe_process_series_cluster(varargin)
 	% add key words, such as stimulation type, in the file names for the order in the series
 
 	% Defaults
-	opt = [];
-	folder = ['/flash/UusisaariU/GD/'];
-	stim_keyword = {'ap1s','og5s', 'mix'};
+	opt.Fs = 20;
+	opt.keyword = 'air'; % use the file name containing this as template for the series
+	folder = '/flash/UusisaariU/GD/';
+	stim_keyword = {'air','opto', 'mix'};
 	use_gui = false;
 
 	% Optionals for inputs
@@ -23,6 +24,7 @@ function [varargout] = cnmfe_process_series_cluster(varargin)
 			use_gui = varargin{ii+1}; 
 		end
 	end
+
 
 	% Main content
 	if use_gui

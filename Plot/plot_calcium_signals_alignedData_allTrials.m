@@ -32,7 +32,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 	plot_unit_width = 0.4; % normalized size of a single plot to the display
 	plot_unit_height = 0.4; % nomralized size of a single plot to the display
 
-	show_colorbar = false; % true/false. Show color scale next to the fluorescence signal color plot.
+	show_colorbar = true; % true/false. Show color scale next to the fluorescence signal color plot.
 	hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins
 	xtickInt_scale = 5; % xtickInt = hist_binsize * xtickInt_scale. Use by figure 2
 
@@ -109,7 +109,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData,va
 	% (show the event number in time bins in the histogram) (fig2).
 	trial_num = numel(alignedData_filtered);
 	for tn = 1:trial_num
-		pause_plot = false;
+		pause_plot = true;
 		close all
 
 		if debug_mode

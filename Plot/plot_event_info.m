@@ -121,9 +121,9 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
     f_violin = figure('Name', 'violin plots');
 
 	if par_num == 1
-		fig_position = [0.1 0.1 0.2 0.6]; % left, bottom, width, height
+		fig_position = [0.1 0.1 0.2 0.3]; % left, bottom, width, height
 	else
-		fig_position = [0.1 0.1 0.8 0.8];
+		fig_position = [0.1 0.1 0.8 0.4];
 	end
 	set(f_bar, 'Units', 'normalized', 'Position', fig_position)
     set(f_stat, 'Units', 'normalized', 'Position', fig_position)
@@ -268,9 +268,9 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	%% cumulative plot
 	f_cd = figure('Name', 'cumulative distribution plots'); 
 	if par_num == 1
-		fig_position = [0.1 0.1 0.2 0.6];
+		fig_position = [0.1 0.1 0.2 0.3];
 	else
-		fig_position = [0.1 0.1 0.8 0.8];
+		fig_position = [0.1 0.1 0.8 0.4];
 	end 
 	set(gcf, 'Units', 'normalized', 'Position', fig_position)
 	tlo = tiledlayout(f_cd, ceil(par_num/4), 4);

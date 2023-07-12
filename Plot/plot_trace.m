@@ -123,6 +123,8 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 		end
 	end
 
+	hold off
+
 	box off
 	chi=get(gca, 'Children');
 	set(gca, 'Children',flipud(chi));
