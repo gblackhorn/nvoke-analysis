@@ -48,7 +48,7 @@ function [List_curveFitNum_eventNum,varargout] = plot_stimNum_fitNum_eventNum(al
 	% by the input 'eventCat'
 	List_curveFitNum_eventNum = get_StimEvents_CloseToFit_trials(alignedData_stim,eventCat,stimTimeCol);
 	barplotData = cell(1,4);
-	barplotGroupName = {'curve_fit/stimulation_number','events_with_curveFit/curve_fit',...
+	barplotGroupName = {'total_curve_fit/stimulation_number','events_with_curveFit/total_curve_fit',...
 		'events_with_curveFit/stimulation_number','all_events/stimulation_number'};
 
 

@@ -119,7 +119,11 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     	if ischar(recdata_organized{rn, col_gpioname})
     		stim_name = recdata_organized{rn, col_gpioname};
     	elseif iscell(recdata_organized{rn, col_gpioname})
-    		stim_name = recdata_organized{rn, col_gpioname}{:};
+            if isempty(recdata_organized{rn, col_gpioname})
+                stim_name = recdata_organized{rn, col_gpioname};
+            else
+    		  stim_name = recdata_organized{rn, col_gpioname}{:};
+            end
     	end
     	if isempty(stim_name)
     		stim_str = 'no-stim'; 
@@ -141,6 +145,9 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
                 stim_str = 'no-stim';
             end
     	end 
+        if strcmpi(stim_str,'no-stim')
+            gpio_info_table = [];
+        end
     	recdata_organized{rn, col_gpioname} = stim_str;
 
 

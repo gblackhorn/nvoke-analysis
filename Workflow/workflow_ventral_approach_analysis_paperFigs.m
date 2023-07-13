@@ -816,30 +816,34 @@ end
 
 %% ====================
 % 9.5.2.2 
+% Show the relationship between decayTau/caLevelDecrease and various rebound event properties
+
 close all
 save_fig = true; % true/false
-% Show the relationship between decayTau/caLevelDecrease and various rebound event properties
+filter_roi_tf = true;
 fieldNames_rb_prop = {'rise_duration','FWHM','peak_mag_delta','sponNorm_peak_mag_delta',...
 	'rise_delay','peak_delay'}; % properties of rebound events.
 GroupedEventTags = {grouped_event_info_filtered.tag}; % Get the tags containing event catergory and stimulation
 pos_OG5sRB = find(strcmpi('rebound [og-5s]', GroupedEventTags)); % Get the idx of rebound events in og-5s recordings
 rbEventInfo = grouped_event_info_filtered(pos_OG5sRB).event_info;
-BarInfo_rbEvents = plot_reboundEvent_analysis(rbEventInfo,'fieldNames_rb_prop',fieldNames_rb_prop,...
-	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on');
+[BarInfo_rbEvents,FolderPathVA.fig] = plot_reboundEvent_analysis(rbEventInfo,...
+	'fieldNames_rb_prop',fieldNames_rb_prop,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on');
 
-% if filter_roi_tf == true
-% 	[alignedData] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
-% 			'stim_names',stim_names,'filters',filters); % check section before 9.1.1
-% else 
-% 	alignedData = alignedData_allTrials;
-% end
+if filter_roi_tf == true
+	[alignedData] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
+			'stim_names',stim_names,'filters',filters); % check section before 9.1.1
+else 
+	alignedData = alignedData_allTrials;
+end
 
-[List_curveFitNum_eventNum_ogRB,~,save_dir] = plot_stimNum_fitNum_eventNum(alignedData,'rebound','og-5s',...
-	'stimTimeCol',2,'save_fig',save_fig,'save_dir',save_dir,'gui_save',true);
+% alignedData = alignedData_allTrials;
+
+[List_curveFitNum_eventNum_ogRB,~,FolderPathVA.fig] = plot_stimNum_fitNum_eventNum(alignedData,'rebound','og-5s',...
+	'stimTimeCol',2,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save',true);
 [List_curveFitNum_eventNum_ogTrig] = plot_stimNum_fitNum_eventNum(alignedData,'trig','og-5s',...
-	'stimTimeCol',1,'save_fig',save_fig,'save_dir',save_dir,'gui_save',false);
+	'stimTimeCol',1,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save',false);
 [List_curveFitNum_eventNum_apTrig] = plot_stimNum_fitNum_eventNum(alignedData,'trig','ap-0.1s',...
-	'stimTimeCol',1,'save_fig',save_fig,'save_dir',save_dir,'gui_save',false);
+	'stimTimeCol',1,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save',false);
 
 %% ====================
 % 9.5.2.3

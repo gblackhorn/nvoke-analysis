@@ -177,8 +177,16 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
 
     if group_num>1
         switch stat
-            case 'anova'
-            case 'pttest'
+            case 'anova' % one-way ANOVA
+                if group_num == 2
+                    if numel(barInfo.data(1).group_data) ~= numel(barInfo.data(2).group_data)
+                        stat = 'upttest';
+                    else % use paired t-test if there are only two groups of data, and both contain the same number of data
+                        stat = 'pttest'
+                        warning('one-way ANOVA is changed to paired t-test. Two groups have the same number data points')
+                    end
+                end
+            case 'pttest' % paired t-test
                 if group_num ~= 2
                     stat = 'anova';
                 else
@@ -186,41 +194,24 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
                        stat = 'anova';
                     end 
                 end
+            case 'upttest' % unpaired t-test
+                if group_num ~= 2
+                    stat = 'anova';
+                % else
+                %     if numel(barInfo.data(1).group_data) ~= numel(barInfo.data(2).group_data)
+                %        stat = 'anova';
+                %     end 
+                end
             otherwise
         end
 
         switch stat
-            case 'anova'
+            case 'anova' % one-way ANOVA
                 [barInfo.stat] = anova1_with_multiComp(data_all,data_all_group);
-                % % Convert data_all and data_all_group to a single column
-                % % var to be able to run anova1 using them
-                % data_all = data_all(:); % Convert data_all to a single column var
-                % data_all_group = data_all_group(:); % Convert data_all_group to a single column var
-                % [barInfo.stat.p,barInfo.stat.tbl,barInfo.stat.stats] = anova1(data_all,data_all_group,'off');
-                % if barInfo.stat.stats.df~=0
-                %     [c,~,~,gnames] = multcompare(barInfo.stat.stats,'Display','off'); % multiple comparison test. Check if the difference between groups are significant
-                %     % 'tukey-kramer'
-                %     % The first two columns of c show the groups that are compared. 
-                %     % The fourth column shows the difference between the estimated group means. 
-                %     % The third and fifth columns show the lower and upper limits for 95% confidence intervals for the true mean difference. 
-                %     % The sixth column contains the p-value for a hypothesis test that the corresponding mean difference is equal to zero. 
-
-                %     % convert c to a table
-                %     c = num2cell(c);
-                %     c(:, 1:2) = cellfun(@(x) gnames{x}, c(:, 1:2), 'UniformOutput',false);
-                %     c = cell2table(c,...
-                %         'variableNames', {'g1', 'g2', 'lower-confi-int', 'estimate', 'upper-confi-int', 'p'});
-                %     h = NaN(size(c, 1), 1);
-                %     idx_sig = find(c.p < 0.05);
-                %     idx_nonsig = find(c.p >= 0.05);
-                %     h(idx_sig) = 1;
-                %     h(idx_nonsig) = 0;
-                %     c.h = h;
-                % end
-                % barInfo.stat.c = c;
-                % barInfo.stat.gnames = gnames;
-            case 'pttest'
+            case 'pttest' % paired t-test
                 [barInfo.stat.h,barInfo.stat.p,barInfo.stat.ci,barInfo.stat.stats] = ttest(barInfo.data(1).group_data,barInfo.data(2).group_data);
+            case 'upttest' % unpaired t-test
+                [barInfo.stat.h,barInfo.stat.p,barInfo.stat.ci,barInfo.stat.stats] = ttest2(barInfo.data(1).group_data,barInfo.data(2).group_data);
             otherwise
         end
         barInfo.stat.stat_method = stat;
