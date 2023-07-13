@@ -290,7 +290,7 @@ filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan nan]}; % [ex in rb exApO
 % Note: set adata.event_type to 'stimWin' when creating alignedData_allTrials
 close all
 save_fig = false; % true/false
-pause_after_trial = false;
+pause_after_trial = true;
 
 filter_roi_tf = false; % true/false. If true, screen ROIs
 TraceType = 'aligned'; % 'full'/'aligned'. Plot the full trace or stimulation aligned trace
