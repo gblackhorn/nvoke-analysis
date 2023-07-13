@@ -48,6 +48,8 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	        stim_names = varargin{ii+1};
         elseif strcmpi('filters', varargin{ii})
 	        filters = varargin{ii+1};
+        elseif strcmpi('diffPair', varargin{ii})
+	        diffPair = varargin{ii+1};
         elseif strcmpi('propName', varargin{ii})
 	        propName = varargin{ii+1};
         elseif strcmpi('binWidth', varargin{ii})
