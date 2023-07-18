@@ -25,9 +25,12 @@ function [xData,meanVal,steVal,varargout] = get_mean_ste_from_barStat(barStat,st
 		meanVal = [barStat(idx).data.mean_val];
 		steVal = [barStat(idx).data.ste_val];
 		binEdges = barStat(idx).binEdges;
+
+		periStimGroups = barStat(idx).periStimGroups;
 	else
 		error('stimName not found in the input structure var')
 	end
 	varargout{1} = binEdges;
 	varargout{2} = rawData;
+	varargout{3} = periStimGroups;
 end

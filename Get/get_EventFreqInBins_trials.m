@@ -40,6 +40,11 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
     AlignEventsToStim = true; % align the eventTimeStamps to the onsets of the stimulations: subtract eventTimeStamps with stimulation onset time
     round_digit_sig = 2; % round to the Nth significant digit for duration
 
+    splitLongStim = [1]; % If the stimDuration is longer than stimEffectDuration, the stimDuration 
+                        %  part after the stimEffectDuration will be splitted. If it is [1 1], the
+                        % time during stimulation will be splitted using edges below
+                        % [stimStart, stimEffectDuration, stimEffectDuration+splitLongStim, stimEnd] 
+
     debug_mode = false;
 
     % Optionals for inputs
@@ -56,6 +61,8 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
             PeriBaseRange = varargin{ii+1}; 
         elseif strcmpi('stimEffectDuration', varargin{ii}) 
             stimEffectDuration = varargin{ii+1}; 
+        elseif strcmpi('splitLongStim', varargin{ii})
+            splitLongStim = varargin{ii+1};
         elseif strcmpi('binWidth', varargin{ii}) 
             binWidth = varargin{ii+1}; 
         elseif strcmpi('specialBin', varargin{ii}) 
@@ -140,6 +147,7 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
         EventFreqInBins = emptyStruct({'TrialNames','roiNames','EventFqInBins','stimNum'},[1, roi_num]); % create an empty structure
         [EventFreqInBins.TrialNames] = TrialNames{:}; % add trial names in struct EventFreqInBins
         [EventFreqInBins.roiNames] = roiNames{:}; % add roi names in struct EventFreqInBins
+        periStimGroups = {};
 
         % Get the time of stimulation related events
         if stimEventsPos && ~isempty(stimEvents) && ~isempty(EventsProps)
@@ -207,9 +215,9 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
                     PeriBaseRange = [-preStimDuration -2];
                 end
                 % set the peri-stim sections (edges)
-                [periStimSections,stimRepeatNum] = setPeriStimSectionForEventFreqCalc(alignedData_filtered(tn).fullTime,stimInfo,...
+                [periStimSections,stimRepeatNum,periStimGroups] = setPeriStimSectionForEventFreqCalc(alignedData_filtered(tn).fullTime,stimInfo,...
                     'preStimDuration',preStim_duration,'postStimDuration',postStim_duration,...
-                    'PeriBaseRange',PeriBaseRange,'stimEffectDuration',stimEffectDuration);
+                    'PeriBaseRange',PeriBaseRange,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim);
 
                 % calculate the averaged event frequencies in the bins defined by periStimSections
                 % Use the 3rd-column elements as default 0 for the peri-stim ranges 
@@ -230,4 +238,5 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
     varargout{2} = stimShadeData;
     varargout{3} = stimShadeName;
     varargout{4} = stimEventCatName;
+    varargout{5} = periStimGroups;
 end

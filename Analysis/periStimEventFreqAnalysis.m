@@ -21,6 +21,11 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	customizeEdges = false; % customize the bins using function 'setPeriStimSectionForEventFreqCalc'
 	stimEffectDuration = 1; % unit: second. Use this to set the end for the stimulation effect range
 
+	splitLongStim = [1]; % If the stimDuration is longer than stimEffectDuration, the stimDuration 
+						%  part after the stimEffectDuration will be splitted. If it is [1 1], the
+						% time during stimulation will be splitted using edges below
+						% [stimStart, stimEffectDuration, stimEffectDuration+splitLongStim, stimEnd] 
+
 	stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
 	stimEvents(1).stimName = 'og-5s';
 	stimEvents(1).eventCat = 'rebound';
@@ -66,6 +71,8 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
             PeriBaseRange = varargin{ii+1}; 
         elseif strcmpi('stimEffectDuration', varargin{ii}) 
             stimEffectDuration = varargin{ii+1}; 
+        elseif strcmpi('splitLongStim', varargin{ii})
+	        splitLongStim = varargin{ii+1};
         elseif strcmpi('stimEventsPos', varargin{ii})
 	        stimEventsPos = varargin{ii+1};
         elseif strcmpi('stimEvents', varargin{ii})
@@ -103,7 +110,7 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	    'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,'stimIDX',stimIDX,...
 	    'normToBase',normToBase,'apCorrection',apCorrection,...
 	    'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
-	    'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,...
+	    'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim,...
 	    'xlabelStr',xlabelStr,'ylabelStr',ylabelStr,...
         'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 		'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'binWidth',binWidth,...
@@ -111,14 +118,15 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 
 	% Get the binned data from barStat
 	stimTypeNum = numel(stim_names);
-	PSEF_Data = empty_content_struct({'stim','binEdges','xData','binData','binMean','binSte','stimShade'},stimTypeNum); % peri-stim event frequency (PSEF) data
+	PSEF_Data = empty_content_struct({'stim','binEdges','periStimGroups','xData','binData','binMean','binSte','stimShade'},stimTypeNum); % peri-stim event frequency (PSEF) data
 	for stn = 1:stimTypeNum
 		PSEF_Data(stn).stim = stim_names{stn};
-		[PSEF_Data(stn).xData,PSEF_Data(stn).binMean,PSEF_Data(stn).binSte,PSEF_Data(stn).binEdges,PSEF_Data(stn).binData] = get_mean_ste_from_barStat(barStat,PSEF_Data(stn).stim);
+		[PSEF_Data(stn).xData,PSEF_Data(stn).binMean,PSEF_Data(stn).binSte,PSEF_Data(stn).binEdges,PSEF_Data(stn).binData,PSEF_Data(stn).periStimGroups] = get_mean_ste_from_barStat(barStat,PSEF_Data(stn).stim);
 
 		shadeStimTypeNames = {stimShadeDataAll.stimTypeName};
 		IDXstimShade = find(strcmpi(PSEF_Data(stn).stim,shadeStimTypeNames));
 		PSEF_Data(stn).stimShade = stimShadeDataAll(IDXstimShade);
+		% PSEF_Data(stn).periStimGroups = stimShadeDataAll(IDXstimShade);
 	end
 
 	% Plot diff between different stimulations
@@ -186,6 +194,8 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 			'stimShadeDataA',diffStat(dpn).shadeA.shadeData,'stimShadeDataB',diffStat(dpn).shadeB.shadeData,...
 			'stimShadeColorA',diffStat(dpn).shadeA.color,'stimShadeColorB',diffStat(dpn).shadeB.color,...
 			'save_fig',false,'save_dir',save_dir,'plotWhere',gca);
+
+
 		ax = nexttile(tloDiffStat);
 		ttestP1TableVarNames = NumArray2StringCell(diffStat(dpn).xA);
 		ttestP1Table = array2table(ttestVal,'VariableNames',ttestP1TableVarNames(1:length(ttestVal)),'RowNames',{'p','h'});
