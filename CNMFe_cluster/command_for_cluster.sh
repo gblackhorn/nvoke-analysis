@@ -135,18 +135,27 @@ scancel xxxxxxx # xxxxxxx is a job ID
 # that are not present in the source.
 
 
+
 # ====================
 # If needed, you can run some script using a matlab with GUI
 
 # Load matlab module 
 module load matlab
 
+
+
 # Run matlab with specified resource
 # -t 1-0: 1 day
 srun -p compute -t 1-0 --nodes=1 --ntasks=1 --cpus-per-task=32 --mem-per-cpu=8G --x11 --pty matlab
 # srun -p short -t 0-1 --mem=10G -c8 --x11 --pty matlab
-# srun -p compute -t 1-0 --mem=256G -c16 --x11 --pty matlab
 # srun -p compute -t 1-0 --mem=256G -c16 --x11 --pty bash
 
 # srun matlab -nosplash 
 # srun matlab -nosplash "cluster_interactive_matlab_bash;quit"
+
+
+
+# Open the scripts below 
+# - command_for_cnmfe_with_manual_intervention.m
+# - cnmfe_large_data_script_cluster.m
+# viewNeurons.m
