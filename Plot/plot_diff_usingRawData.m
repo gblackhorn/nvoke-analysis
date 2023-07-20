@@ -17,6 +17,7 @@ function [varargout] = plot_diff_usingRawData(xData,DataA,DataB,varargin)
 	column_lim = 1; % number of axes column
 	xlabelStr = 'Time (s)';
 	ylabelStr = '';
+	new_xticksLabel = {};
 	figTitleStr = 'line plots with diff bar';
 
 	stimShadeDataA = {};
@@ -50,6 +51,8 @@ function [varargout] = plot_diff_usingRawData(xData,DataA,DataB,varargin)
 	        ylabelStr = varargin{ii+1};
 	    elseif strcmpi('new_xticks', varargin{ii})
 	        new_xticks = varargin{ii+1};
+	    elseif strcmpi('new_xticksLabel', varargin{ii})
+	        new_xticksLabel = varargin{ii+1};
 	    elseif strcmpi('figTitleStr', varargin{ii})
 	        figTitleStr = varargin{ii+1};
 	    elseif strcmpi('stimShadeDataA', varargin{ii})
@@ -123,6 +126,10 @@ function [varargout] = plot_diff_usingRawData(xData,DataA,DataB,varargin)
 		xticksVal = xData;
 	end
 	xticks(xticksVal);
+
+	if ~isempty(new_xticksLabel) && numel(xticksVal) == numel(new_xticksLabel)
+		xticklabels(new_xticksLabel)
+	end
 
 
 	% get the y lim

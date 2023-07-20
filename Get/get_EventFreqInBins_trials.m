@@ -41,8 +41,8 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
     round_digit_sig = 2; % round to the Nth significant digit for duration
 
     splitLongStim = [1]; % If the stimDuration is longer than stimEffectDuration, the stimDuration 
-                        %  part after the stimEffectDuration will be splitted. If it is [1 1], the
-                        % time during stimulation will be splitted using edges below
+                        %  part after the stimEffectDuration will be splitted using this var as edges inside. 
+                        % If it is [1 1], the time during stimulation will be splitted using edges below
                         % [stimStart, stimEffectDuration, stimEffectDuration+splitLongStim, stimEnd] 
 
     debug_mode = false;
@@ -147,7 +147,7 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
         EventFreqInBins = emptyStruct({'TrialNames','roiNames','EventFqInBins','stimNum'},[1, roi_num]); % create an empty structure
         [EventFreqInBins.TrialNames] = TrialNames{:}; % add trial names in struct EventFreqInBins
         [EventFreqInBins.roiNames] = roiNames{:}; % add roi names in struct EventFreqInBins
-        periStimGroups = {};
+        binNames = {};
 
         % Get the time of stimulation related events
         if stimEventsPos && ~isempty(stimEvents) && ~isempty(EventsProps)
@@ -215,7 +215,7 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
                     PeriBaseRange = [-preStimDuration -2];
                 end
                 % set the peri-stim sections (edges)
-                [periStimSections,stimRepeatNum,periStimGroups] = setPeriStimSectionForEventFreqCalc(alignedData_filtered(tn).fullTime,stimInfo,...
+                [periStimSections,stimRepeatNum,binNames] = setPeriStimSectionForEventFreqCalc(alignedData_filtered(tn).fullTime,stimInfo,...
                     'preStimDuration',preStim_duration,'postStimDuration',postStim_duration,...
                     'PeriBaseRange',PeriBaseRange,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim);
 
@@ -238,5 +238,5 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
     varargout{2} = stimShadeData;
     varargout{3} = stimShadeName;
     varargout{4} = stimEventCatName;
-    varargout{5} = periStimGroups;
+    varargout{5} = binNames;
 end

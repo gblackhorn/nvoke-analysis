@@ -118,10 +118,10 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 
 	% Get the binned data from barStat
 	stimTypeNum = numel(stim_names);
-	PSEF_Data = empty_content_struct({'stim','binEdges','periStimGroups','xData','binData','binMean','binSte','stimShade'},stimTypeNum); % peri-stim event frequency (PSEF) data
+	PSEF_Data = empty_content_struct({'stim','binEdges','binNames','xData','binData','binMean','binSte','stimShade'},stimTypeNum); % peri-stim event frequency (PSEF) data
 	for stn = 1:stimTypeNum
 		PSEF_Data(stn).stim = stim_names{stn};
-		[PSEF_Data(stn).xData,PSEF_Data(stn).binMean,PSEF_Data(stn).binSte,PSEF_Data(stn).binEdges,PSEF_Data(stn).binData,PSEF_Data(stn).periStimGroups] = get_mean_ste_from_barStat(barStat,PSEF_Data(stn).stim);
+		[PSEF_Data(stn).xData,PSEF_Data(stn).binMean,PSEF_Data(stn).binSte,PSEF_Data(stn).binEdges,PSEF_Data(stn).binData,PSEF_Data(stn).binNames] = get_mean_ste_from_barStat(barStat,PSEF_Data(stn).stim);
 
 		shadeStimTypeNames = {stimShadeDataAll.stimTypeName};
 		IDXstimShade = find(strcmpi(PSEF_Data(stn).stim,shadeStimTypeNames));
@@ -131,7 +131,7 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 
 	% Plot diff between different stimulations
 	diffPairNum = numel(diffPair);
-	diffStat = empty_content_struct({'groupA','groupB','xA','xB','dataA','dataB','binA','binB','shadeA','shadeB','ABdiff','ttestTab','scatterNum'},diffPairNum);
+	diffStat = empty_content_struct({'groupA','groupB','xA','xB','dataA','dataB','binA','binB','xGroupA','xGroupB','shadeA','shadeB','ABdiff','ttestTab','scatterNum'},diffPairNum);
 	figTitleStrCell = cell(diffPairNum,1);
 	[fDiff,fDiff_rowNum,fDiff_colNum] = fig_canvas(diffPairNum,'unit_width',0.4,'unit_height',0.4,'column_lim',2,...
 		'fig_name','diff between event freq'); % create a figure
@@ -140,57 +140,74 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 		'fig_name','diff between event freq stat'); % create a figure
 	tloDiffStat = tiledlayout(fDiffStat,fDiff_rowNum,fDiff_colNum);
 
+	% organize the data in PSEF to compare peri-stim event frequencies from recordings applied with
+	% different stimulation
+	[diffStat] = organizeDataForDiffComp(PSEF_Data,diffPair);
+
 	for dpn = 1:diffPairNum
-		ax = nexttile(tloDiff);
-		stimPairs = stim_names(diffPair{dpn});
-		diffStat(dpn).groupA = PSEF_Data(diffPair{dpn}(1)).stim;
-		diffStat(dpn).groupB = PSEF_Data(diffPair{dpn}(2)).stim;
-		diffStat(dpn).xA = PSEF_Data(diffPair{dpn}(1)).xData;
-		diffStat(dpn).xB = PSEF_Data(diffPair{dpn}(2)).xData;
-		diffStat(dpn).binA = PSEF_Data(diffPair{dpn}(1)).binEdges;
-		diffStat(dpn).binB = PSEF_Data(diffPair{dpn}(2)).binEdges;
+		% ax = nexttile(tloDiff);
+		% stimPairs = stim_names(diffPair{dpn});
+		% diffStat(dpn).groupA = PSEF_Data(diffPair{dpn}(1)).stim;
+		% diffStat(dpn).groupB = PSEF_Data(diffPair{dpn}(2)).stim;
+		% diffStat(dpn).xA = PSEF_Data(diffPair{dpn}(1)).xData;
+		% diffStat(dpn).xB = PSEF_Data(diffPair{dpn}(2)).xData;
+		% diffStat(dpn).binA = PSEF_Data(diffPair{dpn}(1)).binEdges;
+		% diffStat(dpn).binB = PSEF_Data(diffPair{dpn}(2)).binEdges;
 
-		% Shift ap only data, if stim pairs all contains og, and one of them contains ap
-		shiftDataPairIDX = find(contains(stimPairs,'ap') & contains(stimPairs,'og')); % index in diffPair{dpn}
-		noShiftDataPairIDX = find(contains(stimPairs,'ap') & ~contains(stimPairs,'og')); % index in diffPair{dpn}
-		% noShiftDataIDX = diffPair{dpn}(noShiftDataPairIDX); % index in stim_names
-		if ~isempty(shiftDataPairIDX) && ~isempty(noShiftDataPairIDX) % all(contains(stimPairs,'og')) && ~isempty(noShiftDataPairIDX)
-			noShiftDataIDX = diffPair{dpn}(noShiftDataPairIDX); % index in stim_names
-			% shiftDataPairIDX = find(diffPair{dpn}~=noShiftDataIDX); % index in diffPair{dpn}
-			shiftDataIDX = diffPair{dpn}(shiftDataPairIDX); % index in stim_names
+		% % Shift data using both ap and og stim, if stim pairs all contains og, and one of them contains ap
+		% shiftDataPairIDX = find(contains(stimPairs,'ap') & contains(stimPairs,'og')); % index in diffPair{dpn}
+		% noShiftDataPairIDX = find(contains(stimPairs,'ap') & ~contains(stimPairs,'og')); % index in diffPair{dpn}
+		% % noShiftDataIDX = diffPair{dpn}(noShiftDataPairIDX); % index in stim_names
+		% if ~isempty(shiftDataPairIDX) && ~isempty(noShiftDataPairIDX) % all(contains(stimPairs,'og')) && ~isempty(noShiftDataPairIDX)
 
-			shiftData = PSEF_Data(shiftDataIDX).binData(2:end);
-			shiftShade = PSEF_Data(shiftDataIDX).stimShade;
-			for n = 1:numel(shiftShade.shadeData)
-				shiftShade.shadeData{n}(:,1) = shiftShade.shadeData{n}(:,1)-1;
-			end
+		% 	if ~customizeEdges
+		% 		noShiftDataIDX = diffPair{dpn}(noShiftDataPairIDX); % index in stim_names
+		% 		% shiftDataPairIDX = find(diffPair{dpn}~=noShiftDataIDX); % index in diffPair{dpn}
+		% 		shiftDataIDX = diffPair{dpn}(shiftDataPairIDX); % index in stim_names
 
-			if noShiftDataPairIDX == 1
-				diffStat(dpn).dataA = PSEF_Data(noShiftDataIDX).binData;
-				diffStat(dpn).dataB = shiftData;
+		% 		shiftData = PSEF_Data(shiftDataIDX).binData(2:end);
+		% 		shiftShade = PSEF_Data(shiftDataIDX).stimShade;
+		% 		for n = 1:numel(shiftShade.shadeData)
+		% 			shiftShade.shadeData{n}(:,1) = shiftShade.shadeData{n}(:,1)-1;
+		% 		end
 
-				diffStat(dpn).shadeA = PSEF_Data(noShiftDataIDX).stimShade;
-				diffStat(dpn).shadeB = shiftShade;
-			else
-				diffStat(dpn).dataA = shiftData;
-				diffStat(dpn).dataB = PSEF_Data(noShiftDataIDX).binData;
+		% 		if noShiftDataPairIDX == 1
+		% 			diffStat(dpn).dataA = PSEF_Data(noShiftDataIDX).binData;
+		% 			diffStat(dpn).dataB = shiftData;
 
-				diffStat(dpn).shadeA = shiftShade;
-				diffStat(dpn).shadeB = PSEF_Data(noShiftDataIDX).stimShade;
-			end
-		else
-			diffStat(dpn).dataA = PSEF_Data(diffPair{dpn}(1)).binData;
-			diffStat(dpn).dataB = PSEF_Data(diffPair{dpn}(2)).binData;
-			diffStat(dpn).shadeA = PSEF_Data(diffPair{dpn}(1)).stimShade;
-			diffStat(dpn).shadeB = PSEF_Data(diffPair{dpn}(2)).stimShade;
-		end
+		% 			diffStat(dpn).shadeA = PSEF_Data(noShiftDataIDX).stimShade;
+		% 			diffStat(dpn).shadeB = shiftShade;
+		% 		else
+		% 			diffStat(dpn).dataA = shiftData;
+		% 			diffStat(dpn).dataB = PSEF_Data(noShiftDataIDX).binData;
+
+		% 			diffStat(dpn).shadeA = shiftShade;
+		% 			diffStat(dpn).shadeB = PSEF_Data(noShiftDataIDX).stimShade;
+		% 		end
+		% 	else
+		% 	end
+		% else
+		% 	diffStat(dpn).dataA = PSEF_Data(diffPair{dpn}(1)).binData;
+		% 	diffStat(dpn).dataB = PSEF_Data(diffPair{dpn}(2)).binData;
+		% 	diffStat(dpn).shadeA = PSEF_Data(diffPair{dpn}(1)).stimShade;
+		% 	diffStat(dpn).shadeB = PSEF_Data(diffPair{dpn}(2)).stimShade;
+		% end
 
 		figTitleStrCell{dpn} = sprintf('diff between %s and %s in %gs bins%s%s',...
 			diffStat(dpn).groupA,diffStat(dpn).groupB,binWidth,normToBaseStr);
 
+		if diffStat(dpn).shiftBins
+			new_xticks = diffStat(dpn).xA;
+			new_xticksLabel = diffStat(dpn).binNamesAB;
+		else
+			new_xticks = diffStat(dpn).binEdgesA;
+			new_xticksLabel = {};
+		end
+
+		ax = nexttile(tloDiff);
 		[ttestVal,diffVal,scatterNum]=plot_diff_usingRawData(diffStat(dpn).xA,diffStat(dpn).dataA,diffStat(dpn).dataB,...
-			'legStrA',diffStat(dpn).groupA,'legStrB',diffStat(dpn).groupB,'new_xticks',diffStat(dpn).binA,...
-			'ylabelStr',ylabelStr,'figTitleStr',figTitleStrCell{dpn},...
+			'legStrA',diffStat(dpn).groupA,'legStrB',diffStat(dpn).groupB,'ylabelStr',ylabelStr,...
+			'new_xticks',new_xticks,'new_xticksLabel',new_xticksLabel,'figTitleStr',figTitleStrCell{dpn},...
 			'stimShadeDataA',diffStat(dpn).shadeA.shadeData,'stimShadeDataB',diffStat(dpn).shadeB.shadeData,...
 			'stimShadeColorA',diffStat(dpn).shadeA.color,'stimShadeColorB',diffStat(dpn).shadeB.color,...
 			'save_fig',false,'save_dir',save_dir,'plotWhere',gca);

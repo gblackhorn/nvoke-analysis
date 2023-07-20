@@ -65,23 +65,23 @@ function [periStimEdges,varargout] = setPeriStimSectionForEventFreqCalc(timeInfo
 		periStimEdges = NaN(stimRepeatNum,sectionEdgesNum);
 
 		% create a cell array to store the names of groups set by the edges
-		periStimGroups = cell(1,(sectionEdgesNum-1));
+		binNames = cell(1,(sectionEdgesNum-1));
 
 		% 4th edge:use the second stim start  
 		periStimEdges(:,4) = stimDurationStruct(stimStartSortIDX(end)).range(:,1);
-		periStimGroups{4} = groupName.secondStim;
+		binNames{4} = groupName.secondStim;
 
 		% 5th edge: use the secondStimStart + stimEffectDuration  
 		periStimEdges(:,5) = stimDurationStruct(stimStartSortIDX(end)).range(:,1)+stimEffectDuration;
-		periStimGroups{5} = groupName.lateFirstStim;
+		binNames{5} = groupName.lateFirstStim;
 
 		% 6th edge: use the firstStimEnd   
 		periStimEdges(:,6) = stimDurationStruct(stimStartSortIDX(1)).range(:,2);
-		periStimGroups{6} = groupName.postFirstStim;
+		binNames{6} = groupName.postFirstStim;
 
 		% 7th edge: use the firstStimEnd + stimEffectDuration   
 		periStimEdges(:,7) = stimDurationStruct(stimStartSortIDX(1)).range(:,2)+stimEffectDuration;
-		periStimGroups{7} = groupName.baseAfter;
+		binNames{7} = groupName.baseAfter;
 
 		% list the section edge using stimulation start;
 		stimStartSecIDX = [stimStartSecIDX 4];
@@ -93,10 +93,11 @@ function [periStimEdges,varargout] = setPeriStimSectionForEventFreqCalc(timeInfo
 			periStimEdges = NaN(stimRepeatNum,sectionEdgesNum);
 
 			% create a cell array to store the names of groups set by the edges
-			periStimGroups = cell(1,(sectionEdgesNum-1));
+			binNames = cell(1,(sectionEdgesNum-1));
 
-			% % 4th edge:use the stimStart+  postStimDuration
-			% periStimEdges(:,4) = stimDurationStruct(stimStartSortIDX(1)).range(:,1)+stimEffectDuration;
+			% 4th edge:use the stimStart +  stimEffectDuration
+			periStimEdges(:,4) = stimDurationStruct(stimStartSortIDX(1)).range(:,1)+stimEffectDuration;
+			binNames{4} = groupName.baseAfter;
 		else
 
 			% number of edges during stimulation after the stimEffectDuration. StimEnd is not counted
@@ -107,7 +108,7 @@ function [periStimEdges,varargout] = setPeriStimSectionForEventFreqCalc(timeInfo
 			periStimEdges = NaN(stimRepeatNum,sectionEdgesNum);
 
 			% create a cell array to store the names of groups set by the edges
-			periStimGroups = cell(1,(sectionEdgesNum-1));
+			binNames = cell(1,(sectionEdgesNum-1));
 
 			% If the late part of the stimulation will be splitted
 			if lateStimEdgesNum > 0
@@ -116,41 +117,43 @@ function [periStimEdges,varargout] = setPeriStimSectionForEventFreqCalc(timeInfo
 					error('the last element in splitLongStim is >= stimDuration, stimWindow cannot be further splitted')
 				end
 
+				% 4th edge:use the stimStart +  stimEffectDuration
+				periStimEdges(:,4) = stimDurationStruct(stimStartSortIDX(1)).range(:,1)+stimEffectDuration;
+				binNames{4} = sprintf('%s%g',groupName.lateFirstStim,1);
+
+
 				for n = 1:lateStimEdgesNum
 					periStimEdges(:,4+n) = stimDurationStruct(stimStartSortIDX(1)).range(:,1)+stimEffectDuration+splitLongStim(n);
-					periStimGroups{4+n} = sprintf('%s-%g',groupName.lateFirstStim,n);
+					binNames{4+n} = sprintf('%s%g',groupName.lateFirstStim,n+1);
 				end
 			end
 
 
 			% 3rd last edge:use the stimEnd
 			periStimEdges(:,sectionEdgesNum-2) = stimDurationStruct(stimStartSortIDX(1)).range(:,2);
-			periStimGroups{sectionEdgesNum-2} = groupName.postFirstStim;
+			binNames{sectionEdgesNum-2} = groupName.postFirstStim;
 
 			% 2nd last edge:stimEnd +  postStimDuration
 			periStimEdges(:,sectionEdgesNum-1) = stimDurationStruct(stimStartSortIDX(1)).range(:,2)+stimEffectDuration;
-			periStimGroups{sectionEdgesNum-1} = groupName.baseAfter;
+			binNames{sectionEdgesNum-1} = groupName.baseAfter;
 			% periStimEdges(:,6) = stimDurationStruct(stimStartSortIDX(1)).range(:,2)+stimEffectDuration;
 
 		end
 
-		% 4th edge:use the stimStart +  stimEffectDuration
-		periStimEdges(:,4) = stimDurationStruct(stimStartSortIDX(1)).range(:,1)+stimEffectDuration;
-		periStimGroups{4} = groupName.baseAfter;
 
 	end
 
 	% 1st edge: firstStimStart-preStimDuration.
 	periStimEdges(:,1) = stimDurationStruct(stimStartSortIDX(1)).range(:,1)-preStimDuration;
-	periStimGroups{1} = groupName.base;
+	binNames{1} = groupName.base;
 
 	% 2nd edge: baseline end as the second edge
 	periStimEdges(:,2) = stimDurationStruct(stimStartSortIDX(1)).range(:,1)+PeriBaseRange(2);
-	periStimGroups{2} = groupName.preBase;
+	binNames{2} = groupName.preBase;
 
 	% 3rd edge: use the first stim start 
 	periStimEdges(:,3) = stimDurationStruct(stimStartSortIDX(1)).range(:,1);
-	periStimGroups{3} = groupName.firstStim;
+	binNames{3} = groupName.firstStim;
 
 	% final edge: use the firstStimEnd + postStimDuration
 	periStimEdges(:,end) = stimDurationStruct(stimStartSortIDX(1)).range(:,2)+postStimDuration;
@@ -169,6 +172,6 @@ function [periStimEdges,varargout] = setPeriStimSectionForEventFreqCalc(timeInfo
 	% closestIndex = reshapt(closestIndex,1,[]);
 
 	varargout{1} = stimRepeatNum;
-	varargout{2} = periStimGroups;
+	varargout{2} = binNames;
 end
 

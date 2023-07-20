@@ -159,7 +159,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	titleStr = strrep(titleStr,'_',' ');
 
 		% Create a figure and start to plot 
-	barStat = empty_content_struct({'stim','method','multiComp','data','binEdges','periStimGroups','baseRange','recNum','recDateNum','roiNum','stimRepeatNum'},...
+	barStat = empty_content_struct({'stim','method','multiComp','data','binEdges','binNames','baseRange','recNum','recDateNum','roiNum','stimRepeatNum'},...
 		stim_type_num);
 	[f,f_rowNum,f_colNum] = fig_canvas(stim_type_num,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
 		'fig_name',titleStr); % create a figure
@@ -169,7 +169,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	tloStat = tiledlayout(fstat,fstat_rowNum,fstat_colNum);
 	for stn = 1:stim_type_num
 		PeriBaseRange = [baseBinEdgestart baseBinEdgeEnd];
-		[EventFreqInBins,binEdges,stimShadeData,stimShadeName,stimEventCatName,periStimGroups] = get_EventFreqInBins_trials(alignedData,stim_names{stn},'PropName',PropName,...
+		[EventFreqInBins,binEdges,stimShadeData,stimShadeName,stimEventCatName,binNames] = get_EventFreqInBins_trials(alignedData,stim_names{stn},'PropName',PropName,...
 			'binWidth',binWidth,'stimIDX',stimIDX,...
 			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 			'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'PeriBaseRange',PeriBaseRange,...
@@ -218,7 +218,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		else
 			barStat(stn).baseRange = [];
 		end
-		xdata = binEdges(1:end-1)+binWidth/2; % Use binEdges and binWidt to create xdata for bar plot
+		xdata = binEdges(1:end-1)+diff(binEdges)/2; % Use binEdges and binWidt to create xdata for bar plot
+		% xdata = binEdges(1:end-1)+binWidth/2; % Use binEdges and binWidt to create xdata for bar plot
 
 		ax = nexttile(tlo);
 		filterStr = NumArray2StringCell(filters{stn});
@@ -251,6 +252,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 
 		xticks(binEdges);
 		xticklabels(NumArray2StringCell(binEdges));
+		xlim([binEdges(1) binEdges(end)])
 		xlabel(xlabelStr)
 		ylabel(ylabelStr)
 		title(sub_titleStr)
@@ -260,7 +262,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		barStat(stn).multiComp = barInfo.stat.c;
 		barStat(stn).data = barInfo.data;
 		barStat(stn).binEdges = binEdges;
-		barStat(stn).periStimGroups = periStimGroups;
+		barStat(stn).binNames = binNames;
 
 		% combine baseline data and run anova to compare baseline and the rest bins
 		xdataStr_combineBase = NumArray2StringCell(xdata);
