@@ -34,6 +34,7 @@ function [varargout] = plot_diff_usingRawData(xData,DataA,DataB,varargin)
 	scatterAlpha = 0.5;
 	diffBarAlpha = 0.5;
 	diffBarColor = '#616887';
+	FontSize = 14;
 
 	save_fig = false;
 	save_dir = '';
@@ -109,6 +110,8 @@ function [varargout] = plot_diff_usingRawData(xData,DataA,DataB,varargin)
 	xlabel(xlabelStr)
 	ylabel(ylabelStr)
 	title(figTitleStr)
+	set(gca, 'FontSize', FontSize)
+
 
 
 	% bar plot show the difference between A and B

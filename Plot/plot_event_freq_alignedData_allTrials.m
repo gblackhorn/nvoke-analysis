@@ -13,7 +13,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	% Defaults
 	filter_roi_tf = false; % do not filter ROIs by default
 	stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-	filters = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+	filters = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 
 	plot_unit_width = 0.4; % normalized size of a single plot to the display
 	plot_unit_height = 0.4; % nomralized size of a single plot to the display
@@ -229,8 +229,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 			stimEventsStr = 'none';
 		end
 
-		sub_titleStr = sprintf('%s: ex-%s in-%s rb-%s stimEventsPos-%s [%g animals %g cells %g stims]',...
-		stim_names{stn},filterStr{1},filterStr{2},filterStr{3},stimEventsStr,...
+		sub_titleStr = sprintf('%s: ex-%s in-%s rb-%s exApOg-%s stimEventsPos-%s \n[%g animals %g cells %g stims]',...
+		stim_names{stn},filterStr{1},filterStr{2},filterStr{3},filterStr{4},stimEventsStr,...
 		barStat(stn).recDateNum,barStat(stn).roiNum,barStat(stn).stimRepeatNum); % string for the subtitle
 		[barInfo] = barplot_with_stat(ef,'xdata',xdata,'plotWhere',gca);
 

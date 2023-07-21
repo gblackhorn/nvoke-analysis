@@ -254,6 +254,7 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 
 		% Figure 2: Plot the calcium events as scatter and show the events number in a histogram (2 plots)
 		fig_title{2} = sprintf('%s event [%s] raster and histbin %s',title_str_stem,event_type,sortStr);
+		fig_title{2} = strrep(fig_title{2},'_',' ');
 		f(2) = plot_raster_with_hist(eventTime,trace_xlim,'shadeData',patchCoor,...
 			'rowNames',rowNames,'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...
 			'titleStr',fig_title{2});
