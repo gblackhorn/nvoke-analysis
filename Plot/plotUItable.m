@@ -8,9 +8,18 @@ function [varargout] = plotUItable(plotWhereFig,plotWhereAxes,tableData,varargin
 	uit_unit = get(plotWhereAxes,'Units');
 	% delete(axStat);
 	% MultCom_stat = barStat(stn).anovaCombineBase.c(:,["g1","g2","p","h"]);
-	uit = uitable(plotWhereFig,'Data',table2cell(tableData),...
+
+	if ~isempty(tableData.Properties.RowNames)
+		uit = uitable(plotWhereFig,'Data',table2cell(tableData),...
+			'ColumnName',tableData.Properties.VariableNames,...
+			'RowName',tableData.Properties.RowNames,...
+			'Units',uit_unit,'Position',uit_pos);
+	else
+		uit = uitable(plotWhereFig,'Data',table2cell(tableData),...
 		'ColumnName',tableData.Properties.VariableNames,...
 		'Units',uit_unit,'Position',uit_pos);
+	end
+
 
 	uit.FontSize = fontSize;
 

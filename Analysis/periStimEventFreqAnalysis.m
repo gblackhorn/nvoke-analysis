@@ -39,6 +39,16 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	baseBinEdgeEnd = -2; % 0
 	apCorrection = false; % true/false. If true, correct baseline bin used for normalization. 
 
+	groupAforNormB = 'og-5s'; % plot the normB (the fold of dataA) in fig C if the groupA is this
+	errorBarColor = {'#ED8564', '#5872ED', '#EDBF34', '#40EDC3', '#5872ED'};
+	scatterColor = errorBarColor;
+	scatterSize = 20;
+	scatterAlpha = 0.5;
+	stimShadeColorA = {'#F05BBD','#4DBEEE','#ED8564'};
+	stimShadeColorB = {'#F05BBD','#4DBEEE','#ED8564'};
+	shadeHeightScale = 0.05; % percentage of y axes
+	shadeGapScale = 0.01; % diff between two shade in percentage of y axes
+
 	save_fig = false; % true/false
 	save_dir = '';
 	gui_save = 'off';
@@ -105,7 +115,7 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	ylabelStr = sprintf('eventFreq %s',normToBaseStr);
 	xlabelStr = 'time (s)';
 
-	% plot the peri-stim event frequencies in bins for all the stimulation types in alignedData
+	% Fig A. plot the peri-stim event frequencies in bins for all the stimulation types in alignedData
 	[barStat,stimShadeDataAll,save_dir] = plot_event_freq_alignedData_allTrials(alignedData,'propName',propName,...
 	    'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,'stimIDX',stimIDX,...
 	    'normToBase',normToBase,'apCorrection',apCorrection,...
@@ -129,110 +139,141 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 		% PSEF_Data(stn).periStimGroups = stimShadeDataAll(IDXstimShade);
 	end
 
-	% Plot diff between different stimulations
+
+	% Fig B. Plot the diff (two groups as a pair ('diffPair')). Data is organized by the function 'organizeDataForDiffComp'
+	% create fig canvas for plotting diff between different stimulations. Create struct var to save data
 	diffPairNum = numel(diffPair);
-	diffStat = empty_content_struct({'groupA','groupB','xA','xB','dataA','dataB','binA','binB','xGroupA','xGroupB','shadeA','shadeB','ABdiff','ttestTab','scatterNum'},diffPairNum);
+	% diffStat = empty_content_struct({'groupA','groupB','xA','xB','dataA','dataB','binA','binB','xGroupA','xGroupB','shadeA','shadeB','ABdiff','ttestTab','scatterNum'},diffPairNum);
 	figTitleStrCell = cell(diffPairNum,1);
 	[fDiff,fDiff_rowNum,fDiff_colNum] = fig_canvas(diffPairNum,'unit_width',0.4,'unit_height',0.4,'column_lim',2,...
 		'fig_name','diff between event freq'); % create a figure
 	tloDiff = tiledlayout(fDiff,fDiff_rowNum,fDiff_colNum);
-	[fDiffStat,fDiff_rowNum,fDiff_colNum] = fig_canvas(diffPairNum,'unit_width',0.4,'unit_height',0.4,'column_lim',2,...
+	[fDiffStat,~,~] = fig_canvas(diffPairNum,'unit_width',0.4,'unit_height',0.4,'column_lim',2,...
 		'fig_name','diff between event freq stat'); % create a figure
 	tloDiffStat = tiledlayout(fDiffStat,fDiff_rowNum,fDiff_colNum);
+
+	% % Fig C. Plot the diff. dataB is normalized to the means of dataA (every bin is normalized separately)
+	% [fDiff2,~,~] = fig_canvas(diffPairNum,'unit_width',0.4,'unit_height',0.4,'column_lim',2,...
+	% 	'fig_name','diff between event freq normDataB'); % create a figure
+	% tloDiff2 = tiledlayout(fDiff2,fDiff_rowNum,fDiff_colNum);
+	% [fDiffStat2,~,~] = fig_canvas(diffPairNum,'unit_width',0.4,'unit_height',0.4,'column_lim',2,...
+	% 	'fig_name','diff between event freq stat normDataB'); % create a figure
+	% tloDiffStat2 = tiledlayout(fDiffStat2,fDiff_rowNum,fDiff_colNum);
+
 
 	% organize the data in PSEF to compare peri-stim event frequencies from recordings applied with
 	% different stimulation
 	[diffStat] = organizeDataForDiffComp(PSEF_Data,diffPair);
 
+	% plot fig B and fig C. compare the peri-stim event frequencies from recordings applied with
+	% different stimulation
 	for dpn = 1:diffPairNum
-		% ax = nexttile(tloDiff);
-		% stimPairs = stim_names(diffPair{dpn});
-		% diffStat(dpn).groupA = PSEF_Data(diffPair{dpn}(1)).stim;
-		% diffStat(dpn).groupB = PSEF_Data(diffPair{dpn}(2)).stim;
-		% diffStat(dpn).xA = PSEF_Data(diffPair{dpn}(1)).xData;
-		% diffStat(dpn).xB = PSEF_Data(diffPair{dpn}(2)).xData;
-		% diffStat(dpn).binA = PSEF_Data(diffPair{dpn}(1)).binEdges;
-		% diffStat(dpn).binB = PSEF_Data(diffPair{dpn}(2)).binEdges;
-
-		% % Shift data using both ap and og stim, if stim pairs all contains og, and one of them contains ap
-		% shiftDataPairIDX = find(contains(stimPairs,'ap') & contains(stimPairs,'og')); % index in diffPair{dpn}
-		% noShiftDataPairIDX = find(contains(stimPairs,'ap') & ~contains(stimPairs,'og')); % index in diffPair{dpn}
-		% % noShiftDataIDX = diffPair{dpn}(noShiftDataPairIDX); % index in stim_names
-		% if ~isempty(shiftDataPairIDX) && ~isempty(noShiftDataPairIDX) % all(contains(stimPairs,'og')) && ~isempty(noShiftDataPairIDX)
-
-		% 	if ~customizeEdges
-		% 		noShiftDataIDX = diffPair{dpn}(noShiftDataPairIDX); % index in stim_names
-		% 		% shiftDataPairIDX = find(diffPair{dpn}~=noShiftDataIDX); % index in diffPair{dpn}
-		% 		shiftDataIDX = diffPair{dpn}(shiftDataPairIDX); % index in stim_names
-
-		% 		shiftData = PSEF_Data(shiftDataIDX).binData(2:end);
-		% 		shiftShade = PSEF_Data(shiftDataIDX).stimShade;
-		% 		for n = 1:numel(shiftShade.shadeData)
-		% 			shiftShade.shadeData{n}(:,1) = shiftShade.shadeData{n}(:,1)-1;
-		% 		end
-
-		% 		if noShiftDataPairIDX == 1
-		% 			diffStat(dpn).dataA = PSEF_Data(noShiftDataIDX).binData;
-		% 			diffStat(dpn).dataB = shiftData;
-
-		% 			diffStat(dpn).shadeA = PSEF_Data(noShiftDataIDX).stimShade;
-		% 			diffStat(dpn).shadeB = shiftShade;
-		% 		else
-		% 			diffStat(dpn).dataA = shiftData;
-		% 			diffStat(dpn).dataB = PSEF_Data(noShiftDataIDX).binData;
-
-		% 			diffStat(dpn).shadeA = shiftShade;
-		% 			diffStat(dpn).shadeB = PSEF_Data(noShiftDataIDX).stimShade;
-		% 		end
-		% 	else
-		% 	end
-		% else
-		% 	diffStat(dpn).dataA = PSEF_Data(diffPair{dpn}(1)).binData;
-		% 	diffStat(dpn).dataB = PSEF_Data(diffPair{dpn}(2)).binData;
-		% 	diffStat(dpn).shadeA = PSEF_Data(diffPair{dpn}(1)).stimShade;
-		% 	diffStat(dpn).shadeB = PSEF_Data(diffPair{dpn}(2)).stimShade;
-		% end
-
 		figTitleStrCell{dpn} = sprintf('diff between %s and %s in %gs bins%s%s',...
 			diffStat(dpn).groupA,diffStat(dpn).groupB,binWidth,normToBaseStr);
 
-		if diffStat(dpn).shiftBins
-			new_xticks = diffStat(dpn).xA;
-			new_xticksLabel = diffStat(dpn).binNamesAB;
-		else
-			new_xticks = diffStat(dpn).binEdgesA;
-			new_xticksLabel = {};
-		end
+		new_xticks = diffStat(dpn).xA;
+		new_xticksLabel = diffStat(dpn).binNamesAB;
 
+		% if diffStat(dpn).shiftBins
+		% 	new_xticks = diffStat(dpn).xA;
+		% 	new_xticksLabel = diffStat(dpn).binNamesAB;
+		% else
+		% 	new_xticks = diffStat(dpn).binEdgesA;
+		% 	new_xticksLabel = {};
+		% end
+
+		% fig B
 		ax = nexttile(tloDiff);
-		[ttestVal,diffVal,scatterNum]=plot_diff_usingRawData(diffStat(dpn).xA,diffStat(dpn).dataA,diffStat(dpn).dataB,...
+		[diffStat(dpn).ttestAB,diffStat(dpn).diffAB]=plot_diff_usingRawData(diffStat(dpn).xA,diffStat(dpn).dataA,diffStat(dpn).dataB,...
 			'legStrA',diffStat(dpn).groupA,'legStrB',diffStat(dpn).groupB,'ylabelStr',ylabelStr,...
 			'new_xticks',new_xticks,'new_xticksLabel',new_xticksLabel,'figTitleStr',figTitleStrCell{dpn},...
 			'stimShadeDataA',diffStat(dpn).shadeA.shadeData,'stimShadeDataB',diffStat(dpn).shadeB.shadeData,...
 			'stimShadeColorA',diffStat(dpn).shadeA.color,'stimShadeColorB',diffStat(dpn).shadeB.color,...
 			'save_fig',false,'save_dir',save_dir,'plotWhere',gca);
 
-
+		% fig B stat
 		ax = nexttile(tloDiffStat);
 		ttestP1TableVarNames = NumArray2StringCell(diffStat(dpn).xA);
-		ttestP1Table = array2table(ttestVal,'VariableNames',ttestP1TableVarNames(1:length(ttestVal)),'RowNames',{'p','h'});
+		ttestP1Table = array2table(diffStat(dpn).ttestAB,...
+			'VariableNames',ttestP1TableVarNames(1:length(diffStat(dpn).ttestAB)),'RowNames',{'p','h'});
 		plotUItable(fDiffStat,ax,ttestP1Table);
+
+		% % fig C
+		% ax = nexttile(tloDiff2);
+		% [diffStat(dpn).ttestABnorm,diffStat(dpn).diffABnorm]=plot_diff_usingRawData(diffStat(dpn).xA,diffStat(dpn).dataA,diffStat(dpn).dataBnorm,...
+		% 	'legStrA',diffStat(dpn).groupA,'legStrB',diffStat(dpn).groupB,'ylabelStr',ylabelStr,...
+		% 	'new_xticks',new_xticks,'new_xticksLabel',new_xticksLabel,'figTitleStr',figTitleStrCell{dpn},...
+		% 	'stimShadeDataA',diffStat(dpn).shadeA.shadeData,'stimShadeDataB',diffStat(dpn).shadeB.shadeData,...
+		% 	'stimShadeColorA',diffStat(dpn).shadeA.color,'stimShadeColorB',diffStat(dpn).shadeB.color,...
+		% 	'save_fig',false,'save_dir',save_dir,'plotWhere',gca);
+
+		% % fig C stat
+		% ax = nexttile(tloDiffStat2);
+		% % ttestP1TableVarNames = NumArray2StringCell(diffStat(dpn).xA);
+		% ttestP1TableNorm = array2table(diffStat(dpn).ttestABnorm,...
+		% 	'VariableNames',ttestP1TableVarNames(1:length(diffStat(dpn).ttestABnorm)),'RowNames',{'p','h'});
+		% plotUItable(fDiffStat2,ax,ttestP1TableNorm);
 	end
 
-		% Save figure and statistics
+	% Fig C. Plot the dataB normalized to the means of dataA (every bin is normalized separately,
+	% so these are the multiples of dataA)
+	titleStrBnorm = sprintf('event freq as n-fold of %s data\n%sData normalized to %s data',...
+		groupAforNormB,normToBaseStr,groupAforNormB);
+	titleStrBnorm = strrep(titleStrBnorm,'_', ' ');
+	[fdataBnorm,~,~] = fig_canvas(1,'unit_width',0.4,'unit_height',0.4,'column_lim',2,...
+		'fig_name',titleStrBnorm); % create a figure
+
+	% get the groupB data from diff if the groupA is groupAforNormB
+	BnormIDX = find(strcmpi({diffStat.groupA},groupAforNormB));
+	diffStatBnorm = diffStat(BnormIDX);
+	xDataCells = {diffStatBnorm.xB};
+	yDataCells = {diffStatBnorm.dataBnorm};
+	xlabelStr = '';
+	ylabelStr = sprintf('n-fold of %s data',groupAforNormB);
+	legStr = {diffStatBnorm.groupB};
+	stimShadeData = {diffStatBnorm.shadeB};
+
+	[~,longerDataIDX] = max(cellfun(@numel,{diffStatBnorm.xB}));
+	new_xticks = diffStatBnorm(longerDataIDX).xB;
+	new_xticksLabel = diffStatBnorm(longerDataIDX).binNamesAB;
+
+	[ttestNormB] = plot_errorBarLines_with_scatter_stimShade(xDataCells,yDataCells,...
+		'legStr',legStr,'stimShadeData',stimShadeData,'xlabelStr',xlabelStr,'ylabelStr',ylabelStr,...
+		'new_xticks',new_xticks,'new_xticksLabel',new_xticksLabel,'figTitleStr',titleStrBnorm,...
+		'plotWhere',gca);
+
+	if ~isempty(ttestNormB)
+		[~,shorterDataIDX] = min(cellfun(@numel,{diffStatBnorm.xB}));
+		ttestNormBvarNames = diffStatBnorm(shorterDataIDX).binNamesAB;
+		ttestNormBtable = array2table(ttestNormB,...
+			'VariableNames',ttestNormBvarNames,'RowNames',{'p','h'});
+		titleStrBnormStat = sprintf('%s\ntwo-sample ttest',titleStrBnorm);
+		[fstatBnorm,~,~] = fig_canvas(1,'unit_width',0.4,'unit_height',0.4,'column_lim',2,...
+			'fig_name',titleStrBnormStat); % create a figure
+
+		plotUItable(fstatBnorm,gca,ttestNormBtable);
+	end
+
+
+	% Save figure and statistics
 	if save_fig
-		% if isempty(save_dir)
-		% 	gui_save = 'on';
-		% end
-		% msg = 'Choose a folder to save plots of peri-stim event frequency and the difference between stim groups';
 
 		titleStr = sprintf('periStimEventFreqDiff in %g s bins [%s]%s',binWidth,propName,normToBaseStr);
 		titleStr = strrep(titleStr,'_',' ');
+		titleStrNormB = sprintf('event freq as n-fold of %s data %s',groupAforNormB,normToBaseStr);
+		titleStrNormBstat = sprintf('event freq as n-fold of %s data %s stat',groupAforNormB,normToBaseStr);
+		% titleStrNormB = strrep(titleStrNormB,'_',' ');
 
 		save_dir = savePlot(fDiff,'save_dir',save_dir,'guiSave','off',...
 			'fname',titleStr);
 		save_dir = savePlot(fDiffStat,'save_dir',save_dir,'guiSave','off',...
 			'fname',[titleStr,'ttest']);
+		save_dir = savePlot(fdataBnorm,'save_dir',save_dir,'guiSave','off',...
+			'fname',titleStrNormB);
+		save_dir = savePlot(fstatBnorm,'save_dir',save_dir,'guiSave','off',...
+			'fname',titleStrNormBstat);
+		% save_dir = savePlot(fDiffStat2,'save_dir',save_dir,'guiSave','off',...
+		% 	'fname',[titleStrNormB,'ttest']);
 		save(fullfile(save_dir, ['periStimEventAnalysisStat']),...
 		    'barStat','diffStat');
 	end 

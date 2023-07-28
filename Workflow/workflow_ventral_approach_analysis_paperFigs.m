@@ -41,8 +41,10 @@ end
 % Save processed data
 save_dir = uigetdir(AnalysisFolder);
 dt = datestr(now, 'yyyymmdd');
-save(fullfile(save_dir, [dt, '_ProcessedData_ogEx']),...
-    'recdata_organized','alignedData_allTrials','opt','adata');
+% save(fullfile(save_dir, [dt, '_ProcessedData_ogEx']),...
+%     'recdata_organized','alignedData_allTrials','opt','adata');
+uisave({'recdata_organized','alignedData_allTrials','opt','adata'},...
+	fullfile(save_dir, [dt, '_ProcessedData_ogEx']));
 % 'recdata_organized','alignedData_allTrials','grouped_event','adata','grouped_event_setting','opt','adata'
 
 
@@ -216,8 +218,13 @@ baseBinEdgestart = -preStim_duration; % where to start to use the bin for calcul
 baseBinEdgeEnd = -2; % 0
 apCorrection = false; % true/false. If true, correct baseline bin used for normalization. 
 
+violinStimNames = {'og-5s','og-5s ap-0.1s'}; % these groups will be used for the violin plot
+violinBinIDX = [4, 4]; % violinPlot: the nth bin from the data listed in stimNames
+normToFirst = true; % violinPlot: normalize all the data to the mean of the first group (first stimNames)
+
 debug_mode = false; % true/false
 
+% plot periStim event freq, and diff among them
 [barStat,diffStat,FolderPathVA.fig] = periStimEventFreqAnalysis(alignedData_allTrials,'propName',propName,...
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'diffPair',diffPair,...
 	'binWidth',binWidth,'stimIDX',stimIDX,'normToBase',normToBase,...
@@ -226,6 +233,12 @@ debug_mode = false; % true/false
 	'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 	'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on','debug_mode',debug_mode);
+
+% plot and compare a single bins from various stimulation groups
+titleStr = sprintf('violinPlot of a single bin from periStim freq');
+[violinData,statInfo,varargout] = violinplotPeriStimFreq2(barStat,violinStimNames,violinBinIDX,...
+	'normToFirst',normToFirst,'titleStr',titleStr,...
+	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','off');
 
 %% ====================
 % Fig 2 violin plot of specific bins in periStim event frequency
@@ -281,7 +294,7 @@ debug_mode = false; % true/false
 % Screen the ROIs in alignedData_allTrials with specific settings [stim_names and filters]
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+filters = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 [alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
 			'stim_names',stim_names,'filters',filters);
 
@@ -329,59 +342,33 @@ for tn = 1:trial_num
 end
 
 
-%% ====================
-% Fig 2: Plot violin of the event freq without and with OG stimulation
-% 9.1.5 Compare baseline and stimulation calcium signal change (one type of stimulaiton) using boxplot
-stim_name = 'og-5s';
-stimFilter = [nan nan nan nan]; % [ex in rb exApOg].
-[alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
-			'stim_names',stim_name,'filters',stimFilter);
-%% Create grouped_event using code in '9.5.1.1' after filtering alignedData_allTrials
-% Using eventProp_all: entry is 'roi'. mgSetting.groupField = {'stim_name','peak_category'};
-
-% Keep 'og-5s-spon' group and delete others
-tags_discard = {'opto-delay','rebound-ap','rebound-og-0.96s','varied','og-5s ap-0.1s','ap-0.1s og-5s'}; % Discard groups containing these words. 'spon','EXopto','trig-ap',
-% tags_keep = {'og-5s','ap-0.1s'}; % Keep groups containing these words: {'trig-ap','trig','rebound'}
-tags_keep = {'og-5s-spon'}; % Keep groups containing these words: {'trig-ap','trig','rebound'}
-clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
-[grouped_event_ogExNeg] = filter_entries_in_structure(grouped_event,'group',...
-	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);
-
-% Use Violin plot to show the difference of event freq without and with OG stimulation
-close all
-sponfq = [grouped_event_ogExNeg.event_info.sponfq];
-stimfq = [grouped_event_ogExNeg.event_info.stimfq];
-vData = [sponfq(:) stimfq(:)];
-[~,vData_ttestPaired] = ttest(sponfq,stimfq);
-vCategory = {'without OG','during OG'};
-ogEventFreq.withoutOG = sponfq;
-ogEventFreq.duringOG = stimfq;
-ogEventFreq.ttestPaired = vData_ttestPaired;
-violinplot(vData,vCategory);
-titleStr = sprintf('eventFreq stim vs no-stim [%s] paired %g ROIs',stim_name,numel(ogEventFreq.withoutOG));
-title(titleStr)
-ylabel('frequency (Hz)')
-[FolderPathVA.fig,figFileName] = savePlot(gcf,'save_dir',FolderPathVA.fig,'fname','eventFreq_in-out-OG','guiSave','on');
-save(fullfile(FolderPathVA.fig,[figFileName,'_dataStat.mat']),'ogEventFreq');
-
 
 %% ====================
 % Fig 3 
 % 9.2.1 Check aligned trace of events belong to the same category
 % note: 'event_type' for alignedData_allTrials must be 'detected_events'
 close all
-tplot.save_fig = false; % true/false
+tplot.save_fig = true; % true/false
 tplot.plot_combined_data = true; % mean value and std of all traces
 tplot.plot_raw_races = false; % true/false. true: plot every single trace
-tplot.plot_median = true; % true/false. plot raw traces having a median value of the properties specified by 'tplot.medianProp'
+tplot.plot_median = false; % true/false. plot raw traces having a median value of the properties specified by 'tplot.medianProp'
 tplot.medianProp = 'FWHM'; % 
 tplot.shadeType = 'ste'; % plot the shade using std/ste
 tplot.y_range = [-1 2]; % [-10 5],[-3 5],[-2 1]
-tplot.eventCat = {'trig','trig-ap','rebound'}; % options: 'trig', 'spon', 'rebound'
+tplot.eventCat = {'spon'}; % options: 'trig','trig-ap','rebound',, 'spon', 'rebound'
+tplot.combineStim = true; % true/false. combine the same eventCat from recordings applied with various stimulations
 tplot.stimDiscard = {'ap-varied','og-0.96s'}; % 'og-5s',
-tplot.sponNorm = true; % true/false
-tplot.normalized = false; % true/false. normalize the traces to their own peak amplitudes.
+tplot.sponNorm = false; % true/false
+tplot.normalized = true; % true/false. normalize the traces to their own peak amplitudes.
 tplot.save_dir = FolderPathVA.fig;
+
+filter_roi_tf = true; % true/false
+if filter_roi_tf
+	alignedData = alignedData_filtered;
+else
+	alignedData = alignedData_allTrials;
+end
+
 
 if tplot.sponNorm
 	sponNormStr = sprintf('sponNorm_');
@@ -409,10 +396,10 @@ for cn = 1:numel(tplot.eventCat)
 	stimAlignedTrace_means(cn).event_group = tplot.eventCat{cn};
 	tplot.fname = sprintf('%s%s%s-aligned_traces_%s%s%s',...
 		NormStr,sponNormStr,adata.event_align_point,tplot.eventCat{cn},meanDataStr,rawDataStr);
-	[fHandle_stimAlignedTrace,stimAlignedTrace_means(cn).trace] = plot_aligned_catTraces(alignedData_allTrials,...
+	[fHandle_stimAlignedTrace,stimAlignedTrace_means(cn).trace] = plot_aligned_catTraces(alignedData,...
 		'plot_combined_data',tplot.plot_combined_data,'plot_raw_races',tplot.plot_raw_races,...
-		'plot_median',tplot.plot_median,'medianProp',tplot.medianProp,...
-		'eventCat',tplot.eventCat{cn},'stimDiscard',tplot.stimDiscard,'shadeType',tplot.shadeType,...
+		'plot_median',tplot.plot_median,'medianProp',tplot.medianProp,'eventCat',tplot.eventCat{cn},...
+		'combineStim',tplot.combineStim,'stimDiscard',tplot.stimDiscard,'shadeType',tplot.shadeType,...
 		'y_range',tplot.y_range,'sponNorm',tplot.sponNorm,'normalized',tplot.normalized,'fname',tplot.fname); % 'fname',fname,
 	if tplot.save_fig
 		if cn == 1
@@ -481,7 +468,7 @@ mgSetting.sponOnly = false; % true/false. If eventType is 'roi', and mgSetting.s
 mgSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
 mgSetting.dis_spon = false; % true/false. Discard spontaneous events
 mgSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
-mgSetting.groupField = {'stim_name','peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+mgSetting.groupField = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
 
 
 % rename the stimulation tag if og evokes spike at the onset of stimulation
@@ -504,7 +491,7 @@ debug_mode = false; % true/false
 
 % {'trig [EXog]','EXog','trig-AP',}
 tags_discard = {'rebound [ap','ap-0.25s','ap-0.5s','og-0.96s','opto-delay'}; % Discard groups containing these words. 'spon','opto-delay','og&ap','rebound [og&ap-5s]'
-tags_keep = {'trig','trig-ap','rebound [og-5s]','rebound [og&ap-5s]'}; % Keep groups containing these words. {'trig [og','rebound','opto-delay [og-5s]',,'spon'}
+tags_keep = {'trig','trig-ap','rebound [og-5s]','rebound [og&ap-5s]','spon'}; % Keep groups containing these words. {'trig [og','rebound','opto-delay [og-5s]','spon'}
 tagsForMerge = {'trig [og&ap-5s]','trig [og-5s]'};
 NewGroupName = 'opto-evoked all';
 NewtagName = 'opto-evoked [opto-5s opto-5s_air-0.1s]';
@@ -521,8 +508,8 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 close all
 save_fig = true; % true/false
 plot_combined_data = false;
-parNames = {'rise_duration','FWHM','peak_mag_delta','peak_delay'}; % entry: event
-		% 'sponNorm_peak_mag_delta','rise_delay',
+parNames = {'rise_duration','FWHM','peak_mag_delta'}; % entry: event
+		% 'sponNorm_peak_mag_delta','rise_delay','peak_delay'
         % 'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
         % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
     
@@ -585,6 +572,42 @@ violinData = [box_data_cellarray{:}]; % convert cell data to matrix
 violinplot(violinData,NumArray2StringCell(xData));
 savePlot(gcf,'guiSave','off','save_dir',FolderPathVA.fig,'fname','CaLevel violin');
 
+
+
+%% ====================
+% Fig 2: Plot violin of the event freq without and with OG stimulation
+% 9.3.5 Compare baseline and stimulation calcium signal change (one type of stimulaiton) using boxplot
+stim_name = 'og-5s';
+stimFilter = [nan nan nan nan]; % [ex in rb exApOg].
+[alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
+			'stim_names',stim_name,'filters',stimFilter);
+%% Create grouped_event using code in '9.5.1.1' after filtering alignedData_allTrials
+% Using eventProp_all: entry is 'roi'. mgSetting.groupField = {'stim_name','peak_category'};
+
+% Keep 'og-5s-spon' group and delete others
+tags_discard = {'opto-delay','rebound-ap','rebound-og-0.96s','varied','og-5s ap-0.1s','ap-0.1s og-5s'}; % Discard groups containing these words. 'spon','EXopto','trig-ap',
+% tags_keep = {'og-5s','ap-0.1s'}; % Keep groups containing these words: {'trig-ap','trig','rebound'}
+tags_keep = {'og-5s-spon'}; % Keep groups containing these words: {'trig-ap','trig','rebound'}
+clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
+[grouped_event_ogExNeg] = filter_entries_in_structure(grouped_event,'group',...
+	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);
+
+% Use Violin plot to show the difference of event freq without and with OG stimulation
+close all
+sponfq = [grouped_event_ogExNeg.event_info.sponfq];
+stimfq = [grouped_event_ogExNeg.event_info.stimfq];
+vData = [sponfq(:) stimfq(:)];
+[~,vData_ttestPaired] = ttest(sponfq,stimfq);
+vCategory = {'without OG','during OG'};
+ogEventFreq.withoutOG = sponfq;
+ogEventFreq.duringOG = stimfq;
+ogEventFreq.ttestPaired = vData_ttestPaired;
+violinplot(vData,vCategory);
+titleStr = sprintf('eventFreq stim vs no-stim [%s] paired %g ROIs',stim_name,numel(ogEventFreq.withoutOG));
+title(titleStr)
+ylabel('frequency (Hz)')
+[FolderPathVA.fig,figFileName] = savePlot(gcf,'save_dir',FolderPathVA.fig,'fname','eventFreq_in-out-OG','guiSave','on');
+save(fullfile(FolderPathVA.fig,[figFileName,'_dataStat.mat']),'ogEventFreq');
 
 
 %% ==================== 

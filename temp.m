@@ -1178,3 +1178,31 @@ plot(postCloseHMTime,postCloseHMData,'k*');
 
 plot(timeAtHM(:,1),halfMax,'ro');
 plot(timeAtHM(:,2),halfMax,'r*');
+
+
+
+%% ====================
+% Sample data for two groups, each group has 5 time-points
+group1_data = {data for time1, data for time2, data for time3, data for time4, data for time5};
+group2_data = {data for time1, data for time2, data for time3, data for time4, data for time5};
+
+% Combine the data into a single matrix
+dataMatrix = [cell2mat(group1_data); cell2mat(group2_data)];
+
+% Create grouping variables for the two independent variables
+groupVar = [repmat({'Group1'}, 1, 5), repmat({'Group2'}, 1, 5)];
+timeVar = ['Time1', 'Time2', 'Time3', 'Time4', 'Time5'];
+
+% Perform two-way ANOVA
+[p, tbl, stats] = anovan(dataMatrix, {groupVar, timeVar}, 'varnames', {'Group', 'Time'});
+
+% 'p' contains the p-values for main effects and interaction
+% 'tbl' is the ANOVA table
+% 'stats' contains additional information about the ANOVA
+
+% Display the results
+disp(tbl);
+
+
+
+dataAmean = cellfun(@mean,dataA)

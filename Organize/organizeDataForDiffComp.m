@@ -21,10 +21,10 @@ function [diffData,varargout] = organizeDataForDiffComp(PSEF,diffPairs,varargin)
 	binSettings(1).binNamesB = {'baseline','preStim','secondStim','lateFirstStim'};	
 	binSettings(1).binNamesAB = {'baseline','preStim','airPuff','postAirPuff'};	
 	binSettings(1).shiftBinIDX = 3; % if this bin in binSettings(1).binNamesAB is shifted, shade data will also be shifted
-	binSettings(2).stimA = 'ap-0.1s';	
-	binSettings(2).stimB = 'og-5s';	
-	binSettings(2).binNamesA = {'baseline','preStim','firstStim','baseAfter'}; % 	
-	binSettings(2).binNamesB = {'baseline','preStim','lateFirstStim1','lateFirstStim2'};	
+	binSettings(2).stimA = 'og-5s';	
+	binSettings(2).stimB = 'ap-0.1s';	
+	binSettings(2).binNamesA = {'baseline','preStim','lateFirstStim1','lateFirstStim2'};	
+	binSettings(2).binNamesB = {'baseline','preStim','firstStim','baseAfter'}; % 	
 	binSettings(2).binNamesAB = {'baseline','preStim','airPuff','postAirPuff'};	
 	binSettings(2).shiftBinIDX = 3; % if this bin in binSettings(2).binNamesAB is shifted, shade data will also be shifted
 
@@ -45,8 +45,11 @@ function [diffData,varargout] = organizeDataForDiffComp(PSEF,diffPairs,varargin)
 
 	% create an empty stucture diffData
 	diffPairsNum = numel(diffPairs);
-	diffDataFields = {'groupA','groupB','xA','xB','dataA','dataB','binEdgesA','binEdgesB',...
-	'binNamesA','binNamesB','binNamesAB','shadeA','shadeB','shiftBins','ABdiff','stat','scatterNum'};
+
+	% 'binNamesAB': use names here when plotting A and B together for comparison 
+	diffDataFields = {'groupA','groupB','xA','xB','dataA','dataB','dataBnorm','binEdgesA','binEdgesB',...
+	'binNamesA','binNamesB','binNamesAB','shadeA','shadeB','shiftBins',...
+	'ttestAB','ttestABnorm','diffAB','diffABnorm'};
 	diffData = empty_content_struct(diffDataFields,diffPairsNum);
 
 
@@ -127,6 +130,7 @@ function [diffData,varargout] = organizeDataForDiffComp(PSEF,diffPairs,varargin)
 				% store the selected bin data 
 				diffData(dpn).dataA = PSEF(idxA).binData(posBinNamesA);
 				diffData(dpn).dataB = PSEF(idxB).binData(posBinNamesB);
+				diffData(dpn).dataBnorm = normDataBwithDataA(diffData(dpn).dataA,diffData(dpn).dataB);
 
 				% store the shade data
 				diffData(dpn).shadeA = PSEF(idxA).stimShade; 
@@ -134,25 +138,31 @@ function [diffData,varargout] = organizeDataForDiffComp(PSEF,diffPairs,varargin)
 
 				% compare the xData between groupA and groupB in diffData. 
 				% use the one with bigger value. Shift shade data accordingly
-				xDataShiftIDX = find(diffData(dpn).xA-diffData(dpn).xB<0);
+				xDataShiftIDX = find(diffData(dpn).xA-diffData(dpn).xB~=0);
+				% xDataShiftIDX = find(diffData(dpn).xA-diffData(dpn).xB<0);
 
 				% check if the shifted xData including the bin with the name 'firstStim'
 				% if yes, shift the data and shade
 				shiftBinIDX = binSettings(settingIDX).shiftBinIDX;
-				shiftVal = abs(diffData(dpn).xA(shiftBinIDX)-diffData(dpn).xB(shiftBinIDX));
+				shiftVal = diffData(dpn).xA(shiftBinIDX)-diffData(dpn).xB(shiftBinIDX);
+				% shiftVal = abs(diffData(dpn).xA(shiftBinIDX)-diffData(dpn).xB(shiftBinIDX));
 
 				if ~isempty(xDataShiftIDX==shiftBinIDX)
-					% shift the data in groupA
-					xDataShift = diffData(dpn).xA;
-					xDataShift(xDataShiftIDX) = diffData(dpn).xB(xDataShiftIDX);
-					diffData(dpn).xA = xDataShift;
-
-					% shiftVal = abs(diffData(dpn).xA(shiftBinIDX)-diffData(dpn).xB(shiftBinIDX));
-					shiftShadeA = PSEF(idxA).stimShade;
-					for n = 1:numel(shiftShadeA.shadeData)
-						shiftShadeA.shadeData{n}(:,1) = shiftShadeA.shadeData{n}(:,1)+shiftVal;
+					if shiftVal > 0 % use xA for dataB and shift shadeB
+						diffData(dpn).xB = diffData(dpn).xA;
+						shiftShade = PSEF(idxB).stimShade;
+						for n = 1:numel(shiftShade.shadeData)
+							shiftShade.shadeData{n}(:,1) = shiftShade.shadeData{n}(:,1)+shiftVal;
+						end
+						diffData(dpn).shadeB = shiftShade;
+					elseif shiftVal < 0 % use xB for dataA and shift shadeA
+						diffData(dpn).xA = diffData(dpn).xB;
+						shiftShade = PSEF(idxA).stimShade;
+						for n = 1:numel(shiftShade.shadeData)
+							shiftShade.shadeData{n}(:,1) = shiftShade.shadeData{n}(:,1)-shiftVal;
+						end
+						diffData(dpn).shadeA = shiftShade;
 					end
-					diffData(dpn).shadeA = shiftShadeA;
 				end
 			end
 		else % when the bin numbers in two different groups are the same
@@ -171,6 +181,7 @@ function [diffData,varargout] = organizeDataForDiffComp(PSEF,diffPairs,varargin)
 
 			diffData(dpn).dataA = PSEF(idx1).binData;
 			diffData(dpn).dataB = PSEF(idx2).binData;
+			diffData(dpn).dataBnorm = normDataBwithDataA(diffData(dpn).dataA,diffData(dpn).dataB);
 
 			diffData(dpn).shadeA = PSEF(idx1).stimShade;
 			diffData(dpn).shadeB = PSEF(idx2).stimShade;
@@ -179,6 +190,25 @@ function [diffData,varargout] = organizeDataForDiffComp(PSEF,diffPairs,varargin)
 			diffData(dpn).binNamesB = PSEF(idx2).binNames;
 			diffData(dpn).binNamesAB = PSEF(idx2).binNames;
 		end
+	end
+end
+
+function [dataBnorm] = normDataBwithDataA(dataA,dataB)
+	% norm dataB using mean values of dataA
+
+	% dataB and dataA have the same length and are both cell array vars.
+
+	% get the length of dataA
+	cellNum = numel(dataA);
+
+	% create an empty cell array to store the output
+	dataBnorm = cell(size(dataB));
+
+	% calculate the mean of each cell in dataA
+	dataAmean = cellfun(@mean,dataA);
+
+	for cn = 1:cellNum
+		dataBnorm{cn} = dataB{cn}/dataAmean(cn);
 	end
 end
 

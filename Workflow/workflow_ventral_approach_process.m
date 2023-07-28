@@ -89,11 +89,11 @@ end
 % Top = 176;
 % Width = 424;
 % Height = 444;
-movieKeyword = '*2021-04-09-13-03-56*.isxd'; % crop file with names like this
-Left = 376;
-Top = 114;
-Width = 708;
-Height = 547;
+movieKeyword = '2021-03-29-13-48-34_video_sched_0.isxd'; % crop file with names like this
+Left = 352;
+Top = 186;
+Width = 647;
+Height = 425;
 Bottom = Top+Height;
 Right = Left+Width;
 cropRectangle = [Top Left Bottom Right]; % [top, left, bottom, right]
@@ -108,7 +108,7 @@ end
 
 %% ==================== 
 % 2.1.2 Spatial filter and motion correct the movies
-movieKeyword = '*-crop.isxd'; % Code will search for files with names like this and motion-correct them
+movieKeyword = '2023-06-28*.isxd'; % Code will search for files with names like this and motion-correct them
 rmBPfile = true; % true/false. Remove the spatial filtered file ('bp_file') after creating the motion-corrected video
 [movieFolder,~,chosenStatus] = getInputOutputFolders('inputFolder',FolderPathVA.project,...
 	'outputFolder',FolderPathVA.project,'inputMSG','Chose a folder containing cropped files');
@@ -121,7 +121,7 @@ end
 % 2.2 (Optional) Create DFF files from motion corrected files in a specified folder
 % DFF files can be examined in IDPS
 % Use keyword to filter MC files
-movieKeyword = '*0-PP-BP-MC.isxd'; % Use file name like this to look for motion corrected files
+movieKeyword = '2021-03-29-13-48-34_video_sched_0-crop-BP-MC.isxd'; % Use file name like this to look for motion corrected files
 overwrite = false; % true/false. Create new DFF files if this is true.
 
 MC_fileFolder = uigetdir(FolderPathVA.project,...
@@ -134,7 +134,7 @@ end
 
 %% ==================== 
 % 3.1.1 Export nvoke movies to tiff files for further work using ImageJ, matlab, etc.
-movieKeyword = '*-crop-BP-MC.isxd'; % used to filter 
+movieKeyword = '2021-03-29-13-48-34_video_sched_0-crop-BP-MC.isxd'; % used to filter 
 overwrite = false;
 
 input_isxd_folder = uigetdir(FolderPathVA.project,...
@@ -410,7 +410,6 @@ recdata_organized = recdata_organized(sortedIndices,:);
 
 %% ====================
 % 6.7 Save the modified 'recdata_organized'
-% This will 
 uisave('recdata_organized', fullfile(FolderPathVA.ventralApproach, 'recdata_organized'));
 
 

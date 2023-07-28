@@ -1,7 +1,8 @@
 function [statInfo,varargout] = anova1_with_multiComp(data,dataGroup,varargin)
     % One-way analysis of variance with multi-comparison between groups
 
-    % Input data, a vector, and dataGroup, a cell array containing strings to mark every number in data
+    % data: a vector
+    % dataGroup: a cell array containing strings to mark every number in data
 
     % Defaults
     displayopt = 'off';

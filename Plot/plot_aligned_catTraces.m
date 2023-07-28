@@ -5,6 +5,7 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 
 	% Defaults
 	eventCat = 'spon';
+	combineStim = false; % if true, combine the same eventCat from recordings applied with various stimulations
 	plot_combined_data = true; % plot the mean value of all trace and add a shade using std
 	shadeType = 'std'; % std/ste
 	plot_raw_races = true; % true: plot the traces in the trace_data
@@ -54,6 +55,8 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	        normalized = varargin{ii+1};
         elseif strcmpi('stimKeep', varargin{ii})
 	        stimKeep = varargin{ii+1};
+        elseif strcmpi('combineStim', varargin{ii})
+	        combineStim = varargin{ii+1};
         elseif strcmpi('stimDiscard', varargin{ii})
 	        stimDiscard = varargin{ii+1};
         elseif strcmpi('yRangeMargin', varargin{ii})
@@ -72,9 +75,16 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	[alignedData] = filter_entries_in_structure(alignedData,'stim_name',...
 		'tags_discard',stimDiscard,'tags_keep',stimKeep);
 
-
-	[C, ia, ic] = unique({alignedData.stim_name});
+	% If combineStim is not true, find out how many different stimulations were applied
+	% If combineStim is true, collect the events belong to the same category from all recordings
+	if ~combineStim
+		[C, ia, ic] = unique({alignedData.stim_name});
+	else
+		C = {'allRec'};
+		ic = ones(1,numel(alignedData));
+	end
 	num_C = numel(C);
+
 
 	if ~exist('fname','var')
 		fname = sprintf('aligned_catTraces_%s',eventCat);
