@@ -355,14 +355,14 @@ tplot.plot_median = false; % true/false. plot raw traces having a median value o
 tplot.medianProp = 'FWHM'; % 
 tplot.shadeType = 'ste'; % plot the shade using std/ste
 tplot.y_range = [-1 2]; % [-10 5],[-3 5],[-2 1]
-tplot.eventCat = {'spon'}; % options: 'trig','trig-ap','rebound',, 'spon', 'rebound'
-tplot.combineStim = true; % true/false. combine the same eventCat from recordings applied with various stimulations
+tplot.eventCat = {'trig','trig-ap','rebound'}; % options: 'trig','trig-ap','rebound','spon', 'rebound'
+tplot.combineStim = false; % true/false. combine the same eventCat from recordings applied with various stimulations
 tplot.stimDiscard = {'ap-varied','og-0.96s'}; % 'og-5s',
 tplot.sponNorm = false; % true/false
 tplot.normalized = true; % true/false. normalize the traces to their own peak amplitudes.
 tplot.save_dir = FolderPathVA.fig;
 
-filter_roi_tf = true; % true/false
+filter_roi_tf = false; % true/false
 if filter_roi_tf
 	alignedData = alignedData_filtered;
 else
@@ -417,7 +417,7 @@ end
 % 9.2.2 Replot the averaged traces (same category) using the data in stimAlignedTrace_means
 % This section can combine traces from different group
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 tplot.y_range = [-1 2]; % [-10 5],[-3 5],[-2 1]
 % {{stimName1,eventCat1},{stimName2,eventCat2}}. Combine the eventCat1 and eventCat2 from different stimNames
 stimNameEventCat = {{'og-5s','trig'},{'og-5s ap-0.1s','trig'}}; 
@@ -506,7 +506,7 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 % 9.3.3 Plot event parameters. Grouped according to categories
 % [9.3] eventProp_all: entry is 'events'
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 plot_combined_data = false;
 parNames = {'rise_duration','FWHM','peak_mag_delta'}; % entry: event
 		% 'sponNorm_peak_mag_delta','rise_delay','peak_delay'

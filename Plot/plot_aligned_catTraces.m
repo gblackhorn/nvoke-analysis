@@ -132,7 +132,7 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 			eventProp_cell_rois = cell(1, num_roi);
 			for nr = 1:num_roi
 				eventCat_info = {traceInfo_trial(nr).eventProp.peak_category};
-				event_idx = find(contains(eventCat_info,eventCat));
+				event_idx = find(strcmpi(eventCat_info,eventCat));
 				if ~isempty(event_idx)
 					roiName = alignedData(IDX_trial(nst)).traces(nr).roi;
 
