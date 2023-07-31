@@ -39,6 +39,7 @@ function [statInfo,varargout] = anova1_with_multiComp(data,dataGroup,varargin)
 
 
     % Run one-way anova
+    statInfo.method = 'one-way ANOVA [tuckey multiple comparison]';
     [statInfo.p,statInfo.tbl,statInfo.stats] = anova1(data,dataGroup,displayopt);
 
 

@@ -120,6 +120,11 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
         data_cell_group{gn} = cell(size(data_cell{gn}));
         [data_cell_group{gn}{:}] = deal(barInfo.data(gn).group);
     end
+
+    % convert all the cell contents to row vectors
+    data_cell = cellfun(@(x) reshape(x,1,[]),data_cell,'UniformOutput',false);
+    data_cell_group = cellfun(@(x) reshape(x,1,[]),data_cell_group,'UniformOutput',false);
+
     data_all = [data_cell{:}]; % for anova1
     data_all_group = [data_cell_group{:}]; % for anova1
 

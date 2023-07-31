@@ -64,8 +64,8 @@ function [diffData,varargout] = organizeDataForDiffComp(PSEF,diffPairs,varargin)
 		% compare the number of bins in dataA and dataB
 		% use all the bins if binNumA and binNumB are the same
 		% discard bins and shift on x-direction using 'binSettings' when they are different
-		binNum1 = numel(PSEF(idx1).binNames);
-		binNum2 = numel(PSEF(idx2).binNames);
+		binNum1 = numel(PSEF(idx1).xData);
+		binNum2 = numel(PSEF(idx2).xData);
 		if binNum1 ~= binNum2
 			shiftBins = true; 
 		else

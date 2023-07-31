@@ -1203,6 +1203,59 @@ timeVar = ['Time1', 'Time2', 'Time3', 'Time4', 'Time5'];
 % Display the results
 disp(tbl);
 
+idx = [1 3];
+xDataCells = {diffStat(idx).xB};
+yDataCells = {diffStat(idx).dataBnorm};
+legStr = {diffStat(idx).groupB};
+stimShadeData = {diffStat(idx).shadeB};
+plot_errorBarLines_with_scatter_stimShade(xDataCells,yDataCells,'legStr',legStr,'stimShadeData',stimShadeData)
+
+diffStat(dpn).shadeB.shadeData
 
 
-dataAmean = cellfun(@mean,dataA)
+%% ====================
+ogData = PSEF_Data(1).binData;
+ogMeans = cellfun(@mean,ogData);
+ogapData = PSEF_Data(3).binData;
+ogapDataNorm = cell(size(ogapData));
+
+for n = 1:numel(ogapData)
+	ogapDataNorm{n} = ogapData{n}/ogMeans(n);
+end
+ogapDataNormMeans = cellfun(@mean,ogapDataNorm)
+
+
+
+ 
+%% ====================
+% 2023-07-31
+% event freq comparison: OG vs OGAP in AP bin
+save_fig = true;
+titleStr = 'eventFreq OG vs OGAP in AP bin';
+OGvsOGAPdata = {violinData.eventFreq};
+groupNames = {violinData.stim};
+[violinInfo1,FolderPathVA.fig] = violinplotWithStat(OGvsOGAPdata,...
+	'groupNames',groupNames,...
+	'titleStr',titleStr,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on');
+
+
+% event freq comparison: baseline of AP vs AP
+titleStr = 'eventFreq baseline vs AP';
+BASEvsAP = {barStat(2).data(1).group_data barStat(2).data(3).group_data};
+groupNames = {'baseline', 'AP'};
+[violinInfo2,FolderPathVA.fig] = violinplotWithStat(BASEvsAP,...
+	'groupNames',groupNames,...
+	'titleStr',titleStr,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','off');
+
+
+% bar plot of the fold-change of event frequency in violinInfo1 and violinInfo2
+title_str = 'foldChange of eventFreq caused by AP with and without OG';
+[f,f_rowNum,f_colNum] = fig_canvas(1,'unit_width',0.4,'unit_height',0.4,...
+	'column_lim',1,...
+    'fig_name',titleStr); % create a figure
+foldDataOGAP = violinInfo1.data.ogap/mean(violinInfo1.data.og);  
+foldDataAP = violinInfo2.data.AP/mean(violinInfo2.data.baseline);
+[barInfo] = barplot_with_stat({foldDataAP,foldDataOGAP},'plotWhere',gca,...
+	'group_names',{'without OG','with OG'},'ylabelStr','eventFreq fold-change',...
+	'title_str',title_str,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save',false);
+

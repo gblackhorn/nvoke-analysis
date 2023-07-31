@@ -138,7 +138,7 @@ end
 % Note: ROIs of all trials in alignedData_allTrials can be plotted. 
 %	Use 'filter' to screen ROIs based on the effect of stimulation
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
@@ -182,7 +182,7 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 % 9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 gui_save = 'on';
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
@@ -236,7 +236,7 @@ debug_mode = false; % true/false
 
 % plot and compare a single bins from various stimulation groups
 titleStr = sprintf('violinPlot of a single bin from periStim freq');
-[violinData,statInfo,varargout] = violinplotPeriStimFreq2(barStat,violinStimNames,violinBinIDX,...
+[violinData,statInfo] = violinplotPeriStimFreq2(barStat,violinStimNames,violinBinIDX,...
 	'normToFirst',normToFirst,'titleStr',titleStr,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','off');
 

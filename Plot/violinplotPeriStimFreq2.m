@@ -88,11 +88,6 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
     violinDataStruct = empty_content_struct({violinData.stimMod},1);
 
     for n = 1:numel(violinData)
-        % if normToFirst
-        %     eventFreqData = violinData(n).eventFreqNorm;
-        % else
-        %     eventFreqData = violinData(n).eventFreq;
-        % end
         violinDataStruct.(violinData(n).stimMod) = violinData(n).(dataField);
         % violinDataStruct.(violinData(n).stimMod) = eventFreqData;
     end
@@ -107,7 +102,7 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
 
 
     % 1st plot: violin
-    ax = nexttile(tlo,[3 1]); % activate the ax for color plot
+    ax = nexttile(tlo,[3 1]); % activate the ax for the violin plot
     violinplot(violinDataStruct);
 
     % 2nd plot: stat at a table. ttest if there are two groups, ANOVA if there are more groups
@@ -127,7 +122,7 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
         [dataVector,dataGroupCell] = prepareStructDataforAnova(violinDataStruct);
         [statInfo] = anova1_with_multiComp(dataVector,dataGroupCell);
         statTab = statInfo.c(:,["g1","g2","p","h"]);
-        statTitle = 'one-way ANOVA [tucky multiple comparison]'
+        statTitle = 'one-way ANOVA [tuckey multiple comparison]';
     end
     % plot stat table
     axStat = nexttile(tlo,[1 1]);
@@ -157,30 +152,6 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
     varargout{1} = save_dir;
 end
 
-% function [recNum,recDateNum,roiNum,stimRepeatNum] = calcDataNum(EventFreqInBins)
-%     % calculte the n numbers using the structure var 'EventFreqInBins'
-
-%     % each entry of EventFreqInBins contains data for one roi
-%     % find the empty roi entries
-%     EventFqInBinsAll = {EventFreqInBins.EventFqInBins};
-%     emptyEntryIDX = find(cellfun(@(x) isempty(x),EventFqInBinsAll));
-%     EventFreqInBins(emptyEntryIDX) = [];
-
-%     % get the date and time info from trial names
-%     % one specific date-time (exp. 20230101-150320) represent one recording
-%     % one date, in general, represent one animal
-%     trialNamesAll = {EventFreqInBins.TrialNames};
-%     trialNamesAllDateTime = cellfun(@(x) x(1:15),trialNamesAll,'UniformOutput',false);
-%     trialNamesAllDate = cellfun(@(x) x(1:8),trialNamesAll,'UniformOutput',false);
-%     trialNameUniqueDateTime = unique(trialNamesAllDateTime);
-%     trialNameUniqueDate = unique(trialNamesAllDate);
-
-%     % get all the n numbers
-%     recNum = numel(trialNameUniqueDateTime);
-%     recDateNum = numel(trialNameUniqueDate);
-%     roiNum = numel(trialNamesAll);
-%     stimRepeatNum = sum([EventFreqInBins.stimNum]);
-% end
 
 function [violinDataNew,varargout] = addFieldCompatibleStimName(violinData)
     oldNewStr = {{'og-5s','OG'},...
