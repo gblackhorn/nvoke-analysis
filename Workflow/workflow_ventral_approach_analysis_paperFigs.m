@@ -182,7 +182,7 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 % 9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 gui_save = 'on';
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
@@ -218,9 +218,6 @@ baseBinEdgestart = -preStim_duration; % where to start to use the bin for calcul
 baseBinEdgeEnd = -2; % 0
 apCorrection = false; % true/false. If true, correct baseline bin used for normalization. 
 
-violinStimNames = {'og-5s','og-5s ap-0.1s'}; % these groups will be used for the violin plot
-violinBinIDX = [4, 4]; % violinPlot: the nth bin from the data listed in stimNames
-normToFirst = true; % violinPlot: normalize all the data to the mean of the first group (first stimNames)
 
 debug_mode = false; % true/false
 
@@ -235,7 +232,17 @@ debug_mode = false; % true/false
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on','debug_mode',debug_mode);
 
 % plot and compare a single bins from various stimulation groups
-titleStr = sprintf('violinPlot of a single bin from periStim freq');
+violinStimNames = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % these groups will be used for the violin plot
+violinBinIDX = [4,3,4]; % violinPlot: the nth bin from the data listed in stimNames
+normToFirst = false; % true/false. violinPlot: normalize all the data to the mean of the first group (first stimNames)
+
+if normToFirst
+	normStr = sprintf(' normTo[%s]',violinStimNames{1});
+else
+	normStr = '';
+end
+
+titleStr = sprintf('violinPlot of a single bin from periStim freq%s',normStr);
 [violinData,statInfo] = violinplotPeriStimFreq2(barStat,violinStimNames,violinBinIDX,...
 	'normToFirst',normToFirst,'titleStr',titleStr,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','off');

@@ -40,6 +40,7 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	apCorrection = false; % true/false. If true, correct baseline bin used for normalization. 
 
 	groupAforNormB = 'og-5s'; % plot the normB (the fold of dataA) in fig C if the groupA is this
+	xTickAngle = 45;
 	errorBarColor = {'#ED8564', '#5872ED', '#EDBF34', '#40EDC3', '#5872ED'};
 	scatterColor = errorBarColor;
 	scatterSize = 20;
@@ -89,6 +90,8 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	        stimEvents = varargin{ii+1};
         elseif strcmpi('normToBase', varargin{ii})
 	        normToBase = varargin{ii+1};
+        elseif strcmpi('xTickAngle', varargin{ii})
+	        xTickAngle = varargin{ii+1};
         elseif strcmpi('baseBinEdgestart', varargin{ii})
 	        baseBinEdgestart = varargin{ii+1};
         elseif strcmpi('baseBinEdgeEnd', varargin{ii})
@@ -121,7 +124,7 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	    'normToBase',normToBase,'apCorrection',apCorrection,...
 	    'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 	    'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim,...
-	    'xlabelStr',xlabelStr,'ylabelStr',ylabelStr,...
+	    'xlabelStr',xlabelStr,'ylabelStr',ylabelStr,'xTickAngle',xTickAngle,...
         'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 		'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'binWidth',binWidth,...
 		'save_fig',save_fig,'save_dir',save_dir,'gui_save',gui_save,'debug_mode',debug_mode);
@@ -189,7 +192,7 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 			'new_xticks',new_xticks,'new_xticksLabel',new_xticksLabel,'figTitleStr',figTitleStrCell{dpn},...
 			'stimShadeDataA',diffStat(dpn).shadeA.shadeData,'stimShadeDataB',diffStat(dpn).shadeB.shadeData,...
 			'stimShadeColorA',diffStat(dpn).shadeA.color,'stimShadeColorB',diffStat(dpn).shadeB.color,...
-			'save_fig',false,'save_dir',save_dir,'plotWhere',gca);
+			'xTickAngle',xTickAngle,'save_fig',false,'save_dir',save_dir,'plotWhere',gca);
 
 		% fig B stat
 		ax = nexttile(tloDiffStat);
@@ -240,7 +243,7 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	[ttestNormB] = plot_errorBarLines_with_scatter_stimShade(xDataCells,yDataCells,...
 		'legStr',legStr,'stimShadeData',stimShadeData,'xlabelStr',xlabelStr,'ylabelStr',ylabelStr,...
 		'new_xticks',new_xticks,'new_xticksLabel',new_xticksLabel,'figTitleStr',titleStrBnorm,...
-		'plotWhere',gca);
+		'xTickAngle',xTickAngle,'plotWhere',gca);
 
 	if ~isempty(ttestNormB)
 		[~,shorterDataIDX] = min(cellfun(@numel,{diffStatBnorm.xB}));

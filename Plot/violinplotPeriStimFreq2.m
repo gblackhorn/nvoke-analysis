@@ -6,8 +6,8 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
     % periStimFreqDiffStat is an output, diffStat, from plot_event_freq_alignedData_allTrials
 
     % default
-    stimNames = {'og-5s','og-5s ap-0.1s'}; % periStimFreqBarstat.stim. data using these stimulations will be compared
-    binIDX = [4, 4]; % the nth bin from the data listed in stimNames
+    % stimNames = {'og-5s','og-5s ap-0.1s'}; % periStimFreqBarstat.stim. data using these stimulations will be compared
+    % binIDX = [4, 4]; % the nth bin from the data listed in stimNames
 
     normToFirst = true; % normalize all the data to the mean of the first group (first stimNames)
 
@@ -64,6 +64,7 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
             barData = periStimFreqBarData(stimIDX(n));
             violinData(n).stim = barData.stim;
             violinData(n).eventFreq = barData.data(binIDX(n)).group_data;
+            violinData(n).binNum = binIDX(n);
             violinData(n).binName = barData.binNames{binIDX(n)};
             violinData(n).recNum = barData.recNum;
             violinData(n).recDateNum = barData.recDateNum;
@@ -104,6 +105,8 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
     % 1st plot: violin
     ax = nexttile(tlo,[3 1]); % activate the ax for the violin plot
     violinplot(violinDataStruct);
+    set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
+    set(gca, 'box', 'off')
 
     % 2nd plot: stat at a table. ttest if there are two groups, ANOVA if there are more groups
     if numel(violinData) == 2 % two-sample ttest
@@ -132,7 +135,7 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
 
     % 3rd plot: figure info as a table
     violinDataTable = struct2table(violinData);
-    figInfoTable = violinDataTable(:,["stim","binName","recNum","recDateNum","roiNum","stimRepeatNum"]);
+    figInfoTable = violinDataTable(:,["stim","binNum","binName","recNum","recDateNum","roiNum","stimRepeatNum"]);
     axInfo = nexttile(tlo,[1 1]);
     plotUItable(gcf,axInfo,figInfoTable);
 

@@ -51,6 +51,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	stimEvents(3).eventCat = 'rebound';
 
 	xlabelStr = 'Time (s)';
+	xTickAngle = 45;
 	ylabelStr = '';
 	shadeColors = {'#F05BBD','#4DBEEE','#ED8564'}; % og, ap, others
 
@@ -106,6 +107,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
             plot_unit_height = varargin{ii+1};
 	    elseif strcmpi('xlabelStr', varargin{ii})
             xlabelStr = varargin{ii+1};
+	    elseif strcmpi('xTickAngle', varargin{ii})
+            xTickAngle = varargin{ii+1};
 	    elseif strcmpi('ylabelStr', varargin{ii})
             ylabelStr = varargin{ii+1};
 	    elseif strcmpi('save_fig', varargin{ii})
@@ -249,11 +252,16 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		end
 		hold off
 
-
-		xticks(binEdges);
-		xticklabels(NumArray2StringCell(binEdges));
 		xlim([binEdges(1) binEdges(end)])
+		% % mark the bin edges with peri-stimulus time
+		% xticks(binEdges);
+		% xticklabels(NumArray2StringCell(binEdges));
+
+		% mark the bar with the customized binName
+		xticklabels(binNames)
 		xlabel(xlabelStr)
+		xtickangle(xTickAngle)
+
 		ylabel(ylabelStr)
 		title(sub_titleStr)
 

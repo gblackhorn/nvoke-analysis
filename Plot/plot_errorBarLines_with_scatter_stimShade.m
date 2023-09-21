@@ -16,6 +16,7 @@ function [varargout] = plot_errorBarLines_with_scatter_stimShade(xDataCells,yDat
 	xlabelStr = 'Time (s)';
 	ylabelStr = '';
 	new_xticksLabel = {};
+	xTickAngle = 45;
 	legStr = {}; 
 	figTitleStr = 'line plots with scatter';
 
@@ -44,6 +45,8 @@ function [varargout] = plot_errorBarLines_with_scatter_stimShade(xDataCells,yDat
 	        new_xticks = varargin{ii+1};
 	    elseif strcmpi('new_xticksLabel', varargin{ii})
 	        new_xticksLabel = varargin{ii+1};
+	    elseif strcmpi('xTickAngle', varargin{ii})
+	        xTickAngle = varargin{ii+1};
 	    elseif strcmpi('figTitleStr', varargin{ii})
 	        figTitleStr = varargin{ii+1};
 	    elseif strcmpi('stimShadeData', varargin{ii})
@@ -131,6 +134,7 @@ function [varargout] = plot_errorBarLines_with_scatter_stimShade(xDataCells,yDat
 
 	if ~isempty(new_xticksLabel) && numel(xticksVal) == numel(new_xticksLabel)
 		xticklabels(new_xticksLabel)
+		xtickangle(xTickAngle)
 	end
 
 
