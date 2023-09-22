@@ -697,7 +697,7 @@ plot_eventTimeInt_alignedData_allTrials(alignedData_allTrials,timeType,binsOrEdg
 close all
 filter_roi_tf = true;
 stimName = 'og-5s';
-stimEffect_filter = [nan 1 nan]; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+stimEffect_filter = [nan 1 nan nan]; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 rsquare_thresh = 0.7;
 norm_FluorData = false; % true/false. whether to normalize the FluroData
 
@@ -853,7 +853,7 @@ end
 % Show the relationship between decayTau/caLevelDecrease and various rebound event properties
 
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 filter_roi_tf = true;
 fieldNames_rb_prop = {'rise_duration','FWHM','peak_mag_delta','sponNorm_peak_mag_delta',...
 	'rise_delay','peak_delay'}; % properties of rebound events.
@@ -863,6 +863,12 @@ rbEventInfo = grouped_event_info_filtered(pos_OG5sRB).event_info;
 [BarInfo_rbEvents,FolderPathVA.fig] = plot_reboundEvent_analysis(rbEventInfo,...
 	'fieldNames_rb_prop',fieldNames_rb_prop,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on');
 
+% Filter the ROIs in all trials using stimulation effect
+% the filtered alignedData will be used in the following plotting sections
+stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
+filters = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+[alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
+	'stim_names',stim_names,'filters',filters);
 if filter_roi_tf == true
 	[alignedData] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
 			'stim_names',stim_names,'filters',filters); % check section before 9.1.1
