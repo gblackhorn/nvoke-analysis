@@ -1259,3 +1259,9 @@ foldDataAP = violinInfo2.data.AP/mean(violinInfo2.data.baseline);
 	'group_names',{'without OG','with OG'},'ylabelStr','eventFreq fold-change',...
 	'title_str',title_str,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save',false);
 
+%% ====================
+filter_roi_tf = true;
+stim_names = {'og-5s'};
+filters = {[0 nan nan nan]};
+alignedData = alignedData_allTrials;
+[analysisResult] = stimCurveFitAnalysis(alignedData,'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters);

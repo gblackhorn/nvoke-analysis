@@ -138,7 +138,7 @@ end
 % Note: ROIs of all trials in alignedData_allTrials can be plotted. 
 %	Use 'filter' to screen ROIs based on the effect of stimulation
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
@@ -148,7 +148,7 @@ event_type = 'peak_time'; % rise_time/peak_time
 norm_FluorData = true; % true/false. whether to normalize the FluroData
 sortROI = true; % true/false. Sort ROIs according to the event number: high to low
 preTime = 5; % fig3 include time before stimulation starts for plotting
-postTime = []; % fig3 include time after stimulation ends for plotting. []: until the next stimulation starts
+postTime = 10; % fig3 include time after stimulation ends for plotting. []: until the next stimulation starts
 activeHeatMap = true; % true/false. If true, only plot the traces with specified events in figure 3
 stimEvents(1).stimName = 'og-5s';
 stimEvents(1).eventCat = 'rebound';
@@ -182,7 +182,7 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 % 9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 gui_save = 'on';
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
@@ -232,8 +232,8 @@ debug_mode = false; % true/false
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on','debug_mode',debug_mode);
 
 % plot and compare a single bins from various stimulation groups
-violinStimNames = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % these groups will be used for the violin plot
-violinBinIDX = [4,3,4]; % violinPlot: the nth bin from the data listed in stimNames
+violinStimNames = {'og-5s ap-0.1s','og-5s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
+violinBinIDX = [4,4]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
 normToFirst = false; % true/false. violinPlot: normalize all the data to the mean of the first group (first stimNames)
 
 if normToFirst
@@ -497,8 +497,8 @@ debug_mode = false; % true/false
 % additional manual deletion might be needed
 
 % {'trig [EXog]','EXog','trig-AP',}
-tags_discard = {'rebound [ap','ap-0.25s','ap-0.5s','og-0.96s','opto-delay'}; % Discard groups containing these words. 'spon','opto-delay','og&ap','rebound [og&ap-5s]'
-tags_keep = {'trig','trig-ap','rebound [og-5s]','rebound [og&ap-5s]','spon'}; % Keep groups containing these words. {'trig [og','rebound','opto-delay [og-5s]','spon'}
+tags_discard = {'rebound [ap','ap-0.25s','ap-0.5s','og-0.96s','opto-delay','rebound [og&ap-5s]',}; % Discard groups containing these words. 'spon','opto-delay','og&ap','rebound [og&ap-5s]'
+tags_keep = {'trig','trig-ap','rebound [og-5s]','spon'}; % Keep groups containing these words. {'trig [og','rebound','opto-delay [og-5s]','spon'}
 tagsForMerge = {'trig [og&ap-5s]','trig [og-5s]'};
 NewGroupName = 'opto-evoked all';
 NewtagName = 'opto-evoked [opto-5s opto-5s_air-0.1s]';
@@ -515,7 +515,7 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 close all
 save_fig = false; % true/false
 plot_combined_data = false;
-parNames = {'rise_duration','FWHM','peak_mag_delta'}; % entry: event
+parNames = {'rise_duration','FWHM','sponNorm_peak_mag_delta'}; % entry: event
 		% 'sponNorm_peak_mag_delta','rise_delay','peak_delay'
         % 'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
         % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
