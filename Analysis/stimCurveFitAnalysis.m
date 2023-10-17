@@ -4,13 +4,19 @@ function [analysisResult,varargout] = stimCurveFitAnalysis(alignedData,varargin)
     %   - Percentage of fitted curve: number of fitted curve/number of stimualtion
     %   - Calculate the event frequency before the stimulation. Separate the trials with and without fitted curves
 
-    % default
+    % default variables
     filter_roi_tf = false; % true/false. If true, screen ROIs using stim_names and stimulation effects (filters)
     stim_names = {'og-5s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
     filters = {[0 nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 
     preStimTimeDuration = 5; % unit: sec. Time duration prio to the stimulation. Event frequency will be calculated 
     eventTimeType = 'peak_time'; % 'rise_time'/'peak_time'. category of event used for calculate the frequency
+
+    % default figure parameters
+    unit_width = 0.2; % normalized to display
+    unit_height = 0.3; % normalized to display
+    column_lim = 4; % number of axes column
+
     debugMode = true;
 
     % Optionals
@@ -164,16 +170,26 @@ function [analysisResult,varargout] = stimCurveFitAnalysis(alignedData,varargin)
     % analysisResult.preEventFreqMeanFit = mean(analysisResult.preEventFreq);
 
 
-
+    % ==========
     % visualize the results
+    % create a canvas
+    [f,f_rowNum,f_colNum] = fig_canvas(12,'unit_width',unit_width,'unit_height',unit_height,'column_lim',column_lim);
+    tiledlayout(f,f_rowNum,f_colNum)
 
-    % venn diagrams: roiFit vs roiNotFit (number and perc)
+    % pie chart: roiFit vs roiNotFit (number and perc)
+    ax = nexttile(1,[2 2]);
+    pieData = [analysisResult.roiNumFit analysisResult.roiNumNotFit];
+    sliceNames = {'ROIs with decay curves', 'ROIs without decay curves'};
+    pieChartTitleStr = 'Pie Chart roiNumFit vs roiNumNotFit';
+    stylishPieChart(pieData,'sliceNames',sliceNames,'titleStr',pieChartTitleStr,'plotWhere',gca);
 
     % violin plot and/or bar plot: the percentage of fitted curve in ROIs
 
     % viollin plot and/or bar plot: tau
 
     % violin plot and/or bar plot: preEventFrquency (fit vs not fit)
+
+
 
 end
 
