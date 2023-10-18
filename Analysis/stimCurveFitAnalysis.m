@@ -184,11 +184,15 @@ function [analysisResult,varargout] = stimCurveFitAnalysis(alignedData,varargin)
     stylishPieChart(pieData,'sliceNames',sliceNames,'titleStr',pieChartTitleStr,'plotWhere',gca);
 
     % violin plot and/or bar plot: the percentage of fitted curve in ROIs
+    ax = nexttile(3);
+    violinplot(analysisResult.fitCurvePerc(:),{'ROI decay perc'},'Width',0.1);
+
+    ax = nexttile(4);
+    [barInfo] = barplot_with_errBar(analysisResult.fitCurvePerc(:),'barNames','ROI decay perc','plotWhere',gca);
 
     % viollin plot and/or bar plot: tau
 
     % violin plot and/or bar plot: preEventFrquency (fit vs not fit)
-
 
 
 end

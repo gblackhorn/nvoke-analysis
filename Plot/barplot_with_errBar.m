@@ -52,18 +52,13 @@ function [barInfo,varargout] = barplot_with_errBar(barData,varargin)
     end
     hold on
 
-    % bar name for each bar
-    if ~exist('barNames','var')
-        barSN = num2cell([1:barNum]); % serial numbers of bars
-        barNames = cellfun(@(x) sprintf('%s %d',barNamePrefix,x),barSN,'UniformOutput',false);
-    end
 
     % check the barData type and make the calculation for plot if necessary 
-    if isrow(barData) % use the given barData and errBar to plot directly
+    if isnumeric(barData) && isrow(barData) % use the given barData and errBar to plot directly
         barVal = barData;
         % errBarVal = errBar;
         barNum = numel(barData);
-    elseif iscolumn(barData) % calculate mean and ste of every column for plotting
+    elseif isnumeric(barData) && ismatrix(barData) % calculate mean and ste of every column for plotting
         barVal = mean(barData,1);
         errBarVal = NaN(size(barVal));
         for cn = 1:size(barData,2)
@@ -78,14 +73,20 @@ function [barInfo,varargout] = barplot_with_errBar(barData,varargin)
         dataNumVal = cellfun(@(x) numel(x),barData);
     end
     barX = 1:barNum;
-    nNumStr = num2str(dataNumVal(:)');
+    nNumStr = num2cell(dataNumVal(:)');
+    nNumStr = cellfun(@(x) num2str(x),nNumStr,'UniformOutput',false);
 
+    % bar name for each bar
+    if ~exist('barNames','var')
+        barSN = num2cell([1:barNum]); % serial numbers of bars
+        barNames = cellfun(@(x) sprintf('%s %d',barNamePrefix,x),barSN,'UniformOutput',false);
+    end
 
     % plot bar 
     hB = bar(gca,barX,barVal,'EdgeColor', barEdgeColor, 'FaceColor', barFaceColor);
 
     % plot error bar
-    hEB = errbar(gca,barX,barVal,errBarVal,'LineStyle','None');
+    hEB = errorbar(gca,barX,barVal,errBarVal,'LineStyle','None');
     set(hEB,'Color','k','LineWidth',errBarLineWidth,'CapSize',errBarCapSize);
 
     % add data number to the bottom of each bar
@@ -102,6 +103,9 @@ function [barInfo,varargout] = barplot_with_errBar(barData,varargin)
     xtickangle(TickAngle)
     set(gca, 'XTick', barX)
     set(gca, 'xticklabel', barNames)
+
+    % save the calculated data (mean for bar and ste for error bar) to a structure
+    barInfo = struct('barNames',barNames,'barVal',num2cell(barVal),'errBarVal',num2cell(errBarVal));
 
     hold off
 end
