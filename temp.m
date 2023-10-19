@@ -1264,4 +1264,23 @@ filter_roi_tf = true;
 stim_names = {'og-5s'};
 filters = {[0 nan nan nan]};
 alignedData = alignedData_allTrials;
-[analysisResult] = stimCurveFitAnalysis(alignedData,'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters);
+saveFig = true;
+save_dir = '';
+guiSave = true; % Options: 'on'/'off'. whether use the gui to choose the save_dir
+
+[analysisResult] = stimCurveFitAnalysis(alignedData,...
+	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
+	'saveFig',saveFig,'save_dir',save_dir,'guiSave',guiSave);
+
+%% ====================
+pieData = [analysisResult.roiNumFit analysisResult.roiNumNotFit];
+sliceNames = {'ROIs with decay curves', 'ROIs without decay curves'};
+
+stylishPieChart(pieData,'sliceNames',sliceNames)
+
+%% ====================
+barData{1,1} = analysisResult.preEventFreqFit;
+barData{1,2} = analysisResult.preEventFreqNotFit;
+[barInfo] = barplot_with_errBar(barData)
+
+barNames = {'a','bb','ccc','dddd','eeeee'};

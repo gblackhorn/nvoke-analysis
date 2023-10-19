@@ -65,7 +65,7 @@ function [barInfo,varargout] = barplot_with_errBar(barData,varargin)
             errBarVal(cn) = ste(barData(:,cn));
         end
         barNum = size(barData,2);
-        dataNumVal = repmat(size(dataNumVal,1),1,barNum);
+        dataNumVal = repmat(size(barData,1),1,barNum);
     elseif iscell(barData) % calculate mean and ste of every cell for plotting
         barVal = cellfun(@(x) mean(x(:)),barData);
         errBarVal = cellfun(@(x) ste(x),barData);

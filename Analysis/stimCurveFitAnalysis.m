@@ -16,8 +16,13 @@ function [analysisResult,varargout] = stimCurveFitAnalysis(alignedData,varargin)
     unit_width = 0.2; % normalized to display
     unit_height = 0.3; % normalized to display
     column_lim = 4; % number of axes column
+    row_lim = 3;
 
-    debugMode = true;
+    saveFig = false;
+    save_dir = '';
+    guiSave = true; % Options: 'on'/'off'. whether use the gui to choose the save_dir
+
+    debugMode = false;
 
     % Optionals
     for ii = 1:2:(nargin-1)
@@ -33,10 +38,12 @@ function [analysisResult,varargout] = stimCurveFitAnalysis(alignedData,varargin)
             eventTimeType = varargin{ii+1};
         elseif strcmpi('debugMode', varargin{ii})
             debugMode = varargin{ii+1};
-        % elseif strcmpi('save_dir', varargin{ii})
-        %     save_dir = varargin{ii+1};
-        % elseif strcmpi('gui_save', varargin{ii})
-        %     gui_save = varargin{ii+1};
+        elseif strcmpi('saveFig', varargin{ii})
+            saveFig = varargin{ii+1};
+        elseif strcmpi('save_dir', varargin{ii})
+            save_dir = varargin{ii+1};
+        elseif strcmpi('guiSave', varargin{ii})
+            guiSave = varargin{ii+1};
         end
     end 
 
@@ -47,7 +54,6 @@ function [analysisResult,varargout] = stimCurveFitAnalysis(alignedData,varargin)
         [alignedData] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData,...
                     'stim_names',stim_names,'filters',filters);
     end
-
     
     % --
     % loop through all the recordings to collect data
@@ -75,25 +81,18 @@ function [analysisResult,varargout] = stimCurveFitAnalysis(alignedData,varargin)
         uniStimRepeat = uniStim.repeats; % number of repeats
         preStimRange = [uniStimRanges(:,1)-preStimTimeDuration, uniStimRanges(:,1)]; % time ranges used for calculating preStim event freq
 
-
-
         % get the number of all ROIs and the number of ROIs with fitted curvers
         tracesData = trialData.traces;
         roiFitIdx = find([tracesData.StimCurveFit_TauNum]); % index of ROIs with curve fitting
         roiNumAll(rn) = numel(tracesData);
         roiNumFit(rn) = numel(roiFitIdx);
 
-
-
         % collect the percentage of fitted curve (in every ROI).
         FitPercCell{rn} = [tracesData(roiFitIdx).StimCurveFit_TauNum]./uniStimRepeat;
-
-
 
         % loop through ROIs, and collect event frequency before each stimulation in a duration of 'preStimTimeDuration'. 
         preEventFreqStruct = empty_content_struct(preEventFreqFieldNames,roiNumAll(rn)*uniStimRepeat,2);
         for n = 1:roiNumAll(rn)
-
             roiName = tracesData(n).roi;
 
             if debugMode
@@ -149,7 +148,6 @@ function [analysisResult,varargout] = stimCurveFitAnalysis(alignedData,varargin)
     tau = [preEventFreq(preEventFreqFitIDX).tau];
     tauMean = mean(tau);
 
-
     analysisResult.filterStatus = filter_roi_tf;
     analysisResult.filterStimName = stim_names;
     analysisResult.filterStimEffect = filters;
@@ -167,34 +165,89 @@ function [analysisResult,varargout] = stimCurveFitAnalysis(alignedData,varargin)
     analysisResult.preEventFreqNotFitMean = preEventFreqNotFitMean;
     analysisResult.tau = tau;
     analysisResult.tauMean = tauMean;
-    % analysisResult.preEventFreqMeanFit = mean(analysisResult.preEventFreq);
 
 
     % ==========
     % visualize the results
     % create a canvas
-    [f,f_rowNum,f_colNum] = fig_canvas(12,'unit_width',unit_width,'unit_height',unit_height,'column_lim',column_lim);
+    [f,f_rowNum,f_colNum] = fig_canvas(12,'unit_width',unit_width,'unit_height',unit_height,...
+        'row_lim',row_lim,'column_lim',column_lim);
     tiledlayout(f,f_rowNum,f_colNum)
 
     % pie chart: roiFit vs roiNotFit (number and perc)
-    ax = nexttile(1,[2 2]);
+    nexttile(1,[2 2]);
     pieData = [analysisResult.roiNumFit analysisResult.roiNumNotFit];
     sliceNames = {'ROIs with decay curves', 'ROIs without decay curves'};
     pieChartTitleStr = 'Pie Chart roiNumFit vs roiNumNotFit';
     stylishPieChart(pieData,'sliceNames',sliceNames,'titleStr',pieChartTitleStr,'plotWhere',gca);
 
     % violin plot and/or bar plot: the percentage of fitted curve in ROIs
-    ax = nexttile(3);
-    violinplot(analysisResult.fitCurvePerc(:),{'ROI decay perc'},'Width',0.1);
-
-    ax = nexttile(4);
-    [barInfo] = barplot_with_errBar(analysisResult.fitCurvePerc(:),'barNames','ROI decay perc','plotWhere',gca);
+    nexttile(3);
+    violinplot(analysisResult.fitCurvePerc(:),{'ROI decay perc'}); % ,'Width',0.1
+    set(gca,'box','off')
+    set(gca,'TickDir','out')
+    title('Perc of fitted curve in ROIs')
+    nexttile(4);
+    decayPercInfo = barplot_with_errBar(analysisResult.fitCurvePerc(:),'barNames','ROI decay perc','plotWhere',gca);
 
     % viollin plot and/or bar plot: tau
+    nexttile(7);
+    violinplot(analysisResult.tau(:),{'Decay tau'}); % ,'Width',0.1
+    set(gca,'box','off')
+    set(gca,'TickDir','out')
+    title('Tau of decays')
+    nexttile(8);
+    decayTauInfo = barplot_with_errBar(analysisResult.tau(:),'barNames','Decay tau','plotWhere',gca);
 
     % violin plot and/or bar plot: preEventFrquency (fit vs not fit)
+    nexttile(11);
+    preEventFreqDataViolin = struct('PEFnoDecay',analysisResult.preEventFreqNotFit,...
+        'PEFdecay',analysisResult.preEventFreqFit);
+    violinplot(preEventFreqDataViolin);
+    set(gca,'box','off')
+    set(gca,'TickDir','out')
+    title('preEventFrquency (decay vs no-decay)')
+    nexttile(12);
+    preEventFreqDataBar = {analysisResult.preEventFreqNotFit(:),analysisResult.preEventFreqFit(:)};
+    preEventFreqInfo = barplot_with_stat(preEventFreqDataBar,'group_names',{'PEFnoDecay','PEFdecay'},...
+        'stat','upttest','ylabelStr','eventFreq','plotWhere',gca);
 
+    % Plot the bar and errbar val as numbers in a UItable
+    nexttile(9);
+    PEFmeanAndSte = struct('barNames',{preEventFreqInfo.data.group},...
+        'barVal',{preEventFreqInfo.data.mean_val},'errBarVal',{preEventFreqInfo.data.ste_val});
+    meanAndSte = struct2table([decayPercInfo decayTauInfo PEFmeanAndSte]);
+    plotUItable(gcf,gca,meanAndSte);
+    title('Mean (bar) and Ste (errBar) values')
 
+    % stat result for violin plot and/or bar plot: preEventFrquency (fit vs not fit)
+    nexttile(10)
+    PEFstat = struct('method',preEventFreqInfo.stat.stat_method,...
+        'pVal',preEventFreqInfo.stat.p,'h',preEventFreqInfo.stat.h);
+    PEFstatTab = struct2table(PEFstat);
+    plotUItable(gcf,gca,PEFstatTab);
+    title('stat for preEventFrquency (fit vs not fit)')
+
+    % Save the plot
+    if saveFig
+        defaultFullPath = fullfile(save_dir,'stimCurveFitAnalysis.svg');
+        if guiSave
+            [fName,save_dir,indx] = uiputfile({'*.svg';'*.jpg';'*.fig'},...
+                'Save stimCurveFitAnalysis figures',...
+                defaultFullPath);
+            if indx
+                [~,fNameStem,fExt] = fileparts(fName);
+            else
+                return
+            end
+        else
+            fNameStem = 'stimCurveFitAnalysis';
+        end
+
+        % This will save the figure to 3 files, as svg, jpg, and fig
+        [save_dir] = savePlot(gcf,'save_dir',save_dir,'guiSave',false,...
+            'fname',fNameStem);
+    end
 end
 
 
