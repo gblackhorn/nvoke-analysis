@@ -648,6 +648,37 @@ end
 
 
 %% ==================== 
+% Fig 4.1
+filter_roi_tf = true;
+stim_names = {'og-5s'};
+filters = {[0 nan nan nan]};
+alignedData = alignedData_allTrials;
+saveFig = true;
+save_dir = FolderPathVA.fig;
+guiSave = true; % Options: 'on'/'off'. whether use the gui to choose the save_dir
+
+[analysisResult] = stimCurveFitAnalysis(alignedData,...
+	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
+	'saveFig',saveFig,'save_dir',save_dir,'guiSave',guiSave);
+
+%% ==================== 
+% Fig 4.2
+% Get decay curve taus and plot them in histogram
+close all
+filter_roi_tf = true;
+stimName = 'og-5s';
+stimEffect_filter = [nan 1 nan nan]; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+rsquare_thresh = 0.7;
+norm_FluorData = false; % true/false. whether to normalize the FluroData
+
+[roi_tauInfo] = get_decayCurveTau(alignedData_allTrials,'rsquare_thresh',rsquare_thresh,...
+ 	'filter_roi_tf',filter_roi_tf,'stimName',stimName,'stimEffect_filter',stimEffect_filter);
+% histogram([roi_tauInfo.tauMean],20);
+% FolderPathVA.fig = savePlot(gcf,'guiSave','on','save_dir',FolderPathVA.fig,'fname','hist_tau_mean');
+
+
+
+%% ==================== 
 % Fig 5 or supplementary data
 % 9.1.3 Plot the auto-correlogram of events and the probability density function of inter-event time
 close all
@@ -691,20 +722,6 @@ plot_eventTimeInt_alignedData_allTrials(alignedData_allTrials,timeType,binsOrEdg
 	'saveFig',saveFig,'save_dir',save_dir,'gui_save',false);
 
 
-%% ==================== 
-% Fig 5?
-% 9.1.4 Get decay curve taus and plot them in histogram
-close all
-filter_roi_tf = true;
-stimName = 'og-5s';
-stimEffect_filter = [nan 1 nan nan]; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
-rsquare_thresh = 0.7;
-norm_FluorData = false; % true/false. whether to normalize the FluroData
-
-[roi_tauInfo] = get_decayCurveTau(alignedData_allTrials,'rsquare_thresh',rsquare_thresh,...
- 	'filter_roi_tf',filter_roi_tf,'stimName',stimName,'stimEffect_filter',stimEffect_filter);
-histogram([roi_tauInfo.tauMean],20);
-FolderPathVA.fig = savePlot(gcf,'guiSave','on','save_dir',FolderPathVA.fig,'fname','hist_tau_mean');
 
 
 %% ==================== 
