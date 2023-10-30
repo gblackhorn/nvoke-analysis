@@ -6,15 +6,18 @@ function [statInfo,varargout] = anova1_with_multiComp(data,dataGroup,varargin)
 
     % Defaults
     displayopt = 'off';
+    normDistrTF = false; % if true, code will ignore the normality check and run parametric analysis
+    forceParametric = true; % if true, code will ignore the normality check and run parametric analysis
+
 
     % Optionals
     for ii = 1:2:(nargin-2)
         if strcmpi('displayopt', varargin{ii})
             displayopt = varargin{ii+1}; 
-        % elseif strcmpi('overwrite', varargin{ii})
-        %     overwrite = varargin{ii+1};
-        % elseif strcmpi('stimStart_err', varargin{ii})
-        %     stimStart_err = varargin{ii+1};
+        elseif strcmpi('normDistrTF', varargin{ii})
+            normDistrTF = varargin{ii+1};
+        elseif strcmpi('forceParametric', varargin{ii})
+            forceParametric = varargin{ii+1};
         % elseif strcmpi('nonstimMean_pos', varargin{ii})
         %     nonstimMean_pos = varargin{ii+1};
         end
@@ -38,13 +41,19 @@ function [statInfo,varargout] = anova1_with_multiComp(data,dataGroup,varargin)
     dataGroup = dataGroup(:); % Convert data_all_group to a single column var
 
 
-    % Run one-way anova
-    statInfo.method = 'one-way ANOVA [tuckey multiple comparison]';
-    [statInfo.p,statInfo.tbl,statInfo.stats] = anova1(data,dataGroup,displayopt);
+    if normDistrTF || forceParametric
+        % Run one-way anova
+        statInfo.method = 'one-way ANOVA [tukey-kramer multiple comparison]';
+        [statInfo.p,statInfo.tbl,statInfo.stats] = anova1(data,dataGroup,displayopt);
+    else
+        statInfo.method = 'Kruskal-Wallis test [tukey-kramer multiple comparison]';
+        [statInfo.p,statInfo.tbl,statInfo.stats] = kruskalwallis(data,dataGroup,displayopt);
+    end
 
 
     % Multi-comparison
-    if statInfo.stats.df ~= 0
+    % if statInfo.stats.df ~= 0
+    % if statInfo.p < 0.05
         % multiple comparison test. Check if the difference between groups are significant
         [c,~,~,gnames] = multcompare(statInfo.stats,'Display',displayopt); 
         % 'tukey-kramer'
@@ -64,7 +73,7 @@ function [statInfo,varargout] = anova1_with_multiComp(data,dataGroup,varargin)
         h(idx_sig) = 1;
         h(idx_nonsig) = 0;
         c.h = h;
-    end
+    % end
     statInfo.c = c;
     statInfo.gnames = gnames;
     % statInfo.stat_method = 'anova';

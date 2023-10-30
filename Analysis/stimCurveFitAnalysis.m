@@ -91,7 +91,7 @@ function [analysisResult,varargout] = stimCurveFitAnalysis(alignedData,varargin)
         FitPercCell{rn} = [tracesData(roiFitIdx).StimCurveFit_TauNum]./uniStimRepeat;
 
         % loop through ROIs, and collect event frequency before each stimulation in a duration of 'preStimTimeDuration'. 
-        preEventFreqStruct = empty_content_struct(preEventFreqFieldNames,roiNumAll(rn)*uniStimRepeat,2);
+        preEventFreqStruct = empty_content_struct(preEventFreqFieldNames,roiNumAll(rn)*uniStimRepeat);
         for n = 1:roiNumAll(rn)
             roiName = tracesData(n).roi;
 
@@ -208,8 +208,8 @@ function [analysisResult,varargout] = stimCurveFitAnalysis(alignedData,varargin)
     set(gca,'TickDir','out')
     title('preEventFrquency (decay vs no-decay)')
     nexttile(12);
-    preEventFreqDataBar = {analysisResult.preEventFreqNotFit(:),analysisResult.preEventFreqFit(:)};
-    preEventFreqInfo = barplot_with_stat(preEventFreqDataBar,'group_names',{'PEFnoDecay','PEFdecay'},...
+    preEventFreqDataBar = {analysisResult.preEventFreqFit(:),analysisResult.preEventFreqNotFit(:)};
+    preEventFreqInfo = barplot_with_stat(preEventFreqDataBar,'group_names',{'PEFdecay','PEFnoDecay'},...
         'stat','upttest','ylabelStr','eventFreq','plotWhere',gca);
 
     % Plot the bar and errbar val as numbers in a UItable
