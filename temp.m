@@ -1284,3 +1284,18 @@ barData{1,2} = analysisResult.preEventFreqNotFit;
 [barInfo] = barplot_with_errBar(barData)
 
 barNames = {'a','bb','ccc','dddd','eeeee'};
+
+
+%% ====================
+eventTimeType = 'peak_time'; % rise_time/peak_time
+binSize = 1;
+visualizeData = true;
+saveFig = false;
+alignedDataRec = alignedData_allTrials(1);
+[corrMatrix,corrFlat,distMatrix,distFlat,roiNames,recName] = roiCorrAndDistSingleRec(alignedDataRec,binSize,'eventTimeType',eventTimeType);
+[heatmapHandle] = heatMapRoiCorr(corrMatrix,roiNames,'recName',recName);
+
+[corrMatrix,corrFlat,distMatrix,distFlat] = roiCorrAndDistSingleRec(alignedDataRec,binSize,'visualizeData',true);
+
+[corrAndDist,corrFlatAll,distFlatAll] = roiCorrAndDistMultiRec(alignedData_allTrials,binSize,...
+	'visualizeData',visualizeData,'eventTimeType',eventTimeType,'dbMode',true);

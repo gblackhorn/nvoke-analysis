@@ -1,8 +1,12 @@
-function [roiDistMatrix,flatDist,varargout] = roiDist(roi_coors,varargin)
+function [distMatrix,distFlat,varargout] = roiDist(roi_coors,varargin)
 	% compute the distances between roi pairs using their coordinations
 
 	% roi_coors: Cell array. one cell contains the coordinate from one ROI. it can be found in
 	% alignedData.traces
+	% distMatrix: roi distances paires. Can be used to plot heatmap
+		% % example: h = heatmap(plotWhere,distMatrix,'Colormap',jet);
+	% distFlat: Get the upper triangular part of distMatrix and flatten it to a vector
+
 
 	% Example:
 	%		
@@ -28,10 +32,10 @@ function [roiDistMatrix,flatDist,varargout] = roiDist(roi_coors,varargin)
 	roiCoord = roiCoord(:,[2:3]);
 
 	% calculate the pairwise distances
-	roiDistMatrix = pdist2(roiCoord,roiCoord,'euclidean');
+	distMatrix = pdist2(roiCoord,roiCoord,'euclidean');
 
 	% Flatten the upper triangular part (excluding the diagonal) 
 	% flattened distances can be used to pair with activity correlation between ROI pairs, which is
 	% flattend in the same way (using function 'roiCorr')
-	flatDist = distMatrix(triu(true(size(roiDistMatrix)),1));
+	distFlat = distMatrix(triu(true(size(distMatrix)),1));
 end

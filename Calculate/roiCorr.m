@@ -1,8 +1,14 @@
-function [corrMatrix,flatCorr,roiNames,varargout] = roiCorr(alignedDataRec,binSize,varargin)
+function [corrMatrix,corrFlat,varargout] = roiCorr(alignedDataRec,binSize,varargin)
 	% Convert event time points (unit: seconds) from multiple ROIs in one single recording to binary
-	% matrix (one column per roi), and display the correation using the a heatmap 
+	% matrix (one column per roi), and calculate the activity correlation between all neuron pairs
 
+	% alignedDataRec: alignedData for one recording. Get this using the function 'get_event_trace_allTrials' 
 	% binSize: unit: second
+	% corrMatrix: roi correlation paires. Can be used to plot heatmap
+		% % example: h = heatmap(plotWhere,corrMatrix,'Colormap',jet);
+	% corrFlat: Get the upper triangular part of corrMatrix and flatten it to a vector
+	% roiNames: Names of ROIs. This can be used as xLabels and yLabels when displaying corrMatrix using heatmap
+		% example: h = heatmap(plotWhere,xLabels,yLabels,corrMatrix,'Colormap',jet);
 
 	% Example:
 	%		
@@ -29,7 +35,7 @@ function [corrMatrix,flatCorr,roiNames,varargout] = roiCorr(alignedDataRec,binSi
 	recDateTime = alignedDataRec.trialName(1:(underScoreIDX(1)-1));
 
 	% get the maxTime of recording
-	maxTime = alignedDataRec.fullTime(end)-alignedDataRec.fullTime(1)
+	maxTime = alignedDataRec.fullTime(end)-alignedDataRec.fullTime(1);
 
 	% get the eventProps
 	eventProps = {alignedDataRec.traces.eventProp};
@@ -47,7 +53,10 @@ function [corrMatrix,flatCorr,roiNames,varargout] = roiCorr(alignedDataRec,binSi
 	% Flatten the upper triangular part (excluding the diagonal) for scatter plot
 	% flattened correlation can be used to pair with flattened distances between ROI pairs
 	% (using function 'roiDist')
-	flatCorr = corrMatrix(triu(true(size(corrMatrix)),1));
+	corrFlat = corrMatrix(triu(true(size(corrMatrix)),1));
+
+	varargout{1} = roiNames;
+	varargout{2} = recDateTime;
 
 
 
