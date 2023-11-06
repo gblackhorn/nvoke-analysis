@@ -13,6 +13,7 @@ function [varargout] = stylishPieChart(pieData,varargin)
     unit_width = 0.4; % normalized to display
     unit_height = 0.4; % normalized to display
     column_lim = 1; % number of axes column
+    labelFontSize = 12;
     titleFontSize = 14; 
     titleFontWeight = 'bold'; 
     sliceColors = [
@@ -76,11 +77,16 @@ function [varargout] = stylishPieChart(pieData,varargin)
         set(h(k), 'FaceColor', sliceColors(mod((k+1)/2, size(sliceColors, 1)) + 1, :), 'EdgeColor', 'none');
     end
 
+    % Apply customized font size
+    for i = 2:2:length(h)
+        set(h(i),'FontSize',labelFontSize);
+    end
+
     % Set the title with a custom font size and font weight
     if ~exist('titleStr','var')
         titleStr = 'Stylish Pie Chart';
     end
-    title(titleStr, 'FontSize', 16, 'FontWeight', 'bold');
+    title(titleStr, 'FontSize', titleFontSize, 'FontWeight', titleFontWeight);
 
 
     varargout{1} = h;

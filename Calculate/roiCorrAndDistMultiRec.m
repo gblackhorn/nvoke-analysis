@@ -91,15 +91,19 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 	if visualizeData
 		fCorrDistAllName = sprintf('corr-vs-distance all-data');
 		fCorrDistAll = fig_canvas(1,'unit_width',0.3,'unit_height',0.4,'column_lim',1,'fig_name',fCorrDistAllName);
-		scatterHandle = scatter(gca,distFlatAll, corrFlatAll, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'r');
-		xlabel('Distance');
-		ylabel('Correlation');
-		title(fCorrDistAllName);
-		box off;
-		set(gca, 'FontSize', 12, 'LineWidth', 1.5);
-		set(gcf, 'Color', 'w');
-		grid on;
-		set(gca, 'GridLineStyle', ':', 'GridColor', 'k', 'GridAlpha', 0.5);
+		scatterHandle = stylishScatter(distFlatAll, corrFlatAll,'plotWhere',gca,...
+			'xlabelStr','Distance','ylabelStr','Correlation',...
+			'titleStr',fCorrDistAllName);
+
+		% scatterHandle = scatter(gca,distFlatAll, corrFlatAll, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'r');
+		% xlabel('Distance');
+		% ylabel('Correlation');
+		% title(fCorrDistAllName);
+		% box off;
+		% set(gca, 'FontSize', 12, 'LineWidth', 1.5);
+		% set(gcf, 'Color', 'w');
+		% grid on;
+		% set(gca, 'GridLineStyle', ':', 'GridColor', 'k', 'GridAlpha', 0.5);
 		if saveFig
 			savePlot(fCorrDistAll,'save_dir',saveDir,'guiSave',false,'fname',fCorrDistAllName);
 

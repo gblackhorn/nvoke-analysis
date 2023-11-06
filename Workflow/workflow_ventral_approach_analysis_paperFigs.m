@@ -653,7 +653,7 @@ filter_roi_tf = true;
 stim_names = {'og-5s'};
 filters = {[0 nan nan nan]};
 alignedData = alignedData_allTrials;
-saveFig = true;
+saveFig = false;
 save_dir = FolderPathVA.fig;
 guiSave = true; % Options: 'on'/'off'. whether use the gui to choose the save_dir
 
