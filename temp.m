@@ -1,67 +1,3 @@
-clearvars -except recdata_organized alignedData_allTrials seriesData_sync
-PC_name = getenv('COMPUTERNAME'); 
-% set folders for different situation
-DataFolder = 'G:\Workspace\Inscopix_Seagate';
-
-if strcmp(PC_name, 'GD-AW-OFFICE')
-	AnalysisFolder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
-elseif strcmp(PC_name, 'LAPTOP-84IERS3H')
-	AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
-end
-
-[FolderPathVA] = set_folder_path_ventral_approach(DataFolder,AnalysisFolder);
-
-%% ====================
-% Get recData for series recordings (recording sharing the same ROI sets but using different stimulations)
-
-%% ====================
-% 9.1.3 Discard rois (in recdata_organized) if they are lack of certain types of events
-stims = {'GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s GPIO-1-1s'};
-eventCats = {{'trigger'},...
-		{'trigger', 'rebound'},...
-		{'trigger-beforeStim', 'trigger-interval', 'delay-trigger', 'rebound-interval'}};
-debug_mode = false; % true/false
-recdata_organized_bk = recdata_organized;
-[recdata_organized] = discard_recData_roi(recdata_organized,'stims',stims,'eventCats',eventCats,'debug_mode',debug_mode);
-
-%% ====================
-% Get the alignedData from the recdata_organized after tidying up
-% 9.2 Align traces from all trials. Also collect the properties of events
-ad.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
-ad.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
-ad.event_data_group = 'peak_lowpass';
-ad.event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
-ad.event_align_point = 'rise'; % options: 'rise', 'peak'
-ad.rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes
-ad.cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
-%					find a way to combine categories, such as 'nostim' and 'nostimfar'
-ad.pre_event_time = 2; % unit: s. event trace starts at 1s before event onset
-ad.post_event_time = 4; % unit: s. event trace ends at 2s after event onset
-ad.stim_section = true; % true: use a specific section of stimulation to calculate the calcium level delta. For example the last 1s
-ad.ss_range = 1; % single number (last n second) or a 2-element array (start and end. 0s is stimulation onset)
-ad.stim_time_error = 0.1; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
-ad.mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
-% filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
-ad.debug_mode = false; % true/false
-ad.caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
-
-[alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', ad.event_type,...
-	'traceData_type', ad.traceData_type, 'event_data_group', ad.event_data_group,...
-	'event_filter', ad.event_filter, 'event_align_point', ad.event_align_point, 'cat_keywords', ad.cat_keywords,...
-	'pre_event_time', ad.pre_event_time, 'post_event_time', ad.post_event_time,...
-	'stim_section',ad.stim_section,'ss_range',ad.ss_range,...
-	'stim_time_error',ad.stim_time_error,'rebound_duration',ad.rebound_duration,...
-	'mod_pcn', ad.mod_pcn,'debug_mode',ad.debug_mode);
-
-if ad.caDeclineOnly % Keep the trials in which og-led can induce the calcium decline, and discard others
-	stimNames = {alignedData_allTrials.stim_name};
-	[ogIDX] = judge_array_content(stimNames,{'OG-LED'},'IgnoreCase',true); % index of trials using optogenetics stimulation 
-	caDe_og = [alignedData_allTrials(ogIDX).CaDecline]; % calcium decaline logical value of og trials
-	[disIDX_og] = judge_array_content(caDe_og,false); % og trials without significant calcium decline
-	disIDX = ogIDX(disIDX_og); 
-	alignedData_allTrials(disIDX) = [];
-end 
-
 %% ====================
 % Sync ROIs across trials in the same series (same FOV, same ROI set) 
 sd.ref_stim = 'GPIO-1-1s'; % ROIs are synced to the trial applied with this stimulation
@@ -116,42 +52,6 @@ for sn = 1:series_num
 		'fig_row_num',psnt.fig_row_num,'fig_position',psnt.fig_position,'save_fig',psnt.save_path);
 end
 
-%% ====================
-% Plot the spike/event properties for each neuron
-close all
-pei.plot_combined_data = true;
-pei.parNames = {'rise_duration','peak_mag_delta','rise_duration_refNorm','peak_mag_delta_refNorm','rise_delay'}; % entry: event
-pei.save_fig = true; % true/false
-pei.save_dir = FolderPathVA.fig;
-pei.stat = true; % true if want to run anova when plotting bars
-% stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
-
-if pei.save_fig
-	pei.savepath_nogui = uigetdir(FolderPathVA.fig,'Choose a folder to save plot for spike/event prop analysis');
-	if pei.savepath_nogui~=0
-		FolderPathVA.fig = pei.savepath_nogui;
-	else
-		error('pei.savepath_nogui for saving plots is not selected')
-	end 
-else
-	pei.savepath_nogui = '';
-end
-
-series_num = numel(seriesData_sync);
-for sn = 1:series_num
-	series_name = seriesData_sync(sn).seriesName;
-	% NeuronGroup_data = seriesData_sync(sn).NeuronGroup_data;
-	roi_num = numel(seriesData_sync(sn).NeuronGroup_data);
-	for rn = 1:roi_num
-		close all
-		fname_suffix = sprintf('%s-%s', series_name, seriesData_sync(sn).NeuronGroup_data(rn).roi);
-		[~, plot_info] = plot_event_info(seriesData_sync(sn).NeuronGroup_data(rn).eventPropData,...
-			'plot_combined_data',pei.plot_combined_data,'parNames',pei.parNames,'stat',pei.stat,...
-			'save_fig',pei.save_fig,'save_dir',pei.save_dir,'savepath_nogui',pei.savepath_nogui,'fname_suffix',fname_suffix);
-		seriesData_sync(sn).NeuronGroup_data(rn).stat = plot_info;
-		fprintf('Spike/event properties are from %s - %s\n', series_name, seriesData_sync(sn).NeuronGroup_data(rn).roi);
-	end
-end
 
 %% ====================
 % Collect all events from series and plot their REFnorm data
@@ -184,68 +84,6 @@ end
 % end
 
 
-%% ====================
-% Save processed data
-save_dir = uigetdir(FolderPath.analysis);
-dt = datestr(now, 'yyyymmdd');
-save(fullfile(save_dir, [dt, '_seriesData_sync']), 'seriesData_sync');
-
-
-
-
-%% ====================
-% Get the neuron number from a eventProp var
-eventProp_temp = grouped_event_info_filtered(7).event_info;
-trial_names = {eventProp_temp.trialName};
-trial_unique = unique(trial_names);
-trial_num = numel(trial_unique);
-neuron_num = 0;
-trial_roi_list = empty_content_struct({'trialName','roi_list','roi_num','neg_roi_list','neg_roi_num'},trial_num);
-for tn = 1:trial_num
-	tf_trial = strcmp(trial_names,trial_unique{tn});
-	idx_trial = find(tf_trial);
-	trial_eventProp = eventProp_temp(idx_trial);
-	roi_unique = unique({trial_eventProp.roiName});
-	roi_num = numel(roi_unique);
-	neuron_num = neuron_num+roi_num;
-
-	trial_roi_list(tn).trialName = trial_unique{tn};
-	trial_roi_list(tn).roi_list = roi_unique;
-	trial_roi_list(tn).roi_num = roi_num;
-end
-
-%% ====================
-% Get the stim event possibility
-roilist = trial_roi_list_rb;
-alignedData = alignedData_allTrials;
-
-rbPoss_trial = cell(1,numel(roilist));
-
-for tn = 1:numel(roilist)
-	trial_idx = find(strcmp({alignedData_allTrials.trialName},roilist(tn).trialName));
-	alignedData_rois = {alignedData(trial_idx).traces.roi};
-
-	roilist_trial_roi = roilist(tn).roi_list;
-
-	rbPoss_roi = cell(1, numel(roilist_trial_roi));
-	for rn = 1:numel(roilist_trial_roi)
-		possiStruct = alignedData(trial_idx).traces(rn).stimEvent_possi;
-		possiidx = find(strcmp({possiStruct.cat_name},'rebound'));
-		rbPoss_roi{rn} = alignedData(trial_idx).traces(rn).stimEvent_possi(possiidx);
-	end
-	rbPoss_trial{tn} = [rbPoss_roi{:}];
-
-	roilist(tn).neg_roi_list = setdiff(alignedData_rois,roilist_trial_roi);
-	roilist(tn).neg_roi_num = numel(roilist(tn).neg_roi_list);
-
-	neg_roi_num = neg_roi_num+roilist(tn).neg_roi_num;
-end
-all_possi = [rbPoss_trial{:}];
-
-
-% rb_neuron_num = 52;
-% rbex_neuron_num = 20;
-
 
 %% ====================
 % Choose a trial_roi_list and compare the rois in it with the ones in alignedData_allTrials to find difference
@@ -263,123 +101,6 @@ for tn = 1:numel(roilist)
 
 	neg_roi_num = neg_roi_num+roilist(tn).neg_roi_num;
 end
-
-
-%% ====================
-% plot and paired ttest of spike frequency change during og stimulation
-% alignedData_allTrials = alignedData_allTrials_all; % all data
-save_fig = true; % true/false
-
-og_fq_data{1} = [grouped_event(3).event_info.sponfq];
-og_fq_data{2} = [grouped_event(3).event_info.stimfq];
-[barInfo_ogfq] = barplot_with_stat(og_fq_data,'group_names',{'sponfq','stimfq'},...
-	'stat','pttest','save_fig',save_fig);
-
-og_Calevel_data{1} = [grouped_event_info_filtered(3).event_info.CaLevelmeanBase];
-og_Calevel_data{2} = [grouped_event_info_filtered(3).event_info.CaLevelmeanStim];
-[barInfo_ogCalevel] = barplot_with_stat(og_Calevel_data,'group_names',{'Ca-base','Ca-stim'},...
-	'stat','pttest','save_fig',save_fig);
-
-
-event_groups = {grouped_event_info_filtered.group};
-event_pb_cell = cell(1,numel(event_groups));
-for gn = 1:numel(event_groups)
-	event_pb_cell{gn} = [grouped_event_info_filtered(gn).eventPbList.event1_pb];
-end
-[barInfo_eventPb] = barplot_with_stat(event_pb_cell,'group_names',event_groups,...
-	'stat','pttest','save_fig',save_fig);
-
-
-%% ====================
-% plot mean traces of ap-trig and og-rebound together
-% Run 9.2.2 in workflow_ventral_approach_analsyis_2 first and get the variable "stimAlignedTrace_means"
-trace_type(1).tag = {'trig','GPIO-1-1s-trig'}; % search 1st entry in {stimAlignedTrace_means.event_group};
-%												search 2nd entry in {stimAlignedTrace_means(3).trace.group}
-trace_type(2).tag = {'rebound','OG-LED-5s-rebound'};
-
-mean_line_color = {'#2942BA','#BA3C4F'};
-shade_color = {'#4DBEEE','#C67B86'};
-
-f_mean_trace = figure('Name','mean trace');
-set(gcf, 'Units', 'normalized', 'Position', [0.1 0.1 0.9 0.6]);
-% legendStr = {};
-for tn = 1:numel(trace_type)
-	event_pos = find(strcmp(trace_type(tn).tag{1},{stimAlignedTrace_means.event_group}));
-	event_data = stimAlignedTrace_means(event_pos).trace;
-	group_pos = find(strcmp(trace_type(tn).tag{2},{event_data.group}));
-	plot_trace(event_data(group_pos).timeInfo,[],'plotWhere', gca,'plot_combined_data', true,...
-		'mean_trace', event_data(group_pos).mean_val, 'mean_trace_shade', event_data(group_pos).ste_val,...
-		'plot_raw_races',false,'y_range', [-3 7],'tickInt_time',0.5,...
-		'mean_line_color',mean_line_color{tn},'shade_color',shade_color{tn});
-	hold on
-	% legendStr = [legendStr, {'',trace_type(tn).tag{2}}];
-end
-% legend(legendStr, 'location', 'northeast')
-% legend('boxoff')
-
-
-%% ====================
-% Collect all CaLevelDeltaData (base-col and stim-col) into a 2-col vector
-% caLevelData_cell = {grouped_event(2).event_info.CaLevelDeltaData};
-caLevelData = cell2mat(caLevelData_cell(:));
-[barInfo] = barplot_with_stat(caLevelData,'group_names',{'baseline','stim'},...
-	'stat','pttest','save_fig',true,'save_dir',FolderPathVA.fig,'gui_save',true);
-
-
-%% ====================
-% event list grouped to event category
-[event_list] = eventcat_list(alignedData_allTrials);
-
-[TrialRoiList] = get_roiNum_from_eventProp(eventProp_all);
-
-PosAndAllCellNum = [25 54; 32 113; 72 113]; % AP, OG-evoke, OG-rebound
-PosCellNum = PosAndAllCellNum(:,1);
-AllCellNum = PosAndAllCellNum(:,2);
-NegCellNum = PosAndAllCellNum(:,2)-PosAndAllCellNum(:,1);
-% PosAndNegCellNum = [PosAndAllCellNum(:,1) NegCellNum];
-NegAndPosCellNum = [NegCellNum PosCellNum];
-% PosAndNegPercentage = PosAndNegCellNum./AllCellNum;
-NegAndPosPercentage = NegAndPosCellNum./AllCellNum;
-bar(NegAndPosPercentage,'stacked')
-
-%% ====================
-% Get the numbers of ROIs exhibiting certain event category in specific FOVs, and add them to grouped_event_info_filtered
-% Note: set eprop.entry to 'roi' when creating grouped_event
-GroupNum = numel(grouped_event_info_filtered);
-% GroupName = {grouped_event_info_filtered.group};
-for gn = 1:GroupNum
-	EventInfo = grouped_event_info_filtered(gn).event_info;
-	fovIDs = {EventInfo.fovID};
-	fovIDs_unique = unique(fovIDs);
-	fovIDs_unique_num = numel(fovIDs_unique);
-	fovID_count_struct = empty_content_struct({'fovID','numROI'},fovIDs_unique_num);
-	[fovID_count_struct.fovID] = fovIDs_unique{:};
-	for fn = 1:fovIDs_unique_num
-		fovID_count_struct(fn).numROI = numel(find(contains(fovIDs,fovID_count_struct(fn).fovID)));
-	end
-	grouped_event_info_filtered(gn).fovCount = fovID_count_struct;
-end
-
-
-%% ====================
-% plot stim event probability
-trig_ap_eventpb = grouped_event(1).eventPb{3,'eventPb_val'};
-trig_ogrb_eventpb = grouped_event(2).eventPb{2,'eventPb_val'};
-trig_og_eventpb = grouped_event(2).eventPb{3,'eventPb_val'};
-
-eventpb_cell = [trig_ap_eventpb,trig_ogrb_eventpb,trig_og_eventpb];
-
-[barInfo] = barplot_with_stat(eventpb_cell,'group_names',{'ap','ogrb','og'},...
-	'stat','anova','save_fig',true,'save_dir',FolderPathVA.fig,'gui_save',true);
-
-%% ====================
-% Correct stimulation name in recdata for proper processing of gpio info
-for tn = 1:size(recdata,1)
-	if strcmpi(recdata{tn,3},'og-5s ap-0.5s')
-		recdata{tn, 4}(4).name = 'GPIO-1';
-	end
-end
-
 
 
 %% ====================
@@ -441,26 +162,6 @@ while tn <= trial_num
 	end
 end
 
-%% ====================
-% barPlot to show the event frequencies in time bins 
-close all
-[EventFreqInBins] = get_EventFreqInBins_AllTrials(alignedData_allTrials,'og-5s'); % 'ap-0.1s', 'og-5s', 'og-5s ap-0.1s'
-ef_cell = {EventFreqInBins.EventFqInBins};
-ef_cell = ef_cell(:);
-ef = vertcat(ef_cell{:});
-[barInfo] = barplot_with_stat(ef);
-
-%% ====================
-% Plot the the calcium fluorescence with color
-close all
-trial_loc = 1;
-x_window = [alignedData_allTrials(trial_loc).fullTime(1), alignedData_allTrials(trial_loc).fullTime(end)];
-fullTraceCell = {alignedData_allTrials(trial_loc).traces.fullTrace};
-fullTraceCell_norm = cellfun(@(x) x./max(x),fullTraceCell,'UniformOutput',false); % normalize the trace with max value
-TemporalData = [fullTraceCell_norm{:}];
-TemporalData = TemporalData';
-plot_TemporalData_Color(gca,TemporalData,'x_window',x_window)
-colorbar
 
 %% ====================
 % fit the data to exponential curve
@@ -589,108 +290,8 @@ meanEventFitToStimNum = mean(EventFitToStimNum);
 steEventFitToStimNum = ste(EventFitToStimNum);
 
 
-%% ==================== 
-[file_traceCSV,folder_traceCSV] = uigetfile({'*.csv', 'CSV files (*.csv)'}, 'Select a CSV file');
-T = readtable(fullfile(folder_traceCSV, file_traceCSV));
-timeInfo = T.var1;
 
 
-[file_gpio,folder_gpio] = uigetfile({'*.csv', 'CSV files (*.csv)'}, 'Select a CSV file');
-GPIO_table = readtable(fullfile(folder_gpio,file_gpio));
-[channel, EX_LED_power, GPIO_duration, stimulation ] = GPIO_data_extract(GPIO_table);
-[gpio_Info_organized, gpio_info_table] = organize_gpio_info(channel,...
-    			'modify_ch_name', true, 'round_digit_sig', 2); 
-[StimDuration,UnifiedStimDuration,ExtraInfo] = get_stimInfo(gpio_Info_organized);
-patchCoor = {StimDuration.patch_coor};
-stimName = {StimDuration.type};
-
-
-%% ==================== 
-close all
-% Example data
-A = rand(10,20);
-B = rand(10,10);
-
-% Calculate means and standard deviations for each group at each time point
-mean_A = mean(A, 2);
-% std_A = std(A, 0, 2);
-std_A = zeros(size(mean_A));
-mean_B = mean(B, 2);
-% std_B = std(B, 0, 2);
-std_B = zeros(size(mean_B));
-
-% Set up the plot
-figure
-hold on
-xlabel('Time Point')
-ylabel('Value')
-title('Group A vs Group B')
-
-% Plot the means and error bars for each group at each time point
-x = 1:10;
-errorbar(x, mean_A, std_A, 'o-', 'LineWidth', 1.5, 'CapSize', 10, 'MarkerSize', 8)
-errorbar(x, mean_B, std_B, 'o-', 'LineWidth', 1.5, 'CapSize', 10, 'MarkerSize', 8)
-
-% Add legend and grid
-legend('Group A', 'Group B', 'Location', 'Best')
-grid on
-
-% Show the plot
-hold off
-
-plot_diff(x,mean_A,mean_B,'errorA',std_A,'errorB',std_B);
-
-%% ==================== 
-% Define the cell array
-cellArray = {'-1', '0', '1'};
-
-% Convert the cell array to a numeric array
-numArray = cellfun(@str2double, cellArray);
-
-% Display the numeric array
-disp(numArray);
-
-
-%% ==================== 
-figTitleStr_3 = sprintf('diff between ap-0.1s and og-5s ap-0.1s in %gs bins normToBase',binWidth);
-xData_new = xData(2:end);
-meanVal_ogap_new = meanVal_ogap(2:end);
-diffVal_3 = plot_diff(xData_new,meanVal_ap,meanVal_ogap_new,'errorA',steVal_ap,'errorB',steVal_ogap,...
-	'legStrA','ap-0.1s','legStrB','og-5s ap-0.1s','new_xticks',binEdges,'figTitleStr',figTitleStr_3,...
-	'save_fig',save_fig,'save_dir',FolderPathVA.fig);
-
-%% ==================== 
-ogData = {barStat(1).data.group_data};
-apData = {barStat(2).data.group_data};
-ogapData = {barStat(3).data.group_data};
-
-ogapDataShift = ogapData(2:end);
-
-[pVal_ogVSogap] = unpaired_ttest_cellArray(ogData,ogapData);
-[pVal_ogVSap] = unpaired_ttest_cellArray(ogData,apData);
-[pVal_apVSogap] = unpaired_ttest_cellArray(apData,ogapDataShift);
-
-
-%% ==================== 
-close all
-% Generate sample data
-data = {randn(1,10), randn(1,10), randn(1,10), randn(1,10), randn(1,10)};
-xData = 1:5;
-
-% Calculate mean and standard error for each data set
-means = cellfun(@mean, data);
-stderrs = cellfun(@std, data) ./ sqrt(cellfun(@length, data));
-
-% Plot errorbar with scatter
-errorbar(xData, means, stderrs, 'o', 'DisplayName', 'Error Bars');
-hold on
-for i = 1:numel(xData)
-    scatter(xData(i) + 0.1*randn(1,length(data{i})), data{i}, 'k');
-end
-hold off
-
-% Add legend for error bars only
-legend('show', 'Location', 'best', 'AutoUpdate', 'off');
 
 
 %% ==================== 
@@ -1288,7 +889,7 @@ barNames = {'a','bb','ccc','dddd','eeeee'};
 
 %% ====================
 eventTimeType = 'peak_time'; % rise_time/peak_time
-binSize = 1;
+binSize = 1; % unit: second
 visualizeData = true;
 saveFig = false;
 alignedDataRec = alignedData_allTrials(1);
@@ -1298,4 +899,4 @@ alignedDataRec = alignedData_allTrials(1);
 % [corrMatrix,corrFlat,distMatrix,distFlat] = roiCorrAndDistSingleRec(alignedDataRec,binSize,'visualizeData',true);
 
 [corrAndDist,corrFlatAll,distFlatAll] = roiCorrAndDistMultiRec(alignedData_allTrials,binSize,...
-	'visualizeData',visualizeData,'eventTimeType',eventTimeType,'dbMode',false);
+	'visualizeData',visualizeData,'eventTimeType',eventTimeType,'dbMode',false); 

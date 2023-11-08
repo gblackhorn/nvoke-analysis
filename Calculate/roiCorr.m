@@ -55,25 +55,24 @@ function [corrMatrix,corrFlat,varargout] = roiCorr(alignedDataRec,binSize,vararg
 	% (using function 'roiDist')
 	corrFlat = corrMatrix(triu(true(size(corrMatrix)),1));
 
+
+	% Prepare the roiPairNames for 'corrFlat'
+	% Calculate the number of neurons
+	numNeurons = size(corrMatrix, 1);
+
+	% Initialize a cell array to hold the neuron pair names
+	roiPairNames = cell(length(corrFlat), 1);
+
+	% Obtain the upper triangular indices
+	[row, col] = find(triu(ones(numNeurons, numNeurons), 1));
+
+	% Loop through each index to get neuron names
+	for i = 1:length(row)
+	    roiPairNames{i} = [roiNames{row(i)}, '-', roiNames{col(i)}];
+	end
+
+
 	varargout{1} = roiNames;
-	varargout{2} = recDateTime;
-
-
-
-	% if dispCorr
-	% 	% create a heatmap
-	% 	if ~exist('plotWhere','var')
-	% 		f = figure;
-	% 		plotWhere = gca;
-	% 	end
-	% 	xLabels = roiNames;
-	% 	yLabels = roiNames;
-	% 	h = heatmap(plotWhere,xLabels,yLabels,corrMatrix,'Colormap',jet);
-	% 	h.Title = recDateTime;
-	% else
-	% 	h = [];
-	% end
-
-	% varargout{1} = roiNames;
-	% varargout{2} = h;
+	varargout{2} = roiPairNames;
+	varargout{3} = recDateTime;
 end

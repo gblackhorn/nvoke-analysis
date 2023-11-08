@@ -35,14 +35,15 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 	end
 
 	% calculate the activity correlation using event time
-	[corrMatrix,corrFlat,roiNames,recDateTime] = roiCorr(alignedDataRec,binSize,'eventTimeType',eventTimeType);
+	[corrMatrix,corrFlat,roiNames,roiPairNames,recDateTime] = roiCorr(alignedDataRec,binSize,'eventTimeType',eventTimeType);
 
 	% calculate the distances of all neuron pairs
 	roi_coors = {alignedDataRec.traces.roi_coor};
 	[distMatrix,distFlat] = roiDist(roi_coors);
 
 	varargout{1} = roiNames;
-	varargout{2} = recDateTime;
+	varargout{2} = roiPairNames;
+	varargout{3} = recDateTime;
 
 	% Plot data if visualizeData is true
 	if visualizeData
@@ -68,10 +69,10 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 		set(gca, 'GridLineStyle', ':', 'GridColor', 'k', 'GridAlpha', 0.5);
 
 		sgtitle(fName)
-		varargout{3} = f;
-		varargout{4} = fName;
+		varargout{4} = f;
+		varargout{5} = fName;
 	else
-		varargout{3} = [];
 		varargout{4} = [];
+		varargout{5} = [];
 	end
 end

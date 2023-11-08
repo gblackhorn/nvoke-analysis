@@ -653,7 +653,7 @@ filter_roi_tf = true;
 stim_names = {'og-5s'};
 filters = {[0 nan nan nan]};
 alignedData = alignedData_allTrials;
-saveFig = false;
+saveFig = true;
 save_dir = FolderPathVA.fig;
 guiSave = true; % Options: 'on'/'off'. whether use the gui to choose the save_dir
 
@@ -676,10 +676,17 @@ norm_FluorData = false; % true/false. whether to normalize the FluroData
 % histogram([roi_tauInfo.tauMean],20);
 % FolderPathVA.fig = savePlot(gcf,'guiSave','on','save_dir',FolderPathVA.fig,'fname','hist_tau_mean');
 
-
+%% ==================== 
+% Fig 5 synchronicity
+eventTimeType = 'peak_time'; % rise_time/peak_time
+binSize = 1; % unit: second
+visualizeData = false;
+saveFig = false;
+[corrAndDist,corrFlatAll,distFlatAll] = roiCorrAndDistMultiRec(alignedData_allTrials,binSize,...
+	'visualizeData',visualizeData,'eventTimeType',eventTimeType,'dbMode',false); 
 
 %% ==================== 
-% Fig 5 or supplementary data
+% Fig 6 or supplementary data
 % 9.1.3 Plot the auto-correlogram of events and the probability density function of inter-event time
 close all
 saveFig = false; % true/false
