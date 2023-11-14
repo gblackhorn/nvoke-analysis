@@ -10,7 +10,7 @@ function [varargout] = plot_roi_coor(roi_map,coor,plotWhere,varargin)
 	shape_size = 10; % radius of 'Circle'
 
 	text_lable = false;
-	fontSize = 10; % size of text label
+	labelFontSize = 10; % size of text label
 	anchorpoint = 'Center'; % anchor point for text labels
 	textCell = {};
 	text_prefix = 'neuron'; % this will be used to find the neuron numbers
@@ -32,6 +32,8 @@ function [varargout] = plot_roi_coor(roi_map,coor,plotWhere,varargin)
 	        textCell = varargin{ii+1}; % a column cell containing neuron lables
         elseif strcmpi('shape_style', varargin{ii})
 	        shape_style = varargin{ii+1}; % a column cell containing neuron lables
+        elseif strcmpi('labelFontSize', varargin{ii})
+	        labelFontSize = varargin{ii+1}; % a column cell containing neuron lables
         elseif strcmpi('shape_size', varargin{ii})
 	        shape_size = varargin{ii+1}; % a column cell containing neuron lables
         elseif strcmpi('text_prefix', varargin{ii})
@@ -81,7 +83,7 @@ function [varargout] = plot_roi_coor(roi_map,coor,plotWhere,varargin)
 		end
 	end
 	if text_lable
-		roi_map_marked = insertText(roi_map, coor, text_str,'FontSize',fontSize,...
+		roi_map_marked = insertText(roi_map, coor, text_str,'FontSize',labelFontSize,...
 			'BoxOpacity',opacity,'AnchorPoint',anchorpoint,'TextColor',textColor,'BoxColor',shapeColor);
 	end
 
@@ -94,7 +96,7 @@ function [varargout] = plot_roi_coor(roi_map,coor,plotWhere,varargin)
     
     if showMap
     	imshow(roi_map_marked)
-    else
+    end
 
     varargout{1} = roi_map_marked;
 end

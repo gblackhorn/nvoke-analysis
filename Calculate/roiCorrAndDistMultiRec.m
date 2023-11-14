@@ -7,8 +7,11 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 	% Defaults
 	eventTimeType = 'peak_time'; % rise_time/peak_time
 	visualizeData = false;
+	corrThresh = 0.3; % correlation equal and below this threshhold will not be show in the graph and bundling plots  
+	distScale = []; % pixels/um. used for calibrate the distance
 	saveFig = false;
 	guiSave = false;
+	saveDir = [];
 	dbMode = false; % debug mode
 
 	% Optionals
@@ -17,6 +20,10 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 	        eventTimeType = varargin{ii+1}; 
 	    elseif strcmpi('visualizeData', varargin{ii})
             visualizeData = varargin{ii+1};
+	    elseif strcmpi('corrThresh', varargin{ii})
+            corrThresh = varargin{ii+1}; % pixels/um. used for calibrate the distance
+	    elseif strcmpi('distScale', varargin{ii})
+            distScale = varargin{ii+1}; % pixels/um. used for calibrate the distance
 	    elseif strcmpi('saveFig', varargin{ii})
             saveFig = varargin{ii+1};
 	    elseif strcmpi('guiSave', varargin{ii})
@@ -52,7 +59,7 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 	for n = 1:recNum
 		if dbMode
 			fprintf('recording (%d/%d): %s\n',n,recNum,alignedData(n).trialName);
-			if n == 24
+			if n == 9
 				pause
 			end
 		end
@@ -60,7 +67,7 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 		if ~isempty(alignedData(n).traces)
 			close all
 			[corrMatrix,corrFlat,distMatrix,distFlat,roiNames,roiPairNames,recDateTime,fig,figName] = roiCorrAndDistSingleRec(alignedData(n),...
-				binSize,'visualizeData',visualizeData);
+				binSize,'visualizeData',visualizeData,'distScale',distScale);
 
 			corrAndDist(n).recName = recDateTime;
 			corrAndDist(n).roiNames = roiNames;
@@ -112,4 +119,6 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 		    save(fullfile(saveDir, 'corrAndDistData'), 'corrAndDist','corrFlatAll','distFlatAll');
 		end
 	end
+
+	varargout{3} = saveDir;
 end

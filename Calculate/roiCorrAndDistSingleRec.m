@@ -22,6 +22,7 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 	% Defaults
 	eventTimeType = 'peak_time'; % rise_time/peak_time
 	visualizeData = false;
+	corrThresh = 0.3; % correlation equal and below this threshhold will not be show in the graph and bundling plots  
 
 	% Optionals
 	for ii = 1:2:(nargin-2)
@@ -29,8 +30,10 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 	        eventTimeType = varargin{ii+1}; 
 	    elseif strcmpi('visualizeData', varargin{ii})
             visualizeData = varargin{ii+1};
-	    % elseif strcmpi('dispCorr', varargin{ii})
-        %     dispCorr = varargin{ii+1};
+	    elseif strcmpi('corrThresh', varargin{ii})
+            corrThresh = varargin{ii+1}; % pixels/um. used for calibrate the distance
+	    elseif strcmpi('distScale', varargin{ii})
+            distScale = varargin{ii+1}; % pixels/um. used for calibrate the distance
 	    end
 	end
 
@@ -41,6 +44,15 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 	roi_coors = {alignedDataRec.traces.roi_coor};
 	[distMatrix,distFlat] = roiDist(roi_coors);
 
+	if exist('distScale','var') && ~isempty(distScale)
+	    distMatrix = distMatrix./distScale;
+	    distFlat = distFlat./distScale;
+	    distLabelStr = 'Distance (um)';
+	else
+		distLabelStr = 'Distance (pixel)';
+	end
+
+
 	varargout{1} = roiNames;
 	varargout{2} = roiPairNames;
 	varargout{3} = recDateTime;
@@ -48,25 +60,50 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 	% Plot data if visualizeData is true
 	if visualizeData
 		fName = sprintf('roiCorrFig rec-%s',recDateTime);
-		f = fig_canvas(2,'unit_width',0.3,'unit_height',0.4,'column_lim',2,'fig_name',fName);
-		fTile = tiledlayout(f,1,2); % creat 1x2 tiles 
+		f = fig_canvas(5,'unit_width',0.3,'unit_height',0.4,'column_lim',3,'fig_name',fName);
+		fTile = tiledlayout(f,2,3); % create 1x2 tiles 
 
 		% display the roi correlation using heatmap
-		corrHeatmapAx = nexttile(fTile);
-		heatmapHandle = heatMapRoiCorr(corrMatrix,roiNames,'recName',recDateTime,'plotWhere',gca);
+		corrHeatmapAx = nexttile(fTile,1);
+		heatmapHandle = heatMapRoiCorr(corrMatrix,roiNames,'recName',recDateTime,'plotWhere',gca,...
+			'excludeSelfCorrColor',true);
 		title('Cross correlation')
 
-		% display the relationship between the activity correlation and the roi distance
-		corrDistScatterAx = nexttile(fTile);
-		scatterHandle = scatter(gca,distFlat, corrFlat, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'r');
-		xlabel('Distance');
-		ylabel('Correlation');
-		title('Correlation vs Distance');
-		box off;
-		set(gca, 'FontSize', 12, 'LineWidth', 1.5);
-		set(gcf, 'Color', 'w');
-		grid on;
-		set(gca, 'GridLineStyle', ':', 'GridColor', 'k', 'GridAlpha', 0.5);
+		
+		if numel(corrMatrix)>1
+			% display the hierachical clustered roi correlation usigng heatmap
+			corrHeatmapAx = nexttile(fTile,2);
+			[corrMatrixHC,outperm_cols,outperm_rows] = hierachicalCluster(corrMatrix);
+			roiNamesHC = roiNames(outperm_cols);
+			heatmapHCHandle = heatMapRoiCorr(corrMatrixHC,roiNamesHC,'recName',recDateTime,'plotWhere',gca,...
+				'excludeSelfCorrColor',true);
+			title('Hierachical clustered cross correlation')
+
+			% display the relationship between the activity correlation and the roi distance
+			corrDistScatterAx = nexttile(fTile,3);
+			scatterHandle = stylishScatter(distFlat,corrFlat,'plotWhere',gca,...
+				'xlabelStr',distLabelStr,'ylabelStr','Correlation','titleStr','Correlation vs Distance');
+
+			% display the neuronal network graph
+			corrHeatmapAx = nexttile(fTile,4);
+			graphHandle = drawNeuronalNetworkGraph(corrMatrix,distMatrix,roiNames,'plotWhere',gca,'corrThresh',corrThresh);
+
+			% display the edge bundling
+			corrHeatmapAx = nexttile(fTile,5);
+			drawEdgeBundling(corrMatrix,distMatrix,roiNames,'plotWhere',gca,'corrThresh',corrThresh,'colorBarStr',distLabelStr);
+		end
+
+		% display the roi map
+		roi_map = alignedDataRec.roi_map;
+		roiCoor = {alignedDataRec.traces.roi_coor}';
+		roiCoor = cell2mat(roiCoor);
+		roiCoor = convert_roi_coor(roiCoor);
+
+		roiMapAx = nexttile(fTile,6);
+		plot_roi_coor(roi_map,roiCoor,roiMapAx,...
+			'label','text','textCell',roiNames,'textColor','black','labelFontSize',12,...
+			'shapeColor','yellow','opacity',1,'showMap',true); % plotWhere is [] to supress plot
+
 
 		sgtitle(fName)
 		varargout{4} = f;

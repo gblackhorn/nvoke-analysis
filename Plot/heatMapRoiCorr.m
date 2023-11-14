@@ -9,6 +9,8 @@ function [heatmapHandle] = heatMapRoiCorr(corrMatrix,roiNames,varargin)
 
 	% Defaults
 	heatmapColor = jet; 
+	excludeSelfCorrColor = true; % if true, exclude the diagonal values from the heatmap color limit
+
 
 	% Optionals
 	for ii = 1:2:(nargin-2)
@@ -18,6 +20,8 @@ function [heatmapHandle] = heatMapRoiCorr(corrMatrix,roiNames,varargin)
             plotWhere = varargin{ii+1};
 	    elseif strcmpi('heatmapColor', varargin{ii})
             heatmapColor = varargin{ii+1};
+	    elseif strcmpi('excludeSelfCorrColor', varargin{ii})
+            excludeSelfCorrColor = varargin{ii+1};
 	    end
 	end
 
@@ -29,7 +33,8 @@ function [heatmapHandle] = heatMapRoiCorr(corrMatrix,roiNames,varargin)
 		ytickLabels = roiNames;
 
 		heatmapHandle = heatMapCustomized(corrMatrix,'plotWhere',plotWhere,...
-			'xtickLabels',xtickLabels,'ytickLabels',ytickLabels);
+			'xtickLabels',xtickLabels,'ytickLabels',ytickLabels,...
+			'heatmapColor',heatmapColor,'excludeSelfCorrColor',excludeSelfCorrColor);
 		% heatmapHandle = heatmap(plotWhere,xLabels,yLabels,corrMatrix,'Colormap',heatmapColor);
 
 		% Use recording name as the title

@@ -3,6 +3,10 @@ function drawEdgeBundling(corrMatrix, distMatrix, roiNames, varargin)
     % default
     corrThresh = 0.3; % Only correlations higher then the threshold will be shown as edges
     edgeScale = 20; % scaling factor applied to the correlation values when setting the edge width
+    colorBarStr = 'Distance (pixel)';
+    lineAlpha = 0.5;
+    labelFontSize = 10;
+    labelFontWeight = 'normal'; % 'normal' / 'bold'
 
     unit_width = 0.4; % normalized to display
     unit_height = 0.4; % normalized to display
@@ -16,6 +20,8 @@ function drawEdgeBundling(corrMatrix, distMatrix, roiNames, varargin)
             corrThresh = varargin{ii+1};
         elseif strcmpi('titleStr', varargin{ii})
             titleStr = varargin{ii+1};
+        elseif strcmpi('colorBarStr', varargin{ii})
+            colorBarStr = varargin{ii+1};
         elseif strcmpi('showEdgelabel', varargin{ii})
             showEdgelabel = varargin{ii+1};
         end
@@ -68,8 +74,8 @@ function drawEdgeBundling(corrMatrix, distMatrix, roiNames, varargin)
              'HorizontalAlignment', horzAlign, ...
              'VerticalAlignment', 'middle', ...
              'Color', 'k', ... % black color for better visibility
-             'FontSize', 8, ...
-             'FontWeight', 'bold', ...
+             'FontSize', labelFontSize, ...
+             'FontWeight', labelFontWeight, ...
              'BackgroundColor', 'w', ... % white background to avoid overlapping with edges
              'Margin', 1); % a small margin around the text for better legibility
     end
@@ -100,7 +106,7 @@ function drawEdgeBundling(corrMatrix, distMatrix, roiNames, varargin)
                  controlPoint = midPoint / norm(midPoint) * corrThresh; % Adjust for 'bundling' effect
                  
                  % Draw the Bezier curve
-                 bezierLine(positions(i,:), controlPoint, positions(j,:), lineWidth, edgeColor);
+                 bezierLine(positions(i,:), controlPoint, positions(j,:), lineWidth, edgeColor, lineAlpha);
              end
          end
      end
@@ -113,7 +119,8 @@ function drawEdgeBundling(corrMatrix, distMatrix, roiNames, varargin)
 
     % Add a color bar to the right of the figure
     c = colorbar;
-    c.Label.String = 'Distance';
+    c.Label.String = colorBarStr;
+    c.Label.FontSize = labelFontSize;
     
     % Set color limits based on min and max distances
     caxis([minDist maxDist]);
@@ -139,12 +146,12 @@ function drawEdgeBundling(corrMatrix, distMatrix, roiNames, varargin)
     ylim(ax, [yl(1), yl(2) + upBorder]); % Increase the upper limit
 end
 
-function bezierLine(p0, p1, p2, lineWidth, edgeColor)
+function bezierLine(p0, p1, p2, lineWidth, edgeColor, lineAlpha)
     % Generate points for the Bezier curve
     t = linspace(0, 1, 100);
     Bx = (1-t).^2 .* p0(1) + 2 .* (1-t) .* t .* p1(1) + t.^2 .* p2(1);
     By = (1-t).^2 .* p0(2) + 2 .* (1-t) .* t .* p1(2) + t.^2 .* p2(2);
     
     % Draw the line on the current figure
-    line(Bx, By, 'Color', edgeColor, 'LineWidth', lineWidth);
+    lineHandle = line(Bx, By, 'Color', [edgeColor lineAlpha], 'LineWidth', lineWidth);
 end

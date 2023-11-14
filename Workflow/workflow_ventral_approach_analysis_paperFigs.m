@@ -678,12 +678,18 @@ norm_FluorData = false; % true/false. whether to normalize the FluroData
 
 %% ==================== 
 % Fig 5 synchronicity
+saveFig = true; % true/false
 eventTimeType = 'peak_time'; % rise_time/peak_time
 binSize = 1; % unit: second
-visualizeData = false;
-saveFig = false;
-[corrAndDist,corrFlatAll,distFlatAll] = roiCorrAndDistMultiRec(alignedData_allTrials,binSize,...
-	'visualizeData',visualizeData,'eventTimeType',eventTimeType,'dbMode',false); 
+visualizeData = true; % true/false
+corrThresh = 0.3; % correlation equal and below this threshhold will not be show in the graph and bundling plots  
+distScale = 296/100; % pixels/um. used for calibrate the distance. 
+	% Length 9 mm, Ø 1 mm: 296.0608 pixels = 100 µm
+	% Length 8.4 mm, Ø 0.5 mm: 266.0676 pixels = 100 µm
+dbMode = false; % true/false
+[corrAndDist,corrFlatAll,distFlatAll,FolderPathVA.fig] = roiCorrAndDistMultiRec(alignedData_allTrials,binSize,...
+	'visualizeData',visualizeData,'corrThresh',corrThresh,'eventTimeType',eventTimeType,'distScale',distScale,...
+	'saveFig',saveFig,'saveDir',FolderPathVA.fig,'guiSave',true,'dbMode',dbMode); 
 
 %% ==================== 
 % Fig 6 or supplementary data

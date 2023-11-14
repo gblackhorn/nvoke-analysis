@@ -1,9 +1,11 @@
-function drawNeuronalNetworkGraph(corrMatrix, distMatrix, roiNames, varargin)
+function [h] = drawNeuronalNetworkGraph(corrMatrix, distMatrix, roiNames, varargin)
     % Create the graph object from the correlation matrix
 
 
     % Defaults
     showEdgelabel = false; % true/false. Show the weight as edge label
+    nodeFontsize = 10;
+    corrThresh = 0; % Only correlations higher then the threshold will be shown as edges
 
     unit_width = 0.4; % normalized to display
     unit_height = 0.4; % normalized to display
@@ -15,15 +17,25 @@ function drawNeuronalNetworkGraph(corrMatrix, distMatrix, roiNames, varargin)
             plotWhere = varargin{ii+1}; 
         elseif strcmpi('showEdgelabel', varargin{ii})
             showEdgelabel = varargin{ii+1};
+        elseif strcmpi('corrThresh', varargin{ii})
+            corrThresh = varargin{ii+1};
         end
     end
 
     % Get the upper triangle without the diagnol line
     G = graph(corrMatrix, roiNames, 'upper', 'omitselfloops');
 
-    % Remove edges with non-positive correlation
-    % G = rmedge(G, 1:numedges(G), find(G.Edges.Weight <= 0));
-    G = rmedge(G, find(G.Edges.Weight <= 0));
+
+    if corrThresh > 0
+        % Remove edges smaller than corrThresh
+        G = rmedge(G, find(G.Edges.Weight < corrThresh));
+    else
+        warning('variable corrThresh is equal or smaller than 0')
+        % Remove edges with non-positive correlation
+        % G = rmedge(G, 1:numedges(G), find(G.Edges.Weight <= 0));
+        G = rmedge(G, find(G.Edges.Weight <= 0));
+    end
+    
 
     % Create a new figure window or use the existing axis if 'plotWhere' variable exists
     if ~exist('plotWhere','var')
@@ -36,27 +48,30 @@ function drawNeuronalNetworkGraph(corrMatrix, distMatrix, roiNames, varargin)
 
     % Create a layout for the graph
     h = plot(gca, G, 'Layout', 'force');
-    title('Neuronal Network Graph');
+    h.NodeFontSize = nodeFontsize;
+    title(sprintf('Neuronal Network Graph\ncorrThresh: %g',corrThresh));
 
     % Customize the node colors
     numNodes = numnodes(G);
     nodeColorMap = lines(numNodes); % Using 'lines' colormap for different colors
     h.NodeColor = nodeColorMap;
 
-    % Customize node sizes based on degree
-    % nodeSizes = 5 * degree(G);
-    nodeSizes = 1 * degree(G);
-    h.MarkerSize = nodeSizes;
+    if isempty(find(degree(G) == 0))
+        % Customize node sizes based on degree
+        % nodeSizes = 5 * degree(G);
+        nodeSizes = 1 * degree(G);
+        h.MarkerSize = nodeSizes;
 
-    % Normalize the weights for correlation
-    weights = G.Edges.Weight / max(G.Edges.Weight); 
-    h.LineWidth = 1 * weights;
+        % Normalize the weights for correlation
+        weights = G.Edges.Weight / max(G.Edges.Weight); 
+        h.LineWidth = 5 * weights;
+    end
 
-    % Normalize distances for color mapping
-    maxDist = max(distMatrix(:));
-    minDist = min(distMatrix(:));
-    distColors = (distMatrix - minDist) / (maxDist - minDist); % Normalize between 0 and 1
-    distColors = 1 - distColors; % Invert so that small distances are "warmer" (red) and large are "cooler" (blue)
+    % % Normalize distances for color mapping
+    % maxDist = max(distMatrix(:));
+    % minDist = min(distMatrix(:));
+    % distColors = (distMatrix - minDist) / (maxDist - minDist); % Normalize between 0 and 1
+    % distColors = 1 - distColors; % Invert so that small distances are "warmer" (red) and large are "cooler" (blue)
 
     % % Draw the edges with colors based on distances
     % for i = 1:numedges(G)
