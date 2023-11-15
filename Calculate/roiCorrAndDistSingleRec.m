@@ -59,9 +59,9 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 
 	% Plot data if visualizeData is true
 	if visualizeData
-		fName = sprintf('roiCorrFig rec-%s',recDateTime);
-		f = fig_canvas(5,'unit_width',0.3,'unit_height',0.4,'column_lim',3,'fig_name',fName);
-		fTile = tiledlayout(f,2,3); % create 1x2 tiles 
+		fName = sprintf('roiCorrFig rec-%s binSize-%g corrThresh-%g',recDateTime,binSize,corrThresh);
+		f = fig_canvas(9,'unit_width',0.3,'unit_height',0.4,'column_lim',3,'fig_name',fName);
+		fTile = tiledlayout(f,3,3); % create tiles 
 
 		% display the roi correlation using heatmap
 		corrHeatmapAx = nexttile(fTile,1);
@@ -104,8 +104,12 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 			'label','text','textCell',roiNames,'textColor','black','labelFontSize',12,...
 			'shapeColor','yellow','opacity',1,'showMap',true); % plotWhere is [] to supress plot
 
+		% display the synchronicity of ROIs in a recording using percentage
+		syncPercAx = nexttile(fTile,7,[1,3]);
+		displayRecSyncPerc(syncPercAx,alignedDataRec,binSize);
 
-		sgtitle(fName)
+
+		sgtitle(fName,'FontSize',14,'FontWeight','Bold')
 		varargout{4} = f;
 		varargout{5} = fName;
 	else
