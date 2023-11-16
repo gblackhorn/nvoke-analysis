@@ -23,6 +23,7 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 	eventTimeType = 'peak_time'; % rise_time/peak_time
 	visualizeData = false;
 	corrThresh = 0.3; % correlation equal and below this threshhold will not be show in the graph and bundling plots  
+	roiNameExcessiveStr = 'neuron'; % remove this string from the ROI name to shorten it
 
 	% Optionals
 	for ii = 1:2:(nargin-2)
@@ -57,6 +58,13 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 	varargout{2} = roiPairNames;
 	varargout{3} = recDateTime;
 
+	% remove the 'neuron' part from the roiName for clearer display in the plots. For example,
+	% change neuron5 to 5
+	roiNamesShort = cell(size(roiNames));
+	for i = 1:numel(roiNames)
+		roiNamesShort{i} = strrep(roiNames{i},roiNameExcessiveStr,'');
+	end
+
 	% Plot data if visualizeData is true
 	if visualizeData
 		fName = sprintf('roiCorrFig rec-%s binSize-%g corrThresh-%g',recDateTime,binSize,corrThresh);
@@ -65,7 +73,7 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 
 		% display the roi correlation using heatmap
 		corrHeatmapAx = nexttile(fTile,1);
-		heatmapHandle = heatMapRoiCorr(corrMatrix,roiNames,'recName',recDateTime,'plotWhere',gca,...
+		heatmapHandle = heatMapRoiCorr(corrMatrix,roiNamesShort,'recName',recDateTime,'plotWhere',gca,...
 			'excludeSelfCorrColor',true);
 		title('Cross correlation')
 
@@ -74,7 +82,7 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 			% display the hierachical clustered roi correlation usigng heatmap
 			corrHeatmapAx = nexttile(fTile,2);
 			[corrMatrixHC,outperm_cols,outperm_rows] = hierachicalCluster(corrMatrix);
-			roiNamesHC = roiNames(outperm_cols);
+			roiNamesHC = roiNamesShort(outperm_cols);
 			heatmapHCHandle = heatMapRoiCorr(corrMatrixHC,roiNamesHC,'recName',recDateTime,'plotWhere',gca,...
 				'excludeSelfCorrColor',true);
 			title('Hierachical clustered cross correlation')
@@ -86,11 +94,11 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 
 			% display the neuronal network graph
 			corrHeatmapAx = nexttile(fTile,4);
-			graphHandle = drawNeuronalNetworkGraph(corrMatrix,distMatrix,roiNames,'plotWhere',gca,'corrThresh',corrThresh);
+			graphHandle = drawNeuronalNetworkGraph(corrMatrix,distMatrix,roiNamesShort,'plotWhere',gca,'corrThresh',corrThresh);
 
 			% display the edge bundling
 			corrHeatmapAx = nexttile(fTile,5);
-			drawEdgeBundling(corrMatrix,distMatrix,roiNames,'plotWhere',gca,'corrThresh',corrThresh,'colorBarStr',distLabelStr);
+			drawEdgeBundling(corrMatrix,distMatrix,roiNamesShort,'plotWhere',gca,'corrThresh',corrThresh,'colorBarStr',distLabelStr);
 		end
 
 		% display the roi map
@@ -101,7 +109,7 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 
 		roiMapAx = nexttile(fTile,6);
 		plot_roi_coor(roi_map,roiCoor,roiMapAx,...
-			'label','text','textCell',roiNames,'textColor','black','labelFontSize',12,...
+			'label','text','textCell',roiNamesShort,'textColor','black','labelFontSize',12,...
 			'shapeColor','yellow','opacity',1,'showMap',true); % plotWhere is [] to supress plot
 
 		% display the synchronicity of ROIs in a recording using percentage

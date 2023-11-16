@@ -67,7 +67,7 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 		if ~isempty(alignedData(n).traces)
 			close all
 			[corrMatrix,corrFlat,distMatrix,distFlat,roiNames,roiPairNames,recDateTime,fig,figName] = roiCorrAndDistSingleRec(alignedData(n),...
-				binSize,'visualizeData',visualizeData,'distScale',distScale);
+				binSize,'visualizeData',visualizeData,'corrThresh',corrThresh,'distScale',distScale);
 
 			corrAndDist(n).recName = recDateTime;
 			corrAndDist(n).roiNames = roiNames;

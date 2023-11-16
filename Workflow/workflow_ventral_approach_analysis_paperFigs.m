@@ -678,7 +678,7 @@ norm_FluorData = false; % true/false. whether to normalize the FluroData
 
 %% ==================== 
 % Fig 5 synchronicity
-saveFig = true; % true/false
+saveFig = false; % true/false
 eventTimeType = 'peak_time'; % rise_time/peak_time
 binSize = 1; % unit: second
 visualizeData = true; % true/false
