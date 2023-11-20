@@ -29,7 +29,7 @@ else
 
 	if strcmp(PC_name, 'GD-AW-OFFICE')
 		AnalysisFolder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
-	elseif strcmp(PC_name, 'LAPTOP-84IERS3H')
+	elseif strcmp(PC_name, 'BLADE14-GD')
 		AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
 	else
 		error('set var GUI_chooseFolder to true to select default folders using GUI')
