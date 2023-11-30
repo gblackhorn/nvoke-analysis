@@ -13,7 +13,9 @@ function [filtered_struct_var,varargout] = filter_groups_in_structure(struct_var
 
 	% Optionals
     for ii = 1:2:(nargin-2)
-        if strcmpi('words_keep', varargin{ii})
+        if strcmpi('exact_words', varargin{ii})
+            exact_words = varargin{ii+1}; % cell array containing strings. Keep groups which have exact words
+        elseif strcmpi('words_keep', varargin{ii})
             words_keep = varargin{ii+1}; % cell array containing strings. Keep groups containing these words
         elseif strcmpi('words_discard', varargin{ii})
             words_discard = varargin{ii+1}; % cell array containing strings. Discard groups containing these words
@@ -23,68 +25,87 @@ function [filtered_struct_var,varargout] = filter_groups_in_structure(struct_var
     end
 
     %% Main content
-    if ~exist('words_keep','var') && ~exist('words_discard','var') 
-        error('At least one of the varargin (words_keep, words_discard) should be inputted');
+    if ~exist('exact_words','var') && ~exist('words_keep','var') && ~exist('words_discard','var') 
+        error('At least one of the varargin (exact_words, words_keep, words_discard) should be input');
     end
 
     group_num = numel(struct_var);
 
-    % discard groups containing words_discard
-    if exist('words_discard','var')
-        disIDX_wd = [];
-        wd_num = numel(words_discard);
+
+    % Use 'exact_words' alone or 'words_keep' and 'words_discard'
+    if exist('exact_words','var')
+        disIDX = [];
+        ew_num = numel(exact_words);
         for n = 1:group_num
             group = struct_var(n).(fieldName);
-            for wdn = 1:wd_num
-                if ~isempty(strfind(group, words_discard{wdn}))
-                    dis_tf = true;
-                    break
-                else
-                    dis_tf = false;
-                end
+            ewTF = strcmpi(group,exact_words);
+            if isempty(find(ewTF))
+                dis_tf = true;
+            else
+                dis_tf = false;
             end
             if dis_tf
-                disIDX_wd = [disIDX_wd; n];
+                disIDX = [disIDX; n];
             end
         end
-        
     else
-        disIDX_wd = [];
-    end
-
-    % discard groups without words_keep
-    if exist('words_keep','var')
-        disIDX_wk = [];
-        wk_num = numel(words_keep);
-        for n = 1:group_num
-            group = struct_var(n).(fieldName);
-            for wkn = 1:wk_num
-                if clean_ap_group % discard delay and rebound categories from airpuff experiments
-                    if ~isempty(strfind(group, 'ap'))
-                        if ~isempty(strfind(group, 'delay')) || ~isempty(strfind(group, 'rebound'))
-                            dis_tf = true;
-                            break
-                        end
+        % discard groups containing words_discard
+        if exist('words_discard','var')
+            disIDX_wd = [];
+            wd_num = numel(words_discard);
+            for n = 1:group_num
+                group = struct_var(n).(fieldName);
+                for wdn = 1:wd_num
+                    if ~isempty(strfind(group, words_discard{wdn}))
+                        dis_tf = true;
+                        break
+                    else
+                        dis_tf = false;
                     end
                 end
-
-                if ~isempty(strfind(group, words_keep{wkn}))
-                    dis_tf = false;
-                    break
-                else
-                    dis_tf = true;
+                if dis_tf
+                    disIDX_wd = [disIDX_wd; n];
                 end
             end
-            if dis_tf
-                disIDX_wk = [disIDX_wk; n];
-            end
+            
+        else
+            disIDX_wd = [];
         end
-    else
-        disIDX_wk = [];
-    end
 
-    % combine disIDX_wd and disIDX_wk, and filter groups
-    disIDX = unique([disIDX_wd;disIDX_wk]);
+        % discard groups without words_keep
+        if exist('words_keep','var')
+            disIDX_wk = [];
+            wk_num = numel(words_keep);
+            for n = 1:group_num
+                group = struct_var(n).(fieldName);
+                for wkn = 1:wk_num
+                    if clean_ap_group % discard delay and rebound categories from airpuff experiments
+                        if ~isempty(strfind(group, 'ap'))
+                            if ~isempty(strfind(group, 'delay')) || ~isempty(strfind(group, 'rebound'))
+                                dis_tf = true;
+                                break
+                            end
+                        end
+                    end
+
+                    if ~isempty(strfind(group, words_keep{wkn}))
+                        dis_tf = false;
+                        break
+                    else
+                        dis_tf = true;
+                    end
+                end
+                if dis_tf
+                    disIDX_wk = [disIDX_wk; n];
+                end
+            end
+        else
+            disIDX_wk = [];
+        end
+
+        % combine disIDX_wd and disIDX_wk, and filter groups
+        disIDX = unique([disIDX_wd;disIDX_wk]);
+    end
     filtered_struct_var = struct_var;
     filtered_struct_var(disIDX) = [];
 end

@@ -17,6 +17,8 @@ function [varargout] = plot_diff_usingRawData(xData,DataA,DataB,varargin)
 	column_lim = 1; % number of axes column
 	xlabelStr = 'Time (s)';
 	ylabelStr = '';
+	new_xticksLabel = {};
+	xTickAngle = 45;
 	figTitleStr = 'line plots with diff bar';
 
 	stimShadeDataA = {};
@@ -33,6 +35,7 @@ function [varargout] = plot_diff_usingRawData(xData,DataA,DataB,varargin)
 	scatterAlpha = 0.5;
 	diffBarAlpha = 0.5;
 	diffBarColor = '#616887';
+	FontSize = 14;
 
 	save_fig = false;
 	save_dir = '';
@@ -50,6 +53,10 @@ function [varargout] = plot_diff_usingRawData(xData,DataA,DataB,varargin)
 	        ylabelStr = varargin{ii+1};
 	    elseif strcmpi('new_xticks', varargin{ii})
 	        new_xticks = varargin{ii+1};
+	    elseif strcmpi('new_xticksLabel', varargin{ii})
+	        new_xticksLabel = varargin{ii+1};
+	    elseif strcmpi('xTickAngle', varargin{ii})
+	        xTickAngle = varargin{ii+1};
 	    elseif strcmpi('figTitleStr', varargin{ii})
 	        figTitleStr = varargin{ii+1};
 	    elseif strcmpi('stimShadeDataA', varargin{ii})
@@ -106,6 +113,8 @@ function [varargout] = plot_diff_usingRawData(xData,DataA,DataB,varargin)
 	xlabel(xlabelStr)
 	ylabel(ylabelStr)
 	title(figTitleStr)
+	set(gca, 'FontSize', FontSize)
+
 
 
 	% bar plot show the difference between A and B
@@ -123,6 +132,11 @@ function [varargout] = plot_diff_usingRawData(xData,DataA,DataB,varargin)
 		xticksVal = xData;
 	end
 	xticks(xticksVal);
+
+	if ~isempty(new_xticksLabel) && numel(xticksVal) == numel(new_xticksLabel)
+		xticklabels(new_xticksLabel)
+		xtickangle(xTickAngle)
+	end
 
 
 	% get the y lim

@@ -56,7 +56,7 @@ function [alignedDataTraces_filtered,varargout] = Filter_AlignedDataTraces_withS
             rb_tf = false; % mark discard
         end
 
-        if ~isnan(rb) && stimEffect.exAP_eventCat ~= exApOg % use 'exApOg' filter && the stim effect is different from the 'exApOg' filter
+        if ~isnan(exApOg) && stimEffect.exAP_eventCat ~= exApOg % use 'exApOg' filter && the stim effect is different from the 'exApOg' filter
             exApOg_tf = false; % mark discard
         end
 

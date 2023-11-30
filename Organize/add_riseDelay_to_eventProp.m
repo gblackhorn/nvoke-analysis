@@ -1,5 +1,5 @@
 function [eventProp_new,varargout] = add_riseDelay_to_eventProp(eventProp,stimRange,varargin)
-	% Return a new eventProp including event baseDiff 
+	% Return a new eventProp including event jitter (delay of the onset to the stimulation)
 
 	% eventProp: a structure containing event properties for a single ROI
 	% stimRange: a n x 2 array. n is the repeat times of a stim in a trial

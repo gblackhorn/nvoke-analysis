@@ -26,8 +26,6 @@
 % ins_rec_ventral_folder = fullfile(ins_recordings_folder, 'IO_virus_ventral approach'); % processed imaging data, including isxd, gpio, tiff, and csv files 
 
 %% ====================
-
-% 1. Locate the folders to find and save data 
 % 0. clear varibles
 clearvars -except recdata_organized alignedData_allTrials seriesData_sync
 
@@ -47,8 +45,8 @@ else
 		AnalysisFolder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
 	elseif strcmp(PC_name, 'LAPTOP-84IERS3H')
 		AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
-    elseif strcmp(PC_name,'DESKTOP-DVGTQ1P')
-        AnalysisFolder = 'C:\Users\nRIM_lab\Documents\ExampleData_nVoke\Analysis'; % Ana
+	elseif strcmp(PC_name,'DESKTOP-DVGTQ1P')
+	    AnalysisFolder = 'C:\Users\nRIM_lab\Documents\ExampleData_nVoke\Analysis'; % Ana
 	else
 		error('set var GUI_chooseFolder to true to select default folders using GUI')
 	end
@@ -62,19 +60,6 @@ end
 % % 	Export gpio (stimulation) and recording time stamp information in csv format with IDPS
 
 % % This step can be only done on local desktop installed IDPS
-% Process all raw recording files in the same folder.
-% This is designed for the output of nVoke2
-recording_dir = uigetdir(FolderPathVA.recordingVA,...
-	'Select a folder containing raw recording files (.isxd) and gpio files (.gpio)');
-if recording_dir ~= 0
-	FolderPathVA.recordingVA = recording_dir;
-	project_dir = uigetdir(FolderPathVA.project,...
-		'Select a folder to save processed recording files (PP, BP, MC, DFF)');
-	if FolderPathVA.project ~= 0 
-		FolderPathVA.project = project_dir;
-		process_nvoke_files(recording_dir, 'project_dir',project_dir);
-	end
-end
 
 % % Process all raw recording files in the same folder.
 % % This is designed for the output of nVoke2
@@ -104,12 +89,11 @@ end
 % Top = 176;
 % Width = 424;
 % Height = 444;
-movieKeyword = '2023-06-28'; % no need to add .isxd
-movieKeyword = '*2021-04-09-13-03-56*.isxd'; % crop file with names like this
-Left = 376;
-Top = 114;
-Width = 708;
-Height = 547;
+movieKeyword = '2021-03-29-13-48-34_video_sched_0.isxd'; % crop file with names like this
+Left = 352;
+Top = 186;
+Width = 647;
+Height = 425;
 Bottom = Top+Height;
 Right = Left+Width;
 cropRectangle = [Top Left Bottom Right]; % [top, left, bottom, right]
@@ -124,8 +108,7 @@ end
 
 %% ==================== 
 % 2.1.2 Spatial filter and motion correct the movies
-movieKeyword = '2023-06-28*-PP'; % no need to add .isxd. Code will search for '*movieKeyword.isxd' files
-movieKeyword = '*-crop.isxd'; % Code will search for files with names like this and motion-correct them
+movieKeyword = '2023-06-28*.isxd'; % Code will search for files with names like this and motion-correct them
 rmBPfile = true; % true/false. Remove the spatial filtered file ('bp_file') after creating the motion-corrected video
 [movieFolder,~,chosenStatus] = getInputOutputFolders('inputFolder',FolderPathVA.project,...
 	'outputFolder',FolderPathVA.project,'inputMSG','Chose a folder containing cropped files');
@@ -138,7 +121,7 @@ end
 % 2.2 (Optional) Create DFF files from motion corrected files in a specified folder
 % DFF files can be examined in IDPS
 % Use keyword to filter MC files
-movieKeyword = '*0-PP-BP-MC.isxd'; % Use file name like this to look for motion corrected files
+movieKeyword = '2021-03-29-13-48-34_video_sched_0-crop-BP-MC.isxd'; % Use file name like this to look for motion corrected files
 overwrite = false; % true/false. Create new DFF files if this is true.
 
 MC_fileFolder = uigetdir(FolderPathVA.project,...
@@ -150,10 +133,8 @@ if MC_fileFolder ~= 0
 end
 
 %% ==================== 
-% 3.1 Export nvoke movies to tiff files
-keywords = '-BP-MC.isxd'; % used to filter 
 % 3.1.1 Export nvoke movies to tiff files for further work using ImageJ, matlab, etc.
-movieKeyword = '*-crop-BP-MC.isxd'; % used to filter 
+movieKeyword = '*.isxd'; % used to filter 
 overwrite = false;
 
 input_isxd_folder = uigetdir(FolderPathVA.project,...
@@ -242,7 +223,6 @@ end
 
 
 
-
 %% ====================
 % 5.2 Convert ROI info to matlab file (.m). 
 % Place results.m from CNMFe, ROI info (csv files) and GPIO info (csv) from IDPS to the same folder, and run this
@@ -254,7 +234,6 @@ debug_mode = false; % true/false.
 
 [recdata, recording_num, cell_num] = ROI_matinfo2matlab('input_dir', input_dir,...
 	'output_dir', output_dir,'debug_mode',debug_mode); % for CNMFe processed data
-
 
 
 %% ====================
@@ -329,11 +308,11 @@ loc_opt.hemi = {'left', 'right'}; % hemisphere: IO with chrimsonR (pos) or witho
 loc_opt.hemi_ext = {'chR-pos', 'chR-neg'}; % hemisphere: IO with chrimsonR (pos) or without (neg)
 loc_opt.ml = {'medial', 'lateral'}; % medial lateral
 loc_opt.ap = {'anterior', 'intermediate', 'posterior'}; % anterior poterior. intermediate is not well defined in the experiment
-modify_info = 'yes'; % yes, no or ask. modify the FOV location information if it exists
+modify_info = 'no'; % yes, no or ask. modify the FOV location information if it exists
 
 fov_info_col = 2;
 
-% recordings = recdata_group.all;3
+% recordings = recdata_group.all;
 recordings = recdata_organized;
 rec_num = size(recordings, 1);
 
@@ -431,7 +410,6 @@ recdata_organized = recdata_organized(sortedIndices,:);
 
 %% ====================
 % 6.7 Save the modified 'recdata_organized'
-% This will 
 uisave('recdata_organized', fullfile(FolderPathVA.ventralApproach, 'recdata_organized'));
 
 

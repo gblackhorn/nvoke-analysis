@@ -1,5 +1,7 @@
 function [roi_coor_matlab,varargout] = convert_roi_coor(roi_coor,varargin)
-	% convert roi coordinates from CNMFe format for plotting in matlab
+	% convert roi coordinates from CNMFe style to the one can be understanded by matlab for plotting
+	% in matlab
+	
 	% CNMFe output coordinates are ['neuronNum', 'row', 'column']
 	% Matlab needs [x, y] (from top left of an image) to insert shape/text
 	% Delete 'neuronXXX'. Switch 'row' and 'column', and the matrix will be good for matlab

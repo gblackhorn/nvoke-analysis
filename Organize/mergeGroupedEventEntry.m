@@ -35,17 +35,21 @@ function [newGroupedEvent,varargout] = mergeGroupedEventEntry(groupedEvent,tagsF
 	end
 	tagsIDXall = horzcat(tagsIDX{:});
 
-	% Create a new entry using the data from groupedEvent
-	newEntry.group = NewGroupName;
-	newEntry.tag = NewtagName;
-	newEntry.event_info = horzcat(groupedEvent(tagsIDXall).event_info);
-	newEntry.TrialRoiList = horzcat(groupedEvent(tagsIDXall).TrialRoiList);
+	% Create a new entry using the data from groupedEvent if tagsIDXall is not empty
+	if ~isempty(tagsIDXall)
+		newEntry.group = NewGroupName;
+		newEntry.tag = NewtagName;
+		newEntry.event_info = horzcat(groupedEvent(tagsIDXall).event_info);
+		newEntry.TrialRoiList = horzcat(groupedEvent(tagsIDXall).TrialRoiList);
 
-	[~,recNum,recDateNum,roiNum] = get_roiNum_from_eventProp(newEntry.event_info);
-	newEntry.numTrial = recNum;
-	newEntry.animalNum = recDateNum;
-	newEntry.numRoi = roiNum;
+		[~,recNum,recDateNum,roiNum] = get_roiNum_from_eventProp(newEntry.event_info);
+		newEntry.numTrial = recNum;
+		newEntry.animalNum = recDateNum;
+		newEntry.numRoi = roiNum;
 
-	groupedEvent(tagsIDXall) = [];
-	newGroupedEvent = horzcat(groupedEvent,newEntry);
+		groupedEvent(tagsIDXall) = [];
+		newGroupedEvent = horzcat(groupedEvent,newEntry);
+	else
+		newGroupedEvent = groupedEvent;
+	end
 end

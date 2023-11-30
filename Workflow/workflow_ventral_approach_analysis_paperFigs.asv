@@ -17,7 +17,7 @@ clearvars -except recdata_organized opt alignedData_allTrials adata alignedData_
 % This section is necessary for most sections in this workflow script. 
 % Even if you don't want to save the plots, FolderPathVA should exist to avoid bug
 
-GUI_chooseFolder = false; % true/false. Use GUI to locate the DataFolder and AnalysisFolder
+GUI_chooseFolder = true; % true/false. Use GUI to locate the DataFolder and AnalysisFolder
 
 if GUI_chooseFolder
 	DataFolder = uigetdir(matlabroot,'Choose a folder containing data and project folders');
@@ -29,10 +29,8 @@ else
 
 	if strcmp(PC_name, 'GD-AW-OFFICE')
 		AnalysisFolder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
-	elseif strcmp(PC_name, 'BLADE14-GD')
+	elseif strcmp(PC_name, 'LAPTOP-84IERS3H')
 		AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
-    elseif strcmp(PC_name,'DESKTOP-DVGTQ1P')
-        AnalysisFolder = 'C:\Users\nRIM_lab\Documents\ExampleData_nVoke\Analysis'; % Ana
 	else
 		error('set var GUI_chooseFolder to true to select default folders using GUI')
 	end
@@ -50,14 +48,12 @@ uisave({'recdata_organized','alignedData_allTrials','opt','adata'},...
 % 'recdata_organized','alignedData_allTrials','grouped_event','adata','grouped_event_setting','opt','adata'
 
 
-% %% ====================
-% % 8.5 manually discard rois or trial 
-% % recdata_organized_bk = recdata_organized;
-
-% trial_idx = 35; % trial index number
-% roi_idx = [5]; % roi number. 2 for 'neuron2'
-
-% [recdata_organized] = discard_data(recdata_organized,trial_idx,roi_idx);
+%% ====================% % 8.5 manually discard rois or trial 
+% recdata_organized_bk = recdata_organized;
+  
+trial_idx = 6; % trial index number
+roi_idx = [1,2,4,5,6,7,8]; % roi number. 2 for 'neuron2'
+[recdata_organized] = discard_data(recdata_organized,trial_idx,roi_idx);
 % %% ====================
 % % 8.6 discard rec if the fovID number is bigger than fov_max
 % fov_max = 6; % fov 1-6 are from the ChrimsonR positive CN axon side
@@ -98,7 +94,7 @@ adata.disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-
 adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
 adata.sponfreqFilter.status = true; % true/false. If true, use the following settings to filter ROIs
 adata.sponfreqFilter.field = 'sponfq'; % 
-adata.sponfreqFilter.thresh = 0.06; % Hz
+adata.sponfreqFilter.thresh = 0; % Hz
 adata.sponfreqFilter.direction = 'high';
 debug_mode = false; % true/false
 
@@ -150,7 +146,7 @@ event_type = 'peak_time'; % rise_time/peak_time
 norm_FluorData = true; % true/false. whether to normalize the FluroData
 sortROI = true; % true/false. Sort ROIs according to the event number: high to low
 preTime = 5; % fig3 include time before stimulation starts for plotting
-postTime = 10; % fig3 include time after stimulation ends for plotting. []: until the next stimulation starts
+postTime = []; % fig3 include time after stimulation ends for plotting. []: until the next stimulation starts
 activeHeatMap = true; % true/false. If true, only plot the traces with specified events in figure 3
 stimEvents(1).stimName = 'og-5s';
 stimEvents(1).eventCat = 'rebound';
@@ -172,7 +168,7 @@ debug_mode = false; % true/false.
 
 FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTrials,...
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
-	'norm_FluorData',norm_FluorData,'sortROI',sortROI,'event_type',event_type,...
+	'norm_FluorData',norm_FluorData,'sortROI',sortROI,...
 	'preTime',preTime,'postTime',postTime,'followDelayType',followDelayType,...
 	'activeHeatMap',activeHeatMap,'stimEvents',stimEvents,'eventsTimeSort',eventsTimeSort,...
 	'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...
@@ -184,26 +180,22 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 % 9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 gui_save = 'on';
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
-stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
-diffPair = {[1 3], [2 3], [1 2]}; % {[1 3], [2 3]}. binned freq will be compared between stimualtion groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
+stim_names = {'og-5s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
+filters = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+diffPair = {[1 1]}; % {[1 3], [2 3]}. binned freq will be compared between stimualtion groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
 
 propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
 binWidth = 1; % the width of histogram bin. the default value is 1 s.
 stimIDX = []; % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
 preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
-postStim_duration = 15; % unit: second. include events happened after the end of stimulations
-customizeEdges = true; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
+postStim_duration = 10; % unit: second. include events happened after the end of stimulations
+customizeEdges = false; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
 stimEffectDuration = 1; % unit: second. Use this to set the end for the stimulation effect range
-splitLongStim = [1]; % If the stimDuration is longer than stimEffectDuration, the stimDuration 
-					%  part after the stimEffectDuration will be splitted. If it is [1 1], the
-					% time during stimulation will be splitted using edges below
-					% [stimStart, stimEffectDuration, stimEffectDuration+splitLongStim, stimEnd] 
-					
+
 stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
 stimEvents(1).stimName = 'og-5s';
 stimEvents(1).eventCat = 'rebound';
@@ -220,34 +212,16 @@ baseBinEdgestart = -preStim_duration; % where to start to use the bin for calcul
 baseBinEdgeEnd = -2; % 0
 apCorrection = false; % true/false. If true, correct baseline bin used for normalization. 
 
-
 debug_mode = false; % true/false
 
-% plot periStim event freq, and diff among them
 [barStat,diffStat,FolderPathVA.fig] = periStimEventFreqAnalysis(alignedData_allTrials,'propName',propName,...
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'diffPair',diffPair,...
 	'binWidth',binWidth,'stimIDX',stimIDX,'normToBase',normToBase,...
 	'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
-	'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim,...
+	'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,...
 	'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 	'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on','debug_mode',debug_mode);
-
-% plot and compare a single bins from various stimulation groups
-violinStimNames = {'og-5s ap-0.1s','og-5s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
-violinBinIDX = [4,4]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
-normToFirst = false; % true/false. violinPlot: normalize all the data to the mean of the first group (first stimNames)
-
-if normToFirst
-	normStr = sprintf(' normTo[%s]',violinStimNames{1});
-else
-	normStr = '';
-end
-
-titleStr = sprintf('violinPlot of a single bin from periStim freq%s',normStr);
-[violinData,statInfo] = violinplotPeriStimFreq2(barStat,violinStimNames,violinBinIDX,...
-	'normToFirst',normToFirst,'titleStr',titleStr,...
-	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','off');
 
 %% ====================
 % Fig 2 violin plot of specific bins in periStim event frequency
@@ -303,7 +277,7 @@ debug_mode = false; % true/false
 % Screen the ROIs in alignedData_allTrials with specific settings [stim_names and filters]
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+filters = {[0 nan nan nan], [1 nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 [alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
 			'stim_names',stim_names,'filters',filters);
 
@@ -351,33 +325,59 @@ for tn = 1:trial_num
 end
 
 
+%% ====================
+% Fig 2: Plot violin of the event freq without and with OG stimulation
+% 9.1.5 Compare baseline and stimulation calcium signal change (one type of stimulaiton) using boxplot
+stim_name = 'og-5s';
+stimFilter = [nan nan nan nan]; % [ex in rb exApOg].
+[alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
+			'stim_names',stim_name,'filters',stimFilter);
+%% Create grouped_event using code in '9.5.1.1' after filtering alignedData_allTrials
+% Using eventProp_all: entry is 'roi'. mgSetting.groupField = {'stim_name','peak_category'};
+
+% Keep 'og-5s-spon' group and delete others
+tags_discard = {'opto-delay','rebound-ap','rebound-og-0.96s','varied','og-5s ap-0.1s','ap-0.1s og-5s'}; % Discard groups containing these words. 'spon','EXopto','trig-ap',
+% tags_keep = {'og-5s','ap-0.1s'}; % Keep groups containing these words: {'trig-ap','trig','rebound'}
+tags_keep = {'og-5s-spon'}; % Keep groups containing these words: {'trig-ap','trig','rebound'}
+clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
+[grouped_event_ogExNeg] = filter_entries_in_structure(grouped_event,'group',...
+	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);
+
+% Use Violin plot to show the difference of event freq without and with OG stimulation
+close all
+sponfq = [grouped_event_ogExNeg.event_info.sponfq];
+stimfq = [grouped_event_ogExNeg.event_info.stimfq];
+vData = [sponfq(:) stimfq(:)];
+[~,vData_ttestPaired] = ttest(sponfq,stimfq);
+vCategory = {'without OG','during OG'};
+ogEventFreq.withoutOG = sponfq;
+ogEventFreq.duringOG = stimfq;
+ogEventFreq.ttestPaired = vData_ttestPaired;
+violinplot(vData,vCategory);
+titleStr = sprintf('eventFreq stim vs no-stim [%s] paired %g ROIs',stim_name,numel(ogEventFreq.withoutOG));
+title(titleStr)
+ylabel('frequency (Hz)')
+[FolderPathVA.fig,figFileName] = savePlot(gcf,'save_dir',FolderPathVA.fig,'fname','eventFreq_in-out-OG','guiSave','on');
+save(fullfile(FolderPathVA.fig,[figFileName,'_dataStat.mat']),'ogEventFreq');
+
 
 %% ====================
 % Fig 3 
 % 9.2.1 Check aligned trace of events belong to the same category
 % note: 'event_type' for alignedData_allTrials must be 'detected_events'
 close all
-tplot.save_fig = true; % true/false
+tplot.save_fig = false; % true/false
 tplot.plot_combined_data = true; % mean value and std of all traces
 tplot.plot_raw_races = false; % true/false. true: plot every single trace
-tplot.plot_median = false; % true/false. plot raw traces having a median value of the properties specified by 'tplot.medianProp'
+tplot.plot_median = true; % true/false. plot raw traces having a median value of the properties specified by 'tplot.medianProp'
 tplot.medianProp = 'FWHM'; % 
 tplot.shadeType = 'ste'; % plot the shade using std/ste
 tplot.y_range = [-1 2]; % [-10 5],[-3 5],[-2 1]
-tplot.eventCat = {'trig','trig-ap','rebound'}; % options: 'trig','trig-ap','rebound','spon', 'rebound'
-tplot.combineStim = false; % true/false. combine the same eventCat from recordings applied with various stimulations
+tplot.eventCat = {'trig','trig-ap','rebound'}; % options: 'trig', 'spon', 'rebound'
 tplot.stimDiscard = {'ap-varied','og-0.96s'}; % 'og-5s',
-tplot.sponNorm = false; % true/false
-tplot.normalized = true; % true/false. normalize the traces to their own peak amplitudes.
+tplot.sponNorm = true; % true/false
+tplot.normalized = false; % true/false. normalize the traces to their own peak amplitudes.
 tplot.save_dir = FolderPathVA.fig;
-
-filter_roi_tf = false; % true/false
-if filter_roi_tf
-	alignedData = alignedData_filtered;
-else
-	alignedData = alignedData_allTrials;
-end
-
 
 if tplot.sponNorm
 	sponNormStr = sprintf('sponNorm_');
@@ -405,10 +405,10 @@ for cn = 1:numel(tplot.eventCat)
 	stimAlignedTrace_means(cn).event_group = tplot.eventCat{cn};
 	tplot.fname = sprintf('%s%s%s-aligned_traces_%s%s%s',...
 		NormStr,sponNormStr,adata.event_align_point,tplot.eventCat{cn},meanDataStr,rawDataStr);
-	[fHandle_stimAlignedTrace,stimAlignedTrace_means(cn).trace] = plot_aligned_catTraces(alignedData,...
+	[fHandle_stimAlignedTrace,stimAlignedTrace_means(cn).trace] = plot_aligned_catTraces(alignedData_allTrials,...
 		'plot_combined_data',tplot.plot_combined_data,'plot_raw_races',tplot.plot_raw_races,...
-		'plot_median',tplot.plot_median,'medianProp',tplot.medianProp,'eventCat',tplot.eventCat{cn},...
-		'combineStim',tplot.combineStim,'stimDiscard',tplot.stimDiscard,'shadeType',tplot.shadeType,...
+		'plot_median',tplot.plot_median,'medianProp',tplot.medianProp,...
+		'eventCat',tplot.eventCat{cn},'stimDiscard',tplot.stimDiscard,'shadeType',tplot.shadeType,...
 		'y_range',tplot.y_range,'sponNorm',tplot.sponNorm,'normalized',tplot.normalized,'fname',tplot.fname); % 'fname',fname,
 	if tplot.save_fig
 		if cn == 1
@@ -426,7 +426,7 @@ end
 % 9.2.2 Replot the averaged traces (same category) using the data in stimAlignedTrace_means
 % This section can combine traces from different group
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 tplot.y_range = [-1 2]; % [-10 5],[-3 5],[-2 1]
 % {{stimName1,eventCat1},{stimName2,eventCat2}}. Combine the eventCat1 and eventCat2 from different stimNames
 stimNameEventCat = {{'og-5s','trig'},{'og-5s ap-0.1s','trig'}}; 
@@ -477,7 +477,7 @@ mgSetting.sponOnly = false; % true/false. If eventType is 'roi', and mgSetting.s
 mgSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
 mgSetting.dis_spon = false; % true/false. Discard spontaneous events
 mgSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
-mgSetting.groupField = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+mgSetting.groupField = {'stim_name','peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
 
 
 % rename the stimulation tag if og evokes spike at the onset of stimulation
@@ -499,8 +499,8 @@ debug_mode = false; % true/false
 % additional manual deletion might be needed
 
 % {'trig [EXog]','EXog','trig-AP',}
-tags_discard = {'rebound [ap','ap-0.25s','ap-0.5s','og-0.96s','opto-delay','rebound [og&ap-5s]',}; % Discard groups containing these words. 'spon','opto-delay','og&ap','rebound [og&ap-5s]'
-tags_keep = {'trig','trig-ap','rebound [og-5s]','spon'}; % Keep groups containing these words. {'trig [og','rebound','opto-delay [og-5s]','spon'}
+tags_discard = {'rebound [ap','ap-0.25s','ap-0.5s','og-0.96s','opto-delay'}; % Discard groups containing these words. 'spon','opto-delay','og&ap','rebound [og&ap-5s]'
+tags_keep = {'trig','trig-ap','rebound [og-5s]','rebound [og&ap-5s]'}; % Keep groups containing these words. {'trig [og','rebound','opto-delay [og-5s]',,'spon'}
 tagsForMerge = {'trig [og&ap-5s]','trig [og-5s]'};
 NewGroupName = 'opto-evoked all';
 NewtagName = 'opto-evoked [opto-5s opto-5s_air-0.1s]';
@@ -515,10 +515,10 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 % 9.3.3 Plot event parameters. Grouped according to categories
 % [9.3] eventProp_all: entry is 'events'
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 plot_combined_data = false;
-parNames = {'rise_duration','FWHM','sponNorm_peak_mag_delta'}; % entry: event
-		% 'sponNorm_peak_mag_delta','rise_delay','peak_delay'
+parNames = {'rise_duration','FWHM','peak_mag_delta','peak_delay'}; % entry: event
+		% 'sponNorm_peak_mag_delta','rise_delay',
         % 'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
         % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
     
@@ -583,42 +583,6 @@ savePlot(gcf,'guiSave','off','save_dir',FolderPathVA.fig,'fname','CaLevel violin
 
 
 
-%% ====================
-% Fig 2: Plot violin of the event freq without and with OG stimulation
-% 9.3.5 Compare baseline and stimulation calcium signal change (one type of stimulaiton) using boxplot
-stim_name = 'og-5s';
-stimFilter = [nan nan nan nan]; % [ex in rb exApOg].
-[alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
-			'stim_names',stim_name,'filters',stimFilter);
-%% Create grouped_event using code in '9.5.1.1' after filtering alignedData_allTrials
-% Using eventProp_all: entry is 'roi'. mgSetting.groupField = {'stim_name','peak_category'};
-
-% Keep 'og-5s-spon' group and delete others
-tags_discard = {'opto-delay','rebound-ap','rebound-og-0.96s','varied','og-5s ap-0.1s','ap-0.1s og-5s'}; % Discard groups containing these words. 'spon','EXopto','trig-ap',
-% tags_keep = {'og-5s','ap-0.1s'}; % Keep groups containing these words: {'trig-ap','trig','rebound'}
-tags_keep = {'og-5s-spon'}; % Keep groups containing these words: {'trig-ap','trig','rebound'}
-clean_ap_entry = true; % true: discard delay and rebound categories from airpuff experiments
-[grouped_event_ogExNeg] = filter_entries_in_structure(grouped_event,'group',...
-	'tags_discard',tags_discard,'tags_keep',tags_keep,'clean_ap_entry',clean_ap_entry);
-
-% Use Violin plot to show the difference of event freq without and with OG stimulation
-close all
-sponfq = [grouped_event_ogExNeg.event_info.sponfq];
-stimfq = [grouped_event_ogExNeg.event_info.stimfq];
-vData = [sponfq(:) stimfq(:)];
-[~,vData_ttestPaired] = ttest(sponfq,stimfq);
-vCategory = {'without OG','during OG'};
-ogEventFreq.withoutOG = sponfq;
-ogEventFreq.duringOG = stimfq;
-ogEventFreq.ttestPaired = vData_ttestPaired;
-violinplot(vData,vCategory);
-titleStr = sprintf('eventFreq stim vs no-stim [%s] paired %g ROIs',stim_name,numel(ogEventFreq.withoutOG));
-title(titleStr)
-ylabel('frequency (Hz)')
-[FolderPathVA.fig,figFileName] = savePlot(gcf,'save_dir',FolderPathVA.fig,'fname','eventFreq_in-out-OG','guiSave','on');
-save(fullfile(FolderPathVA.fig,[figFileName,'_dataStat.mat']),'ogEventFreq');
-
-
 %% ==================== 
 % Fig 3
 % Violin plot showing the difference of
@@ -650,51 +614,7 @@ end
 
 
 %% ==================== 
-% Fig 4.1
-filter_roi_tf = true;
-stim_names = {'og-5s'};
-filters = {[0 nan nan nan]};
-alignedData = alignedData_allTrials;
-saveFig = true;
-save_dir = FolderPathVA.fig;
-guiSave = true; % Options: 'on'/'off'. whether use the gui to choose the save_dir
-
-[analysisResult] = stimCurveFitAnalysis(alignedData,...
-	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
-	'saveFig',saveFig,'save_dir',save_dir,'guiSave',guiSave);
-
-%% ==================== 
-% Fig 4.2
-% Get decay curve taus and plot them in histogram
-close all
-filter_roi_tf = true;
-stimName = 'og-5s';
-stimEffect_filter = [nan 1 nan nan]; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
-rsquare_thresh = 0.7;
-norm_FluorData = false; % true/false. whether to normalize the FluroData
-
-[roi_tauInfo] = get_decayCurveTau(alignedData_allTrials,'rsquare_thresh',rsquare_thresh,...
- 	'filter_roi_tf',filter_roi_tf,'stimName',stimName,'stimEffect_filter',stimEffect_filter);
-% histogram([roi_tauInfo.tauMean],20);
-% FolderPathVA.fig = savePlot(gcf,'guiSave','on','save_dir',FolderPathVA.fig,'fname','hist_tau_mean');
-
-%% ==================== 
-% Fig 5 synchronicity
-saveFig = false; % true/false
-eventTimeType = 'peak_time'; % rise_time/peak_time
-binSize = 1; % unit: second
-visualizeData = true; % true/false
-corrThresh = 0.3; % correlation equal and below this threshhold will not be show in the graph and bundling plots  
-distScale = 296/100; % pixels/um. used for calibrate the distance. 
-	% Length 9 mm, Ø 1 mm: 296.0608 pixels = 100 µm
-	% Length 8.4 mm, Ø 0.5 mm: 266.0676 pixels = 100 µm
-dbMode = false; % true/false
-[corrAndDist,corrFlatAll,distFlatAll,FolderPathVA.fig] = roiCorrAndDistMultiRec(alignedData_allTrials,binSize,...
-	'visualizeData',visualizeData,'corrThresh',corrThresh,'eventTimeType',eventTimeType,'distScale',distScale,...
-	'saveFig',saveFig,'saveDir',FolderPathVA.fig,'guiSave',true,'dbMode',dbMode); 
-
-%% ==================== 
-% Fig 6 or supplementary data
+% Fig 5 or supplementary data
 % 9.1.3 Plot the auto-correlogram of events and the probability density function of inter-event time
 close all
 saveFig = false; % true/false
@@ -737,6 +657,20 @@ plot_eventTimeInt_alignedData_allTrials(alignedData_allTrials,timeType,binsOrEdg
 	'saveFig',saveFig,'save_dir',save_dir,'gui_save',false);
 
 
+%% ==================== 
+% Fig 5?
+% 9.1.4 Get decay curve taus and plot them in histogram
+close all
+filter_roi_tf = true;
+stimName = 'og-5s';
+stimEffect_filter = [nan 1 nan]; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+rsquare_thresh = 0.7;
+norm_FluorData = false; % true/false. whether to normalize the FluroData
+
+[roi_tauInfo] = get_decayCurveTau(alignedData_allTrials,'rsquare_thresh',rsquare_thresh,...
+ 	'filter_roi_tf',filter_roi_tf,'stimName',stimName,'stimEffect_filter',stimEffect_filter);
+histogram([roi_tauInfo.tauMean],20);
+FolderPathVA.fig = savePlot(gcf,'guiSave','on','save_dir',FolderPathVA.fig,'fname','hist_tau_mean');
 
 
 %% ==================== 
@@ -885,7 +819,7 @@ end
 % Show the relationship between decayTau/caLevelDecrease and various rebound event properties
 
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 filter_roi_tf = true;
 fieldNames_rb_prop = {'rise_duration','FWHM','peak_mag_delta','sponNorm_peak_mag_delta',...
 	'rise_delay','peak_delay'}; % properties of rebound events.
@@ -895,12 +829,6 @@ rbEventInfo = grouped_event_info_filtered(pos_OG5sRB).event_info;
 [BarInfo_rbEvents,FolderPathVA.fig] = plot_reboundEvent_analysis(rbEventInfo,...
 	'fieldNames_rb_prop',fieldNames_rb_prop,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on');
 
-% Filter the ROIs in all trials using stimulation effect
-% the filtered alignedData will be used in the following plotting sections
-stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
-[alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
-	'stim_names',stim_names,'filters',filters);
 if filter_roi_tf == true
 	[alignedData] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
 			'stim_names',stim_names,'filters',filters); % check section before 9.1.1

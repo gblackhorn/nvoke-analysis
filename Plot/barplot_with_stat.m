@@ -8,7 +8,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
 
     % Defaults
 
-    stat = 'anova'; % anova/pttest. anova test or paired ttest. The later only works when the group number is 2
+    stat = 'anova'; % anova/pttest/upttest. anova test or paired ttest. The later only works when the group number is 2
     xdata = [];
     ylim_val = [];
     ylabelStr = '';
@@ -120,6 +120,11 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
         data_cell_group{gn} = cell(size(data_cell{gn}));
         [data_cell_group{gn}{:}] = deal(barInfo.data(gn).group);
     end
+
+    % convert all the cell contents to row vectors
+    data_cell = cellfun(@(x) reshape(x,1,[]),data_cell,'UniformOutput',false);
+    data_cell_group = cellfun(@(x) reshape(x,1,[]),data_cell_group,'UniformOutput',false);
+
     data_all = [data_cell{:}]; % for anova1
     data_all_group = [data_cell_group{:}]; % for anova1
 
@@ -127,6 +132,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
     if plotData
         if isempty(plotWhere)
             f = figure;
+            plotWhere = gca;
         else
             axes(plotWhere)
             f = gcf;
@@ -136,38 +142,47 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
         % x = [1:1:group_num];
         y = [barInfo.data.mean_val];
         y_error = [barInfo.data.ste_val];
-        n_num_str = num2str([barInfo.data.n]');
 
-        fb = bar(x, y,...
-            'EdgeColor', EdgeColor, 'FaceColor', FaceColor);
-        hold on
 
-        if ~isempty(ylim_val)
-            ylim(ylim_val)
-        end
+        % ==========
+        [barPlotInfo] = barplot_with_errBar(y(:)','plotWhere',plotWhere,...
+            'errBarVal',y_error(:)','barNames',group_names,'dataNumVal',[barInfo.data.n]);
 
-        yl = ylim;
-        yloc = yl(1)+0.05*(yl(2)-yl(1));
-        yloc_array = repmat(yloc, 1, numel(x));
-        text(x,yloc_array,n_num_str,'vert','bottom','horiz','center', 'Color', 'white');
 
-        ax.XTick = x;
-        set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
-        set(gca, 'box', 'off')
-        set(gca, 'FontSize', FontSize)
-        set(gca, 'FontWeight', FontWeight)
-        xtickangle(TickAngle)
-        set(gca, 'XTick', x);
-        set(gca, 'xticklabel', group_names);
+        % fb = bar(x, y,...
+        %     'EdgeColor', EdgeColor, 'FaceColor', FaceColor);
+        % hold on
+
+        % if ~isempty(ylim_val)
+        %     ylim(ylim_val)
+        % end
+
+        % yl = ylim;
+        % yloc = yl(1)+0.05*(yl(2)-yl(1));
+        % yloc_array = repmat(yloc, 1, numel(x));
+        % n_num_str = num2str([barInfo.data.n]');
+        % text(x,yloc_array,n_num_str,'vert','bottom','horiz','center', 'Color', 'white');
+
+        % ax.XTick = x;
+        % set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
+        % set(gca, 'box', 'off')
+        % set(gca, 'FontSize', FontSize)
+        % set(gca, 'FontWeight', FontWeight)
+        % xtickangle(TickAngle)
+        % set(gca, 'XTick', x);
+        % set(gca, 'xticklabel', group_names);
+        % fe = errorbar(x, y, y_error, 'LineStyle', 'None');
+        % set(fe,'Color', 'k', 'LineWidth', 2, 'CapSize', 10);
+        % ==========
+
         ylabel(ylabelStr);
-        fe = errorbar(x, y, y_error, 'LineStyle', 'None');
-        set(fe,'Color', 'k', 'LineWidth', 2, 'CapSize', 10);
         if ~exist('title_str','var')
-            title_str = sprintf('barplot');
+            % title_str = sprintf('barplot');
+        else
+            title_str = replace(title_str, '_', '-');
+            title_str = replace(title_str, ':', '-');
+            title(title_str);
         end
-        title_str = replace(title_str, '_', '-');
-        title_str = replace(title_str, ':', '-');
-        title(title_str);
         hold off
     end
 
@@ -177,8 +192,16 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
 
     if group_num>1
         switch stat
-            case 'anova'
-            case 'pttest'
+            case 'anova' % one-way ANOVA
+                if group_num == 2
+                    if numel(barInfo.data(1).group_data) ~= numel(barInfo.data(2).group_data)
+                        stat = 'upttest';
+                    else % use paired t-test if there are only two groups of data, and both contain the same number of data
+                        stat = 'pttest'
+                        warning('one-way ANOVA is changed to paired t-test. Two groups have the same number data points')
+                    end
+                end
+            case 'pttest' % paired t-test
                 if group_num ~= 2
                     stat = 'anova';
                 else
@@ -186,41 +209,24 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
                        stat = 'anova';
                     end 
                 end
+            case 'upttest' % unpaired t-test
+                if group_num ~= 2
+                    stat = 'anova';
+                % else
+                %     if numel(barInfo.data(1).group_data) ~= numel(barInfo.data(2).group_data)
+                %        stat = 'anova';
+                %     end 
+                end
             otherwise
         end
 
         switch stat
-            case 'anova'
+            case 'anova' % one-way ANOVA
                 [barInfo.stat] = anova1_with_multiComp(data_all,data_all_group);
-                % % Convert data_all and data_all_group to a single column
-                % % var to be able to run anova1 using them
-                % data_all = data_all(:); % Convert data_all to a single column var
-                % data_all_group = data_all_group(:); % Convert data_all_group to a single column var
-                % [barInfo.stat.p,barInfo.stat.tbl,barInfo.stat.stats] = anova1(data_all,data_all_group,'off');
-                % if barInfo.stat.stats.df~=0
-                %     [c,~,~,gnames] = multcompare(barInfo.stat.stats,'Display','off'); % multiple comparison test. Check if the difference between groups are significant
-                %     % 'tukey-kramer'
-                %     % The first two columns of c show the groups that are compared. 
-                %     % The fourth column shows the difference between the estimated group means. 
-                %     % The third and fifth columns show the lower and upper limits for 95% confidence intervals for the true mean difference. 
-                %     % The sixth column contains the p-value for a hypothesis test that the corresponding mean difference is equal to zero. 
-
-                %     % convert c to a table
-                %     c = num2cell(c);
-                %     c(:, 1:2) = cellfun(@(x) gnames{x}, c(:, 1:2), 'UniformOutput',false);
-                %     c = cell2table(c,...
-                %         'variableNames', {'g1', 'g2', 'lower-confi-int', 'estimate', 'upper-confi-int', 'p'});
-                %     h = NaN(size(c, 1), 1);
-                %     idx_sig = find(c.p < 0.05);
-                %     idx_nonsig = find(c.p >= 0.05);
-                %     h(idx_sig) = 1;
-                %     h(idx_nonsig) = 0;
-                %     c.h = h;
-                % end
-                % barInfo.stat.c = c;
-                % barInfo.stat.gnames = gnames;
-            case 'pttest'
+            case 'pttest' % paired t-test
                 [barInfo.stat.h,barInfo.stat.p,barInfo.stat.ci,barInfo.stat.stats] = ttest(barInfo.data(1).group_data,barInfo.data(2).group_data);
+            case 'upttest' % unpaired t-test
+                [barInfo.stat.h,barInfo.stat.p,barInfo.stat.ci,barInfo.stat.stats] = ttest2(barInfo.data(1).group_data,barInfo.data(2).group_data);
             otherwise
         end
         barInfo.stat.stat_method = stat;

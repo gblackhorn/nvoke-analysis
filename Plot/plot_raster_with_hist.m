@@ -74,13 +74,13 @@ function [f,varargout] = plot_raster_with_hist(rasterData,x_window,varargin)
 
 	% Plot histogram to show the sum up of raster points in time bins
 	ax = nexttile(tlo);
-	hist_binedge = [x_window(1):hist_binsize:x_window(2)]; % Get the bin edges for histogram
-	if x_window(2) > hist_binedge(end) % if the end of x_window is bigger than the last hist_binedge
-	    hist_binedge = [hist_binedge x_window(end)]; % add the end of x_window to the binedge
+	hist_binEdge = [x_window(1):hist_binsize:x_window(2)]; % Get the bin edges for histogram
+	if x_window(2) > hist_binEdge(end) % if the end of x_window is bigger than the last hist_binEdge
+	    hist_binEdge = [hist_binEdge x_window(end)]; % add the end of x_window to the binedge
 	end
 	raster_all = cell2mat(rasterData); % collect rasterData in every cell and make a number array
 	raster_all(isnan(raster_all)) = []; % discard nan values
-	histogram(raster_all,hist_binedge,'LineStyle','none');
+	histogram(raster_all,hist_binEdge,'LineStyle','none');
 	xlim(scatter_xlim);
 
 	if ~isempty(shadeData)
