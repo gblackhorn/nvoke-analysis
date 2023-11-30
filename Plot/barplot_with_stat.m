@@ -8,7 +8,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
 
     % Defaults
 
-    stat = 'anova'; % anova/pttest. anova test or paired ttest. The later only works when the group number is 2
+    stat = 'anova'; % anova/pttest/upttest. anova test or paired ttest. The later only works when the group number is 2
     xdata = [];
     ylim_val = [];
     ylabelStr = '';
@@ -120,6 +120,11 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
         data_cell_group{gn} = cell(size(data_cell{gn}));
         [data_cell_group{gn}{:}] = deal(barInfo.data(gn).group);
     end
+
+    % convert all the cell contents to row vectors
+    data_cell = cellfun(@(x) reshape(x,1,[]),data_cell,'UniformOutput',false);
+    data_cell_group = cellfun(@(x) reshape(x,1,[]),data_cell_group,'UniformOutput',false);
+
     data_all = [data_cell{:}]; % for anova1
     data_all_group = [data_cell_group{:}]; % for anova1
 
@@ -127,6 +132,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
     if plotData
         if isempty(plotWhere)
             f = figure;
+            plotWhere = gca;
         else
             axes(plotWhere)
             f = gcf;
@@ -136,38 +142,47 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
         % x = [1:1:group_num];
         y = [barInfo.data.mean_val];
         y_error = [barInfo.data.ste_val];
-        n_num_str = num2str([barInfo.data.n]');
 
-        fb = bar(x, y,...
-            'EdgeColor', EdgeColor, 'FaceColor', FaceColor);
-        hold on
 
-        if ~isempty(ylim_val)
-            ylim(ylim_val)
-        end
+        % ==========
+        [barPlotInfo] = barplot_with_errBar(y(:)','plotWhere',plotWhere,...
+            'errBarVal',y_error(:)','barNames',group_names,'dataNumVal',[barInfo.data.n]);
 
-        yl = ylim;
-        yloc = yl(1)+0.05*(yl(2)-yl(1));
-        yloc_array = repmat(yloc, 1, numel(x));
-        text(x,yloc_array,n_num_str,'vert','bottom','horiz','center', 'Color', 'white');
 
-        ax.XTick = x;
-        set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
-        set(gca, 'box', 'off')
-        set(gca, 'FontSize', FontSize)
-        set(gca, 'FontWeight', FontWeight)
-        xtickangle(TickAngle)
-        set(gca, 'XTick', x);
-        set(gca, 'xticklabel', group_names);
+        % fb = bar(x, y,...
+        %     'EdgeColor', EdgeColor, 'FaceColor', FaceColor);
+        % hold on
+
+        % if ~isempty(ylim_val)
+        %     ylim(ylim_val)
+        % end
+
+        % yl = ylim;
+        % yloc = yl(1)+0.05*(yl(2)-yl(1));
+        % yloc_array = repmat(yloc, 1, numel(x));
+        % n_num_str = num2str([barInfo.data.n]');
+        % text(x,yloc_array,n_num_str,'vert','bottom','horiz','center', 'Color', 'white');
+
+        % ax.XTick = x;
+        % set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
+        % set(gca, 'box', 'off')
+        % set(gca, 'FontSize', FontSize)
+        % set(gca, 'FontWeight', FontWeight)
+        % xtickangle(TickAngle)
+        % set(gca, 'XTick', x);
+        % set(gca, 'xticklabel', group_names);
+        % fe = errorbar(x, y, y_error, 'LineStyle', 'None');
+        % set(fe,'Color', 'k', 'LineWidth', 2, 'CapSize', 10);
+        % ==========
+
         ylabel(ylabelStr);
-        fe = errorbar(x, y, y_error, 'LineStyle', 'None');
-        set(fe,'Color', 'k', 'LineWidth', 2, 'CapSize', 10);
         if ~exist('title_str','var')
-            title_str = sprintf('barplot');
+            % title_str = sprintf('barplot');
+        else
+            title_str = replace(title_str, '_', '-');
+            title_str = replace(title_str, ':', '-');
+            title(title_str);
         end
-        title_str = replace(title_str, '_', '-');
-        title_str = replace(title_str, ':', '-');
-        title(title_str);
         hold off
     end
 

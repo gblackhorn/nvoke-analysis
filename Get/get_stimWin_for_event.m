@@ -1,6 +1,6 @@
 function [stimWin,varargout] = get_stimWin_for_event(eventTime,stimRange,varargin)
 	% Return the stimulation window for an event 
-	% The stimulation window containing/prior the eventTime willl be output
+	% The stimulation window containing/prior the eventTime will be output
 
 	% eventTime: default value is the event rise time
 	% stimRange: a n x 2 array. n is the repeat times of a stim in a trial

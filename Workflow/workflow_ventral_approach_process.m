@@ -89,11 +89,11 @@ end
 % Top = 176;
 % Width = 424;
 % Height = 444;
-movieKeyword = '*2021-04-09-13-03-56*.isxd'; % crop file with names like this
-Left = 376;
-Top = 114;
-Width = 708;
-Height = 547;
+movieKeyword = '2021-03-29-13-48-34_video_sched_0.isxd'; % crop file with names like this
+Left = 352;
+Top = 186;
+Width = 647;
+Height = 425;
 Bottom = Top+Height;
 Right = Left+Width;
 cropRectangle = [Top Left Bottom Right]; % [top, left, bottom, right]
@@ -106,12 +106,12 @@ if chosenStatus
 		'keyword',movieKeyword,'overwrite',false);
 end
 
-%% ====================   
+%% ==================== 
 % 2.1.2 Spatial filter and motion correct the movies
-movieKeyword = '*-PP.isxd'; % Code will search for files with names like this and motion-correct them
+movieKeyword = '2023-06-28*.isxd'; % Code will search for files with names like this and motion-correct them
 rmBPfile = true; % true/false. Remove the spatial filtered file ('bp_file') after creating the motion-corrected video
 [movieFolder,~,chosenStatus] = getInputOutputFolders('inputFolder',FolderPathVA.project,...
-	'outputFolder',FolderPathVA.project,'inputMSG','Chose a folder containing cropped files'); 
+	'outputFolder',FolderPathVA.project,'inputMSG','Chose a folder containing cropped files');
 
 if chosenStatus
 	motionCorrect_nVokeRec(movieFolder,'keyword',movieKeyword,'overwrite',false,'rmBPfile',rmBPfile);
@@ -121,7 +121,7 @@ end
 % 2.2 (Optional) Create DFF files from motion corrected files in a specified folder
 % DFF files can be examined in IDPS
 % Use keyword to filter MC files
-movieKeyword = '*0-PP-BP-MC.isxd'; % Use file name like this to look for motion corrected files
+movieKeyword = '2021-03-29-13-48-34_video_sched_0-crop-BP-MC.isxd'; % Use file name like this to look for motion corrected files
 overwrite = false; % true/false. Create new DFF files if this is true.
 
 MC_fileFolder = uigetdir(FolderPathVA.project,...
@@ -134,9 +134,9 @@ end
 
 %% ==================== 
 % 3.1.1 Export nvoke movies to tiff files for further work using ImageJ, matlab, etc.
-movieKeyword = '*-PP-BP-MC.isxd'; % used to filter 
+movieKeyword = '*.isxd'; % used to filter 
 overwrite = false;
- 
+
 input_isxd_folder = uigetdir(FolderPathVA.project,...
 	'Select a folder (project folder) containing processed recording files (.isxd)');
 if input_isxd_folder ~= 0
@@ -251,7 +251,7 @@ uisave('recdata', fullfile(FolderPathVA.ventralApproach, 'recdata'));
 % Note: Signal processing toolbox and curve fitting toolbox are needed for this section
 clear opt
 % Defaults
-opt.lowpass_fpass = 1; 
+opt.lowpass_fpass = 1;
 opt.highpass_fpass = 4;   
 opt.smooth_method = 'loess';
 opt.smooth_span = 0.1;
@@ -354,7 +354,7 @@ overwrite = true; %options: true/false
 % Load old 'recdata_organized' from a saved file
 
 % 6.5 Copy the FOV_loc struct-field from a sourceData, if exists, to a newly formed recdata_organized
-recdata_target = recData; % The data receiving FOV info
+% recdata_target = recdata_organized; % The data receiving FOV info
 recdata_source = recdata_organized; % The data giving FOV info
 
 [recdata_target_with_fov,trial_list_wo_fov] = copy_fovInfo(recdata_source,recdata_target);
@@ -410,7 +410,6 @@ recdata_organized = recdata_organized(sortedIndices,:);
 
 %% ====================
 % 6.7 Save the modified 'recdata_organized'
-% This will 
 uisave('recdata_organized', fullfile(FolderPathVA.ventralApproach, 'recdata_organized'));
 
 

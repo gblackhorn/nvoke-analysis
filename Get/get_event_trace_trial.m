@@ -40,6 +40,8 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 	in_thresh_stdScale = 2; % n times of std lower than baseline level. Last n s during stimulation is used
 	in_calLength = 1; % calculate the last n s trace level during stimulation to 
 
+	rsquareThresh = 0.7; % used for fitting the decay of traces during OG
+
 	debug_mode = false; % true/false
 
 	% Optionals
@@ -303,7 +305,7 @@ function [alignedData,varargout] = get_event_trace_trial(trialData,varargin)
 
 			% Fit data during stimulation to negative exponantial curve
 			[alignedData.traces(n).StimCurveFit,StimCurveFit_TauInfo] = GetDecayFittingInfo_neuron(full_time,roi_trace_data,...
-				combine_stimRange,[alignedData.traces(n).eventProp.peak_time],0.7); % 0.7 is the threshold for rsquare
+				combine_stimRange,[alignedData.traces(n).eventProp.peak_time],rsquareThresh); % 0.7 is the threshold for rsquare
 			alignedData.traces(n).StimCurveFit_TauMean = StimCurveFit_TauInfo.mean;
 			alignedData.traces(n).StimCurveFit_TauNum = StimCurveFit_TauInfo.num;
 
