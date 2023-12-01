@@ -5,7 +5,7 @@ function [peak_mag,peak_loc] = find_peaks_in_windows(roi_trace_window,window_sta
     %   Detailed explanation goes here
 
     % Defaults
-    errVal = 6; % maximum idx difference between found peak and existing peak in the same window
+    peakErrVal = 6; % maximum idx difference between found peak and existing peak in the same window
 
     % Optionals
     for ii = 1:2:(nargin-2)
@@ -13,6 +13,8 @@ function [peak_mag,peak_loc] = find_peaks_in_windows(roi_trace_window,window_sta
             existing_peakLoc = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
         elseif strcmpi('existing_riseLoc', varargin{ii})
             existing_peakLoc = varargin{ii+1};
+        elseif strcmpi('peakErrVal', varargin{ii})
+            peakErrVal = varargin{ii+1};
         end
     end   
 
@@ -34,7 +36,7 @@ function [peak_mag,peak_loc] = find_peaks_in_windows(roi_trace_window,window_sta
                     [~, idx] = min(loc_diff);
                     loc_single = loc(idx);
                     
-                    if abs(loc_single-existing_peakLoc(wn)) <= errVal
+                    if abs(loc_single-existing_peakLoc(wn)) <= peakErrVal
                         peak_loc(wn) = loc_single;
                         peak_mag(wn) = peak_mag_win(idx);
                     end
