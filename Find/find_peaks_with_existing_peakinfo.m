@@ -12,12 +12,13 @@ function [peak_par,varargout] = find_peaks_with_existing_peakinfo(roi_trace,exis
 	% 'peak_time_75percent', 'peak_slope', 'peak_zscore'};
 
     % Defaults
+    peakErrTime = 0.3; % time (s). When using 'find_peaks_in_windows', this is the max distance between the existing peak and found peak 
     filter_chosen = 'none';
     prominence_factor = 4;
     filter_parameter = 1; % default Hz for lowpass filter
-    rec_fq = 10; % recording frequency in Hz
+    rec_fq = 20; % recording frequency in Hz
     decon = 0;
-    time_info = (1:length(roi_trace))'/10; % default for 10 Hz
+    time_info = (1:length(roi_trace))'/rec_fq; % Use default recording frequency "rec_fq" to create a time_info vector 
     smooth_method = 'loess';
     existing_peak_duration_extension_time_pre  = 0; % duration in second, before existing peak rise 
     existing_peak_duration_extension_time_post = 1; % duration in second, after peak
@@ -47,11 +48,15 @@ function [peak_par,varargout] = find_peaks_with_existing_peakinfo(roi_trace,exis
     	end
     end
 
-    % main content
-    % process trace with filter if needed
+    % peakErrVal used in the function 'find_peaks_in_windows' below
+    peakErrVal = peakErrTime*rec_fq;
+
+
+    % smooth data: process trace with filter if needed
     [roi_trace_processed,filter_info] = process_roi_trace_with_filter(roi_trace,...
                 'filter', filter_chosen, 'filter_par', filter_parameter,...
                 'recording_fq', rec_fq, 'decon', decon, 'time_info', time_info);
+
 
 
     if ~isempty(existing_peakInfo)
@@ -90,7 +95,7 @@ function [peak_par,varargout] = find_peaks_with_existing_peakinfo(roi_trace,exis
     		eventWin_idx);
 
     	[peak_par.peakMag, peak_par.peakLoc] = find_peaks_in_windows(roi_trace_window,window_start_time_index,...
-            'existing_peakLoc', existing_peakInfo.peak_loc);
+            'existing_peakLoc', existing_peakInfo.peak_loc,'peakErrVal',peakErrVal);
 
         % if merge_peaks == true
         %     [peak_par.peakMag, peak_par.peakLoc] = organize_merge_peaks(peak_par.peakMag,...
