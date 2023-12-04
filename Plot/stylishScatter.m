@@ -13,6 +13,7 @@ function [varargout] = stylishScatter(xData,yData,varargin)
     ylabelStr = 'y label';
     titleStr = 'Stylish Scatter';
 
+    MarkerSize = 10;
     MarkerEdgeColor = 'k';
     MarkerFaceColor = 'r';
 
@@ -34,6 +35,8 @@ function [varargout] = stylishScatter(xData,yData,varargin)
             ylabelStr = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
         elseif strcmpi('titleStr', varargin{ii})
             titleStr = varargin{ii+1};
+        elseif strcmpi('MarkerSize', varargin{ii})
+            MarkerSize = varargin{ii+1};
         elseif strcmpi('MarkerEdgeColor', varargin{ii})
             MarkerEdgeColor = varargin{ii+1};
         elseif strcmpi('MarkerFaceColor', varargin{ii})
@@ -60,7 +63,8 @@ function [varargout] = stylishScatter(xData,yData,varargin)
         plotWhere;
     end
 
-    h = scatter(gca,xData,yData,'MarkerEdgeColor',MarkerEdgeColor, 'MarkerFaceColor',MarkerFaceColor);
+    h = scatter(gca,xData,yData,...
+        MarkerSize,'MarkerEdgeColor',MarkerEdgeColor, 'MarkerFaceColor',MarkerFaceColor);
     xlabel(xlabelStr);
     ylabel(ylabelStr);
     title(titleStr);

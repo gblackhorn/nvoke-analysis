@@ -30,19 +30,24 @@ function [eventProp_new,varargout] = add_eventBaseDiff_to_eventProp(eventProp,st
 		eventCat = eventProp_new(n).peak_category;
 		if strcmpi('spon', eventCat)
 			baseDiff = [];
+			baseDiffRise = [];
 			baseDiff_stimWin = [];
 			val_event = [];
 			baseInfo = {};
 		else
 			eventTime = eventProp_new(n).(eventTimeType);
+			riseTime = eventProp_new(n).('rise_time');
 			stimWin= get_stimWin_for_event(eventTime,stimRange);
 			stimStartTime = stimWin(:, 1);
 			stimEndTime = stimWin(:, 2);
 			[baseDiff,val_event,baseInfo, baseDiff_stimWin] = get_event_baseDiff(eventTime,stimStartTime,timeInfo,roiTrace,...
-				'base_timeRange',base_timeRange, 'stimEndTime', stimEndTime);
+				'base_timeRange',base_timeRange,'stimEndTime',stimEndTime);
+			[baseDiffRise,~,~,~] = get_event_baseDiff(riseTime,stimStartTime,timeInfo,roiTrace,...
+				'base_timeRange',base_timeRange,'stimEndTime',stimEndTime);
 		end
-		eventProp_new(n).baseDiff = baseDiff;
-		eventProp_new(n).baseDiff_stimWin = baseDiff_stimWin; % lowest baseDiff value during stimulation window
+		eventProp_new(n).baseDiff = baseDiff; % diff between event (peak by default) and mean of base
+		eventProp_new(n).baseDiffRise = baseDiffRise; % diff between rise point of event and mean of base
+		eventProp_new(n).baseDiff_stimWin = baseDiff_stimWin; % diff between lowest point during stimulation and the mean of base
 		eventProp_new(n).val_rise = val_event;
 		eventProp_new(n).baseInfo = baseInfo;
 	end

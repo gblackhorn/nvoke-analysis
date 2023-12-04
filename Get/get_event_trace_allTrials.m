@@ -10,6 +10,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	event_filter = 'none'; % options are: 'none', 'timeWin' (not setup yet), 'event_cat'
 	event_align_point = 'rise'; % options: 'rise', 'peak'
 	eventTimeType = 'peak_time'; % rise_time/peak_time. pick one of the for event time.
+	decay_eventCat = {'rebound','trig-ap'}; % add decay tau and calcium level change to the eventProp of these events
 
 	trial_name_col = 1; % Find trial name from the first column of trialData
 	traceData_col = 2;
@@ -89,16 +90,16 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	data_cell = cell(1, trial_num);
 
 	% Loop through trials (recordings)
-	for n = 1:trial_num
+	for tn = 1:trial_num
 		if debug_mode
-			fprintf('trial %d: %s\n', n, allTrialsData{n, 1})
+			fprintf('trial %d: %s\n', tn, allTrialsData{tn, 1})
 			% if n == 44
 			% 	pause
 			% end
 		end
 
 		% Get data from a single trial
-		trialData = allTrialsData(n, :);
+		trialData = allTrialsData(tn, :);
 
 		% Clear some variables used in the loop
 		clear alignedData combine_stimRange
@@ -238,7 +239,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 
 					% [alignedData.traces(n).eventProp] = mod_cat_name(alignedData.traces(n).eventProp,'cat_setting',cat_setting,'dis_extra',false);
 					[alignedData.traces(n).eventProp] = add_eventBaseDiff_to_eventProp(alignedData.traces(n).eventProp,...
-						combine_stimRange,full_time,roi_trace_data,varargin);
+						combine_stimRange,full_time,roi_trace_data);
 					[alignedData.traces(n).eventProp,newFieldName,NFNtag] = add_tfTag_to_eventProp(alignedData.traces(n).eventProp,...
 						'peak_category','trig','newFieldName','stimTrig');
 
@@ -329,7 +330,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 				alignedData.traces(n).StimCurveFit_TauMean = StimCurveFit_TauInfo.mean;
 				alignedData.traces(n).StimCurveFit_TauNum = StimCurveFit_TauInfo.num;
 
-				% Add tau to rebound events
+				% Add tau and caLevelDelta to rebound events
 				if ~isempty(alignedData.traces(n).StimCurveFit)
 					tauStimIDX = [alignedData.traces(n).StimCurveFit.SN];
 					tauVal = [alignedData.traces(n).StimCurveFit.tau];
@@ -337,10 +338,16 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 					tauStimIDX = [];
 					tauVal = [];
 				end
-				alignedData.traces(n).eventProp = add_tau_for_specificEvents(alignedData.traces(n).eventProp,...
-					'rebound',combine_stimRange(:,2),tauStimIDX,tauVal);
-				alignedData.traces(n).eventProp = add_caLevelDelta_for_specificEvents(alignedData.traces(n).eventProp,...
-					'rebound',combine_stimRange(:,2),alignedData.traces(n).CaLevelMinDeltaData);
+				for en = 1:numel(decay_eventCat)
+					alignedData.traces(n).eventProp = add_tau_for_specificEvents(alignedData.traces(n).eventProp,...
+						decay_eventCat{en},combine_stimRange(:,2),tauStimIDX,tauVal);
+					alignedData.traces(n).eventProp = add_caLevelDelta_for_specificEvents(alignedData.traces(n).eventProp,...
+						decay_eventCat{en},combine_stimRange(:,2),alignedData.traces(n).CaLevelMinDeltaData);
+				end
+				% alignedData.traces(n).eventProp = add_tau_for_specificEvents(alignedData.traces(n).eventProp,...
+				% 	'rebound',combine_stimRange(:,2),tauStimIDX,tauVal);
+				% alignedData.traces(n).eventProp = add_caLevelDelta_for_specificEvents(alignedData.traces(n).eventProp,...
+				% 	'rebound',combine_stimRange(:,2),alignedData.traces(n).CaLevelMinDeltaData);
 			else
 				empty_idx = [empty_idx n];
 			end
@@ -362,7 +369,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 		alignedData.CaLevel_cal_range = CaLevel_cal_range;
 		alignedData.fullTime = full_time;
 
-		data_cell{n} = alignedData;
+		data_cell{tn} = alignedData;
 	end
 
 	alignedData_allTrials = [data_cell{:}];

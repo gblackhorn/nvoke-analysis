@@ -20,6 +20,7 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 	marker_edge_alpha = 0;
 	FontSize = 18;
 	FontWeight = 'bold';
+	LineWidth = 1.5;
 
 % 	colorGroup = {'#A0DFF0', '#F29665', '#6C80BD', '#BD7C6C', '#27418C',...
 % 		'#B1F0C7', '#F276A5', '#79BDB7', '#BD79B5', '#318C85'};
@@ -111,9 +112,15 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 		data_struct(n+1).par_name_1 = group_data_1;
 		data_struct(n+1).par_name_2 = group_data_2;
 
-		h(n) = scatter(ax,group_data_1, group_data_2,...
-			marker_size, 'filled', 'MarkerFaceColor', colorGroup{n},...
+		% h(n) = scatter(ax,group_data_1, group_data_2,...
+		% 	marker_size, 'filled', 'MarkerFaceColor', colorGroup{n},...
+		% 	'MarkerFaceAlpha',marker_face_alpha,'MarkerEdgeAlpha',marker_edge_alpha);
+
+		h(n) = stylishScatter(group_data_1, group_data_2, 'plotWhere', ax,...
+			'MarkerSize', marker_size, 'FontSize', FontSize, 'LineWidth', LineWidth,...
+			'MarkerEdgeColor', colorGroup{n}, 'MarkerFaceColor', colorGroup{n},...
 			'MarkerFaceAlpha',marker_face_alpha,'MarkerEdgeAlpha',marker_edge_alpha);
+
 		if linearFit
 			[p{n},s{n}] = polyfit(group_data_1, group_data_2, 1);
 			f{n} = polyval(p{n}, group_data_1,s{n});
@@ -123,9 +130,9 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 
 	legendstr = {data_struct(2:end).group}';
 	legend(h(1:group_num), legendstr);
-	set(gca, 'box', 'off')
-	set(gca, 'FontSize', FontSize)
-	set(gca, 'FontWeight', FontWeight)
+	% set(gca, 'box', 'off')
+	% set(gca, 'FontSize', FontSize)
+	% set(gca, 'FontWeight', FontWeight)
 
 	par_name_1 = replace(par_name_1, '_', '-');
 	par_name_2 = replace(par_name_2, '_', '-');

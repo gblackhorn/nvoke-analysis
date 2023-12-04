@@ -29,12 +29,14 @@ function [ROIeventProp_new,varargout] = add_tau_for_specificEvents(ROIeventProp,
 	% One for largest calcium level delta, and another one for decay constant (tau) during stimulations
 	ROIeventProp_new = ROIeventProp;
 	
-	defaultValue = {[]}; % create a cell array with the default value for the new field
-	[ROIeventProp_new(:).decayTau] = deal(defaultValue{:}); % use deal to assign the default value to each structure
+	if ~isfield(ROIeventProp_new,'decayTau')
+		defaultValue = {[]}; % create a cell array with the default value for the new field
+		[ROIeventProp_new(:).decayTau] = deal(defaultValue{:}); % use deal to assign the default value to each structure
+	end
 
 
 
-	% Find the the idx specific type of events, such as the 'rebound' ones
+	% Find the the index for specific type of events, such as the 'rebound' ones
 	tf_idx_events = strcmpi({ROIeventProp_new.peak_category},eventCat);
 	idx_events = find(tf_idx_events);
 

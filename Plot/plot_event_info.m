@@ -303,6 +303,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	norm_slope_val_idx = find(contains(parNames, 'peak_slope_norm_hpstd')); % idx of slope calculated using norm data, such as peak_slope_norm_hpstd
 	slope_val_idx = setdiff(all_slope_val_idx, norm_slope_val_idx); % idx of slope calculated with non-normalized data
 	baseDiff_idx = find(contains(parNames, 'baseDiff')); 
+	baseDiffRise_idx = find(contains(parNames, 'baseDiffRise')); 
 	% baseDiffWin_idx = find(contains(parNames, 'baseDiff_stimWin')); % difference between lowest value during stimulation and baseline 
 	val_rise_idx = find(contains(parNames, 'val_rise')); 
 	riseDelay_idx = find(contains(parNames, 'rise_delay')); 
@@ -405,6 +406,21 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 				par_duration = parNames{duration_val_idx(dn)};
 				[scatter_data.([par_baseDiff, '_vs_' par_duration])] = plot_event_info_scatter(event_info_struct,...
 					par_baseDiff, par_duration,'FontSize', FontSize,'FontWeight',FontWeight,...
+					'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
+			end
+		end
+	end
+
+	% baseDiffRise vs mag
+	if ~isempty(baseDiffRise_idx)
+		baseDiffRise_num = numel(baseDiffRise_idx);
+		for bn = 1:baseDiffRise_num
+			par_baseDiffRise = parNames{baseDiffRise_idx(bn)};
+			mag_par_num = numel(mag_val_idx);
+			for mn = 1:mag_par_num
+				par_mag = parNames{mag_val_idx(mn)};
+				[scatter_data.([par_baseDiffRise, '_vs_' par_mag])] = plot_event_info_scatter(event_info_struct,...
+					par_baseDiffRise, par_mag,'FontSize', FontSize,'FontWeight',FontWeight,...
 					'save_fig', save_fig, 'save_dir', save_dir,'fname_suffix',fname_suffix);
 			end
 		end

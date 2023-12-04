@@ -29,8 +29,10 @@ function [ROIeventProp_new,varargout] = add_caLevelDelta_for_specificEvents(ROIe
 	% One for largest calcium level delta, and another one for decay constant (tau) during stimulations
 	ROIeventProp_new = ROIeventProp;
 	
-	defaultValue = {[]}; % create a cell array with the default value for the new field
-	[ROIeventProp_new(:).caLevelDelta] = deal(defaultValue{:}); % use deal to assign the default value to each structure
+	if ~isfield(ROIeventProp_new,'caLevelDelta')
+		defaultValue = {[]}; % create a cell array with the default value for the new field
+		[ROIeventProp_new(:).caLevelDelta] = deal(defaultValue{:}); % use deal to assign the default value to each structure
+	end
 
 
 
@@ -46,7 +48,7 @@ function [ROIeventProp_new,varargout] = add_caLevelDelta_for_specificEvents(ROIe
 
 
 
-	% assign the calcium delta and the tau to the new fields
+	% assign the calcium delta to the new fields
 	if ~isempty(idx_events)
 		eventNum = numel(idx_events); % number of events with specified category
 		for n = 1:eventNum

@@ -514,10 +514,10 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 % 9.3.3 Plot event parameters. Grouped according to categories
 % [9.3] eventProp_all: entry is 'events'
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 plot_combined_data = false;
-parNames = {'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_delay'}; % entry: event
-		% 'sponNorm_peak_mag_delta','rise_delay','peak_delay'
+parNames = {'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_delay','peak_mag_delta','baseDiffRise'}; % entry: event
+		% 'sponNorm_peak_mag_delta','rise_delay','peak_delay','baseDiffRise'
         % 'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
         % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
     
