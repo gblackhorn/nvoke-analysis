@@ -96,7 +96,7 @@ adata.disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-
 adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
 adata.sponfreqFilter.status = true; % true/false. If true, use the following settings to filter ROIs
 adata.sponfreqFilter.field = 'sponfq'; % 
-adata.sponfreqFilter.thresh = 0.06; % Hz
+adata.sponfreqFilter.thresh = 0.06; % Hz. default 0.06
 adata.sponfreqFilter.direction = 'high';
 debug_mode = false; % true/false
 
@@ -352,10 +352,11 @@ end
 
 %% ====================
 % Fig 3 
-% 9.2.1 Check aligned trace of events belong to the same category
+% 9.2.1 Plot aligned traces. Traces of events belonging to the same category are plot together with
+% mean and std shade
 % note: 'event_type' for alignedData_allTrials must be 'detected_events'
 close all
-tplot.save_fig = true; % true/false
+tplot.save_fig = false; % true/false
 tplot.plot_combined_data = true; % mean value and std of all traces
 tplot.plot_raw_races = false; % true/false. true: plot every single trace
 tplot.plot_median = false; % true/false. plot raw traces having a median value of the properties specified by 'tplot.medianProp'
@@ -513,9 +514,9 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 % 9.3.3 Plot event parameters. Grouped according to categories
 % [9.3] eventProp_all: entry is 'events'
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 plot_combined_data = false;
-parNames = {'rise_duration','FWHM','sponNorm_peak_mag_delta'}; % entry: event
+parNames = {'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_delay'}; % entry: event
 		% 'sponNorm_peak_mag_delta','rise_delay','peak_delay'
         % 'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
         % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
@@ -678,7 +679,7 @@ norm_FluorData = false; % true/false. whether to normalize the FluroData
 
 %% ==================== 
 % Fig 5 synchronicity
-saveFig = false; % true/false
+saveFig = true; % true/false
 eventTimeType = 'peak_time'; % rise_time/peak_time
 binSize = 1; % unit: second
 visualizeData = true; % true/false

@@ -1,7 +1,7 @@
 function [stimEventCatPairs,varargout] = setStimEventCatPairs(stimDurationStruct,varargin)
     % This function stores the pairs of stimulations and their related event category
 
-    % stimDurationStruct: alignedData_allTrials().stimInfo.StimDuration  
+    % stimDurationStruct: alignedData_allTrials(n).stimInfo.StimDuration  
 
     % These pairs can be used to find the correct stimulation for calculating
     % the event delay if combined stimulations are used

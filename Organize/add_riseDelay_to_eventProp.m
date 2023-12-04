@@ -3,11 +3,11 @@ function [eventProp_new,varargout] = add_riseDelay_to_eventProp(eventProp,stimRa
 
 	% eventProp: a structure containing event properties for a single ROI
 	% stimRange: a n x 2 array. n is the repeat times of a stim in a trial
-	% timeInfo: time information for a single trial recording
-	% roiTrace: trace data for a single roi. It has the same length as the timeInfo
+	% stimEventCatPairs: a structure var created by the function 'setStimEventCatPairs'
+	% 	stimEventCatPairs = setStimEventCatPairs(alignedData.stimInfo.StimDuration);
 
 	% Defaults
-	errCali = 0; % calibrate the time if it was used to categorize events
+	errCali = 0; % Add calibration time to the beginning and the end of the stimRange
 	eventType = 'peak_time'; % use rise_time/peak_time for event time
 	stimEventCatPairs = '';
 
@@ -46,6 +46,12 @@ function [eventProp_new,varargout] = add_riseDelay_to_eventProp(eventProp,stimRa
 					stimRange = stimEventCatPairs(idx).stimRanges;
 				end
 			end
+
+			% Expand the stimRange by adding the errCali to the beginning and the end of it
+			stimRange(:,1) = stimRange(:,1)-errCali;
+			stimRange(:,2) = stimRange(:,2)+errCali;
+
+			% Get the 
 			stimWin= get_stimWin_for_event(eventTime,stimRange);
 			stimStartTime = stimWin(:, 1);
 			stimEndTime = stimWin(:, 2);
