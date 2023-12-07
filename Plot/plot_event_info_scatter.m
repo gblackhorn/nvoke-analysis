@@ -15,6 +15,11 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 	save_fig = false;
 	save_dir = '';
 	fname_suffix = '';
+
+	unit_width = 0.4; % normalized to display
+	unit_height = 0.4; % normalized to display
+	column_lim = 2; % number of axes column
+
 	marker_size = 10;
 	marker_face_alpha = 1;
 	marker_edge_alpha = 0;
@@ -92,17 +97,40 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 	end
 	title_str = replace(title_str, '_', '-');
 
+	% Create a figure if no handle is input. Check if the handle is a figure if it is input
 	if ~exist('plotwhere','var')
 		figure('Name', title_str);
-		ax = gca;
+		% ax = gca;
 	else
-		ax = plotwhere;
+		if ~isa(plotwhere, 'matlab.ui.Figure')
+			error('varargin for plotwhere must be a figure handle when linearFit is true')
+		else
+			plotwhere;
+		end
+		% ax = plotwhere;
 	end
-	hold on
 
-	p = cell(1,group_num); % coefficients for a polynomial fit
-	s = cell(1,group_num); % a structure S that can be used as an input to polyval to obtain error estimates
-	f = cell(1,group_num); % y_fitted
+	% If fitting data to a linear model, create another axes for a table showing the fitting info
+	if linearFit
+		axNum = 2;
+	else
+		axNum = 1;
+	end
+
+	% Adjust the size of the figure 
+	f = fig_canvas(axNum,'unit_width',unit_width,'unit_height',unit_height,'column_lim',column_lim,...
+		'figHandle',gcf);
+	fTile = tiledlayout(f,1,axNum);
+
+	% polyCoef = cell(1,group_num); % coefficients for a polynomial fit
+	% errEstStruct = cell(1,group_num); % a structure S that can be used as an input to polyval to obtain error estimates
+	% yFit = cell(1,group_num); % y_fitted
+	PearsonCorrCoef = nan(1,group_num);
+	rsq = nan(1,group_num);
+	PearsonCorrCoefPval = nan(1,group_num);
+
+	scatterAx = nexttile(fTile,1);
+	hold on
 	for n = 1:group_num
 		group_data_1 = data_cell_1{n};
 		group_data_2 = data_cell_2{n};
@@ -116,16 +144,39 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 		% 	marker_size, 'filled', 'MarkerFaceColor', colorGroup{n},...
 		% 	'MarkerFaceAlpha',marker_face_alpha,'MarkerEdgeAlpha',marker_edge_alpha);
 
-		h(n) = stylishScatter(group_data_1, group_data_2, 'plotWhere', ax,...
+		% Scatter plot
+		h(n) = stylishScatter(group_data_1, group_data_2, 'plotWhere', scatterAx,...
 			'MarkerSize', marker_size, 'FontSize', FontSize, 'LineWidth', LineWidth,...
 			'MarkerEdgeColor', colorGroup{n}, 'MarkerFaceColor', colorGroup{n},...
 			'MarkerFaceAlpha',marker_face_alpha,'MarkerEdgeAlpha',marker_edge_alpha);
 
+		% Fitting linear model to Data
 		if linearFit
-			[p{n},s{n}] = polyfit(group_data_1, group_data_2, 1);
-			f{n} = polyval(p{n}, group_data_1,s{n});
-			plot(group_data_1, f{n}, '-', 'Color', colorGroup{n}, 'LineWidth', 2); 
+			% Fit data and plot it as a line
+			[yFit,PearsonCorrCoef(n),rsq(n),PearsonCorrCoefPval(n)] = LinearFitPlotTest(group_data_1,group_data_2,...
+				'plotLine',linearFit,'plotWhere',scatterAx,'LineColor',colorGroup{n});
 		end
+
+
+		% if linearFit
+		% 	[p{n},s{n}] = polyfit(group_data_1, group_data_2, 1);
+		% 	f{n} = polyval(p{n}, group_data_1,s{n});
+		% 	plot(group_data_1, f{n}, '-', 'Color', colorGroup{n}, 'LineWidth', 2); 
+
+		% 	% Pearson Correlation Test
+		% 	% R (Correlation Coefficients Matrix): R(1,2) and R(2,1) are the Pearson correlation
+		% 	% coefficients between x and y. These two values are identical and represent the
+		% 	% strength and direction of the linear relationship between x and y.
+		% 	[R, P] = corrcoef(group_data_1, group_data_2);
+		% 	PearsonCorrCoef = R(1,2);
+		% 	PearsonCorrCoefPval = P(1,2);
+
+		% 	% Calculating the R-squared
+		% 	yresid = y - yfit; 
+		% 	SSresid = sum(yresid.^2); 
+		% 	SStotal = (length(y)-1) * var(y); 
+		% 	rsq = 1 - SSresid/SStotal
+		% end
 	end
 
 	legendstr = {data_struct(2:end).group}';
@@ -140,6 +191,18 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 	ylabel(par_name_2);
 	title(title_str)
 	hold off
+
+	% Show the stat information about the fitting (Pearson test, R-square) in a table
+	if linearFit
+		fitStatAx = nexttile(fTile,2);
+		fitStat = struct('group',legendstr,...
+			'PearsonCorrCoef',num2cell(PearsonCorrCoef(:)),'PearsonCorrCoefPval',num2cell(PearsonCorrCoefPval(:)),...
+			'rsq',num2cell(rsq(:)));
+		fitStatTab = struct2table(fitStat);
+		plotUItable(gcf,gca,fitStatTab);
+		title('stat for linear fit')
+	end
+
 
 	if save_fig
 		title_str = replace(title_str, ':', '-');

@@ -142,7 +142,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 			combine_stimDuration = alignedData.stimInfo.UnifiedStimDuration.fixed+stim_time_error*2;
 			if strcmpi(event_type, 'stimWin')
 				stimStart = combine_stimRange(:, 1);
-				post_event_time = post_event_time+combine_stimDuration;
+				post_event_time_trial = post_event_time+combine_stimDuration;
 			end
 			[stimEventCatPairs] = setStimEventCatPairs(alignedData.stimInfo.StimDuration); % the pairs of stimulations and their related event category
 		else
@@ -186,7 +186,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 							[aligned_time,traceValue,traceMean_val,traceStd_val,eventProp,alignedTrace_scaled] = get_event_trace_roi(full_time,roi_trace_data,roi_event_spec_table,...
 								'event_align_point', event_align_point, 'event_filter', event_filter,...
 								'cat_keywords', cat_keywords,...
-								'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
+								'pre_event_time', pre_event_time, 'post_event_time', post_event_time_trial,...
 								'align_on_y', align_on_y, 'scale_data', scale_data);
 							alignedData.traces(n).value = traceValue; 
 							alignedData.traces(n).mean_val = traceMean_val; 
@@ -200,7 +200,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 					case 'stimWin'
 						if ~isempty(stimStart)
 							[aligned_time,traceValue,traceMean_val,traceStd_val] = get_event_trace(stimStart,full_time,roi_trace_data,...
-								'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
+								'pre_event_time', pre_event_time, 'post_event_time', post_event_time_trial,...
 								'align_on_y', align_on_y, 'scale_data', scale_data);
 							alignedData.traces(n).value = traceValue; 
 							alignedData.traces(n).mean_val = traceMean_val; 
@@ -231,11 +231,21 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 					[cat_setting] = CaImg_char_pat('event_group');
 					[alignedData.traces(n).eventProp] = mod_str_TBLorSTRUCT(alignedData.traces(n).eventProp,'peak_category',...
 						cat_setting.old,cat_setting.new);	
-					StimTags = CreateStimTagForEvents(alignedData.stimInfo.UnifiedStimDuration.range,...
+
+					% Set the unified stimulation range to empty, if stimulation is not applied
+					if ~strcmpi(alignedData.stimInfo,'NA');
+						unifiedStimRange = alignedData.stimInfo.UnifiedStimDuration.range;
+					else
+						unifiedStimRange = [];
+					end
+
+					% Create tag for stimulation related events
+					StimTags = CreateStimTagForEvents(unifiedStimRange,...
 						[alignedData.traces(n).eventProp.(eventTimeType)],'EventCat',{alignedData.traces(n).eventProp.peak_category},...
 						'StimType',alignedData.stimInfo.UnifiedStimDuration.type,...
 						'SkipTag_keyword','spon','NoTag_char',''); % Create stimulation tags for each events for further sorting
 					[alignedData.traces(n).eventProp.stim_tags] = StimTags{:}; % Add stimulation tags
+
 
 					% [alignedData.traces(n).eventProp] = mod_cat_name(alignedData.traces(n).eventProp,'cat_setting',cat_setting,'dis_extra',false);
 					[alignedData.traces(n).eventProp] = add_eventBaseDiff_to_eventProp(alignedData.traces(n).eventProp,...

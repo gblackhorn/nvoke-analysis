@@ -15,7 +15,7 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 	% Optionals
 	for ii = 1:2:(nargin-1)
 	    if strcmpi('plot_combined_data', varargin{ii})
-	        plot_combined_data = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
+	        plot_combined_data = varargin{ii+1}; % 
         elseif strcmpi('plot_stim_shade', varargin{ii})
 	        plot_stim_shade = varargin{ii+1};
         elseif strcmpi('y_range', varargin{ii})
@@ -27,7 +27,7 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
         elseif strcmpi('section', varargin{ii})
 	        section = varargin{ii+1}; % double/vector. specify the n-th repeat of stimulation
         elseif strcmpi('stimNames', varargin{ii})
-	        stimNames = varargin{ii+1}; % double/vector. specify the n-th repeat of stimulation
+	        stimNames = varargin{ii+1}; 
 	    end
 	end	
 
@@ -41,8 +41,9 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 	[C, ia, ic] = unique({alignedData.stim_name});
 	if ~isempty(stimNames)
 		[stimNames,stimNameIDXinC,~]=intersect(C, stimNames);
-	% else
-	% 	C = stimNames;
+	else
+		stimNames = C;
+		% C = stimNames;
 	end
 	stimNum = numel(stimNames);
 
@@ -58,7 +59,7 @@ function [varargout] = plot_stimAlignedTraces(alignedData,varargin)
 
 	for n = 1:stimNum
 		% stimName = C{n};
-		stimName = stimNames{stimNameIDXinC(n)};
+		stimName = C{stimNameIDXinC(n)};
 		IDX_trial = find(ic == stimNameIDXinC(n));
 		timeInfo = alignedData(IDX_trial(1)).time;
 		stim_range = {alignedData(IDX_trial(1)).stimInfo.UnifiedStimDuration.range_aligned};

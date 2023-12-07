@@ -1,5 +1,5 @@
 function [varargout] = plot_trace_allTrials(alignedData_allTrials,varargin)
-	% Plot aligned traces from a all trials. Traces in ROIs from each single trial are grouped
+	% Plot aligned traces from all trials. Traces in ROIs from each single trial are grouped
 	% Use alignedData (output of [get_event_trace_trial]) or a single component of alignedData_allTrials (output of [get_event_trace_allTrials])
 
 

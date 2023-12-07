@@ -1,5 +1,5 @@
 function [varargout] = plot_trace(time_info,trace_data,varargin)
-	% Plot aligned traces 
+	% Plot traces 
 
 	% Defaults
 	plotWhere = [];
@@ -38,10 +38,10 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	        mean_trace_shade = varargin{ii+1};
 	    elseif strcmpi('plot_raw_races', varargin{ii})
 	        plot_raw_races = varargin{ii+1};
-	    elseif strcmpi('save_fig', varargin{ii})
-	        save_fig = varargin{ii+1};
-	    elseif strcmpi('save_dir', varargin{ii})
-	        save_dir = varargin{ii+1};
+	    % elseif strcmpi('save_fig', varargin{ii})
+	    %     save_fig = varargin{ii+1};
+	    % elseif strcmpi('save_dir', varargin{ii})
+	    %     save_dir = varargin{ii+1};
 	    elseif strcmpi('line_color', varargin{ii})
 	        line_color = varargin{ii+1};
 	    elseif strcmpi('mean_line_color', varargin{ii})

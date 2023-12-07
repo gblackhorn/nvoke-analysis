@@ -17,6 +17,7 @@ function [varargout] = plot_trace_yShift(timeInfo,traceInfo,plotWhere,varargin)
 	LineColor = '#98A3D4'; % '#98A3D4' '#616887'
 	markers_color = {'#8D73BA', '#BA9973', '#BA9973'};
 	markers_shape = {'ro', 'g>', 'c<'}; % marker shape for scatter plot
+	FontSize = 12;
 
 	traceNote = ''; % 'lowpass'/'decon'. string to specify information about traceInfo
 
@@ -36,6 +37,8 @@ function [varargout] = plot_trace_yShift(timeInfo,traceInfo,plotWhere,varargin)
 	        LineWidth = varargin{ii+1}; 
 	    elseif strcmpi('LineColor', varargin{ii})
 	        LineColor = varargin{ii+1}; 
+	    elseif strcmpi('FontSize', varargin{ii})
+	        FontSize = varargin{ii+1}; 
 	    elseif strcmpi('markers_color', varargin{ii})
 	        markers_color = varargin{ii+1}; 
 	    elseif strcmpi('markers_shape', varargin{ii})
@@ -54,7 +57,8 @@ function [varargout] = plot_trace_yShift(timeInfo,traceInfo,plotWhere,varargin)
     hold on
 
     traceInfo_shifted = traceInfo+yShift; % shift trace value on y direction
-    plot(timeInfo, traceInfo_shifted, 'LineWidth', LineWidth, 'Color', LineColor); % plot trace
+    plot(timeInfo, traceInfo_shifted,...
+    'LineWidth', LineWidth, 'Color', LineColor); % plot trace
     
 
     if ~isempty(markers_frame)
@@ -69,4 +73,6 @@ function [varargout] = plot_trace_yShift(timeInfo,traceInfo,plotWhere,varargin)
     	mean_trace_shifted = mean_trace+yShift;
     	plot_trace_with_rangeShade(timeInfo,mean_trace_shifted,std_trace,ax);
     end
+
+    set(gca, 'FontSize', FontSize)
 end

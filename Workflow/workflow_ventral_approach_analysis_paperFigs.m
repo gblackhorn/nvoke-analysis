@@ -74,7 +74,7 @@ uisave({'recdata_organized','alignedData_allTrials','opt','adata'},...
 
 %% ====================
 % 8 Align traces from all trials. Also collect the properties of events
-adata.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
+adata.event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
 adata.eventTimeType = 'peak_time'; % rise_time/peak_time. Pick one for event time
 adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 adata.event_data_group = 'peak_lowpass';
@@ -138,7 +138,7 @@ end
 % Note: ROIs of all trials in alignedData_allTrials can be plotted. 
 %	Use 'filter' to screen ROIs based on the effect of stimulation
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
@@ -425,7 +425,7 @@ end
 % 9.2.2 Replot the averaged traces (same category) using the data in stimAlignedTrace_means
 % This section can combine traces from different group
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 tplot.y_range = [-1 2]; % [-10 5],[-3 5],[-2 1]
 % {{stimName1,eventCat1},{stimName2,eventCat2}}. Combine the eventCat1 and eventCat2 from different stimNames
 stimNameEventCat = {{'og-5s','trig'},{'og-5s ap-0.1s','trig'}}; 
@@ -514,7 +514,7 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 % 9.3.3 Plot event parameters. Grouped according to categories
 % [9.3] eventProp_all: entry is 'events'
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 plot_combined_data = false;
 parNames = {'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_delay','peak_mag_delta','baseDiffRise'}; % entry: event
 		% 'sponNorm_peak_mag_delta','rise_delay','peak_delay','baseDiffRise'
@@ -649,7 +649,8 @@ end
 
 
 %% ==================== 
-% Fig 4.1
+% Fig 4.1 
+% Conclude the the data of stimulation caused curve fit
 filter_roi_tf = true;
 stim_names = {'og-5s'};
 filters = {[0 nan nan nan]};
@@ -756,11 +757,12 @@ title_prefix = 'filtered';
 % 9.2.1.1 Check trace aligned to stim window
 % note: 'event_type' for alignedData_allTrials must be 'stimWin'
 close all
-filter_roi_tf = true; % true/false. If true, screen ROIs
+filter_roi_tf = false; % true/false. If true, screen ROIs
 tplot.plot_combined_data = false; % true/false
+tplot.stimNames = 'og-5s'; % 
 tplot.plot_stim_shade = true; % true/false
 tplot.y_range = [-20 30];
-tplot.stimEffectType = 'rebound'; % options: 'excitation', 'inhibition', 'rebound'
+tplot.stimEffectType = ''; % options: 'excitation', 'inhibition', 'rebound'
 tplot.section = []; % n/[]. specify the n-th repeat of stimWin. Set it to [] to plot all stimWin 
 tplot.sponNorm = false; % true/false
 tplot.save_fig = false; % true/false
@@ -774,7 +776,7 @@ end
 
 fHandle_stimAlignedTrace = plot_stimAlignedTraces(alignedDataTrials_plot,...
 	'plot_combined_data',tplot.plot_combined_data,'plot_stim_shade',tplot.plot_stim_shade,'section',tplot.section,...
-	'y_range',tplot.y_range,'stimEffectType',tplot.stimEffectType,'sponNorm',tplot.sponNorm);
+	'y_range',tplot.y_range,'stimEffectType',tplot.stimEffectType,'sponNorm',tplot.sponNorm,'stimNames',tplot.stimNames);
 if tplot.save_fig
 	tplot.fname = sprintf('stimWin_aligned_traces');
 	FolderPathVA.fig = savePlot(fHandle_stimAlignedTrace,'guiSave','on','save_dir',tplot.save_dir,'fname',tplot.fname);

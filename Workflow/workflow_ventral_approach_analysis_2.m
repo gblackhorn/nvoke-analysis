@@ -300,8 +300,9 @@ FolderPathVA.fig = savePlot(gcf,'guiSave','on','save_dir',FolderPathVA.fig,'fnam
 % Note: set adata.event_type to 'stimWin' when creating alignedData_allTrials
 close all
 save_fig = false; % true/false
-pause_after_trial = false;
+pause_after_trial = true;
 TraceType = 'aligned'; % 'full'/'aligned'. Plot the full trace or stimulation aligned trace
+plotAllCombine = true; % Plot a figure combining all ROI in a recording
 markers_name = {}; % of which will be labled in trace plot: 'peak_loc', 'rise_loc'
 if save_fig
 	save_dir = uigetdir(FolderPathVA.fig,'Choose a folder to save plots');
@@ -313,7 +314,10 @@ trial_num = numel(alignedData_allTrials);
 for tn = 1:trial_num
 	alignedData = alignedData_allTrials(tn);
 	PlotTraceFromAlignedDataVar(alignedData,'TraceType',TraceType,'markers_name',markers_name,...
-		'save_fig',save_fig,'save_dir',save_dir);
+		'plotAllCombine',plotAllCombine,'save_fig',save_fig,'save_dir',save_dir);
+	if pause_after_trial
+		pause
+	end
 end
 
 

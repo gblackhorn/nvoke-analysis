@@ -17,6 +17,7 @@ function [varargout] = plot_trace_yShift_multiple(timeInfo,tracesInfo,plotWhere,
 
 	LineWidth = 1;
 	LineColor = '#616887';
+	FontSize = 12;
 	markers_color = {'#8D73BA','#BA9973','#BA9973'};
 	markers_shape = {'ro','g>','c<'}; % marker shape for scatter plot
 	stim_shade_color = {'#ED8564', '#5872ED', '#EDBF34', '#40EDC3', '#5872ED'};
@@ -43,6 +44,8 @@ function [varargout] = plot_trace_yShift_multiple(timeInfo,tracesInfo,plotWhere,
 	        LineWidth = varargin{ii+1}; 
 	    elseif strcmpi('LineColor', varargin{ii})
 	        LineColor = varargin{ii+1}; 
+	    elseif strcmpi('FontSize', varargin{ii})
+	        FontSize = varargin{ii+1}; 
 	    elseif strcmpi('markers_color', varargin{ii})
 	        markers_color = varargin{ii+1}; 
 	    elseif strcmpi('markers_shape', varargin{ii})
@@ -80,7 +83,7 @@ function [varargout] = plot_trace_yShift_multiple(timeInfo,tracesInfo,plotWhere,
 
     	plot_trace_yShift(timeInfo,singleTrace,plotWhere,'yShift',shift_val,...
     		'markers_frame', markers_frame, 'mean_trace', singleMeanTrace, 'std_trace', singleStdTrace,...
-    		'markers_color', markers_color, 'markers_shape', markers_shape);
+    		'markers_color', markers_color, 'markers_shape', markers_shape, 'FontSize', FontSize);
     end
     yticks(flip(yticks_pos));
     yticklabels(flip(yLabelName));

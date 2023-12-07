@@ -47,27 +47,29 @@ function [tags,varargout] = CreateStimTagForEvents(StimRange,EventsTime,varargin
 	tags = cell(1,EventNum); 
 	[tags{:}] = deal(NoTag_char);
 
-	[StimDuration] = CalculateStimDuration(StimRange);
-	StimNum = numel(StimDuration.array);
+	if ~isempty(StimRange)
+		[StimDuration] = CalculateStimDuration(StimRange);
+		StimNum = numel(StimDuration.array);
 
-	if UseCat
-		RangeEnds = StimDuration.range(:,2);
-		for en = 1:EventNum
-			if debugMode
-            	fprintf('eventNum: %g/%g\n',en,EventNum);
-            end
-			if ~contains(EventCat{en},SkipTag_keyword,'IgnoreCase',true)
-				[closestValue,ClosestLoc] = find_closest_in_array(EventsTime(en),RangeEnds(:));
-				TagChar = sprintf('%s-%.2gs',StimType,StimDuration.array(ClosestLoc));
-				tags{en} = TagChar;
+		if UseCat
+			RangeEnds = StimDuration.range(:,2);
+			for en = 1:EventNum
+				if debugMode
+	            	fprintf('eventNum: %g/%g\n',en,EventNum);
+	            end
+				if ~contains(EventCat{en},SkipTag_keyword,'IgnoreCase',true)
+					[closestValue,ClosestLoc] = find_closest_in_array(EventsTime(en),RangeEnds(:));
+					TagChar = sprintf('%s-%.2gs',StimType,StimDuration.array(ClosestLoc));
+					tags{en} = TagChar;
+				end
 			end
-		end
-	else
-		for sn = 1:StimNum
-			OneRange = StimDuration.range(sn,:);
-			TagLoc = find(EventsTime>=OneRange(1) & EventsTime<OneRange(2));
-			TagChar = sprintf('%s-%.2gs',StimType,StimDuration.array(sn));
-			[tags{TagLoc}] = deal(TagChar);
+		else
+			for sn = 1:StimNum
+				OneRange = StimDuration.range(sn,:);
+				TagLoc = find(EventsTime>=OneRange(1) & EventsTime<OneRange(2));
+				TagChar = sprintf('%s-%.2gs',StimType,StimDuration.array(sn));
+				[tags{TagLoc}] = deal(TagChar);
+			end
 		end
 	end
 end
