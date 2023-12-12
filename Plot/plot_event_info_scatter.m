@@ -140,10 +140,6 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 		data_struct(n+1).par_name_1 = group_data_1;
 		data_struct(n+1).par_name_2 = group_data_2;
 
-		% h(n) = scatter(ax,group_data_1, group_data_2,...
-		% 	marker_size, 'filled', 'MarkerFaceColor', colorGroup{n},...
-		% 	'MarkerFaceAlpha',marker_face_alpha,'MarkerEdgeAlpha',marker_edge_alpha);
-
 		% Scatter plot
 		h(n) = stylishScatter(group_data_1, group_data_2, 'plotWhere', scatterAx,...
 			'MarkerSize', marker_size, 'FontSize', FontSize, 'LineWidth', LineWidth,...
@@ -158,32 +154,10 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 		end
 
 
-		% if linearFit
-		% 	[p{n},s{n}] = polyfit(group_data_1, group_data_2, 1);
-		% 	f{n} = polyval(p{n}, group_data_1,s{n});
-		% 	plot(group_data_1, f{n}, '-', 'Color', colorGroup{n}, 'LineWidth', 2); 
-
-		% 	% Pearson Correlation Test
-		% 	% R (Correlation Coefficients Matrix): R(1,2) and R(2,1) are the Pearson correlation
-		% 	% coefficients between x and y. These two values are identical and represent the
-		% 	% strength and direction of the linear relationship between x and y.
-		% 	[R, P] = corrcoef(group_data_1, group_data_2);
-		% 	PearsonCorrCoef = R(1,2);
-		% 	PearsonCorrCoefPval = P(1,2);
-
-		% 	% Calculating the R-squared
-		% 	yresid = y - yfit; 
-		% 	SSresid = sum(yresid.^2); 
-		% 	SStotal = (length(y)-1) * var(y); 
-		% 	rsq = 1 - SSresid/SStotal
-		% end
 	end
 
 	legendstr = {data_struct(2:end).group}';
 	legend(h(1:group_num), legendstr);
-	% set(gca, 'box', 'off')
-	% set(gca, 'FontSize', FontSize)
-	% set(gca, 'FontWeight', FontWeight)
 
 	par_name_1 = replace(par_name_1, '_', '-');
 	par_name_2 = replace(par_name_2, '_', '-');
