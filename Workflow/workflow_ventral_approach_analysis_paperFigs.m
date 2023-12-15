@@ -682,7 +682,7 @@ norm_FluorData = false; % true/false. whether to normalize the FluroData
 % Fig 5 synchronicity
 saveFig = true; % true/false
 eventTimeType = 'peak_time'; % rise_time/peak_time
-binSize = 1; % unit: second
+binSize = 0.05; % unit: second
 visualizeData = true; % true/false
 corrThresh = 0.3; % correlation equal and below this threshhold will not be show in the graph and bundling plots  
 distScale = 296/100; % pixels/um. used for calibrate the distance. 

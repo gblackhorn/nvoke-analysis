@@ -103,15 +103,6 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 			'xlabelStr','Distance','ylabelStr','Correlation',...
 			'titleStr',fCorrDistAllName);
 
-		% scatterHandle = scatter(gca,distFlatAll, corrFlatAll, 'MarkerEdgeColor', 'k', 'MarkerFaceColor', 'r');
-		% xlabel('Distance');
-		% ylabel('Correlation');
-		% title(fCorrDistAllName);
-		% box off;
-		% set(gca, 'FontSize', 12, 'LineWidth', 1.5);
-		% set(gcf, 'Color', 'w');
-		% grid on;
-		% set(gca, 'GridLineStyle', ':', 'GridColor', 'k', 'GridAlpha', 0.5);
 		if saveFig
 			savePlot(fCorrDistAll,'save_dir',saveDir,'guiSave',false,'fname',fCorrDistAllName);
 

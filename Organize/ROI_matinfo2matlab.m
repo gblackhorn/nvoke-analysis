@@ -49,7 +49,8 @@ function [recdata, varargout] = ROI_matinfo2matlab(varargin)
 		end
 		roi_readout_file_processed = fullfile(roi_readout_file_info_processed(n).folder, roi_readout_file_info_processed(n).name);
 		load(roi_readout_file_processed, 'results'); % load CNMF-E processed results
-		CalSig_decon = results.C; % results.C has deconvoluted and demixed data. Each row is a neuron
+		% roiSpatialComponents = results.A; % spatial components of neurons
+		CalSig_decon = results.C; % temporal components of neurons. results.C has deconvoluted and demixed data. Each row is a neuron
 		CalSig_raw = results.C_raw; % raw data
 		CalSig_decon = CalSig_decon'; % transpose matrix to have neurons arranged in columns
 		CalSig_raw = CalSig_raw';

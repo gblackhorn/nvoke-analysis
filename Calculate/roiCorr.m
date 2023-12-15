@@ -34,22 +34,6 @@ function [corrMatrix,corrFlat,varargout] = roiCorr(alignedDataRec,binSize,vararg
 	% info of a single ROI. 1 if a time bin contains an event, 0 if there is no event in the bin
 	[binaryMatrix,roiNames,recDateTime] = recEventBinaryMatrix(alignedDataRec,binSize,'eventTimeType',eventTimeType);
 
-	% % get the recording data and time from the trialName
-	% underScoreIDX = strfind(alignedDataRec.trialName,'_');
-	% recDateTime = alignedDataRec.trialName(1:(underScoreIDX(1)-1));
-
-	% % get the maxTime of recording
-	% maxTime = alignedDataRec.fullTime(end)-alignedDataRec.fullTime(1);
-
-	% % get the eventProps
-	% eventProps = {alignedDataRec.traces.eventProp};
-
-	% % get the roiNames
-	% roiNames = {alignedDataRec.traces.roi};
-
-	% % convert the events' time from all neurons to a binary matrix 
-	% [binaryMatrix] = eventTime2binaryMatrix(eventProps,maxTime,binSize,...
-	% 	'eventTimeType',eventTimeType,'roiNames',roiNames);
 
 	% compute the correlation matrix
 	corrMatrix = corr(binaryMatrix);
