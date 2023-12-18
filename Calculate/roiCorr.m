@@ -32,7 +32,7 @@ function [corrMatrix,corrFlat,varargout] = roiCorr(alignedDataRec,binSize,vararg
 
 	% get events' time from all the ROIs and create a binary matrix. Each column contains events
 	% info of a single ROI. 1 if a time bin contains an event, 0 if there is no event in the bin
-	[binaryMatrix,roiNames,recDateTime] = recEventBinaryMatrix(alignedDataRec,binSize,'eventTimeType',eventTimeType);
+	[binaryMatrix,timePointsNum,roiNames,recDateTime] = recEventBinaryMatrix(alignedDataRec,binSize,'eventTimeType',eventTimeType);
 
 
 	% compute the correlation matrix
@@ -60,7 +60,8 @@ function [corrMatrix,corrFlat,varargout] = roiCorr(alignedDataRec,binSize,vararg
 	end
 
 
-	varargout{1} = roiNames;
-	varargout{2} = roiPairNames;
-	varargout{3} = recDateTime;
+	varargout{1} = timePointsNum;
+	varargout{2} = roiNames;
+	varargout{3} = roiPairNames;
+	varargout{4} = recDateTime;
 end

@@ -31,12 +31,16 @@ function [binaryMatrix,varargout] = eventTime2binaryMatrix(eventProps,maxTime,bi
 		roiNames = arrayfun(@(x) ['roi', num2str(x)], 1:roiNum, 'UniformOutput', false);
 	end
 
-	% initialize binary matrix
+	% initialize binary matrix and timePointsNum array
 	binaryMatrix = NaN(ceil(maxTime/binSize),roiNum);
+	timePointsNum = NaN(1,roiNum); % number of events for every ROI is stored in a single entry
 
 	% fill in binaryMatrix: one roi data for one column
 	for n = 1:roiNum
 		eventTimePoints = [eventProps{n}.(eventTimeType)];
-		binaryMatrix(:,n) = time2binary(eventTimePoints,maxTime,binSize);
+		[binaryMatrix(:,n),timePointsNum(n)] = time2binary(eventTimePoints,maxTime,binSize);
 	end
+
+	% Output the timePointsNum as a varargout
+	varargout{1} = timePointsNum;
 end

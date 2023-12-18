@@ -680,11 +680,12 @@ norm_FluorData = false; % true/false. whether to normalize the FluroData
 
 %% ==================== 
 % Fig 5 synchronicity
+close all
 saveFig = true; % true/false
 eventTimeType = 'peak_time'; % rise_time/peak_time
 binSize = 0.05; % unit: second
 visualizeData = true; % true/false
-corrThresh = 0.3; % correlation equal and below this threshhold will not be show in the graph and bundling plots  
+corrThresh = 0.2; % correlation equal and below this threshhold will not be show in the graph and bundling plots  
 distScale = 296/100; % pixels/um. used for calibrate the distance. 
 	% Length 9 mm, Ø 1 mm: 296.0608 pixels = 100 µm
 	% Length 8.4 mm, Ø 0.5 mm: 266.0676 pixels = 100 µm

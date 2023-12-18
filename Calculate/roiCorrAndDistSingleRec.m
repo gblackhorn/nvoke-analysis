@@ -24,6 +24,7 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 	visualizeData = false;
 	corrThresh = 0.3; % correlation equal and below this threshhold will not be show in the graph and bundling plots  
 	roiNameExcessiveStr = 'neuron'; % remove this string from the ROI name to shorten it
+	tileMultiplier = 3; % Multiple the number of tiles with this parametter for Managing the size of plots
 
 	% Optionals
 	for ii = 1:2:(nargin-2)
@@ -39,7 +40,7 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 	end
 
 	% calculate the activity correlation using event time
-	[corrMatrix,corrFlat,roiNames,roiPairNames,recDateTime] = roiCorr(alignedDataRec,binSize,'eventTimeType',eventTimeType);
+	[corrMatrix,corrFlat,timePointsNum,roiNames,roiPairNames,recDateTime] = roiCorr(alignedDataRec,binSize,'eventTimeType',eventTimeType);
 
 	% calculate the distances of all neuron pairs
 	roi_coors = {alignedDataRec.traces.roi_coor};
@@ -67,37 +68,60 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 
 	% Plot data if visualizeData is true
 	if visualizeData
-		fName = sprintf('roiCorrFig rec-%s binSize-%g corrThresh-%g',recDateTime,binSize,corrThresh);
+		fName = sprintf('roiCorrFig rec-%s binSize-%gs corrThresh-%g',recDateTime,binSize,corrThresh);
 		f = fig_canvas(9,'unit_width',0.3,'unit_height',0.4,'column_lim',3,'fig_name',fName);
-		fTile = tiledlayout(f,3,3); % create tiles 
+		fTile = tiledlayout(f,3*tileMultiplier,3*tileMultiplier); % create tiles 
 
 		% display the roi correlation using heatmap
-		corrHeatmapAx = nexttile(fTile,1);
+		corrHeatmapAx = nexttile(fTile,2,[3 2]);
 		heatmapHandle = heatMapRoiCorr(corrMatrix,roiNamesShort,'recName',recDateTime,'plotWhere',gca,...
 			'excludeSelfCorrColor',true);
 		title('Cross correlation')
 
+		% add histogram next to the heatmap above showing the timePoint number in each ROI
+		% horizontal histo on the left side of the heatmap
+		tpNumVertAx = nexttile(fTile,1,[3 1]); 
+		stylishHistogram(timePointsNum,'plotWhere',gca,'Orientation','horizontal',...
+			'titleStr','','xlabelStr','Event Num','ylabelStr','','XTick',[0 max(timePointsNum)]);
+		% vertical histo below the the heatmap
+		tpNumVertAx = nexttile(fTile,29,[1 2]); 
+		stylishHistogram(timePointsNum,'plotWhere',gca,'Orientation','vertical',...
+			'titleStr','','xlabelStr','','ylabelStr','Event Num','YTick',[0 max(timePointsNum)]);
+
+
 		
 		if numel(corrMatrix)>1
 			% display the hierachical clustered roi correlation usigng heatmap
-			corrHeatmapAx = nexttile(fTile,2);
-			[corrMatrixHC,outperm_cols,outperm_rows] = hierachicalCluster(corrMatrix);
-			roiNamesHC = roiNamesShort(outperm_cols);
+			corrHeatmapAx = nexttile(fTile,5,[3 2]);
+			[corrMatrixHC,outperm] = hierachicalCluster(corrMatrix);
+			roiNamesHC = roiNamesShort(outperm);
+			timePointsNumHC = timePointsNum(outperm);
 			heatmapHCHandle = heatMapRoiCorr(corrMatrixHC,roiNamesHC,'recName',recDateTime,'plotWhere',gca,...
 				'excludeSelfCorrColor',true);
 			title('Hierachical clustered cross correlation')
 
+			% add histogram next to the heatmap above showing the timePoint number in each ROI
+			% horizontal histo on the left side of the heatmap
+			tpNumVertAx = nexttile(fTile,4,[3 1]); 
+			stylishHistogram(timePointsNumHC,'plotWhere',gca,'Orientation','horizontal',...
+				'titleStr','','xlabelStr','Event Num','ylabelStr','','XTick',[0 max(timePointsNum)]);
+			% vertical histo below the the heatmap
+			tpNumVertAx = nexttile(fTile,32,[1 2]); 
+			stylishHistogram(timePointsNumHC,'plotWhere',gca,'Orientation','vertical',...
+				'titleStr','','xlabelStr','','ylabelStr','Event Num','YTick',[0 max(timePointsNum)]);
+
+
 			% display the relationship between the activity correlation and the roi distance
-			corrDistScatterAx = nexttile(fTile,3);
+			corrDistScatterAx = nexttile(fTile,7,[3 3]);
 			scatterHandle = stylishScatter(distFlat,corrFlat,'plotWhere',gca,...
 				'xlabelStr',distLabelStr,'ylabelStr','Correlation','titleStr','Correlation vs Distance');
 
 			% display the neuronal network graph
-			corrHeatmapAx = nexttile(fTile,4);
+			corrHeatmapAx = nexttile(fTile,37,[3 3]);
 			graphHandle = drawNeuronalNetworkGraph(corrMatrix,distMatrix,roiNamesShort,'plotWhere',gca,'corrThresh',corrThresh);
 
 			% display the edge bundling
-			corrHeatmapAx = nexttile(fTile,5);
+			corrHeatmapAx = nexttile(fTile,40,[3 3]);
 			drawEdgeBundling(corrMatrix,distMatrix,roiNamesShort,'plotWhere',gca,'corrThresh',corrThresh,'colorBarStr',distLabelStr);
 		end
 
@@ -107,13 +131,13 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 		roiCoor = cell2mat(roiCoor);
 		roiCoor = convert_roi_coor(roiCoor);
 
-		roiMapAx = nexttile(fTile,6);
+		roiMapAx = nexttile(fTile,43,[3 3]);
 		plot_roi_coor(roi_map,roiCoor,roiMapAx,...
 			'label','text','textCell',roiNamesShort,'textColor','black','labelFontSize',12,...
 			'shapeColor','yellow','opacity',1,'showMap',true); % plotWhere is [] to supress plot
 
 		% display the synchronicity of ROIs in a recording using percentage
-		syncPercAx = nexttile(fTile,7,[1,3]);
+		syncPercAx = nexttile(fTile,64,[2,9]);
 		displayRecSyncPerc(syncPercAx,alignedDataRec,binSize);
 
 

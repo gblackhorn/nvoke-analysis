@@ -41,9 +41,10 @@ function [binaryMatrix,varargout] = recEventBinaryMatrix(alignedDataRec,binSize,
 	roiNames = {alignedDataRec.traces.roi};
 
 	% convert the events' time from all neurons to a binary matrix 
-	[binaryMatrix] = eventTime2binaryMatrix(eventProps,maxTime,binSize,...
+	[binaryMatrix,timePointsNum] = eventTime2binaryMatrix(eventProps,maxTime,binSize,...
 		'eventTimeType',eventTimeType,'roiNames',roiNames);
 
-	varargout{1} = roiNames;
-	varargout{2} = recDateTime;
+	varargout{1} = timePointsNum;
+	varargout{2} = roiNames;
+	varargout{3} = recDateTime;
 end
