@@ -30,6 +30,10 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 	for ii = 1:2:(nargin-2)
 	    if strcmpi('eventTimeType', varargin{ii}) 
 	        eventTimeType = varargin{ii+1}; 
+	    % elseif strcmpi('calTimeLagCorr', varargin{ii})
+        %     calTimeLagCorr = varargin{ii+1};
+	    % elseif strcmpi('binLag', varargin{ii})
+        %     binLag = varargin{ii+1};
 	    elseif strcmpi('visualizeData', varargin{ii})
             visualizeData = varargin{ii+1};
 	    elseif strcmpi('corrThresh', varargin{ii})
@@ -39,9 +43,15 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 	    end
 	end
 
-	% calculate the activity correlation using event time
-	[corrMatrix,corrFlat,timePointsNum,roiNames,roiPairNames,recDateTime] = roiCorr(alignedDataRec,binSize,'eventTimeType',eventTimeType);
+	% Get events' time from all the ROIs and create a binary matrix. Each column contains events
+	% info of a single ROI. 1 if a time bin contains an event, 0 if there is no event in the bin
+	% Extract recording and roi names as well
+	[binaryMatrix,timePointsNum,roiNames,recDateTime] = recEventBinaryMatrix(alignedDataRec,binSize,'eventTimeType',eventTimeType);
 
+	% calculate the activity correlation using event time
+	[corrMatrix,corrFlat,roiPairNames] = roiCorr(binaryMatrix,roiNames);
+
+	
 	% calculate the distances of all neuron pairs
 	roi_coors = {alignedDataRec.traces.roi_coor};
 	[distMatrix,distFlat] = roiDist(roi_coors);
@@ -54,10 +64,10 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 		distLabelStr = 'Distance (pixel)';
 	end
 
-
 	varargout{1} = roiNames;
 	varargout{2} = roiPairNames;
 	varargout{3} = recDateTime;
+
 
 	% remove the 'neuron' part from the roiName for clearer display in the plots. For example,
 	% change neuron5 to 5
@@ -65,6 +75,7 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 	for i = 1:numel(roiNames)
 		roiNamesShort{i} = strrep(roiNames{i},roiNameExcessiveStr,'');
 	end
+
 
 	% Plot data if visualizeData is true
 	if visualizeData
@@ -87,7 +98,6 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 		tpNumVertAx = nexttile(fTile,29,[1 2]); 
 		stylishHistogram(timePointsNum,'plotWhere',gca,'Orientation','vertical',...
 			'titleStr','','xlabelStr','','ylabelStr','Event Num','YTick',[0 max(timePointsNum)]);
-
 
 		
 		if numel(corrMatrix)>1

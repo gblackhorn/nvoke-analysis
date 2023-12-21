@@ -37,7 +37,7 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 
 	% create a stucture to store correlation and distance data from every recording
 	recNum = numel(alignedData);
-	corrAndDistFields = {'recName','roiNames','roiPairNames','corrMatrix','corrFlat','distMatrix','distFlat'};
+	corrAndDistFields = {'recName','roiNames','roiPairNames','binSize','corrMatrix','corrFlat','distMatrix','distFlat'};
 	corrAndDist = empty_content_struct(corrAndDistFields,recNum);
 
 	% select folder to save figures
@@ -72,6 +72,7 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 			corrAndDist(n).recName = recDateTime;
 			corrAndDist(n).roiNames = roiNames;
 			corrAndDist(n).roiPairNames = roiPairNames;
+			corrAndDist(n).binSize = binSize;
 			corrAndDist(n).corrMatrix = corrMatrix;
 			corrAndDist(n).corrFlat = corrFlat;
 			corrAndDist(n).distMatrix = distMatrix;

@@ -1,38 +1,24 @@
-function [corrMatrix,corrFlat,varargout] = roiCorr(alignedDataRec,binSize,varargin)
+function [corrMatrix,corrFlat,varargout] = roiCorr(matrixData,varargin)
 	% Convert event time points (unit: seconds) from multiple ROIs in one single recording to binary
 	% matrix (one column per roi), and calculate the activity correlation between all neuron pairs
 
-	% alignedDataRec: alignedData for one recording. Get this using the function 'get_event_trace_allTrials' 
-	% binSize: unit: second
+	% matrixData: each column being the activity data of one neuron
 	% corrMatrix: roi correlation paires. Can be used to plot heatmap
 		% % example: h = heatmap(plotWhere,corrMatrix,'Colormap',jet);
 	% corrFlat: Get the upper triangular part of corrMatrix and flatten it to a vector
-	% roiNames: Names of ROIs. This can be used as xLabels and yLabels when displaying corrMatrix using heatmap
-		% example: h = heatmap(plotWhere,xLabels,yLabels,corrMatrix,'Colormap',jet);
 
 	% Example:
 	%		
 
 	% Defaults
-	eventTimeType = 'peak_time'; % rise_time/peak_time
-	% dispCorr = false;
-	% filters = {[nan 1 nan nan], [1 nan nan nan], [nan nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: excitatory AP during OG
-		% filter number must be equal to stim_names
 
 	% Optionals
-	for ii = 1:2:(nargin-2)
-	    if strcmpi('eventTimeType', varargin{ii}) 
-	        eventTimeType = varargin{ii+1}; 
-	    % elseif strcmpi('plotWhere', varargin{ii})
-        %     plotWhere = varargin{ii+1};
-	    % elseif strcmpi('dispCorr', varargin{ii})
-        %     dispCorr = varargin{ii+1};
+	for ii = 1:2:(nargin-1)
+	    if strcmpi('roiNames', varargin{ii}) 
+	        roiNames = varargin{ii+1}; 
 	    end
 	end
 
-	% get events' time from all the ROIs and create a binary matrix. Each column contains events
-	% info of a single ROI. 1 if a time bin contains an event, 0 if there is no event in the bin
-	[binaryMatrix,timePointsNum,roiNames,recDateTime] = recEventBinaryMatrix(alignedDataRec,binSize,'eventTimeType',eventTimeType);
 
 
 	% compute the correlation matrix
@@ -44,24 +30,24 @@ function [corrMatrix,corrFlat,varargout] = roiCorr(alignedDataRec,binSize,vararg
 	corrFlat = corrMatrix(triu(true(size(corrMatrix)),1));
 
 
-	% Prepare the roiPairNames for 'corrFlat'
-	% Calculate the number of neurons
-	numNeurons = size(corrMatrix, 1);
+	if exist('roiNames','var') && ~isempty(roiNames)
+		% Prepare the roiPairNames for 'corrFlat'
+		% Calculate the number of neurons
+		numNeurons = size(corrMatrix, 1);
 
-	% Initialize a cell array to hold the neuron pair names
-	roiPairNames = cell(length(corrFlat), 1);
+		% Initialize a cell array to hold the neuron pair names
+		roiPairNames = cell(length(corrFlat), 1);
 
-	% Obtain the upper triangular indices
-	[row, col] = find(triu(ones(numNeurons, numNeurons), 1));
+		% Obtain the upper triangular indices
+		[row, col] = find(triu(ones(numNeurons, numNeurons), 1));
 
-	% Loop through each index to get neuron names
-	for i = 1:length(row)
-	    roiPairNames{i} = [roiNames{row(i)}, '-', roiNames{col(i)}];
+		% Loop through each index to get neuron names
+		for i = 1:length(row)
+		    roiPairNames{i} = [roiNames{row(i)}, '-', roiNames{col(i)}];
+		end
+
+		varargout{1} = roiPairNames;
+	else
+		varargout{1} = '';
 	end
-
-
-	varargout{1} = timePointsNum;
-	varargout{2} = roiNames;
-	varargout{3} = roiPairNames;
-	varargout{4} = recDateTime;
 end
