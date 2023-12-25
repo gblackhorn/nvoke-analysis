@@ -22,7 +22,7 @@ function [corrMatrix,corrFlat,varargout] = roiCorr(matrixData,varargin)
 
 
 	% compute the correlation matrix
-	corrMatrix = corr(binaryMatrix);
+	corrMatrix = corr(matrixData);
 
 	% Flatten the upper triangular part (excluding the diagonal) for scatter plot
 	% flattened correlation can be used to pair with flattened distances between ROI pairs

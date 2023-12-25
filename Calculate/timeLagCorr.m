@@ -13,10 +13,8 @@ function [corrMatrix,varargout] = timeLagCorr(matrixData,binLag,varargin)
 
 	% Optionals
 	for ii = 1:2:(nargin-2)
-	    if strcmpi('eventTimeType', varargin{ii}) 
-	        eventTimeType = varargin{ii+1}; 
-	    % elseif strcmpi('plotWhere', varargin{ii})
-        %     plotWhere = varargin{ii+1};
+	    if strcmpi('ignoreAutoCorr', varargin{ii}) 
+	        ignoreAutoCorr = varargin{ii+1}; 
 	    % elseif strcmpi('dispCorr', varargin{ii})
         %     dispCorr = varargin{ii+1};
 	    end
@@ -42,5 +40,4 @@ function [corrMatrix,varargout] = timeLagCorr(matrixData,binLag,varargin)
 	        end
 	    end
 	end
-
 end
