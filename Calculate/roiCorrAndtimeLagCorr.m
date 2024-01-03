@@ -226,7 +226,7 @@ function [timeLagCorrData,varargout] = roiCorrAndtimeLagCorr(alignedData,binSize
 			end
 
 			if saveFig
-				saveDir = savePlot(fig,'save_dir',saveDir,'guiSave',false,'fname',figName);
+				saveDir = savePlot(f,'save_dir',saveDir,'guiSave',false,'fname',fName);
 			end
 		end
 	end
