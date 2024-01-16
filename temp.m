@@ -900,3 +900,21 @@ alignedDataRec = alignedData_allTrials(1);
 
 [corrAndDist,corrFlatAll,distFlatAll] = roiCorrAndDistMultiRec(alignedData_allTrials,binSize,...
 	'visualizeData',visualizeData,'eventTimeType',eventTimeType,'dbMode',false); 
+
+
+%% ==========
+videoFileIsxd = '';
+videoFileTiff = '';
+imuFileIsxd = '';
+imuFileTiff = '';
+
+isx.export_movie_to_tiff(videoFileIsxd,videoFileTiff);
+isx.export_movie_to_tiff(videoFileIsxd,videoFileTiff);
+
+
+
+%% ==========
+saveFig = false;
+dbMode = true; % debug mode
+[timeLagCorr] = roiCorrAndtimeLagCorr(alignedData_allTrials,0.05,[1:3],...
+	'visualizeData',true,'saveFig',saveFig,'dbMode',true);

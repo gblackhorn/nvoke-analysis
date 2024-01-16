@@ -108,7 +108,7 @@ end
 
 %% ==================== 
 % 2.1.2 Spatial filter and motion correct the movies
-movieKeyword = '2023-06-28*.isxd'; % Code will search for files with names like this and motion-correct them
+movieKeyword = '2024-01*.isxd'; % Code will search for files with names like this and motion-correct them
 rmBPfile = true; % true/false. Remove the spatial filtered file ('bp_file') after creating the motion-corrected video
 [movieFolder,~,chosenStatus] = getInputOutputFolders('inputFolder',FolderPathVA.project,...
 	'outputFolder',FolderPathVA.project,'inputMSG','Chose a folder containing cropped files');

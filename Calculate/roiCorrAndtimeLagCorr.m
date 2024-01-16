@@ -24,6 +24,7 @@ function [timeLagCorrData,varargout] = roiCorrAndtimeLagCorr(alignedData,binSize
 	saveFig = false;
 	guiSave = false;
 	saveDir = [];
+	listRec = true; % if true, list recordings
 	dbMode = false; % debug mode
 
 	% Optionals
@@ -40,6 +41,8 @@ function [timeLagCorrData,varargout] = roiCorrAndtimeLagCorr(alignedData,binSize
             guiSave = varargin{ii+1};
 	    elseif strcmpi('saveDir', varargin{ii})
             saveDir = varargin{ii+1};
+	    elseif strcmpi('listRec', varargin{ii})
+            listRec = varargin{ii+1};
 	    elseif strcmpi('dbMode', varargin{ii})
             dbMode = varargin{ii+1};
 	    end
@@ -71,9 +74,10 @@ function [timeLagCorrData,varargout] = roiCorrAndtimeLagCorr(alignedData,binSize
 
 	% loop through every recording and collect data
 	for n = 1:recNum
-		if dbMode
+		if dbMode || listRec
 			fprintf('recording (%d/%d): %s\n',n,recNum,alignedData(n).trialName);
-			if n == 9
+			if dbMode && n == 13
+				fprintf('pause for debugging\n')
 				pause
 			end
 		end
@@ -147,77 +151,79 @@ function [timeLagCorrData,varargout] = roiCorrAndtimeLagCorr(alignedData,binSize
 					'titleStr','','xlabelStr','','ylabelStr','Event Num','YTick',[0 max(timePointsNum)],'FontSize',histFontSize);
 
 
-				% Figure 2: ROI correlation hierarchical clustered
-				figIDX = 2; 
-				[heatmapIDX,horHistIDX,vertHistIDX] = getPlotTileIDX(figIDX,figColNum,tileMultiplier,vertHistHeight,horHistWidth);
-
-				% Display the hierarchical clustered cross correlation using heatmap
-				nexttile(fTile,heatmapIDX,[heatmapHeight heatmapWidth]);
-				[corrMatrixHC,outperm] = hierachicalCluster(corrMatrix);
-				roiNamesHC = roiNamesShort(outperm);
-				timePointsNumHC = timePointsNum(outperm);
-				heatmapHCHandle = heatMapRoiCorr(corrMatrixHC,roiNamesHC,'recName',recDateTime,'plotWhere',gca,...
-					'excludeSelfCorrColor',true,'FontSize',heatFontsize);
-				title('Hierachical clustered cross correlation')
-
-				% add histogram next to the heatmap above showing the timePoint number in each ROI
-				% horizontal histo on the left side of the heatmap
-				nexttile(fTile,horHistIDX,[heatmapHeight horHistWidth]); 
-				stylishHistogram(timePointsNumHC,'plotWhere',gca,'Orientation','horizontal',...
-					'titleStr','','xlabelStr','Event Num','ylabelStr','','XTick',[0 max(timePointsNum)],'FontSize',histFontSize);
-				% vertical histo below the the heatmap
-				nexttile(fTile,vertHistIDX,[vertHistHeight heatmapWidth]); 
-				stylishHistogram(timePointsNumHC,'plotWhere',gca,'Orientation','vertical',...
-					'titleStr','','xlabelStr','','ylabelStr','Event Num','YTick',[0 max(timePointsNum)],'FontSize',histFontSize);
-
-
-
-				% display the cross correlation with time lag using heatmap
-				for m = 1:binLagNum
-					% Figure (m+2): Time-lag cross-correlation 
-					figIDX = 2*m+1; % (m-1)*2+1+2
-					[heatmapIDX,horHistIDX,vertHistIDX] = getPlotTileIDX(figIDX,figColNum,tileMultiplier,vertHistHeight,horHistWidth);
-					% timeLagCorrMatrix = timeLagCorr(binaryMatrix,binLag(m));
-
-					% Display the roi time-lag cross-correlation using heatmap
-					nexttile(fTile,heatmapIDX,[heatmapHeight heatmapWidth]); 
-					heatmapHandle = heatMapRoiCorr(corrMatrixTimeLagCells{m},roiNamesShort,'recName',recDateTime,'plotWhere',gca,...
-						'excludeSelfCorrColor',true,'FontSize',heatFontsize);
-					title(sprintf('Time-lag (%d-bin) cross-corr',m));
-
-					% add histogram next to the heatmap above showing the timePoint number in each ROI
-					% horizontal histo on the left side of the heatmap
-					nexttile(fTile,horHistIDX,[heatmapHeight horHistWidth]); 
-					stylishHistogram(timePointsNum,'plotWhere',gca,'Orientation','horizontal',...
-						'titleStr','','xlabelStr','Event Num','ylabelStr','','XTick',[0 max(timePointsNum)],'FontSize',histFontSize);
-					% vertical histo below the the heatmap
-					nexttile(fTile,vertHistIDX,[vertHistHeight heatmapWidth]); 
-					stylishHistogram(timePointsNum,'plotWhere',gca,'Orientation','vertical',...
-						'titleStr','','xlabelStr','','ylabelStr','Event Num','YTick',[0 max(timePointsNum)],'FontSize',histFontSize);
-
+				if numel(corrMatrix)>1
 					% Figure 2: ROI correlation hierarchical clustered
-					figIDX = 2*m+2; 
+					figIDX = 2; 
 					[heatmapIDX,horHistIDX,vertHistIDX] = getPlotTileIDX(figIDX,figColNum,tileMultiplier,vertHistHeight,horHistWidth);
 
 					% Display the hierarchical clustered cross correlation using heatmap
 					nexttile(fTile,heatmapIDX,[heatmapHeight heatmapWidth]);
-					[timeLagCorrMatrixHC,outperm] = hierachicalCluster(corrMatrixTimeLagCells{m});
-					TLroiNamesHC = roiNamesShort(outperm);
-					TLtimePointsNumHC = timePointsNum(outperm);
-					TLheatmapHCHandle = heatMapRoiCorr(timeLagCorrMatrixHC,TLroiNamesHC,'recName',recDateTime,'plotWhere',gca,...
+					[corrMatrixHC,outperm] = hierachicalCluster(corrMatrix);
+					roiNamesHC = roiNamesShort(outperm);
+					timePointsNumHC = timePointsNum(outperm);
+					heatmapHCHandle = heatMapRoiCorr(corrMatrixHC,roiNamesHC,'recName',recDateTime,'plotWhere',gca,...
 						'excludeSelfCorrColor',true,'FontSize',heatFontsize);
-					% title('Hierachical clustered cross correlation')
-					title(sprintf('Time-lag (%d-bin) Hierachical clustered',m));
+					title('Hierachical clustered cross correlation')
 
 					% add histogram next to the heatmap above showing the timePoint number in each ROI
 					% horizontal histo on the left side of the heatmap
 					nexttile(fTile,horHistIDX,[heatmapHeight horHistWidth]); 
-					stylishHistogram(TLtimePointsNumHC,'plotWhere',gca,'Orientation','horizontal',...
+					stylishHistogram(timePointsNumHC,'plotWhere',gca,'Orientation','horizontal',...
 						'titleStr','','xlabelStr','Event Num','ylabelStr','','XTick',[0 max(timePointsNum)],'FontSize',histFontSize);
 					% vertical histo below the the heatmap
 					nexttile(fTile,vertHistIDX,[vertHistHeight heatmapWidth]); 
-					stylishHistogram(TLtimePointsNumHC,'plotWhere',gca,'Orientation','vertical',...
+					stylishHistogram(timePointsNumHC,'plotWhere',gca,'Orientation','vertical',...
 						'titleStr','','xlabelStr','','ylabelStr','Event Num','YTick',[0 max(timePointsNum)],'FontSize',histFontSize);
+
+
+
+					% display the cross correlation with time lag using heatmap
+					for m = 1:binLagNum
+						% Figure (m+2): Time-lag cross-correlation 
+						figIDX = 2*m+1; % (m-1)*2+1+2
+						[heatmapIDX,horHistIDX,vertHistIDX] = getPlotTileIDX(figIDX,figColNum,tileMultiplier,vertHistHeight,horHistWidth);
+						% timeLagCorrMatrix = timeLagCorr(binaryMatrix,binLag(m));
+
+						% Display the roi time-lag cross-correlation using heatmap
+						nexttile(fTile,heatmapIDX,[heatmapHeight heatmapWidth]); 
+						heatmapHandle = heatMapRoiCorr(corrMatrixTimeLagCells{m},roiNamesShort,'recName',recDateTime,'plotWhere',gca,...
+							'excludeSelfCorrColor',true,'FontSize',heatFontsize);
+						title(sprintf('Time-lag (%d-bin) cross-corr',m));
+
+						% add histogram next to the heatmap above showing the timePoint number in each ROI
+						% horizontal histo on the left side of the heatmap
+						nexttile(fTile,horHistIDX,[heatmapHeight horHistWidth]); 
+						stylishHistogram(timePointsNum,'plotWhere',gca,'Orientation','horizontal',...
+							'titleStr','','xlabelStr','Event Num','ylabelStr','','XTick',[0 max(timePointsNum)],'FontSize',histFontSize);
+						% vertical histo below the the heatmap
+						nexttile(fTile,vertHistIDX,[vertHistHeight heatmapWidth]); 
+						stylishHistogram(timePointsNum,'plotWhere',gca,'Orientation','vertical',...
+							'titleStr','','xlabelStr','','ylabelStr','Event Num','YTick',[0 max(timePointsNum)],'FontSize',histFontSize);
+
+						% Figure 2: ROI correlation hierarchical clustered
+						figIDX = 2*m+2; 
+						[heatmapIDX,horHistIDX,vertHistIDX] = getPlotTileIDX(figIDX,figColNum,tileMultiplier,vertHistHeight,horHistWidth);
+
+						% Display the hierarchical clustered cross correlation using heatmap
+						nexttile(fTile,heatmapIDX,[heatmapHeight heatmapWidth]);
+						[timeLagCorrMatrixHC,outperm] = hierachicalCluster(corrMatrixTimeLagCells{m});
+						TLroiNamesHC = roiNamesShort(outperm);
+						TLtimePointsNumHC = timePointsNum(outperm);
+						TLheatmapHCHandle = heatMapRoiCorr(timeLagCorrMatrixHC,TLroiNamesHC,'recName',recDateTime,'plotWhere',gca,...
+							'excludeSelfCorrColor',true,'FontSize',heatFontsize);
+						% title('Hierachical clustered cross correlation')
+						title(sprintf('Time-lag (%d-bin) Hierachical clustered',m));
+
+						% add histogram next to the heatmap above showing the timePoint number in each ROI
+						% horizontal histo on the left side of the heatmap
+						nexttile(fTile,horHistIDX,[heatmapHeight horHistWidth]); 
+						stylishHistogram(TLtimePointsNumHC,'plotWhere',gca,'Orientation','horizontal',...
+							'titleStr','','xlabelStr','Event Num','ylabelStr','','XTick',[0 max(timePointsNum)],'FontSize',histFontSize);
+						% vertical histo below the the heatmap
+						nexttile(fTile,vertHistIDX,[vertHistHeight heatmapWidth]); 
+						stylishHistogram(TLtimePointsNumHC,'plotWhere',gca,'Orientation','vertical',...
+							'titleStr','','xlabelStr','','ylabelStr','Event Num','YTick',[0 max(timePointsNum)],'FontSize',histFontSize);
+					end
 				end
 				sgtitle(fName,'FontSize',14,'FontWeight','Bold')
 
@@ -226,7 +232,7 @@ function [timeLagCorrData,varargout] = roiCorrAndtimeLagCorr(alignedData,binSize
 			end
 
 			if saveFig
-				saveDir = savePlot(fig,'save_dir',saveDir,'guiSave',false,'fname',figName);
+				saveDir = savePlot(f,'save_dir',saveDir,'guiSave',false,'fname',fName);
 			end
 		end
 	end

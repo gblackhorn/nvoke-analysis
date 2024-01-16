@@ -695,6 +695,17 @@ dbMode = false; % true/false
 	'saveFig',saveFig,'saveDir',FolderPathVA.fig,'guiSave',true,'dbMode',dbMode); 
 
 %% ==================== 
+% Fig 5.1 synchronicity
+close all
+saveFig = true;
+eventTimeType = 'peak_time'; % rise_time/peak_time
+binSize = 0.1; % unit: second
+dbMode = false; % debug mode
+[timeLagCorr,FolderPathVA.fig] = roiCorrAndtimeLagCorr(alignedData_allTrials,binSize,[1:3],'visualizeData',true,...
+	'saveFig',saveFig,'saveDir',FolderPathVA.fig,'guiSave',true,'dbMode',dbMode);
+
+
+%% ==================== 
 % Fig 6 or supplementary data
 % 9.1.3 Plot the auto-correlogram of events and the probability density function of inter-event time
 close all
