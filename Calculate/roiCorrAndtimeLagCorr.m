@@ -9,6 +9,7 @@ function [timeLagCorrData,varargout] = roiCorrAndtimeLagCorr(alignedData,binSize
 	% Defaults
 	eventTimeType = 'peak_time'; % rise_time/peak_time
 	roiNameExcessiveStr = 'neuron'; % remove this string from the ROI name to shorten it
+	useNoLagOutperm = true; % if true, use the order of hierachical cluster of no-lag data for the lag data correlaion
 	visualizeData = false;
 	figColNum = 4; % one figure colum contains one heatmap paired with a vertial and a horizontal histogram
 	tileMultiplier = 4; % Multiple the number of tiles with this parametter for Managing the size of plots
@@ -206,7 +207,11 @@ function [timeLagCorrData,varargout] = roiCorrAndtimeLagCorr(alignedData,binSize
 
 						% Display the hierarchical clustered cross correlation using heatmap
 						nexttile(fTile,heatmapIDX,[heatmapHeight heatmapWidth]);
-						[timeLagCorrMatrixHC,outperm] = hierachicalCluster(corrMatrixTimeLagCells{m});
+						if useNoLagOutperm
+							timeLagCorrMatrixHC = corrMatrixTimeLagCells{m}(outperm,outperm);
+						else
+							[timeLagCorrMatrixHC,outperm] = hierachicalCluster(corrMatrixTimeLagCells{m});
+						end
 						TLroiNamesHC = roiNamesShort(outperm);
 						TLtimePointsNumHC = timePointsNum(outperm);
 						TLheatmapHCHandle = heatMapRoiCorr(timeLagCorrMatrixHC,TLroiNamesHC,'recName',recDateTime,'plotWhere',gca,...
