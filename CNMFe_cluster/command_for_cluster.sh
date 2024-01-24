@@ -45,18 +45,19 @@ rsync -av --include '*/' --include '*.sh' --exclude '*' $flashHomeDir/ deigo:$bu
 # 3. Copy data files from bucket to flash using rsync
 
 # Set folder path on Bucket to Copy data from bucket to flash
-bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/20230609_re-run_motion-correction/'
-# bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/series_20230627/'
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2024-01_30Hz/'
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2024-01_20Hz/'
 # bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/Moscope/INSCOPIX_tiff/M8/'
 # bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/Moscope/INSCOPIX_tiff/M9_BMC/'
 # bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/Moscope/INSCOPIX_tiff/M9_extra/'
 
 # Create a folder, if it doesn't exist, to store data
-mkdir /flash/UusisaariU/GD/data_series # make a folder with a fixed name
+mkdir /flash/UusisaariU/GD/data_2024-01_20Hz # make a folder with a fixed name
 mktemp -d /flash/UusisaariU/GD/20230609_reMC_data.XXXXXX # make a folder whos name is a fixed string followed by a random string (.XXXXXX) 
 
 # Assign the new dir to 'flashdatadir'
-flashdatadir='/flash/UusisaariU/GD/data_series'
+flashdatadir='/flash/UusisaariU/GD/data_2024-01_30Hz/'
+flashdatadir='/flash/UusisaariU/GD/data_2024-01_20Hz/'
 
 # Copy the content in bucketdatadir to flashdatadir using rsync
 rsync -av --no-group --no-perms deigo:$bucketdatadir/ $flashdatadir/ 
@@ -140,7 +141,8 @@ scancel xxxxxxx # xxxxxxx is a job ID
 # If needed, you can run some script using a matlab with GUI
 
 # Load matlab module 
-module load matlab
+# module avail matlab
+module load matlab/R2022a
 
 
 

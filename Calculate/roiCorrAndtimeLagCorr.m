@@ -15,6 +15,7 @@ function [timeLagCorrData,varargout] = roiCorrAndtimeLagCorr(alignedData,binSize
 	tileMultiplier = 4; % Multiple the number of tiles with this parametter for Managing the size of plots
 	vertHistHeight = 1; % width of the the vertical histogram
 	horHistWidth = 1; % height of the horizontal histogram
+	heatmapGroupPerRow = 2; % number of heatmap groups (heatmap + re-ordered heatmap as a group)
 
 	unit_width = 0.2; % normalized to display
 	unit_height = 0.4; % normalized to display
@@ -116,11 +117,12 @@ function [timeLagCorrData,varargout] = roiCorrAndtimeLagCorr(alignedData,binSize
 
 				% Create a fig canvas and organize tiles
 				heatmapNum = (1+binLagNum)*2; % cross correlation withou time lag will always be plotted
-				figRowNum = ceil((1+binLagNum)/2);
+				heatmapRowNum = ceil((1+binLagNum)/heatmapGroupPerRow); % number of rows for correlation plots
+				figUnitNum = (heatmapRowNum+1)*figColNum; % add 1 row for plotting synchronicity
 				heatmapHeight = (tileMultiplier-vertHistHeight);
 				heatmapWidth = (tileMultiplier-horHistWidth);
-				f = fig_canvas(heatmapNum,'unit_width',unit_width,'unit_height',unit_height,'column_lim',figColNum,'fig_name',fName);
-				fTile = tiledlayout(f,figRowNum*tileMultiplier,figColNum*tileMultiplier); % create tiles 
+				f = fig_canvas(figUnitNum,'unit_width',unit_width,'unit_height',unit_height,'column_lim',figColNum,'fig_name',fName);
+				fTile = tiledlayout(f,heatmapRowNum*tileMultiplier+ceil(0.5*tileMultiplier),figColNum*tileMultiplier); % create tiles 
 
 
 				% remove the 'neuron' part from the roiName for clearer display in the plots. For example,
@@ -230,14 +232,25 @@ function [timeLagCorrData,varargout] = roiCorrAndtimeLagCorr(alignedData,binSize
 							'titleStr','','xlabelStr','','ylabelStr','Event Num','YTick',[0 max(timePointsNum)],'FontSize',histFontSize);
 					end
 				end
+
+				% plot the synchronicity
+				syncIDX = heatmapRowNum*tileMultiplier*figColNum*tileMultiplier+1;
+				syncHeight = ceil(0.5*tileMultiplier);
+				syncWidth = figColNum*tileMultiplier;
+				nexttile(fTile,syncIDX,[syncHeight syncWidth])
+				displayRecSyncPerc(gca,alignedData(n),binSize);
+
+
+				% add a name to the figure
 				sgtitle(fName,'FontSize',14,'FontWeight','Bold')
 
 				% t.TileSpacing = 'compact'; % Reduces space between tiles
 				% t.Padding = 'compact'; % Reduces padding around the outer edges
-			end
 
-			if saveFig
-				saveDir = savePlot(f,'save_dir',saveDir,'guiSave',false,'fname',fName);
+				if saveFig
+					saveDir = savePlot(f,'save_dir',saveDir,'guiSave',false,'fname',fName);
+				end
+
 			end
 		end
 	end

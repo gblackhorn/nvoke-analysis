@@ -147,7 +147,7 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
         EventFreqInBins = emptyStruct({'TrialNames','roiNames','EventFqInBins','stimNum'},[1, roi_num]); % create an empty structure
         [EventFreqInBins.TrialNames] = TrialNames{:}; % add trial names in struct EventFreqInBins
         [EventFreqInBins.roiNames] = roiNames{:}; % add roi names in struct EventFreqInBins
-        binNames = {};
+        % binNames = {};
 
         % Get the time of stimulation related events
         if stimEventsPos && ~isempty(stimEvents) && ~isempty(EventsProps)

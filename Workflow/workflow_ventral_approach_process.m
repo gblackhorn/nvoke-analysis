@@ -134,7 +134,7 @@ end
 
 %% ==================== 
 % 3.1.1 Export nvoke movies to tiff files for further work using ImageJ, matlab, etc.
-movieKeyword = '*.isxd'; % used to filter 
+movieKeyword = '2024-01*-MC.isxd'; % used to filter 
 overwrite = false;
 
 input_isxd_folder = uigetdir(FolderPathVA.project,...

@@ -145,7 +145,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
 
 
         % ==========
-        [barPlotInfo] = barplot_with_errBar(y(:)','plotWhere',plotWhere,...
+        [barPlotInfo] = barplot_with_errBar(y(:)','barX',x,'plotWhere',plotWhere,...
             'errBarVal',y_error(:)','barNames',group_names,'dataNumVal',[barInfo.data.n]);
 
 

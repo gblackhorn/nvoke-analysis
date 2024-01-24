@@ -16,7 +16,7 @@ function [varargout] = stylishHistogram(data,varargin)
     ylabelStr = 'y label';
     titleStr = 'Stylish Histogram';
 
-    FaceColor = [0 0.5 0.8];
+    FaceColor = '#8F8F8F';
     bgColor = [1 1 1];
     Orientation = 'vertical'; % vertical/horizontal
 

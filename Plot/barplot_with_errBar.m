@@ -26,7 +26,9 @@ function [barInfo,varargout] = barplot_with_errBar(barData,varargin)
 
 
     for ii = 1:2:(nargin-1)
-        if strcmpi('barNames', varargin{ii})
+        if strcmpi('barX', varargin{ii})
+            barX = varargin{ii+1};
+        elseif strcmpi('barNames', varargin{ii})
             barNames = varargin{ii+1};
         elseif strcmpi('errBarVal', varargin{ii})
             errBarVal = varargin{ii+1};
@@ -72,7 +74,10 @@ function [barInfo,varargout] = barplot_with_errBar(barData,varargin)
         barNum = numel(barData);
         dataNumVal = cellfun(@(x) numel(x),barData);
     end
-    barX = 1:barNum;
+
+    if ~exist('barX','var')
+        barX = 1:barNum;
+    end
     nNumStr = num2cell(dataNumVal(:)');
     nNumStr = cellfun(@(x) num2str(x),nNumStr,'UniformOutput',false);
 

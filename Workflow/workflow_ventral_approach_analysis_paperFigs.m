@@ -74,7 +74,7 @@ uisave({'recdata_organized','alignedData_allTrials','opt','adata'},...
 
 %% ====================
 % 8 Align traces from all trials. Also collect the properties of events
-adata.event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
+adata.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
 adata.eventTimeType = 'peak_time'; % rise_time/peak_time. Pick one for event time
 adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 adata.event_data_group = 'peak_lowpass';
@@ -138,7 +138,7 @@ end
 % Note: ROIs of all trials in alignedData_allTrials can be plotted. 
 %	Use 'filter' to screen ROIs based on the effect of stimulation
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
@@ -182,7 +182,7 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 % 9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 gui_save = 'on';
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
@@ -695,7 +695,7 @@ dbMode = false; % true/false
 	'saveFig',saveFig,'saveDir',FolderPathVA.fig,'guiSave',true,'dbMode',dbMode); 
 
 %% ==================== 
-% Fig 5.1 synchronicity
+% Fig 5.1 cross-correlation with timeLag, synchronicity
 close all
 saveFig = true; % true/false
 eventTimeType = 'peak_time'; % rise_time/peak_time

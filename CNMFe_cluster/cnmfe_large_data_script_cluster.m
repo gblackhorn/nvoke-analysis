@@ -62,7 +62,7 @@ deconv_options = struct('type', 'ar2', ... % default=ar1, model of the calcium t
     'smin', -5, ...         % default: -5. minimum spike size. When the value is negative, the actual threshold is abs(smin)*noise level
     'optimize_pars', true, ...  % optimize AR coefficients
     'optimize_b', true, ...% optimize the baseline);
-    'max_tau', 100);    % default=100. maximum decay time (unit: frame);
+    'max_tau', Fs*5);    % default=100. maximum decay time (unit: frame);
 
 nk = 1;             % default=3, detrending the slow fluctuation. usually 1 is fine (no detrending)
 % when changed, try some integers smaller than total_frame/(Fs*30)
