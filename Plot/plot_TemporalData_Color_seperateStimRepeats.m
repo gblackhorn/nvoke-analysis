@@ -55,6 +55,8 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
             stimEventCat = varargin{ii+1}; % 
         elseif strcmpi('stimRefType', varargin{ii})
             stimRefType = varargin{ii+1}; % 
+        elseif strcmpi('roiNames', varargin{ii})
+            roiNames = varargin{ii+1}; % 
         elseif strcmpi('followEventsTime', varargin{ii})
             followEventsTime = varargin{ii+1}; % 
         elseif strcmpi('followDelayType', varargin{ii})
@@ -74,12 +76,21 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
         end
 	end	
 
+	% create roiNames if it's empty
+	if ~exist('roiNames','var')
+		roiNum = size(fluroData,2);
+		roiNames = cell(roiNum,1);
+		for rn = 1:roiNum
+			roiNames{rn} = sprintf('roi-%g',rn);
+		end
+	end
+
 
 	% Sort the peri-stimulation traces according to the events time
 	[sortedIDX,sortedFdSection,sortedEventMarker,sortedRowNames,timeDuration,posNum,sortedEventNumIDX] = sortPeriStimTraces(fluroData,timeData,...
 			eventsTime,stimInfo,'preTime',preTime,'postTime',postTime,...
 			'eventCat',eventCat,'stimEventCat',stimEventCat,'followEventCat',followEventCat,...
-			'stimRefType',stimRefType,'debugMode',debug_mode);
+			'stimRefType',stimRefType,'roiNames',roiNames,'debugMode',debug_mode);
 
     f = fig_canvas(2,'unit_width',unit_width,'unit_height',unit_height,'column_lim',1,...
 	    	'fig_name',titleStr); % create a figure

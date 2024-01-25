@@ -108,9 +108,9 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 
 		if debugMode
 			fprintf('\nstimName (%g/%g): %s\n',n,num_C,stimName);
-			if n == 1
-				pause
-			end
+			% if n == 1
+			% 	pause
+			% end
 		end
 
 		IDX_trial = find(ic == n);
@@ -124,6 +124,10 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 			recDateTimeInfo = trialName(1:15);
 			if debugMode
 				fprintf(' recName (%g/%g): %s\n',nst,num_stimTrial,trialName);
+				if nst == 16
+					pause
+				end
+
 			end
 
 			traceInfo_trial = alignedData(IDX_trial(nst)).traces;
@@ -160,6 +164,10 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 			traceData_cell_trials{nst} = [traceData_cell_rois{:}];
 			eventProp_cell_trials{nst} = [eventProp_cell_rois{:}];
 		end
+
+		% Downsample the high sampling frequency data before concatenate 
+		[traceData_cell_trials] = downSampleHighFreqCell(traceData_cell_trials);
+
 		tracesData = [traceData_cell_trials{:}];
 		eventProp_trials = [eventProp_cell_trials{:}];
 
@@ -212,5 +220,34 @@ function [recNum,recDateNum,roiNum,tracesNum] = calcDataNum(eventProp_trials)
 		recDateNum = 0;
 		roiNum = 0;
 		tracesNum = 0;
+	end
+end
+
+function [CellArrayDataDS] = downSampleHighFreqCell(CellArrayData)
+	% Check the datapoint number in every cell of CellArrayData. Downsample the high frequency cell 
+
+	CellArrayDataDS = CellArrayData;
+
+	% Get the data numbers in every cell
+	CellArrayDataNum = cellfun(@(x) length(x),CellArrayData);
+
+	% Get the unique numbers
+	CellArrayDataNumUnique = unique(CellArrayDataNum);
+
+	% Get the smalles non-zero number. Cells with bigger data number will be downsampled to this
+	% number
+	idx = find(CellArrayDataNumUnique,1);
+	targetLength = CellArrayDataNumUnique(idx);
+
+	% Downsample data
+	if ~isempty(targetLength)
+	biggerLengthIDX = find(CellArrayDataNum>targetLength);
+		if ~isempty(biggerLengthIDX) && ~isempty(targetLength)
+			for n = 1:numel(biggerLengthIDX)
+				cellIDX = biggerLengthIDX(n);
+				originalLength = CellArrayDataNum(cellIDX);
+				CellArrayDataDS{cellIDX} = resample(CellArrayData{cellIDX},targetLength,originalLength);
+			end
+		end
 	end
 end

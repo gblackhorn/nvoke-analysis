@@ -232,6 +232,10 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
         if roi_num == 0 && ~exist('binEdges','var')
             binEdges = [];
         end
+
+        if ~exist('binNames','var')
+            binNames = {};
+        end
     end
     EventFreqInBins = [EventFreqInBins_cell{:}];
     varargout{1} = binEdges;

@@ -251,7 +251,7 @@ titleStr = sprintf('violinPlot of a single bin from periStim freq%s',normStr);
 % Fig 2 violin plot of specific bins in periStim event frequency
 % 9.1.3
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 gui_save = 'on';
 
 propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
@@ -272,7 +272,7 @@ binRange(1).stim = 'og-5s';
 binRange(1).filters = [0 nan nan nan]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 binRange(1).startTime = startTime1; % Use data in [startTime startTime+winDuration] range
 binRange(2).stim = 'ap-0.1s';
-binRange(2).filters = [1 nan nan nan]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+binRange(2).filters = [nan nan nan nan]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 binRange(2).startTime = startTime2; 
 binRange(3).stim = 'og-5s ap-0.1s';
 binRange(3).filters = [0 nan nan nan]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
@@ -311,8 +311,8 @@ filters = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exA
 % 9.1.4 Plot traces and stim-aligned traces
 % Note: set adata.event_type to 'stimWin' when creating alignedData_allTrials
 close all
-save_fig = false; % true/false
-pause_after_trial = true;
+save_fig = true; % true/false
+pause_after_trial = false;
 
 filter_roi_tf = false; % true/false. If true, screen ROIs
 TraceType = 'aligned'; % 'full'/'aligned'. Plot the full trace or stimulation aligned trace
@@ -356,10 +356,10 @@ end
 % mean and std shade
 % note: 'event_type' for alignedData_allTrials must be 'detected_events'
 close all
-tplot.save_fig = false; % true/false
+tplot.save_fig = true; % true/false
 tplot.plot_combined_data = true; % mean value and std of all traces
 tplot.plot_raw_races = false; % true/false. true: plot every single trace
-tplot.plot_median = false; % true/false. plot raw traces having a median value of the properties specified by 'tplot.medianProp'
+tplot.plot_median = true; % true/false. plot raw traces having a median value of the properties specified by 'tplot.medianProp'
 tplot.medianProp = 'FWHM'; % 
 tplot.shadeType = 'ste'; % plot the shade using std/ste
 tplot.y_range = [-1 2]; % [-10 5],[-3 5],[-2 1]
@@ -514,7 +514,7 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 % 9.3.3 Plot event parameters. Grouped according to categories
 % [9.3] eventProp_all: entry is 'events'
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 plot_combined_data = false;
 parNames = {'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_delay','peak_mag_delta','baseDiffRise'}; % entry: event
 		% 'sponNorm_peak_mag_delta','rise_delay','peak_delay','baseDiffRise'

@@ -119,7 +119,7 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 
 	
 	% Get the ROI names
-	rowNames = {alignedData_trial.traces.roi};
+	originRowNames = {alignedData_trial.traces.roi};
 	roiNum = numel(alignedData_trial.traces);
 	% fluroData = cell(1,roiNum);
 	eventsTime = cell(roiNum,1);
@@ -149,7 +149,7 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 		if sortROI
 			eventNums = cellfun(@(x) numel(x),event_riseTime);
 			[~,descendIDX] = sort(eventNums,'descend');
-			rowNames = rowNames(descendIDX);
+			rowNames = originRowNames(descendIDX);
 			FluroData = FluroData(:,descendIDX);
 			event_riseTime = event_riseTime(descendIDX);
 			event_peakTime = event_peakTime(descendIDX);
@@ -270,7 +270,7 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 		f(3) = plot_TemporalData_Color_seperateStimRepeats(gca,FluroData,timeData,stimInfo,...
 			'preTime',preTime,'postTime',postTime,'stimRefType',stimRefType,...
 			'eventsTime',eventTime,'eventsTimeSort',eventsTimeSort,'markEvents',plot_marker,...
-			'rowNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{3},'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
+			'roiNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{3},'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
 		sgtitle(fig_title{3})
 		
 		fig_title{4} = sprintf('%s %s single-stim fluorescence signal %s firstSponAfterStimDelaySort-%s',...
@@ -279,7 +279,7 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 			'preTime',preTime,'postTime',postTime,'stimRefType',stimRefType,...
 			'eventCat',event_eventCat,'eventsTime',eventTime,'eventsTimeSort',eventsTimeSort,...
 			'stimEventCat',eventCat,'followEventCat',eventCatFollow,'markEvents',plot_marker,...
-			'rowNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{4},'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
+			'roiNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{4},'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
 		sgtitle(fig_title{4})
 
 
