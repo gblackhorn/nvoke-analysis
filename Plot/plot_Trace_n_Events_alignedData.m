@@ -133,7 +133,7 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 
 
 	% Get the time information and traces
-	[timeData,FluroData] = get_TrialTraces_from_alignedData(alignedData_trial,...
+	[timeData,FluroData,FluroDataDecon] = get_TrialTraces_from_alignedData(alignedData_trial,...
 		'norm_FluorData',norm_FluorData); 
 
 
@@ -151,6 +151,7 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 			[~,descendIDX] = sort(eventNums,'descend');
 			rowNames = originRowNames(descendIDX);
 			FluroData = FluroData(:,descendIDX);
+			FluroDataDecon = FluroDataDecon(:,descendIDX);
 			event_riseTime = event_riseTime(descendIDX);
 			event_peakTime = event_peakTime(descendIDX);
             event_eventCat = event_eventCat(descendIDX);
@@ -238,7 +239,7 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 			'column_lim',1,'fig_name',fig_title{1}); % create a figure
 		tlo = tiledlayout(f(1), 3, 1); % setup tiles
 		ax = nexttile(tlo,[2,1]); % activate the ax for trace plot
-		plot_TemporalData_Trace(gca,timeData,FluroData,...
+		plot_TemporalData_Trace(gca,timeData,FluroData,'yData2',FluroDataDecon,...
 			'ylabels',rowNames,'plot_marker',plot_marker,...
 			'marker1_xData',event_peakTime,'marker2_xData',event_riseTime,'shadeData',patchCoor);
 		trace_xlim = xlim;

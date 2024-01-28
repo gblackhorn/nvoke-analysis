@@ -13,8 +13,10 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
     % data.
 
     % Defaults
+    yData2 = [];
     plotInterval = 10; % offset for traces on y axis to seperate them
     xtickInt = 10; % unit: second. x tick interval. 
+    scaleYData = true;
 
     % vis = 'on'; % set the 'visible' of figures
     % decon = true; % true/false plot decon trace
@@ -24,7 +26,9 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
 
     LineWidth = 1;
     line_color = '#616887';
+    line_color2 = '#ADADAD';
     % line_color_decon = '#24283B';
+    markerSize = 20;
     marker1_style = 'o';
     marker2_style = '>';
     marker1_color = '#8D73BA';
@@ -38,7 +42,9 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
 
     % Optionals for inputs
     for ii = 1:2:(nargin-3)
-        if strcmpi('plotInterval', varargin{ii})
+        if strcmpi('yData2', varargin{ii})
+            yData2 = varargin{ii+1}; % if yData2 is input, it will be plot as an overlay. It should have the same size as yData
+        elseif strcmpi('plotInterval', varargin{ii})
             plotInterval = varargin{ii+1}; 
         elseif strcmpi('ylabels', varargin{ii})
             ylabels = varargin{ii+1}; 
@@ -78,19 +84,40 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
         plotWhere = gca;
     end
 
+    % Scale yData using the value of plotInterval to make it the plot
+    if scaleYData
+        yData = yData*plotInterval/2;
+        if ~isempty(yData2)
+            yData2 = yData2*plotInterval/2;
+        end
+    end
+
     trace_num = size(yData,2); % number of traces = number of yData columns
     trace_length = size(yData,1); % data point number of yData
-    trace_y_pos = [0:-20:(trace_num-1)*-20];
+    trace_y_pos = [0:-plotInterval:(trace_num-1)*-plotInterval];
+    % trace_y_pos = [0:-20:(trace_num-1)*-20];
     trace_y_shift = repmat(trace_y_pos,trace_length,1);
     yData_shift = yData+trace_y_shift;
     trace_y_tick = ylabels;
     % spikeFrames_all_cell = cell(trace_num,1);
 
+    if ~isempty(yData2)
+        yData2_shift = yData2+trace_y_shift;
+    end
+
+    % Plot the data traces
     plot(xData,yData_shift,'LineWidth',LineWidth,'Color',line_color);
+    hold on
+
+    % Plot the data traces using yData2 if it is not empty
+    if ~isempty(yData2)
+        plot(xData,yData2_shift,'LineWidth',LineWidth,'Color',line_color2);
+    end
+
     xlim([xData(1) xData(end)]); % set the x-axis limit to the beginnin and the end of xData
     ymax = max(yData_shift(:,1)); % Get the largest y value
     ymin = min(yData_shift(:,end)); % Get the smallest y value
-    ylim([ymin-plotInterval ymax+plotInterval]) % add plotInterval to ymax and ymin and use them for ylim
+    ylim([ymin-plotInterval/2 ymax+plotInterval/2]) % add plotInterval to ymax and ymin and use them for ylim
     hold on
 
     if isempty(marker1_xData)
@@ -105,13 +132,13 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
             marker1_xData_trace = marker1_xData{tn};
             [~,~,marker1_xData_idx] = intersect(marker1_xData_trace,xData); % Get the locations of the time points in xData
             marker1_yData_trace = yData_shift(marker1_xData_idx,tn); % y values of trace at the marker1_xData
-            scatter(marker1_xData_trace,marker1_yData_trace,marker1_style,...
+            scatter(marker1_xData_trace,marker1_yData_trace,markerSize,marker1_style,...
                 'MarkerEdgeColor',marker1_color,'LineWidth', 1);
 
             marker2_xData_trace = marker2_xData{tn};
             [~,~,marker2_xData_idx] = intersect(marker2_xData_trace,xData); % Get the locations of the time points in xData
             marker2_yData_trace = yData_shift(marker2_xData_idx,tn); % y values of trace at the marker2_xData
-            scatter(marker2_xData_trace,marker2_yData_trace,marker2_style,...
+            scatter(marker2_xData_trace,marker2_yData_trace,markerSize,marker2_style,...
                 'MarkerEdgeColor',marker2_color,'LineWidth', 1);
         end
     end
@@ -133,4 +160,5 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
 
     title(titleStr);
     xlabel ('Time (s)');
+    hold off
 end

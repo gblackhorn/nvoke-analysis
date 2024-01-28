@@ -96,7 +96,7 @@ adata.disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-
 adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
 adata.sponfreqFilter.status = true; % true/false. If true, use the following settings to filter ROIs
 adata.sponfreqFilter.field = 'sponfq'; % 
-adata.sponfreqFilter.thresh = 0.06; % Hz. default 0.06
+adata.sponfreqFilter.thresh = 0.05; % Hz. default 0.06
 adata.sponfreqFilter.direction = 'high';
 debug_mode = false; % true/false
 
@@ -301,7 +301,7 @@ debug_mode = false; % true/false
 % Screen the ROIs in alignedData_allTrials with specific settings [stim_names and filters]
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-filters = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+filters = {[nan nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 [alignedData_filtered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
 			'stim_names',stim_names,'filters',filters);
 

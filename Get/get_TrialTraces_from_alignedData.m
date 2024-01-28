@@ -30,15 +30,20 @@ function [timeData,FluroData,varargout] = get_TrialTraces_from_alignedData(align
 	timeData = alignedData_trial.fullTime;
 
 	fullTraceCell = {alignedData_trial.traces.fullTrace};
+	fullTraceCellDecon = {alignedData_trial.traces.fullTraceDecon};
 
 	if ~isnan(pick)
 		fullTraceCell = fullTraceCell(pick);
+		fullTraceCellDecon = fullTraceCellDecon(pick);
 	end
 
 	if norm_FluorData
 		fullTraceCell = cellfun(@(x) x./max(x),fullTraceCell,'UniformOutput',false); % normalize the trace with max value
+		fullTraceCellDecon = cellfun(@(x) x./max(x),fullTraceCellDecon,'UniformOutput',false); % normalize the trace with max value
 	end
 
 	FluroData = [fullTraceCell{:}];
 	fullTraceCell = fullTraceCell';
+
+	varargout{1} = [fullTraceCellDecon{:}];
 end

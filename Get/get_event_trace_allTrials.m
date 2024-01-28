@@ -118,11 +118,14 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 			alignedData.fovID = 'NA';
 		end
 
-		time_trace_data = trialData{traceData_col}.(traceData_type);
-		full_time = time_trace_data.Time;
-		duration_full_time = full_time(end)-full_time(1);
-		full_traces_data = time_trace_data(:, 2:end);
-		% roi_num = size(full_traces_data, 2);
+		% Get the time info and calcium signal (usually 'lowpass' data and 'decon' data)
+		timeTraceData = trialData{traceData_col}.(traceData_type);
+		fullTime = timeTraceData.Time;
+		duration_fullTime = fullTime(end)-fullTime(1);
+		fullTracesData = timeTraceData(:, 2:end);
+		timeTraceDataDecon = trialData{traceData_col}.decon;
+		fullTracesDataDecon = timeTraceDataDecon(:, 2:end);
+
 
 		event_spec_fulltable = trialData{event_spec_fulltable_col};
 		roi_num = size(event_spec_fulltable, 2);
@@ -161,9 +164,10 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 			'roi_coor', cell(1, roi_num), 'eventProp', cell(1, roi_num));
 		empty_idx = []; % roi idx in alignedData.traces does not contain any event info
 		for n = 1:roi_num
-			% roiName = full_traces_data.Properties.VariableNames{n};
+			% roiName = fullTracesData.Properties.VariableNames{n};
 			roiName = event_spec_fulltable.Properties.VariableNames{n};
-			roi_trace_data = full_traces_data.(roiName);
+			roiTraceData = fullTracesData.(roiName);
+			roiTraceDataDecon = fullTracesDataDecon.(roiName);
 			alignedData.traces(n).roi = roiName;
 			roi_event_spec_table = event_spec_fulltable{event_data_group, roiName}{:};
 
@@ -183,7 +187,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 				switch event_type
 					case 'detected_events'
 						if ~isempty(roi_event_spec_table)
-							[aligned_time,traceValue,traceMean_val,traceStd_val,eventProp,alignedTrace_scaled] = get_event_trace_roi(full_time,roi_trace_data,roi_event_spec_table,...
+							[aligned_time,traceValue,traceMean_val,traceStd_val,eventProp,alignedTrace_scaled] = get_event_trace_roi(fullTime,roiTraceData,roi_event_spec_table,...
 								'event_align_point', event_align_point, 'event_filter', event_filter,...
 								'cat_keywords', cat_keywords,...
 								'pre_event_time', pre_event_time, 'post_event_time', post_event_time,...
@@ -199,7 +203,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 
 					case 'stimWin'
 						if ~isempty(stimStart)
-							[aligned_time,traceValue,traceMean_val,traceStd_val] = get_event_trace(stimStart,full_time,roi_trace_data,...
+							[aligned_time,traceValue,traceMean_val,traceStd_val] = get_event_trace(stimStart,fullTime,roiTraceData,...
 								'pre_event_time', pre_event_time, 'post_event_time', post_event_time_trial,...
 								'align_on_y', align_on_y, 'scale_data', scale_data);
 							alignedData.traces(n).value = traceValue; 
@@ -224,7 +228,8 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 					otherwise
 						fprintf('Warning: only use [detected_events] or [stimWin] for var [event_type]\n')
 				end
-				alignedData.traces(n).fullTrace = roi_trace_data;
+				alignedData.traces(n).fullTrace = roiTraceData;
+				alignedData.traces(n).fullTraceDecon = roiTraceDataDecon;
 
 				% modify the names of peak categories 
 				if ~isempty(alignedData.traces(n).eventProp) && mod_pcn 
@@ -249,7 +254,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 
 					% [alignedData.traces(n).eventProp] = mod_cat_name(alignedData.traces(n).eventProp,'cat_setting',cat_setting,'dis_extra',false);
 					[alignedData.traces(n).eventProp] = add_eventBaseDiff_to_eventProp(alignedData.traces(n).eventProp,...
-						combine_stimRange,full_time,roi_trace_data);
+						combine_stimRange,fullTime,roiTraceData);
 					[alignedData.traces(n).eventProp,newFieldName,NFNtag] = add_tfTag_to_eventProp(alignedData.traces(n).eventProp,...
 						'peak_category','trig','newFieldName','stimTrig');
 
@@ -277,15 +282,15 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 						exclude_duration = exepWinDur;
 					end
 				end
-				[stimWin,sponWin,~,stimDuration,sponDuration] = get_condition_win(combine_stimRange,full_time,...
+				[stimWin,sponWin,~,stimDuration,sponDuration] = get_condition_win(combine_stimRange,fullTime,...
 					'err_duration', 0, 'exclude_duration', exclude_duration); % add 1s exclude duration after opto stimulation
 				[~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
-					combine_stimRange,duration_full_time,'exepWinDur',exepWinDur);
+					combine_stimRange,duration_fullTime,'exepWinDur',exepWinDur);
 				[sponfq,sponInterval,sponIdx,sponEventTime,sponEventNum] = get_event_freq_interval(events_time,sponWin);
 
 
 				% Get the effect of stimulation on each ROI
-				[alignedData.traces(n).stimEffect] = get_stimEffect(full_time,roi_trace_data,combine_stimRange,...
+				[alignedData.traces(n).stimEffect] = get_stimEffect(fullTime,roiTraceData,combine_stimRange,...
 					{alignedData.traces(n).eventProp.peak_category},'ex_eventCat',ex_eventCat,'exAP_eventCat',exAP_eventCat,...
 					'rb_eventCat',rb_eventCat,'in_thresh_stdScale',in_thresh_stdScale,...
 					'in_calLength',in_calLength,'freq_spon_stim', [sponfq stimfq]); % find the stimulation effect. stimEffect is a struct var
@@ -306,7 +311,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 					'ref_idx',sponEvent_idx,'newF_prefix','sponnorm');
 
 				% Get the baseline change 
-				[CaLevel,CaLevelTrace,CaLevel_cal_range] = get_CaLevel_delta(combine_stimRange,full_time,roi_trace_data,...
+				[CaLevel,CaLevelTrace,CaLevel_cal_range] = get_CaLevel_delta(combine_stimRange,fullTime,roiTraceData,...
 					'base_timeRange',base_timeRange,'postStim_timeRange',base_timeRange,...
 					'stim_section',stim_section,'ss_range',ss_range,'stim_time_error',stim_time_error);
 
@@ -335,7 +340,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 				alignedData.traces(n).CaLevelTrace = CaLevelTrace.yAlign;
 
 				% Fit data during stimulation to negative exponantial curve
-				[alignedData.traces(n).StimCurveFit,StimCurveFit_TauInfo] = GetDecayFittingInfo_neuron(full_time,roi_trace_data,...
+				[alignedData.traces(n).StimCurveFit,StimCurveFit_TauInfo] = GetDecayFittingInfo_neuron(fullTime,roiTraceData,...
 					combine_stimRange,[alignedData.traces(n).eventProp.peak_time],rsquareThresh); % 0.7 is the threshold for rsquare
 				alignedData.traces(n).StimCurveFit_TauMean = StimCurveFit_TauInfo.mean;
 				alignedData.traces(n).StimCurveFit_TauNum = StimCurveFit_TauInfo.num;
@@ -377,7 +382,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 		alignedData.time = aligned_time;
 		alignedData.timeCaLevel = aligned_time_CaLevel;
 		alignedData.CaLevel_cal_range = CaLevel_cal_range;
-		alignedData.fullTime = full_time;
+		alignedData.fullTime = fullTime;
 
 		data_cell{tn} = alignedData;
 	end
