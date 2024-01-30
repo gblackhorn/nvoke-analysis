@@ -1,20 +1,19 @@
 function [matrix_data] = organize_multiple_range_data_from_one_vector_in_matrix(vector_data,range_start_end_idx)
-    % Accquire multiple windows of data from a vector using "range_start" (a
-    % vector containing index) and "range_end" to creat a matrix, within which
-    % each column includs data from one window. Shorter column is felt by NaN
-    %   Detailed explanation goes here
+    % Use a n*2 array, range_start_end_idx, as windows to get the contents in a vector, vector_data.
+    % Concatenate these small vectors with diferent lengts by padding with NaN
+
     
     range_start = range_start_end_idx(:, 1);
     range_end = range_start_end_idx(:, 2);
     window_num = length(range_start);
     matrix_data_cell = cell(1, window_num);
 
-    % fill trace data in each window in window_idx_cell
+    % Get the vector_data in a range defined by range_start and rang_end. Store it in a cell in 'matrix_data_cell'
     for wn = 1:window_num
     	matrix_data_cell{wn} = vector_data(range_start(wn):range_end(wn));
     end
 
-    % convert roi_trace_window_cell to a matrix, fill the short arrays with NaN
+    % Convert matrix_data_cell to a matrix, fill the short arrays with NaN
     if window_num ==1
         matrix_data = matrix_data_cell{1};
     else

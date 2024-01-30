@@ -19,11 +19,18 @@ function [peak_properties_tables_updated,varargout] = organize_merge_peaks_multi
         end
     end
 
-    % Main contents
+    % Assign the input "peak_properties_tables" to the output. It will be modified in the following
+    % lines
     peak_properties_tables_updated = peak_properties_tables;
+
+    % Get the time information
     time_info = rec_data.Time;
+
+    % Loop through ROIs and merge events close to each other
     roi_num = size(peak_properties_tables_updated, 2);
     for rn = 1:roi_num
+
+        % Get the peak properties of a singal ROI
         if size(peak_properties_tables_updated{1, rn}, 2) ~= 1
             peak_properties_table_single = peak_properties_tables_updated{1, rn};
         else
@@ -37,6 +44,7 @@ function [peak_properties_tables_updated,varargout] = organize_merge_peaks_multi
         %     pause
         % end
 
+        % Discard the peak event if its peak_loc (peak_properties_table_single{:, 1}) is nan
         if ~isempty(peak_properties_table_single)
             discard_nan_idx = isnan(peak_properties_table_single{:, 1});
             peak_properties_table_single(discard_nan_idx, :) = [];

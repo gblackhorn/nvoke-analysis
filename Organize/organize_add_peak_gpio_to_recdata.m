@@ -105,7 +105,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
         % Debugging
         fprintf(' - recording_num: %d/%d (%s)\n', rn, recording_num, recording_name);
         if debug_mode
-            if rn == 44
+            if rn == 5
                 disp('pause for debugging')
                 pause
             end
@@ -163,8 +163,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 			'decon', 0, 'filter', 'lowpass', 'filter_par', lowpass_fpass,...
 			'prom_par', prominence_factor,...
             'use_existing_peakInfo', true, 'existing_peakInfo', peak_properties_decon,...
-			'peakProperties_names', peak_properties_variable_names,...
-            'merge_peaks', merge_peaks, 'merge_time_interval', merge_time_interval); % ,'debug_mode',debug_mode
+			'peakProperties_names', peak_properties_variable_names); % ,'debug_mode',debug_mode, 'merge_peaks', merge_peaks, 'merge_time_interval', merge_time_interval
         recdata_organized{rn, col_trace}.lowpass = rec_data_lowpass.processed_data;
 
 		% smooth
@@ -191,7 +190,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 			'slope', criteria_slope, 'pnr', criteria_pnr);
 
 
-        % Merge close events, which are likely to be transients caused by multiple spikes with short interval
+        % Merge close events, which are likely to be ones caused by multiple spikes with short interval
         if merge_peaks
             [peak_properties_lowpass] = organize_merge_peaks_multiroi(peak_properties_lowpass,...
                 rec_data_lowpass.processed_data, 'merge_time_interval', merge_time_interval);
