@@ -499,7 +499,7 @@ debug_mode = false; % true/false
 
 % {'trig [EXog]','EXog','trig-AP',}
 tags_discard = {'rebound [ap','ap-0.25s','ap-0.5s','og-0.96s','opto-delay','rebound [og&ap-5s]',}; % Discard groups containing these words. 'spon','opto-delay','og&ap','rebound [og&ap-5s]'
-tags_keep = {'trig','trig-ap','rebound [og-5s]','spon'}; % Keep groups containing these words. {'trig [og','rebound','opto-delay [og-5s]','spon'}
+tags_keep = {'trig','trig-ap','rebound [og-5s]','spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
 tagsForMerge = {'trig [og&ap-5s]','trig [og-5s]'};
 NewGroupName = 'opto-evoked all';
 NewtagName = 'opto-evoked [opto-5s opto-5s_air-0.1s]';

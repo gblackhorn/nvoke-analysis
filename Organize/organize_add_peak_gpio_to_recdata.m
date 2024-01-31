@@ -20,6 +20,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     % criteria_mag = 3; % default: 3. peak_mag_normhp
     criteria_pnr = 10; % default: 3. peak-noise-ration (PNR): relative-peak-signal/std. std is calculated from highpassed data.
     eventTimeType = 'peak_time'; % peak_time/rise_time. Use this value to categorize event
+    peakErrTime = 0.4; % unit: second. The max difference between existing peak and found peak
     criteria_excitated = 2; % If a peak starts to rise in 2 sec since stimuli, it's a excitated peak
     criteria_rebound = 1; % a peak is concidered as rebound if it starts to rise within 2s after stimulation end
     stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
@@ -62,6 +63,8 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 			criteria_pnr = varargin{ii+1};
 		elseif strcmpi('eventTimeType', varargin{ii}) % needed for smooth process
 			eventTimeType = varargin{ii+1};
+        elseif strcmpi('peakErrTime', varargin{ii}) % needed for smooth process
+            peakErrTime = varargin{ii+1};
         elseif strcmpi('criteria_excitated', varargin{ii}) % needed for smooth process
             criteria_excitated = varargin{ii+1};
 		elseif strcmpi('criteria_rebound', varargin{ii}) % needed for smooth process
@@ -161,7 +164,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 		% lowpass
 		[peak_properties_lowpass, rec_data_lowpass] = organize_transient_properties(rec_data_raw,...
 			'decon', 0, 'filter', 'lowpass', 'filter_par', lowpass_fpass,...
-			'prom_par', prominence_factor,...
+			'prom_par', prominence_factor,'peakErrTime',peakErrTime,...
             'use_existing_peakInfo', true, 'existing_peakInfo', peak_properties_decon,...
 			'peakProperties_names', peak_properties_variable_names); % ,'debug_mode',debug_mode, 'merge_peaks', merge_peaks, 'merge_time_interval', merge_time_interval
         recdata_organized{rn, col_trace}.lowpass = rec_data_lowpass.processed_data;
