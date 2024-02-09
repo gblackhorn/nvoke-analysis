@@ -5,7 +5,12 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 	% binSize: unit: second
 
 	% Defaults
+	corrDataType = 'event'; % event/trace. Data used for calculation correlation
 	eventTimeType = 'peak_time'; % rise_time/peak_time
+
+	ThresholdCorrMat = true; % Use the percentile to threshold correlation data
+	percentileThreshold = 75; % Threshold correlation matrix data. Keep the ones above the percentile
+
 	visualizeData = false;
 	corrThresh = 0.3; % correlation equal and below this threshhold will not be show in the graph and bundling plots  
 	distScale = []; % pixels/um. used for calibrate the distance
@@ -18,6 +23,10 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 	for ii = 1:2:(nargin-2)
 	    if strcmpi('eventTimeType', varargin{ii}) 
 	        eventTimeType = varargin{ii+1}; 
+	    elseif strcmpi('corrDataType', varargin{ii})
+            corrDataType = varargin{ii+1};
+	    elseif strcmpi('ThresholdCorrMat', varargin{ii})
+            ThresholdCorrMat = varargin{ii+1};
 	    elseif strcmpi('visualizeData', varargin{ii})
             visualizeData = varargin{ii+1};
 	    elseif strcmpi('corrThresh', varargin{ii})
@@ -67,7 +76,9 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 		if ~isempty(alignedData(n).traces)
 			close all
 			[corrMatrix,corrFlat,distMatrix,distFlat,roiNames,roiPairNames,recDateTime,fig,figName] = roiCorrAndDistSingleRec(alignedData(n),...
-				binSize,'visualizeData',visualizeData,'corrThresh',corrThresh,'distScale',distScale);
+				binSize,'corrDataType',corrDataType,...
+				'ThresholdCorrMat',ThresholdCorrMat,'percentileThreshold',percentileThreshold,...
+				'visualizeData',visualizeData,'corrThresh',corrThresh,'distScale',distScale);
 
 			corrAndDist(n).recName = recDateTime;
 			corrAndDist(n).roiNames = roiNames;

@@ -1,6 +1,5 @@
 function [heatmapHandle] = heatMapCustomized(matData,varargin)
-	% Convert event time points (unit: seconds) from multiple ROIs in one single recording to binary
-	% matrix (one column per roi). Calculate the 
+	% Create a heatmap using a matrix
 
 	% matData: a matrix
 
@@ -36,6 +35,8 @@ function [heatmapHandle] = heatMapCustomized(matData,varargin)
 
 	% Plot heatmap using imagesc
 	heatmapHandle = imagesc(plotWhere, matData);
+	colormap(gca, heatmapColor);  % Optional: Specify colormap
+
 
 	% exclude diagonal (self-correlation) from the color range
 	if excludeSelfCorrColor
@@ -50,7 +51,6 @@ function [heatmapHandle] = heatMapCustomized(matData,varargin)
 		end
 	end
 
-	colormap(gca, heatmapColor);  % Optional: Specify colormap
 
 	% Add a color bar
 	if showColorbar
@@ -61,6 +61,12 @@ function [heatmapHandle] = heatMapCustomized(matData,varargin)
 	box(plotWhere, 'off');
 
 	% Add x and y tick labels
+	if ~exist('xtickLabels','var')
+		xtickLabels = NumArray2StringCell(size(matData,2));
+	end
+	if ~exist('ytickLabels','var')
+		ytickLabels = NumArray2StringCell(size(matData,1));
+	end
 	xticks(plotWhere, 1:length(xtickLabels));
 	yticks(plotWhere, 1:length(ytickLabels));
 	% Adjust font size of tick labels

@@ -1,7 +1,7 @@
 function drawEdgeBundling(corrMatrix, distMatrix, roiNames, varargin)
 
     % default
-    corrThresh = 0.3; % Only correlations higher then the threshold will be shown as edges
+    corrThresh = -1; % Only correlations higher then the threshold will be shown as edges
     edgeScale = 20; % scaling factor applied to the correlation values when setting the edge width
     colorBarStr = 'Distance (pixel)';
     lineAlpha = 0.5;

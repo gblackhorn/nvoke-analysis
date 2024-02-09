@@ -1,20 +1,22 @@
-function [h] = drawNeuronalNetworkGraph(corrMatrix, distMatrix, roiNames, varargin)
+function [h] = drawNeuronalNetworkGraph(corrMatrix, varargin)
     % Create the graph object from the correlation matrix
 
 
     % Defaults
     showEdgelabel = false; % true/false. Show the weight as edge label
     nodeFontsize = 10;
-    corrThresh = 0; % Only correlations higher then the threshold will be shown as edges
+    corrThresh = []; % Only correlations higher then the threshold will be shown as edges
 
     unit_width = 0.4; % normalized to display
     unit_height = 0.4; % normalized to display
     column_lim = 1; % number of axes column
 
     % Optionals
-    for ii = 1:2:(nargin-3)
+    for ii = 1:2:(nargin-1)
         if strcmpi('plotWhere', varargin{ii}) 
             plotWhere = varargin{ii+1}; 
+        elseif strcmpi('roiNames', varargin{ii})
+            roiNames = varargin{ii+1};
         elseif strcmpi('showEdgelabel', varargin{ii})
             showEdgelabel = varargin{ii+1};
         elseif strcmpi('corrThresh', varargin{ii})
@@ -22,18 +24,28 @@ function [h] = drawNeuronalNetworkGraph(corrMatrix, distMatrix, roiNames, vararg
         end
     end
 
+    % Create roiNames it they are not input
+    if ~exist('roiNames','var')
+        % roiNames = [1:size(corrMatrix,1)];
+        roiNames = NumArray2StringCell(size(corrMatrix,1));
+        roiNames = cellfun(@(x) ['roi', x],roiNames,'UniformOutput',false);
+    end
+
+
     % Get the upper triangle without the diagnol line
     G = graph(corrMatrix, roiNames, 'upper', 'omitselfloops');
 
 
-    if corrThresh > 0
-        % Remove edges smaller than corrThresh
-        G = rmedge(G, find(G.Edges.Weight < corrThresh));
-    else
-        warning('variable corrThresh is equal or smaller than 0')
-        % Remove edges with non-positive correlation
-        % G = rmedge(G, 1:numedges(G), find(G.Edges.Weight <= 0));
-        G = rmedge(G, find(G.Edges.Weight <= 0));
+    if exist('corrThresh','var') || ~isempty(corrThresh)
+        if corrThresh > 0
+            % Remove edges smaller than corrThresh
+            G = rmedge(G, find(G.Edges.Weight < corrThresh));
+        else
+            warning('variable corrThresh is equal or smaller than 0')
+            % Remove edges with non-positive correlation
+            % G = rmedge(G, 1:numedges(G), find(G.Edges.Weight <= 0));
+            G = rmedge(G, find(G.Edges.Weight <= 0));
+        end
     end
     
 

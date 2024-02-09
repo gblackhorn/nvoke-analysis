@@ -1,6 +1,5 @@
 function [heatmapHandle] = heatMapRoiCorr(corrMatrix,roiNames,varargin)
-	% Convert event time points (unit: seconds) from multiple ROIs in one single recording to binary
-	% matrix (one column per roi). Calculate the 
+	% Plot the correlation matrix using heatmap
 
 	% corrMatrix: roi correlation paires. Can be used to plot heatmap
 		% % example: h = heatmap(plotWhere,corrMatrix,'Colormap',jet);

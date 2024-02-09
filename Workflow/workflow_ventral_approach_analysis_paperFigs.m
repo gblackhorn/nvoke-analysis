@@ -681,17 +681,24 @@ norm_FluorData = false; % true/false. whether to normalize the FluroData
 %% ==================== 
 % Fig 5 synchronicity
 close all
-saveFig = true; % true/false
+saveFig = false; % true/false
+corrDataType = 'trace'; % event/trace. Data used for calculation correlation
 eventTimeType = 'peak_time'; % rise_time/peak_time
 binSize = 0.1; % unit: second
 visualizeData = true; % true/false
-corrThresh = 0.2; % correlation equal and below this threshhold will not be show in the graph and bundling plots  
+
+% Use either ThresholdCorrMat or corrThresh (-1 to 1)
+ThresholdCorrMat = true; % Use the percentile to threshold correlation data
+corrThresh = []; % correlation equal and below this threshhold will not be show in the graph and bundling plots  
+
 distScale = 296/100; % pixels/um. used for calibrate the distance. 
 	% Length 9 mm, Ø 1 mm: 296.0608 pixels = 100 µm
 	% Length 8.4 mm, Ø 0.5 mm: 266.0676 pixels = 100 µm
 dbMode = false; % true/false
 [corrAndDist,corrFlatAll,distFlatAll,FolderPathVA.fig] = roiCorrAndDistMultiRec(alignedData_allTrials,binSize,...
-	'visualizeData',visualizeData,'corrThresh',corrThresh,'eventTimeType',eventTimeType,'distScale',distScale,...
+	'corrDataType',corrDataType,'visualizeData',visualizeData,...
+	'ThresholdCorrMat',ThresholdCorrMat,'corrThresh',corrThresh,...
+	'eventTimeType',eventTimeType,'distScale',distScale,...
 	'saveFig',saveFig,'saveDir',FolderPathVA.fig,'guiSave',true,'dbMode',dbMode); 
 
 %% ==================== 
