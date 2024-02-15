@@ -182,7 +182,7 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 % 9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 gui_save = 'on';
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
@@ -231,7 +231,9 @@ debug_mode = false; % true/false
 	'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on','debug_mode',debug_mode);
 
-% plot and compare a single bins from various stimulation groups
+
+% Compare the fold change of AP (norm to AP baseline) and OGAP (norm to the AP bin in OG recordings)
+% event freq comparison: OG vs OGAP in AP bin
 violinStimNames = {'og-5s ap-0.1s','og-5s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
 violinBinIDX = [4,4]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
 normToFirst = false; % true/false. violinPlot: normalize all the data to the mean of the first group (first stimNames)
@@ -247,11 +249,66 @@ titleStr = sprintf('violinPlot of a single bin from periStim freq%s',normStr);
 	'normToFirst',normToFirst,'titleStr',titleStr,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','off');
 
+titleStr = 'eventFreq OG vs OGAP in AP bin';
+OGvsOGAPdata = {violinData.eventFreq};
+groupNames = {violinData.stim};
+[violinInfo1,FolderPathVA.fig] = violinplotWithStat(OGvsOGAPdata,...
+	'groupNames',groupNames,...
+	'titleStr',titleStr,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on');
+
+% event freq comparison: baseline of AP vs AP
+titleStr = 'eventFreq baseline vs AP';
+BASEvsAP = {barStat(2).data(1).group_data barStat(2).data(3).group_data};
+groupNames = {'baseline', 'AP'};
+[violinInfo2,FolderPathVA.fig] = violinplotWithStat(BASEvsAP,...
+	'groupNames',groupNames,...
+	'titleStr',titleStr,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','off');
+
+
+% bar plot of the fold-change of event frequency in violinInfo1 and violinInfo2
+title_str = 'foldChange of eventFreq caused by AP with and without OG';
+[f,f_rowNum,f_colNum] = fig_canvas(2,'unit_width',0.4,'unit_height',0.4,...
+	'column_lim',1,...
+    'fig_name',titleStr); % create a figure
+tlo = tiledlayout(f, 2, 1); % setup tiles
+% Bar plot
+axBar = nexttile(tlo); 
+foldDataOGAP = violinInfo1.data.ogap/mean(violinInfo1.data.og);  
+foldDataAP = violinInfo2.data.AP/mean(violinInfo2.data.baseline);
+[barInfo,~,barInfoStatTab] = barplot_with_stat({foldDataAP,foldDataOGAP},'plotWhere',axBar,...
+	'group_names',{'without OG','with OG'},'ylabelStr','eventFreq fold-change',...
+	'title_str',title_str,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save',false);
+% plot stat results next to bars
+axStat = nexttile(tlo);
+plotUItable(gcf,axStat,barInfoStatTab);
+
+
+
+
+
+
+
+% % plot and compare a single bins from various stimulation groups
+% violinStimNames = {'og-5s ap-0.1s','og-5s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
+% violinBinIDX = [4,4]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
+% normToFirst = false; % true/false. violinPlot: normalize all the data to the mean of the first group (first stimNames)
+
+% if normToFirst
+% 	normStr = sprintf(' normTo[%s]',violinStimNames{1});
+% else
+% 	normStr = '';
+% end
+
+% titleStr = sprintf('violinPlot of a single bin from periStim freq%s',normStr);
+% [violinData,statInfo] = violinplotPeriStimFreq2(barStat,violinStimNames,violinBinIDX,...
+% 	'normToFirst',normToFirst,'titleStr',titleStr,...
+% 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','off');
+
 %% ====================
 % Fig 2 violin plot of specific bins in periStim event frequency
 % 9.1.3
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 gui_save = 'on';
 
 propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
@@ -623,10 +680,10 @@ save(fullfile(FolderPathVA.fig,[figFileName,'_dataStat.mat']),'ogEventFreq');
 % Violin plot showing the difference of
 % stim-related-event_to_following_event_time and the spontaneous_event_interval
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 stimNameAll = {'og-5s','ap-0.1s'}; % 'og-5s' 'ap-0.1s'
 stimEventCatAll = {'rebound','trig'}; % 'rebound', 'trig'
-maxDiff = 3; % the max difference between the stim-related and the following events
+maxDiff = 5; % the max difference between the stim-related and the following events
 
 % loop through different stim-event pairs
 
@@ -681,7 +738,7 @@ norm_FluorData = false; % true/false. whether to normalize the FluroData
 %% ==================== 
 % Fig 5 synchronicity
 close all
-saveFig = false; % true/false
+saveFig = true; % true/false
 corrDataType = 'trace'; % event/trace. Data used for calculation correlation
 eventTimeType = 'peak_time'; % rise_time/peak_time
 binSize = 0.1; % unit: second

@@ -7,6 +7,7 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 	% Defaults
 	corrDataType = 'event'; % event/trace. Data used for calculation correlation
 	eventTimeType = 'peak_time'; % rise_time/peak_time
+	useStimRange = 'include'; % include/exclude/only. Include or exclude the data during stimulation range or only use it
 
 	ThresholdCorrMat = true; % Use the percentile to threshold correlation data
 	percentileThreshold = 75; % Threshold correlation matrix data. Keep the ones above the percentile
@@ -25,6 +26,8 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 	        eventTimeType = varargin{ii+1}; 
 	    elseif strcmpi('corrDataType', varargin{ii})
             corrDataType = varargin{ii+1};
+	    elseif strcmpi('useStimRange', varargin{ii})
+            useStimRange = varargin{ii+1};
 	    elseif strcmpi('ThresholdCorrMat', varargin{ii})
             ThresholdCorrMat = varargin{ii+1};
 	    elseif strcmpi('visualizeData', varargin{ii})
@@ -76,7 +79,7 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 		if ~isempty(alignedData(n).traces)
 			close all
 			[corrMatrix,corrFlat,distMatrix,distFlat,roiNames,roiPairNames,recDateTime,fig,figName] = roiCorrAndDistSingleRec(alignedData(n),...
-				binSize,'corrDataType',corrDataType,...
+				binSize,'corrDataType',corrDataType,'useStimRange',useStimRange,...
 				'ThresholdCorrMat',ThresholdCorrMat,'percentileThreshold',percentileThreshold,...
 				'visualizeData',visualizeData,'corrThresh',corrThresh,'distScale',distScale);
 

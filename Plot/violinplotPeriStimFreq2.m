@@ -94,65 +94,85 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
     end
 
 
-    % create a canvas for the plot
-    % 1st plot: violin. 2nd plot: stat. 3rd plot: animal number, roi number, etc.
-    [f,f_rowNum,f_colNum] = fig_canvas(3,'unit_width',...
-        plot_unit_width,'unit_height',plot_unit_height,'column_lim',1,...
-        'fig_name',titleStr); % create a figure
-    tlo = tiledlayout(f, 5, 1); % setup tiles
+    
+    % Collect data for violin plot and statistics. Store data from different groups in cells
+    violinDataCell = {violinData.(dataField)};
 
+    % Collect stimulation names as violin plot group names
+    groupNames = {violinData.stimMod};
 
-    % 1st plot: violin
-    ax = nexttile(tlo,[3 1]); % activate the ax for the violin plot
-    violinplot(violinDataStruct);
-    set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
-    set(gca, 'box', 'off')
-
-    % 2nd plot: stat at a table. ttest if there are two groups, ANOVA if there are more groups
-    if numel(violinData) == 2 % two-sample ttest
-        [pVal,hVal] = unpaired_ttest_cellArray({violinData(1).(dataField)},...
-            {violinData(2).(dataField)});
-        statInfo.method = 'two-sample ttest';
-        statInfo.group1 = violinData(1).stim;
-        statInfo.group2 = violinData(2).stim;
-        statInfo.p = pVal;
-        statInfo.h = hVal;
-
-        % Create a table with variable names 'p' and 'h'
-        statTab = table(pVal,hVal,'VariableNames',{'p', 'h'});
-        statTitle = 'two-sample ttest';
-    else numel(violinData) > 2 % one-way ANOVA with tucky multiple comparison
-        [dataVector,dataGroupCell] = prepareStructDataforAnova(violinDataStruct);
-        [statInfo] = anova1_with_multiComp(dataVector,dataGroupCell);
-        statTab = statInfo.c(:,["g1","g2","p","h"]);
-        statTitle = 'one-way ANOVA [tuckey multiple comparison]';
-    end
-    % plot stat table
-    axStat = nexttile(tlo,[1 1]);
-    plotUItable(gcf,axStat,statTab);
-    title(statTitle);
-
-
-    % 3rd plot: figure info as a table
+    % Collect extra info about the data, which will be used to plot extra UI table
     violinDataTable = struct2table(violinData);
     figInfoTable = violinDataTable(:,["stim","binNum","binName","recNum","recDateNum","roiNum","stimRepeatNum"]);
-    axInfo = nexttile(tlo,[1 1]);
-    plotUItable(gcf,axInfo,figInfoTable);
 
 
-    % set the title for the figure
-    sgtitle(titleStr)
-    if save_fig
-        if isempty(save_dir)
-            gui_save = 'on';
-        end
-        msg = 'Choose a folder to save the violin plot and the statistics for periStim frequency';
-        save_dir = savePlot(f,'save_dir',save_dir,'guiSave',gui_save,...
-            'guiInfo',msg,'fname',titleStr);
-        save(fullfile(save_dir, [titleStr, '_dataStat']),...
-            'violinData','statInfo');
-    end 
+    % Violin plot + statistics analysis
+    [statInfo,save_dir] = violinplotWithStat(violinDataCell,...
+        'groupNames',groupNames,'extraUItable',figInfoTable,...
+        'titleStr',titleStr,'save_fig',save_fig,'save_dir',save_dir,'gui_save',gui_save);
+
     varargout{1} = save_dir;
+
+
+    % % create a canvas for the plot
+    % % 1st plot: violin. 2nd plot: stat. 3rd plot: animal number, roi number, etc.
+    % [f,f_rowNum,f_colNum] = fig_canvas(3,'unit_width',...
+    %     plot_unit_width,'unit_height',plot_unit_height,'column_lim',1,...
+    %     'fig_name',titleStr); % create a figure
+    % tlo = tiledlayout(f, 5, 1); % setup tiles
+
+
+    % % 1st plot: violin
+    % ax = nexttile(tlo,[3 1]); % activate the ax for the violin plot
+    % violinplot(violinDataStruct);
+    % set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
+    % set(gca, 'box', 'off')
+
+    % % 2nd plot: stat at a table. ttest if there are two groups, ANOVA if there are more groups
+    % if numel(violinData) == 2 % two-sample ttest
+    %     [pVal,hVal] = unpaired_ttest_cellArray({violinData(1).(dataField)},...
+    %         {violinData(2).(dataField)});
+    %     statInfo.method = 'two-sample ttest';
+    %     statInfo.group1 = violinData(1).stim;
+    %     statInfo.group2 = violinData(2).stim;
+    %     statInfo.p = pVal;
+    %     statInfo.h = hVal;
+
+    %     % Create a table with variable names 'p' and 'h'
+    %     statTab = table(pVal,hVal,'VariableNames',{'p', 'h'});
+    %     statTitle = 'two-sample ttest';
+    % else numel(violinData) > 2 % one-way ANOVA with tucky multiple comparison
+    %     [dataVector,dataGroupCell] = prepareStructDataforAnova(violinDataStruct);
+    %     [statInfo] = anova1_with_multiComp(dataVector,dataGroupCell);
+    %     statTab = statInfo.c(:,["g1","g2","p","h"]);
+    %     statTitle = 'one-way ANOVA [tuckey multiple comparison]';
+    % end
+    % % plot stat table
+    % axStat = nexttile(tlo,[1 1]);
+    % plotUItable(gcf,axStat,statTab);
+    % title(statTitle);
+
+
+    % % 3rd plot: figure info as a table
+    % violinDataTable = struct2table(violinData);
+    % figInfoTable = violinDataTable(:,["stim","binNum","binName","recNum","recDateNum","roiNum","stimRepeatNum"]);
+    % axInfo = nexttile(tlo,[1 1]);
+    % plotUItable(gcf,axInfo,figInfoTable);
+
+
+    % % set the title for the figure
+    % sgtitle(titleStr)
+    % if save_fig
+    %     if isempty(save_dir)
+    %         gui_save = 'on';
+    %     end
+    %     msg = 'Choose a folder to save the violin plot and the statistics for periStim frequency';
+    %     save_dir = savePlot(f,'save_dir',save_dir,'guiSave',gui_save,...
+    %         'guiInfo',msg,'fname',titleStr);
+    %     save(fullfile(save_dir, [titleStr, '_dataStat']),...
+    %         'violinData','statInfo');
+    % end 
+    % varargout{1} = save_dir;
 end
 
 

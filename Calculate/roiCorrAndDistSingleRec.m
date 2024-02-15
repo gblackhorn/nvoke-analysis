@@ -22,6 +22,7 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 	% Defaults
 	corrDataType = 'event'; % event/trace. Data used for calculation correlation
 	eventTimeType = 'peak_time'; % rise_time/peak_time
+	useStimRange = 'include'; % include/exclude/only. Include or exclude the data during stimulation range or only use it
 
 	ThresholdCorrMat = true; % Use the percentile to threshold correlation data
 	percentileThreshold = 75; % Threshold correlation matrix data. Keep the ones above the percentile
@@ -37,6 +38,8 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 	        eventTimeType = varargin{ii+1}; 
 	    elseif strcmpi('ThresholdCorrMat', varargin{ii})
             ThresholdCorrMat = varargin{ii+1};
+	    elseif strcmpi('useStimRange', varargin{ii})
+            useStimRange = varargin{ii+1};
 	    elseif strcmpi('corrDataType', varargin{ii})
             corrDataType = varargin{ii+1};
 	    elseif strcmpi('visualizeData', varargin{ii})
@@ -54,13 +57,14 @@ function [corrMatrix,corrFlat,distMatrix,distFlat,varargout] = roiCorrAndDistSin
 			% Get events' time from all the ROIs and create a binary matrix. Each column contains events
 			% info of a single ROI. 1 if a time bin contains an event, 0 if there is no event in the bin
 			% Extract recording and roi names as well
-			[binaryMatrix,timePointsNum,roiNames,recDateTime] = recEventBinaryMatrix(alignedDataRec,binSize,'eventTimeType',eventTimeType);
+			[binaryMatrix,timePointsNum,roiNames,recDateTime] = recEventBinaryMatrix(alignedDataRec,binSize,...
+				'eventTimeType',eventTimeType,'useStimRange',useStimRange);
 
 			% calculate the activity correlation using event time
 			[corrMatrix,corrFlat,roiPairNames] = roiCorr(binaryMatrix,roiNames);
 		case 'trace'
 			[traceMatrix,roiNames,recDateTime] = recTrace(alignedDataRec);
-			lagExt = binSize/2;
+			lagExt = binSize/2; % second. Use [lagsOfInterest-lagExt:1:lagsOfInterest+lagExt, when calculating the correlation at a certain lag
 			[~,corrMatrix,corrFlat,roiPairNames] = roiCorrTrace(traceMatrix,'roiNames',roiNames,...
 				'lagsOfInterest',0,'lagExt',lagExt);
 	end

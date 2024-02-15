@@ -24,8 +24,8 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
             groupNames = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
         elseif strcmpi('titleStr', varargin{ii})
             titleStr = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
-        % elseif strcmpi('normToFirst', varargin{ii})
-        %     normToFirst = varargin{ii+1};
+        elseif strcmpi('extraUItable', varargin{ii})
+            extraUItable = varargin{ii+1};
         elseif strcmpi('save_fig', varargin{ii})
             save_fig = varargin{ii+1};
         elseif strcmpi('save_dir', varargin{ii})
@@ -93,7 +93,7 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
     [f,f_rowNum,f_colNum] = fig_canvas(dataRowNum*2,'unit_width',...
         plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
         'fig_name',titleStr); % create a figure
-    tlo = tiledlayout(f, dataRowNum*2, 2); % setup tiles
+    tlo = tiledlayout(f, dataRowNum*3, 2); % setup tiles
 
 
 
@@ -119,11 +119,11 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
         end
 
         % statistics
-        [violinInfo(rn).stat,violinInfo(rn).statTab] = ttestOrANOVA(violinData,'groupNames',groupNames(rn,:));
+        [violinInfo(rn).stat,violinInfo(rn).statTab] = ttestOrANOVA(violinData(rn,:),'groupNames',groupNames(rn,:));
 
 
         % plot violin
-        axViolin = nexttile(tlo,[2 1]); 
+        axViolin = nexttile(tlo,[3 1]); 
         violinplot(violinInfo(rn).data,groupNames(rn,:));
 
         % plot dataInfo 
@@ -131,9 +131,18 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
         dataInfoTab = struct2table(violinInfo(rn).dataInfo);
         plotUItable(gcf,axDataInfo,dataInfoTab);
 
+
         % plot stat results
         axStat = nexttile(tlo,[1 1]);
         plotUItable(gcf,axStat,violinInfo(rn).statTab);
+        title(violinInfo(rn).stat.method)
+
+
+        % plot an extra UI table if input is not empty
+        if exist('extraUItable','var') && ~isempty(extraUItable)
+            axExUItable = nexttile(tlo,[1 1]);
+            plotUItable(gcf,axExUItable,extraUItable);
+        end
     end
 
 
