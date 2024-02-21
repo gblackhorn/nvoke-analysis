@@ -606,13 +606,13 @@ end
 % Fig 3
 % 9.3.3-extension. Plot the correlation of calcium values at rise and peak locations
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 save_dir = FolderPathVA.fig;
 gui_save = true;
 normWithSponEvent = true;
-selectGroups = {'AP-trig','OGAP-trig-ap','OG-rebound','OGAP-rebound'}; % plot these in different color. All the rest group in another color
+selectGroups = {'AP-trig','OGAP-trig-ap'}; % ,'OG-rebound','OGAP-rebound' plot these in different color. All the rest group in another color
 [selectGroupsStruct,save_dir] = analyzeRisePeakCorr(alignedData_allTrials,'normWithSponEvent',normWithSponEvent,...
-	'save_fig',save_fig,'save_dir',save_dir,'gui_save',gui_save);
+	'selectGroups',selectGroups,'save_fig',save_fig,'save_dir',save_dir,'gui_save',gui_save);
 
 
 %% ====================

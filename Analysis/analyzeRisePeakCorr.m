@@ -25,6 +25,8 @@ function [selectGroupsStruct,save_dir,varargout] = analyzeRisePeakCorr(alignedDa
 	        normWithSponEvent = varargin{ii+1}; % label style. 'shape'/'text'
 	    elseif strcmpi('normWithSponEvent', varargin{ii})
 	        normWithSponEvent = varargin{ii+1}; % label style. 'shape'/'text'
+    	elseif strcmpi('selectGroups', varargin{ii})
+	        selectGroups = varargin{ii+1}; % label style. 'shape'/'text'
 	    elseif strcmpi('save_fig', varargin{ii})
 	        save_fig = varargin{ii+1}; % label style. 'shape'/'text'
 	    elseif strcmpi('save_dir', varargin{ii})
