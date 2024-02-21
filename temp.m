@@ -784,9 +784,9 @@ plot(timeAtHM(:,2),halfMax,'r*');
 
 %% ====================
 % Sample data for two groups, each group has 5 time-points
-group1_data = {data for time1, data for time2, data for time3, data for time4, data for time5};
-group2_data = {data for time1, data for time2, data for time3, data for time4, data for time5};
-
+% group1_data = {data for time1, data for time2, data for time3, data for time4, data for time5};
+% group2_data = {data for time1, data for time2, data for time3, data for time4, data for time5};
+% 
 % Combine the data into a single matrix
 dataMatrix = [cell2mat(group1_data); cell2mat(group2_data)];
 
@@ -831,7 +831,7 @@ ogapDataNormMeans = cellfun(@mean,ogapDataNorm)
 %% ====================
 % 2023-07-31
 % event freq comparison: OG vs OGAP in AP bin
-save_fig = true;
+save_fig = false;
 titleStr = 'eventFreq OG vs OGAP in AP bin';
 OGvsOGAPdata = {violinData.eventFreq};
 groupNames = {violinData.stim};
@@ -918,3 +918,104 @@ saveFig = false;
 dbMode = true; % debug mode
 [timeLagCorr] = roiCorrAndtimeLagCorr(alignedData_allTrials,0.05,[1:3],...
 	'visualizeData',true,'saveFig',saveFig,'dbMode',true);
+
+
+
+%% ==========
+matrixData = [alignedData_allTrials(1).traces(:).fullTrace];
+
+%% ==========
+roi_map = alignedData_allTrials(4).roi_map;
+roiCoor = {alignedData_allTrials(4).traces.roi_coor}';
+roiCoor = cell2mat(roiCoor);
+roiCoor = convert_roi_coor(roiCoor);
+roiNames = {alignedData_allTrials(4).traces(:).roi};
+
+figure;
+imagesc(roi_map); % Display the ROI map
+colormap('jet'); % Optional: Choose a colormap that suits your data
+axis equal; % Keep the aspect ratio of the map
+hold on; % Keep the map displayed while plotting the labels
+
+
+for i = 1:length(roiNames)
+    % Extract the coordinates for the current ROI
+    x = roiCoor(i, 1);
+    y = roiCoor(i, 2);
+
+    % Place the text label on the map
+    text(x, y, roiNames{i}, 'Color', 'w', 'FontSize', 8, 'HorizontalAlignment', 'center');
+end
+
+
+
+%% ==========
+close all
+[riseVals,peakVals,eventTypesAll] = getRisePeakValFromRecordings(alignedData_allTrials,'normWithSponEvent',true);
+stylishScatter(riseVals,peakVals);
+[Rrvpv, pValuervpv,RL1,RU1] = corrcoef(riseVals, peakVals);
+correlationCoefficientRVPV = Rrvpv(1,2);
+
+
+peakAmps = peakVals-riseVals;
+stylishScatter(riseVals,peakAmps);
+[Rrvpa, pValuervpa,RL2,RU2] = corrcoef(riseVals, peakAmps);
+correlationCoefficientRVPA = Rrvpa(1,2);
+
+%% ==========
+close all
+[riseVals,peakVals,eventTypesAll] = getRisePeakValFromRecordings(alignedData_allTrials,'normWithSponEvent',true);
+peakAmps = peakVals-riseVals;
+sepGroups = {'AP-trig','OGAP-trig-ap','OG-rebound','OGAP-rebound'}; % plot these in different color. All the rest group in another color
+
+sepGroupsStruct = empty_content_struct({'labels','riseVals','peakVals','peakAmps'},numel(sepGroups)+1);
+for i = 1:numel(sepGroups)
+	sepGroupsStruct(i).labels = sepGroups{i};
+	tf = strcmpi(sepGroupsStruct(i).labels,eventTypesAll);
+	IDX = find(tf);
+	sepGroupsStruct(i).riseVals = riseVals(IDX);
+	sepGroupsStruct(i).peakVals = peakVals(IDX);
+	sepGroupsStruct(i).peakAmps = peakAmps(IDX);
+
+	eventTypesAll(IDX) = [];
+	riseVals(IDX) = [];
+	peakVals(IDX) = [];
+	peakAmps(IDX) = [];
+end
+
+sepGroupsStruct(end).labels = 'other';
+sepGroupsStruct(end).riseVals = riseVals;
+sepGroupsStruct(end).peakVals = peakVals;
+sepGroupsStruct(end).peakAmps = peakAmps;
+
+figure
+gca
+colors = {'#3A8E9E','#873A9E','#9E683A','#7B9E3A','#AFAFAF'};
+% colors = {'#1267B3','#00615B','#61461B','#66645B','#AFAFAF'};
+for j = 1:numel(sepGroupsStruct)-1
+	hold on
+	stylishScatter(sepGroupsStruct(j).riseVals,sepGroupsStruct(j).peakVals,...
+		'plotWhere',gca,'MarkerFaceColor',colors{j},'MarkerSize',20,...
+		'xlabelStr','riseVals','ylabelStr','peakVals');
+end
+legend({sepGroupsStruct.labels})
+hold off
+set(gca,'children',flipud(get(gca,'children')))
+
+
+
+figure
+gca
+colors = {'#3A8E9E','#873A9E','#9E683A','#7B9E3A','#AFAFAF'};
+% colors = {'#1267B3','#00615B','#61461B','#66645B','#AFAFAF'};
+for j = 1:numel(sepGroupsStruct)-1
+	hold on
+	stylishScatter(sepGroupsStruct(j).riseVals,sepGroupsStruct(j).peakAmps,...
+		'plotWhere',gca,'MarkerFaceColor',colors{j},'MarkerSize',20,...
+		'xlabelStr','riseVals','ylabelStr','peakAmps');
+end
+legend({sepGroupsStruct.labels})
+hold off
+set(gca,'children',flipud(get(gca,'children')))
+
+

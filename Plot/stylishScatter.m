@@ -23,7 +23,10 @@ function [varargout] = stylishScatter(xData,yData,varargin)
     gridON = true; % true/false. If on, plot grids
     GridLineStyle = ':';
     GridColor = 'k';
-    GridAlpha = 0.5;
+    GridAlpha = 0.2;
+
+    showCorrCoef = false; % Calculate the correlation coefficient and the linear regression parameters. Show them in the plot
+    lineColor = '#585858';
 
     % Optionals
     for ii = 1:2:(nargin-2)
@@ -53,6 +56,10 @@ function [varargout] = stylishScatter(xData,yData,varargin)
             GridColor = varargin{ii+1};
         elseif strcmpi('GridAlpha', varargin{ii})
             GridAlpha = varargin{ii+1};
+        elseif strcmpi('showCorrCoef', varargin{ii})
+            showCorrCoef = varargin{ii+1};
+        elseif strcmpi('lineColor', varargin{ii})
+            lineColor = varargin{ii+1};
         end
     end 
 
@@ -64,7 +71,7 @@ function [varargout] = stylishScatter(xData,yData,varargin)
     end
 
     h = scatter(gca,xData,yData,...
-        MarkerSize,'MarkerEdgeColor',MarkerEdgeColor, 'MarkerFaceColor',MarkerFaceColor);
+        MarkerSize,'MarkerEdgeColor',MarkerEdgeColor,'MarkerFaceColor',MarkerFaceColor);
     xlabel(xlabelStr);
     ylabel(ylabelStr);
     title(titleStr);
@@ -76,6 +83,48 @@ function [varargout] = stylishScatter(xData,yData,varargin)
         grid on;    
         set(gca, 'GridLineStyle',GridLineStyle,'GridColor',GridColor,'GridAlpha',GridAlpha);
     end
+
+    hold on
+
+    % Calculate the correlation coefficient and the linear regression parameters.
+    if showCorrCoef
+        % Calculate linear regression parameters
+        p = polyfit(xData,yData, 1); % p(1) is the slope, p(2) is the intercept
+
+        % Calculate the correlation coefficient for annotation
+        [R,pValue] = corrcoef(xData,yData);
+        correlationCoefficient = R(1,2);
+        corrCoefPval = pValue(1,2);
+
+        % Generate xData values for the line
+        xLine = linspace(min(xData), max(xData), 100); % 100 points for a smooth line
+
+        % Calculate corresponding y values using the regression parameters
+        yLine = polyval(p, xLine);
+
+        % Plot the regression line
+        plot(xLine,yLine,'Color',lineColor,'LineStyle','-','LineWidth', 2);
+
+        % Determine the limits of the current axes
+        xlims = xlim; % Get the x-axis limits
+        ylims = ylim; % Get the y-axis limits
+
+        % Position for the annotation in the top right corner
+        xPos = xlims(2); % The rightmost limit of the x-axis
+        yPos = ylims(2); % The topmost limit of the y-axis
+
+        % Annotate the plot with the correlation coefficient
+        str = sprintf('R = %.2f, p-value = %.3f',correlationCoefficient,corrCoefPval);
+        text(xPos-range(xlims)*0.1,yPos-range(ylims)*0.05,str,'FontWeight','bold',...
+            'VerticalAlignment','top','HorizontalAlignment','right');
+        % text(max(xData),min(yData),str,'FontWeight','bold',...
+        %     'VerticalAlignment','top','HorizontalAlignment','right');
+
+        varargout{2} = correlationCoefficient;
+        varargout{3} = corrCoefPval;
+    end
+
+    hold off
 
     varargout{1} = h;
 end

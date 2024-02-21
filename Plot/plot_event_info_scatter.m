@@ -145,6 +145,8 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 			'MarkerSize', marker_size, 'FontSize', FontSize, 'LineWidth', LineWidth,...
 			'MarkerEdgeColor', colorGroup{n}, 'MarkerFaceColor', colorGroup{n},...
 			'MarkerFaceAlpha',marker_face_alpha,'MarkerEdgeAlpha',marker_edge_alpha);
+        
+        hold on
 
 		% Fitting linear model to Data
 		if linearFit
@@ -152,8 +154,6 @@ function [data_struct,varargout] = plot_event_info_scatter(event_info_struct,par
 			[yFit,PearsonCorrCoef(n),rsq(n),PearsonCorrCoefPval(n)] = LinearFitPlotTest(group_data_1,group_data_2,...
 				'plotLine',linearFit,'plotWhere',scatterAx,'LineColor',colorGroup{n});
 		end
-
-
 	end
 
 	legendstr = {data_struct(2:end).group}';

@@ -266,7 +266,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		title(sub_titleStr)
 
 		barStat(stn).stim = stim_names{stn};
-		barStat(stn).method = barInfo.stat.stat_method;
+		barStat(stn).method = barInfo.stat.method;
 		barStat(stn).multiComp = barInfo.stat.c;
 		barStat(stn).data = barInfo.data;
 		barStat(stn).binEdges = binEdges;

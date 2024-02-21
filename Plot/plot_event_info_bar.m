@@ -95,11 +95,6 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
     	f = gcf;
     end
 
-	% title_str = ['Bar-plot: ', par_name]; 
-	% title_str = replace(title_str, '_', '-');
-	% figure('Name', title_str);
-	
-
 	group_names = {data_struct(2:end).group};
 	x = [1:1:group_num];
 	y = cat(2, data_struct(2:end).mean_value);
@@ -173,12 +168,6 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 		% 	c.h = h;
 		% end
 	end
-
-	% statInfo.anova_p = p; % p-value of anova test
-	% statInfo.tbl = tbl; % anova table
-	% statInfo.stats = statsInfo; % structure used to perform  multiple comparison test (multcompare)
-	% statInfo.multCompare = c; % result of multiple comparision test.
-	% statInfo.multCompare_gnames = gnames; % group names. Use this to decode the first two columns of c
 
 	varargout{1} = statInfo;
 end

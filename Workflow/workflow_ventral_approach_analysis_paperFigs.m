@@ -182,7 +182,7 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 % 9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 gui_save = 'on';
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
@@ -233,9 +233,6 @@ debug_mode = false; % true/false
 
 
 % Compare the fold change of AP (norm to AP baseline) and OGAP (norm to the AP bin in OG recordings)
-% event freq comparison: OG vs OGAP in AP bin
-violinStimNames = {'og-5s ap-0.1s','og-5s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
-violinBinIDX = [4,4]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
 normToFirst = false; % true/false. violinPlot: normalize all the data to the mean of the first group (first stimNames)
 
 if normToFirst
@@ -244,47 +241,49 @@ else
 	normStr = '';
 end
 
+% Compare event frequency of bins from different or same stimualtion recordings and create violin plots
+% Modify the 'violinStimNames' and 'violinBinIDX' to specify the bins to be compared
+% event freq comparison: OG vs OGAP in AP bin
+violinStimNames = {'og-5s ap-0.1s','og-5s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
+violinBinIDX = [4,4]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
 titleStr = sprintf('violinPlot of a single bin from periStim freq%s',normStr);
-[violinData,statInfo] = violinplotPeriStimFreq2(barStat,violinStimNames,violinBinIDX,...
+[violinData1,statInfo1] = violinplotPeriStimFreq2(barStat,violinStimNames,violinBinIDX,...
 	'normToFirst',normToFirst,'titleStr',titleStr,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','off');
 
-titleStr = 'eventFreq OG vs OGAP in AP bin';
-OGvsOGAPdata = {violinData.eventFreq};
-groupNames = {violinData.stim};
-[violinInfo1,FolderPathVA.fig] = violinplotWithStat(OGvsOGAPdata,...
-	'groupNames',groupNames,...
-	'titleStr',titleStr,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on');
-
 % event freq comparison: baseline of AP vs AP
-titleStr = 'eventFreq baseline vs AP';
-BASEvsAP = {barStat(2).data(1).group_data barStat(2).data(3).group_data};
-groupNames = {'baseline', 'AP'};
-[violinInfo2,FolderPathVA.fig] = violinplotWithStat(BASEvsAP,...
-	'groupNames',groupNames,...
-	'titleStr',titleStr,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','off');
+violinStimNames = {'ap-0.1s','ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
+violinBinIDX = [1,3]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
+titleStr = sprintf('violinPlot of a single bin from periStim freq%s',normStr);
+[violinData2,statInfo2] = violinplotPeriStimFreq2(barStat,violinStimNames,violinBinIDX,...
+	'normToFirst',normToFirst,'titleStr',titleStr,...
+	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','off');
 
 
-% bar plot of the fold-change of event frequency in violinInfo1 and violinInfo2
-title_str = 'foldChange of eventFreq caused by AP with and without OG';
+% bar plot of the fold-change of event frequency in statInfo1 and statInfo2
+% APstim/APbaseline VS OGAP/OG
+% Require the 'statInfo1' and 'statInfo2' above
+titleStrFold = 'foldChange of eventFreq caused by AP with and without OG';
 [f,f_rowNum,f_colNum] = fig_canvas(2,'unit_width',0.4,'unit_height',0.4,...
-	'column_lim',1,...
-    'fig_name',titleStr); % create a figure
-tlo = tiledlayout(f, 2, 1); % setup tiles
+	'column_lim',2,...
+    'fig_name',[titleStrFold,' bar']); % create a figure
+tlo = tiledlayout(f, 1, 2); % setup tiles
 % Bar plot
-axBar = nexttile(tlo); 
-foldDataOGAP = violinInfo1.data.ogap/mean(violinInfo1.data.og);  
-foldDataAP = violinInfo2.data.AP/mean(violinInfo2.data.baseline);
+axBar = nexttile(tlo,[1 1]); 
+foldDataOGAP = statInfo1.data.OGAP/mean(statInfo1.data.OG);  
+foldDataAP = statInfo2.data.APfirstStim/mean(statInfo2.data.APbaseline);
 [barInfo,~,barInfoStatTab] = barplot_with_stat({foldDataAP,foldDataOGAP},'plotWhere',axBar,...
-	'group_names',{'without OG','with OG'},'ylabelStr','eventFreq fold-change',...
-	'title_str',title_str,'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save',false);
+	'group_names',{'AP without OG','AP with OG'},'ylabelStr','eventFreq fold-change',...
+	'title_str',title_str,'save_fig',false,'save_dir',FolderPathVA.fig,'gui_save',false);
 % plot stat results next to bars
-axStat = nexttile(tlo);
+axStat = nexttile(tlo,[1 1]);
 plotUItable(gcf,axStat,barInfoStatTab);
-
-
-
-
+title(barInfo.stat.method)
+if save_fig
+	savePlot(f,'save_dir',FolderPathVA.fig,'guiSave','off','fname',title_str);
+end
+violinplotWithStat({foldDataAP,foldDataOGAP},'groupNames',{'AP without OG','AP with OG'},...
+    'titleStr',[titleStrFold,' violin'],'save_fig',save_fig,'save_dir',FolderPathVA.fig);
 
 
 
@@ -573,17 +572,12 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 close all
 save_fig = true; % true/false
 plot_combined_data = false;
-parNames = {'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_delay','peak_mag_delta','baseDiffRise'}; % entry: event
+parNames = {'rise_duration','FWHM','sponNorm_peak_mag_delta'}; % entry: event
+        % 'peak_delay','peak_mag_delta','baseDiffRise'
 		% 'sponNorm_peak_mag_delta','rise_delay','peak_delay','baseDiffRise'
         % 'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
         % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
     
-    	% baseDiff = EventRiseVal-BaselineVal
-    	% baseDiff_stimWin = min_stimWinVal-BaselineVal
-        % {'sponNorm_rise_duration', 'sponNorm_peak_delta_norm_hpstd', 'sponNorm_peak_slope_norm_hpstd'}; 
-		% options: 'rise_duration', 'peak_mag_delta', 'peak_delta_norm_hpstd', 'peak_slope', 'peak_slope_norm_hpstd'
-		% 'sponNorm_rise_duration', 'sponNorm_peak_mag_delta', 'sponNorm_peak_delta_norm_hpstd'
-		% 'sponNorm_peak_slope', 'sponNorm_peak_slope_norm_hpstd'
 save_dir = FolderPathVA.fig;
 stat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
@@ -608,6 +602,17 @@ if save_fig
 	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info');
 end
 
+%% ====================
+% Fig 3
+% 9.3.3-extension. Plot the correlation of calcium values at rise and peak locations
+close all
+save_fig = true; % true/false
+save_dir = FolderPathVA.fig;
+gui_save = true;
+normWithSponEvent = true;
+selectGroups = {'AP-trig','OGAP-trig-ap','OG-rebound','OGAP-rebound'}; % plot these in different color. All the rest group in another color
+[selectGroupsStruct,save_dir] = analyzeRisePeakCorr(alignedData_allTrials,'normWithSponEvent',normWithSponEvent,...
+	'save_fig',save_fig,'save_dir',save_dir,'gui_save',gui_save);
 
 
 %% ====================
