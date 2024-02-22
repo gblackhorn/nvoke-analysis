@@ -137,19 +137,15 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 		saveas(gcf, [fig_path, '.svg']);
 	end
 
-	p = NaN;
-	tbl = NaN;
-	statsInfo = NaN; 
-	c = NaN;
-	gnames = NaN;
 	if stat && group_num>1% run one-way anova or not
-		[statInfo] = anova1_with_multiComp(data_all,data_all_group,'displayopt',stat_fig);
+		% [statInfo] = anova1_with_multiComp(data_all,data_all_group,'displayopt',stat_fig);
+		[statInfo,~] = ttestOrANOVA(data_cell,'groupNames',{event_info_struct.group});
 	else
-		statInfo.anova_p = p; % p-value of anova test
-		statInfo.tbl = tbl; % anova table
-		statInfo.stats = statsInfo; % structure used to perform  multiple comparison test (multcompare)
-		statInfo.multCompare = c; % result of multiple comparision test.
-		statInfo.multCompare_gnames = gnames; % group names. Use this to decode the first two columns of c
+		statInfo.anova_p = NaN; % p-value of anova test
+		statInfo.tbl = NaN; % anova table
+		statInfo.stats = NaN; % structure used to perform  multiple comparison test (multcompare)
+		statInfo.multCompare = NaN; % result of multiple comparision test.
+		statInfo.multCompare_gnames = NaN; % group names. Use this to decode the first two columns of c
 
 		% [p,tbl,stats] = anova1(data_all, data_all_group, stat_fig);
 		% if stats.df~=0
