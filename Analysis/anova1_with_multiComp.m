@@ -7,7 +7,7 @@ function [statInfo,varargout] = anova1_with_multiComp(data,dataGroup,varargin)
     % Defaults
     displayopt = 'off';
     normDistrTF = false; % if true, code will ignore the normality check and run parametric analysis
-    forceParametric = true; % if true, code will ignore the normality check and run parametric analysis
+    forceParametric = false; % if true, code will ignore the normality check and run parametric analysis
 
 
     % Optionals

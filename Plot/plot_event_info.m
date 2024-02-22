@@ -164,6 +164,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 			jTable  = jScroll.getViewport.getView;
 			jTable.setAutoResizeMode(jTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
 			drawnow;
+            title(bar_stat.rise_duration.method)
 		end
 
 		% box plot

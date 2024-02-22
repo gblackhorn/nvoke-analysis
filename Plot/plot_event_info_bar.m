@@ -138,8 +138,15 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 	end
 
 	if stat && group_num>1% run one-way anova or not
+		% discard groups which sample size is equal or smaller than 3
+		lowSizeGroupIDX = find(cellfun(@(x) numel(x)<=3,data_cell));
+		statDataCell = data_cell;
+		statGroupName = {event_info_struct.group};
+		statDataCell(lowSizeGroupIDX) = [];
+		statGroupName(lowSizeGroupIDX) = [];
+
 		% [statInfo] = anova1_with_multiComp(data_all,data_all_group,'displayopt',stat_fig);
-		[statInfo,~] = ttestOrANOVA(data_cell,'groupNames',{event_info_struct.group});
+		[statInfo,~] = ttestOrANOVA(statDataCell,'groupNames',statGroupName);
 	else
 		statInfo.anova_p = NaN; % p-value of anova test
 		statInfo.tbl = NaN; % anova table
