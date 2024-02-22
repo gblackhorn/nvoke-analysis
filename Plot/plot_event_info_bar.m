@@ -132,19 +132,22 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 		saveas(gcf, [fig_path, '.svg']);
 	end
 
-	p = NaN;
-	tbl = NaN;
-	statsInfo = NaN; 
-	c = NaN;
-	gnames = NaN;
 	if stat && group_num>1% run one-way anova or not
-		[statInfo] = anova1_with_multiComp(data_all,data_all_group,'displayopt',stat_fig);
+		% discard groups which sample size is equal or smaller than 3
+		lowSizeGroupIDX = find(cellfun(@(x) numel(x)<=3,data_cell));
+		statDataCell = data_cell;
+		statGroupName = {event_info_struct.group};
+		statDataCell(lowSizeGroupIDX) = [];
+		statGroupName(lowSizeGroupIDX) = [];
+
+		% [statInfo] = anova1_with_multiComp(data_all,data_all_group,'displayopt',stat_fig);
+		[statInfo,~] = ttestOrANOVA(statDataCell,'groupNames',statGroupName);
 	else
-		statInfo.anova_p = p; % p-value of anova test
-		statInfo.tbl = tbl; % anova table
-		statInfo.stats = statsInfo; % structure used to perform  multiple comparison test (multcompare)
-		statInfo.multCompare = c; % result of multiple comparision test.
-		statInfo.multCompare_gnames = gnames; % group names. Use this to decode the first two columns of c
+		statInfo.anova_p = NaN; % p-value of anova test
+		statInfo.tbl = NaN; % anova table
+		statInfo.stats = NaN; % structure used to perform  multiple comparison test (multcompare)
+		statInfo.multCompare = NaN; % result of multiple comparision test.
+		statInfo.multCompare_gnames = NaN; % group names. Use this to decode the first two columns of c
 
 		% [p,tbl,stats] = anova1(data_all, data_all_group, stat_fig);
 		% if stats.df~=0
