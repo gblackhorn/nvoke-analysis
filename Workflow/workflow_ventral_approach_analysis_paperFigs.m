@@ -274,13 +274,13 @@ foldDataOGAP = statInfo1.data.OGAP/mean(statInfo1.data.OG);
 foldDataAP = statInfo2.data.APfirstStim/mean(statInfo2.data.APbaseline);
 [barInfo,~,barInfoStatTab] = barplot_with_stat({foldDataAP,foldDataOGAP},'plotWhere',axBar,...
 	'group_names',{'AP without OG','AP with OG'},'ylabelStr','eventFreq fold-change',...
-	'title_str',title_str,'save_fig',false,'save_dir',FolderPathVA.fig,'gui_save',false);
+	'save_fig',false,'save_dir',FolderPathVA.fig,'gui_save',false); % 'title_str',title_str,
 % plot stat results next to bars
 axStat = nexttile(tlo,[1 1]);
 plotUItable(gcf,axStat,barInfoStatTab);
 title(barInfo.stat.method)
 if save_fig
-	savePlot(f,'save_dir',FolderPathVA.fig,'guiSave','off','fname',title_str);
+	savePlot(f,'save_dir',FolderPathVA.fig,'guiSave','off','fname',titleStr);
 end
 violinplotWithStat({foldDataAP,foldDataOGAP},'groupNames',{'AP without OG','AP with OG'},...
     'titleStr',[titleStrFold,' violin'],'save_fig',save_fig,'save_dir',FolderPathVA.fig);
@@ -570,7 +570,7 @@ clean_ap_entry = true; % true: discard delay and rebound categories from airpuff
 % 9.3.3 Plot event parameters. Grouped according to categories
 % [9.3] eventProp_all: entry is 'events'
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 plot_combined_data = false;
 parNames = {'rise_duration','FWHM','sponNorm_peak_mag_delta'}; % entry: event
         % 'peak_delay','peak_mag_delta','baseDiffRise'

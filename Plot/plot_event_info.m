@@ -164,7 +164,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 			jTable  = jScroll.getViewport.getView;
 			jTable.setAutoResizeMode(jTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
 			drawnow;
-            title(bar_stat.rise_duration.method)
+            % title(bar_stat.rise_duration.method)
 		end
 
 		% box plot
@@ -188,6 +188,9 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 		xtickangle(TickAngle);
 		title(replace(par, '_', '-'));
 	end
+	% Add the stat method as the title for the stat UI table
+	sgtitle(f_stat,bar_stat.rise_duration.method);
+
 	if save_fig
 		fname_bar = sprintf('bar_plots-%s',fname_suffix);
 		savePlot(f_bar,...
