@@ -75,4 +75,8 @@ function [varargout] = pcaRecTraces(alignedDataRec,varargin)
 	% 		'ylabels',rowNames,'plot_marker',plot_marker,...
 	plot_TemporalData_Trace(gca,timeData,score(:,1:numComponentsToRetain));
 
+
+	% Plot the coeff to show the contribution of every ROI to the PCs
+	% bar(coeff(:,1))
+
 end
