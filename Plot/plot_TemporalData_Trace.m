@@ -44,6 +44,8 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
     for ii = 1:2:(nargin-3)
         if strcmpi('yData2', varargin{ii})
             yData2 = varargin{ii+1}; % if yData2 is input, it will be plot as an overlay. It should have the same size as yData
+        elseif strcmpi('scaleYData', varargin{ii})
+            scaleYData = varargin{ii+1}; 
         elseif strcmpi('plotInterval', varargin{ii})
             plotInterval = varargin{ii+1}; 
         elseif strcmpi('ylabels', varargin{ii})

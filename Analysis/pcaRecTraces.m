@@ -72,8 +72,11 @@ function [varargout] = pcaRecTraces(alignedDataRec,varargin)
 	
 	% Plot the 'score' of the selected PCs
 	figure;
+	scoreNames = NumArray2StringCell(numComponentsToRetain);
+	scoreNames = cellfun(@(x) ['PC',x],scoreNames,'UniformOutput',false);
 	% 		'ylabels',rowNames,'plot_marker',plot_marker,...
-	plot_TemporalData_Trace(gca,timeData,score(:,1:numComponentsToRetain));
+	plot_TemporalData_Trace(gca,timeData,score(:,1:numComponentsToRetain),...
+		'scaleYData',true,'plotInterval',100,'ylabels',scoreNames);
 
 
 	% Plot the coeff to show the contribution of every ROI to the PCs
