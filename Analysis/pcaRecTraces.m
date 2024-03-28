@@ -9,9 +9,11 @@ function [varargout] = pcaRecTraces(alignedDataRec,varargin)
 	%		
 
 	% Defaults
-	% dispCorr = false;
-	% filters = {[nan 1 nan nan], [1 nan nan nan], [nan nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: excitatory AP during OG
-		% filter number must be equal to stim_names
+	plot_unit_width = 0.4; % normalized size of a single plot to the display
+	plot_unit_height = 0.4; % nomralized size of a single plot to the display
+
+	roiNameExcessiveStr = 'neuron'; % remove this string from the ROI name to shorten it
+
 
 	% Optionals
 	% for ii = 1:2:(nargin-2)
@@ -23,8 +25,18 @@ function [varargout] = pcaRecTraces(alignedDataRec,varargin)
     %     %     dispCorr = varargin{ii+1};
 	% end
 
-	% Get the time data
+	% Get some info of the recording
 	timeData = alignedDataRec.fullTime;
+	stimName = alignedDataRec.stim_name;
+	roiNames = {alignedDataRec.traces.roi};
+
+	% remove the 'neuron' part from the roiName for clearer display in the plots. For example,
+	% change neuron5 to 5
+	roiNamesShort = cell(size(roiNames));
+	for i = 1:numel(roiNames)
+		roiNamesShort{i} = strrep(roiNames{i},roiNameExcessiveStr,'');
+	end
+
 
 	% Check the size of 'alignedDataRec' If the length of 'alignedDataRec' is bigger than 1, run
 	% analysis on the first recroding and show warning
@@ -55,11 +67,22 @@ function [varargout] = pcaRecTraces(alignedDataRec,varargin)
 
 
 
+
 	%% Visualize the result
+	titleStrStem = sprintf('%s %s',recDateTime,stimName); % compose a stem str used for both fig 1 and 2
+
+
+	% Plot the PCA explained bars and score traces
+	figTitle{1} = sprintf('%s PCA explained and score',titleStrStem);
+	f(1) = fig_canvas(2,'unit_width',plot_unit_width,'unit_height',plot_unit_height,...
+		'column_lim',1,'fig_name',figTitle{1}); % create a figure
+	tlo = tiledlayout(f(1), 3, 1); % setup tiles
 
 	% Create a bar plot for the explained variance
-	figure;
+	ax = nexttile(tlo,[1,1]); % activate the ax for bar plot of explained - percentage of every PC
 	bar(explained, 'FaceColor', [0.7 0.7 0.7]);
+	set(gca,'box','off')
+	set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
 	xlabel('Principal Components');
 	ylabel('Variance Explained (%)');
 	title('Variance Explained by Each Principal Component');
@@ -71,15 +94,43 @@ function [varargout] = pcaRecTraces(alignedDataRec,varargin)
 
 	
 	% Plot the 'score' of the selected PCs
-	figure;
+	ax = nexttile(tlo,[2,1]);
 	scoreNames = NumArray2StringCell(numComponentsToRetain);
 	scoreNames = cellfun(@(x) ['PC',x],scoreNames,'UniformOutput',false);
 	% 		'ylabels',rowNames,'plot_marker',plot_marker,...
-	plot_TemporalData_Trace(gca,timeData,score(:,1:numComponentsToRetain),...
-		'scaleYData',true,'plotInterval',100,'ylabels',scoreNames);
+	plot_TemporalData_Trace(gca,timeData,score(:,1:numComponentsToRetain),'ylabels',scoreNames);
+	title('Data projected onto principal components')
+
+	sgtitle(figTitle{1})
 
 
 	% Plot the coeff to show the contribution of every ROI to the PCs
+	fig2ColLimit = 4;
+	figTitle{2} = sprintf('%s PCA coeff - contributions of ROIs to PC',titleStrStem);
+	f(2) = fig_canvas(numComponentsToRetain,'unit_width',plot_unit_width/2,'unit_height',plot_unit_height/2,...
+		'column_lim',fig2ColLimit,'fig_name',figTitle{2}); % create a figure
+	fig2RowNum = ceil(numComponentsToRetain/fig2ColLimit);
+	if fig2RowNum == 1
+		fig2ColNum = numComponentsToRetain;
+	else
+		fig2ColNum = fig2ColLimit;
+	end
+	tlo = tiledlayout(f(2),fig2RowNum,fig2ColNum); % setup tiles
+
+	for i = 1:numComponentsToRetain
+		ax = nexttile(tlo,[1,1]); % activate the ax for bar plot of explained - percentage of every PC
+		bar(coeff(:,i));
+		set(gca,'box','off')
+		set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
+		xticklabels([]);
+
+		% xticks(1:length(roiNamesShort));
+		% xticklabels(roiNamesShort)
+		xlabel('ROIs')
+		title(scoreNames{i});
+	end
+
+	sgtitle(figTitle{2})
 	% bar(coeff(:,1))
 
 end
