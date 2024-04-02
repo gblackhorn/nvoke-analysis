@@ -31,7 +31,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     stimStr_combine_order = {'og','ap'}; % this is used to make sure when combine stimName, og is always before ap
     plot_traces = 0; % 0: do not plot. 1: plot. 2: plot with pause
     save_traces = 0; % 0: do not save. 1: save
-    [peak_properties_variable_names] = transient_properties_variable_names('peak', [1:18]);
+    [peak_properties_variable_names] = transient_properties_variable_names('peak', [1:22]);
     debug_mode = false; % true/false
 
     % Optionals for inputs
