@@ -17,24 +17,32 @@ function [varargout] = roiVarianceAnalysis(alignedData,propertyName,varargin)
     createFig = false;
     titleStr = sprintf('ROI prop variance');
 
-
     unit_width = 0.06; % normalized to display
     unit_height = 0.3; % normalized to display
     column_lim = 1; % number of axes column
 
     MaxViolinPerPlot = 15;
 
-    debugMode = false;
+    saveFig = false;
+    saveDir = '';
+    guiSave = false;
 
+    debugMode = false;
 
     % Optionals
     for ii = 1:2:(nargin-2)
-        if strcmpi('plotWhere', varargin{ii})
-            plotWhere = varargin{ii+1}; 
-        elseif strcmpi('peakCat', varargin{ii})
+        % if strcmpi('plotWhere', varargin{ii})
+        %     plotWhere = varargin{ii+1}; 
+        if strcmpi('peakCat', varargin{ii})
             peakCat = varargin{ii+1}; 
         elseif strcmpi('normData', varargin{ii})
             normData = varargin{ii+1}; 
+        elseif strcmpi('saveFig', varargin{ii})
+            saveFig = varargin{ii+1}; 
+        elseif strcmpi('saveDir', varargin{ii})
+            saveDir = varargin{ii+1}; 
+        elseif strcmpi('guiSave', varargin{ii})
+            guiSave = varargin{ii+1}; 
         end
     end 
 
@@ -45,6 +53,8 @@ function [varargout] = roiVarianceAnalysis(alignedData,propertyName,varargin)
 
     % Find the recordings with empty variance, STD, and SEM. Remove them
     emptyRecIDX = find(cellfun(@isempty,roiVariance));
+    % nanIDX = find(cellfun(@isnan,roiVariance));
+    % discardIDX = unique([emptyRecIDX; nanIDX]);
     roiEventVal(emptyRecIDX) = [];
     recNames(emptyRecIDX) = [];
     roiNames(emptyRecIDX) = [];
@@ -113,6 +123,17 @@ function [varargout] = roiVarianceAnalysis(alignedData,propertyName,varargin)
             end
         end
 
+        % Create figure titles/names
+        if normData
+            titleVariance = sprintf('ROI %s %s variance',propertyName,normLabel);
+            titleStd = sprintf('ROI %s %s STD',propertyName,normLabel);
+        else
+            titleVariance = sprintf('ROI %s variance',propertyName);
+            titleStd = sprintf('ROI %s STD',propertyName);
+        end
+        titleVariance = strrep(titleVariance,'_','-');
+        titleStd = strrep(titleStd,'_','-');
+
         % Plot roi Variance in plot tloV, axV
         axV = nexttile(tloV,[1 plotWidth]); 
         violinplot(violinVariance);
@@ -120,12 +141,6 @@ function [varargout] = roiVarianceAnalysis(alignedData,propertyName,varargin)
         xtickangle(45);
         xlabel('Recording Date and Time')
         ylabel('Variance')
-        if normData
-            titleVariance = sprintf('ROI %s %s variance',propertyName,normLabel);
-        else
-            titleVariance = sprintf('ROI %s variance',propertyName);
-        end
-        titleVariance = strrep(titleVariance,'_','-');
         sgtitle(titleVariance)
 
         % Plot roi Variance in plot tloStd, axV
@@ -135,12 +150,20 @@ function [varargout] = roiVarianceAnalysis(alignedData,propertyName,varargin)
         xtickangle(45);
         xlabel('Recording Date and Time')
         ylabel('Variance')
-        if normData
-            titleSTD = sprintf('ROI %s %s STD',propertyName,normLabel);
-        else
-            titleSTD = sprintf('ROI %s STD',propertyName);
-        end
-        titleSTD = strrep(titleSTD,'_','-');
-        sgtitle(titleSTD)
+        sgtitle(titleStd)
     end
+
+    if saveFig
+        if isempty(saveDir)
+            guiSave = true;
+        end
+
+        msg = 'Choose a folder to save the variance and STD violin plots';
+        saveDir = savePlot(fV,'save_dir',saveDir,'guiSave',guiSave,...
+                'guiInfo',msg,'fname',titleVariance);
+        savePlot(fStd,'save_dir',saveDir,'guiSave',false,...
+                'fname',titleStd);
+    end
+
+    varargout{1} = saveDir;
 end

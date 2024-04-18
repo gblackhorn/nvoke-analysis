@@ -615,6 +615,18 @@ selectGroups = {'AP-trig','OGAP-trig-ap'}; % ,'OG-rebound','OGAP-rebound' plot t
 
 
 %% ====================
+% Fig 3
+% 9.3.3-extension-2. 
+close all
+saveFig = true; % true/false
+propertyName = 'FWHM'; % FWHM, peak_mag_delta
+peakCat = 'spon';
+normData = false; % true/false
+guiSave = true; % true/false
+FolderPathVA.fig = roiVarianceAnalysis(alignedData_allTrials,propertyName,'peakCat',peakCat,...
+	'normData',normData,'saveFig',saveFig,'saveDir',FolderPathVA.fig,'guiSave',guiSave);
+
+%% ====================
 % 9.3.4 Plot roi parameters. Grouped according to categories
 box_duration = 1; % unit: second. one box show the calcium signal in the specified duration
 [CaLevelData,CaLevelData_n_num] = GetCalLevelInfoFromAlignedData(alignedData_filtered,stim_name);

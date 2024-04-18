@@ -21,6 +21,7 @@ function [roiEventVal,recNames,roiNames,varargout] = getEventPropFromROIs(aligne
     normData = false; % normalize the data with the mean of spontaneous event property
     peakCatSpon = 'spon'; % the peak category of spontaneous events
 
+    debugMode = false;
 
     % Optionals
     for ii = 1:2:(nargin-2)
@@ -50,6 +51,14 @@ function [roiEventVal,recNames,roiNames,varargout] = getEventPropFromROIs(aligne
 
     % Loop through recordings
     for i = 1:recNum
+
+        if debugMode
+            fprintf('Recording %d/%d',i,recNum)
+            if i == 13
+                pause
+            end
+        end
+
         alignedDataSingle = alignedData(i);
 
         % Get the number and names of ROIs
@@ -67,6 +76,11 @@ function [roiEventVal,recNames,roiNames,varargout] = getEventPropFromROIs(aligne
 
         % Loop through ROIs
         for j = 1:roiNum
+
+            if debugMode
+                fprintf(' - roi %d/%d\n',j,roiNum)
+            end
+
             roiData = alignedDataSingle.traces(j);
 
             % Use peakCat to filter events if it is not empty 
@@ -78,6 +92,15 @@ function [roiEventVal,recNames,roiNames,varargout] = getEventPropFromROIs(aligne
             % Get the specified event property values from a single ROI
             eventVal{j} = [roiData.eventProp(eventIDX).(propertyName)];
             eventVal{j} = eventVal{j}(:);
+
+            % Remove the NaN values from eventVal(j)
+            nanIDX = find(isnan(eventVal{j}));
+            eventVal{j}(nanIDX) = [];
+
+            % Remove the NaN index from the 'eventIDX'
+            eventIDX = setdiff(eventIDX,nanIDX);
+
+            % Get the peak category strings             
             eventPeakCat{j} = peakCatAll(eventIDX);
             eventPeakCat{j} = eventPeakCat{j}(:);
 
@@ -86,7 +109,7 @@ function [roiEventVal,recNames,roiNames,varargout] = getEventPropFromROIs(aligne
             if normData
                 sponIDX = find(strcmpi(peakCatSpon,peakCatAll));
                 eventValSpon = [roiData.eventProp(sponIDX).(propertyName)];
-                eventValSponMean = mean(eventValSpon);
+                eventValSponMean = mean(eventValSpon,'omitnan');
                 eventVal{j} = eventVal{j}./eventValSponMean;
             end 
 
