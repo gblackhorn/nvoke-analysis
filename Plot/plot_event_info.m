@@ -318,7 +318,60 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	% slope_num = numel(slope_val_idx);
 	% slope_norm_num = numel(norm_slope_val_idx);
 
+	
+
 	%% scatter plot
+
+	% Scatter plot of the event width (FWHM) and the time interval from the preceding events
+	f_intNwidth = figure('Name', 'ScatterPlot FWHM vs preEvent time interval');
+    % f_stat = figure('Name', 'bar stat');
+
+    groupNames = {event_info_struct.group};
+    group_num = numel(groupNames);
+
+	if group_num == 1
+		fig_position = [0.1 0.1 0.2 0.3]; % left, bottom, width, height
+	else
+		fig_position = [0.1 0.1 0.8 0.4];
+	end
+	set(f_intNwidth, 'Units', 'normalized', 'Position', fig_position)
+    % set(f_stat, 'Units', 'normalized', 'Position', fig_position)
+
+	tlo_intNwidth = tiledlayout(f_intNwidth, ceil(group_num/4), 4);
+	% tlo_barstat = tiledlayout(f_stat, ceil(par_num/4), 4);
+
+
+	for gn = 1:group_num
+		% bar plot and statistics
+		ax_intNwidth = nexttile(tlo_intNwidth);
+		% ax_stat = nexttile(tlo_barstat);
+
+		% Get the time intervals between the preceding and current events. Get the indices of NaN entries 
+		preEventInt = [event_info_struct(gn).event_info.preEventIntPeak]';
+		idxNaNInt = find(isnan(preEventInt));
+
+		% Get the event width (FWHM). Get the indices of NaN entries 
+		eventWidth = [event_info_struct(gn).event_info.FWHM]';
+		idxNaNFWHM = find(isnan(eventWidth));
+
+		% Remove the NaN entries
+		idxNaN = unique(vertcat(idxNaNInt,idxNaNFWHM));
+		preEventInt(idxNaN) = [];
+		eventWidth(idxNaN) = [];
+
+		% Create a scatter plot to show the relationship between the time interval and the event width
+		stylishScatter(preEventInt,eventWidth,'plotWhere',gca,'titleStr',groupNames{gn},...
+			'xlabelStr','preEvent time-int','ylabelStr','FWHM','showCorrCoef',true);
+	end
+	if save_fig
+		% fname = 'cd_plots';
+		fname = sprintf('FWHM-VS-preEventInt-scatter-%s',fname_suffix);
+		savePlot(f_intNwidth,...
+			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
+	end
+
+
+
 	% duration vs mag/slope
 	if ~isempty(duration_val_idx)
 		duration_par_num = numel(duration_val_idx);

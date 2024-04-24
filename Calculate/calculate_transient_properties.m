@@ -57,6 +57,15 @@ function [transient_properties,varargout] = calculate_transient_properties(roi_t
             peak_val = roi_trace(peak_loc);
             rise_val = roi_trace(rise_loc);
 
+            riseDiff = diff(rise_time);
+            peakDiff = diff(peak_time);
+            preEventIntRise = nan(size(rise_time));
+            preEventIntPeak = nan(size(rise_time));
+            if numel(peak_loc) > 1
+                preEventIntRise(2:end) = riseDiff;
+                preEventIntPeak(2:end) = peakDiff;
+            end
+
             % % calculate the full-width at half maximum (FWHM)
             [FWHM,timeAtHM] = calcFWHM(roi_trace,time_info,rise_loc,peak_loc,...
                 'freq',recFreq,'maxTimeRange',5);
@@ -85,7 +94,8 @@ function [transient_properties,varargout] = calculate_transient_properties(roi_t
         	peakSlope = value_diff_10_90per./time_diff_10_90per;
 
         	transient_properties = [peak_loc, peak_val, peakMag, rise_loc, rise_val,decay_loc,...
-            peak_time, rise_time, decay_time, rise_duration, decay_duration, FWHM, peakMag_delta,...
+            peak_time, rise_time, decay_time, rise_duration, decay_duration,...
+            preEventIntRise,preEventIntPeak,FWHM, peakMag_delta,...
         	peak_loc_10per, peakMag_10per, peakTime_10per, peak_loc_90per, peakMag_90per,...
         	peakTime_90per, peakSlope];
 
@@ -93,14 +103,14 @@ function [transient_properties,varargout] = calculate_transient_properties(roi_t
         		varargout{1} = rise_decay_loc;
         	end
         else
-            transient_properties = double.empty(0, 20);
+            transient_properties = double.empty(0, 22);
             transient_properties = num2cell(transient_properties);
             if nargout == 2
                 varargout{1} = [];
             end
         end
 	else
-		transient_properties = double.empty(0, 20);
+		transient_properties = double.empty(0, 22);
 		transient_properties = num2cell(transient_properties);
 		if nargout == 2
     		varargout{1} = [];

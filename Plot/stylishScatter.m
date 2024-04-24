@@ -14,8 +14,8 @@ function [varargout] = stylishScatter(xData,yData,varargin)
     titleStr = 'Stylish Scatter';
 
     MarkerSize = 10;
-    MarkerEdgeColor = 'k';
-    MarkerFaceColor = 'r';
+    MarkerEdgeColor = '#D95319'; % 'k'
+    MarkerFaceColor = 'none'; % 'r'
 
     FontSize = 12;
     LineWidth = 1.5;

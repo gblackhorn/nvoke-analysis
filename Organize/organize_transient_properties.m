@@ -22,7 +22,7 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
     % merge_time_interval = 0.5; % default: 0.5s. peak to peak interval.
 
     % pack_singlerow_table_in_cell = 0;
-    [transient_prop_var_names] = transient_properties_variable_names('peak', [1:18]);
+    [transient_prop_var_names] = transient_properties_variable_names('peak', [1:22]);
 	% transient_properties_col_names_highpass = {'std'};
     debug_mode = false; % true/false
 
@@ -65,7 +65,7 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
     roi_num = size(RecInfoTable, 2)-1; % number of rois/traces
     rec_fq = 1/(time_info(10)-time_info(9));
     transient_properties = cell(1, roi_num);
-    transient_prop_var_names = transient_prop_var_names(1:20);
+    transient_prop_var_names = transient_prop_var_names(1:22);
 
     % process traces and extract transient properties
    	RecInfoTable_processed = RecInfoTable; % allocate ram for RecInfoTable_processed

@@ -83,7 +83,7 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
     dataStruct = empty_content_struct(groupNames(rn,:),1);
 
     % create a struct var to store the data info
-    dataInfoFields = {'groupNames','meanVal','medianVal','std','ste'};
+    dataInfoFields = {'groupNames','meanVal','medianVal','stdVal','steVal'};
     dataInfoStruct = empty_content_struct(dataInfoFields,dataColNum);
 
 

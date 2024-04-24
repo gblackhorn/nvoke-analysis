@@ -182,7 +182,7 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 % 9.1.2 Plot the event frequency in specified time bins to examine the effect
 % of stimulation and compare each pair of bins
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 gui_save = 'on';
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
@@ -578,8 +578,7 @@ parNames = {'rise_duration','FWHM','sponNorm_peak_mag_delta'}; % entry: event
         % 'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
         % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
     
-save_dir = FolderPathVA.fig;
-stat = true; % true if want to run anova when plotting bars
+dsfstat = true; % true if want to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 
 % Modify the group name for labeling the plots
@@ -614,6 +613,18 @@ selectGroups = {'AP-trig','OGAP-trig-ap'}; % ,'OG-rebound','OGAP-rebound' plot t
 [selectGroupsStruct,save_dir] = analyzeRisePeakCorr(alignedData_allTrials,'normWithSponEvent',normWithSponEvent,...
 	'selectGroups',selectGroups,'save_fig',save_fig,'save_dir',save_dir,'gui_save',gui_save);
 
+
+%% ====================
+% Fig 3
+% 9.3.3-extension-2. 
+close all
+saveFig = true; % true/false
+propertyName = 'FWHM'; % FWHM, peak_mag_delta
+peakCat = 'spon';
+normData = false; % true/false
+guiSave = true; % true/false
+FolderPathVA.fig = roiVarianceAnalysis(alignedData_allTrials,propertyName,'peakCat',peakCat,...
+	'normData',normData,'saveFig',saveFig,'saveDir',FolderPathVA.fig,'guiSave',guiSave);
 
 %% ====================
 % 9.3.4 Plot roi parameters. Grouped according to categories

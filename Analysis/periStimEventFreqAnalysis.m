@@ -1,10 +1,8 @@
 function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	% Return a new eventProp including event baseDiff 
 
-	% eventProp: a structure containing event properties for a single ROI
-	% stimRange: a n x 2 array. n is the repeat times of a stim in a trial
-	% timeInfo: time information for a single trial recording
-	% roiTrace: trace data for a single roi. It has the same length as the timeInfo
+	% alignedData: output of function 'get_event_trace_allTrials'
+
 
 	% Defaults
 	filter_roi_tf = false; % true/false. If true, screen ROIs
