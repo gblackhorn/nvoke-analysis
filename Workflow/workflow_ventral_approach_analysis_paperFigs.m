@@ -578,7 +578,7 @@ parNames = {'rise_duration','FWHM','sponNorm_peak_mag_delta'}; % entry: event
         % 'rise_duration','sponNorm_rise_duration','peak_mag_delta',...
         % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
     
-dsfstat = true; % true if want to run anova when plotting bars
+stat = true; % Set it to true to run anova when plotting bars
 stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 
 % Modify the group name for labeling the plots

@@ -21,7 +21,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	savepath_nogui = '';
 	fname_suffix = '';
 
-	stat = false; % true if want to run anova when plotting bars
+	stat = false; % Set it to true to run anova when plotting bars
 	stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 
 	FontSize = 12;
@@ -369,6 +369,56 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 		savePlot(f_intNwidth,...
 			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
 	end
+
+
+	% Scatter plot of the event width (FWHM) and the time interval from the preceding events
+	f_intNpeak = figure('Name', 'ScatterPlot peakMagDelta vs preEvent time interval');
+    % f_stat = figure('Name', 'bar stat');
+
+    groupNames = {event_info_struct.group};
+    group_num = numel(groupNames);
+
+	if group_num == 1
+		fig_position = [0.1 0.1 0.2 0.3]; % left, bottom, width, height
+	else
+		fig_position = [0.1 0.1 0.8 0.4];
+	end
+	set(f_intNpeak, 'Units', 'normalized', 'Position', fig_position)
+    % set(f_stat, 'Units', 'normalized', 'Position', fig_position)
+
+	tlo_intNpeak = tiledlayout(f_intNpeak, ceil(group_num/4), 4);
+	% tlo_barstat = tiledlayout(f_stat, ceil(par_num/4), 4);
+
+
+	for gn = 1:group_num
+		% bar plot and statistics
+		ax_intNpeak = nexttile(tlo_intNpeak);
+		% ax_stat = nexttile(tlo_barstat);
+
+		% Get the time intervals between the preceding and current events. Get the indices of NaN entries 
+		preEventInt = [event_info_struct(gn).event_info.preEventIntPeak]';
+		idxNaNInt = find(isnan(preEventInt));
+
+		% Get the event width (peak_mag_delta). Get the indices of NaN entries 
+		eventPeakMagDelta = [event_info_struct(gn).event_info.peak_mag_delta]';
+		idxNaNPMD = find(isnan(eventPeakMagDelta));
+
+		% Remove the NaN entries
+		idxNaN = unique(vertcat(idxNaNInt,idxNaNPMD));
+		preEventInt(idxNaN) = [];
+		eventPeakMagDelta(idxNaN) = [];
+
+		% Create a scatter plot to show the relationship between the time interval and the event width
+		stylishScatter(preEventInt,eventPeakMagDelta,'plotWhere',gca,'titleStr',groupNames{gn},...
+			'xlabelStr','preEvent time-int','ylabelStr','peakMagDelta','showCorrCoef',true);
+	end
+	if save_fig
+		% fname = 'cd_plots';
+		fname = sprintf('peakMagDelta-VS-preEventInt-scatter-%s',fname_suffix);
+		savePlot(f_intNpeak,...
+			'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
+	end
+
 
 
 
