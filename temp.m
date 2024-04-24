@@ -1018,4 +1018,7 @@ legend({sepGroupsStruct.labels})
 hold off
 set(gca,'children',flipud(get(gca,'children')))
 
-
+%% ==========
+recdata{11, 2}.FOV_loc = recdata{10, 2}.FOV_loc;
+recdata{11, 2}.mouseID = recdata{10, 2}.mouseID;
+recdata{11, 2}.fovID = recdata{10, 2}.fovID;

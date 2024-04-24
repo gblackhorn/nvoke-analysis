@@ -2,7 +2,6 @@ function [traceMatrix,varargout] = recTrace(alignedDataRec,varargin)
 	% Get ROIs' traces from a single recording as a alignedData form
 
 	% alignedDataRec: alignedData for one recording. Get this using the function 'get_event_trace_allTrials' 
-	% binSize: unit: second
 	% roiNames: Names of ROIs. This can be used as xLabels and yLabels when displaying corrMatrix using heatmap
 		% example: h = heatmap(plotWhere,xLabels,yLabels,corrMatrix,'Colormap',jet);
 

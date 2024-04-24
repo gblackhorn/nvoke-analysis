@@ -44,6 +44,8 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
     for ii = 1:2:(nargin-3)
         if strcmpi('yData2', varargin{ii})
             yData2 = varargin{ii+1}; % if yData2 is input, it will be plot as an overlay. It should have the same size as yData
+        elseif strcmpi('scaleYData', varargin{ii})
+            scaleYData = varargin{ii+1}; 
         elseif strcmpi('plotInterval', varargin{ii})
             plotInterval = varargin{ii+1}; 
         elseif strcmpi('ylabels', varargin{ii})
@@ -84,26 +86,49 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
         plotWhere = gca;
     end
 
-    % Scale yData using the value of plotInterval to make it the plot
-    if scaleYData
-        yData = yData*plotInterval/2;
-        if ~isempty(yData2)
-            yData2 = yData2*plotInterval/2;
-        end
-    end
+
+    % % Scale yData using the value of plotInterval to make it the plot
+    % if scaleYData
+    %     yData = yData*plotInterval/2;
+    %     if ~isempty(yData2)
+    %         yData2 = yData2*plotInterval/2;
+    %     end
+    % end
 
     trace_num = size(yData,2); % number of traces = number of yData columns
     trace_length = size(yData,1); % data point number of yData
-    trace_y_pos = [0:-plotInterval:(trace_num-1)*-plotInterval];
+    % trace_y_pos = [0:-plotInterval:(trace_num-1)*-plotInterval];
     % trace_y_pos = [0:-20:(trace_num-1)*-20];
-    trace_y_shift = repmat(trace_y_pos,trace_length,1);
-    yData_shift = yData+trace_y_shift;
+    % trace_y_shift = repmat(trace_y_pos,trace_length,1);
+    % yData_shift = yData+trace_y_shift;
     trace_y_tick = ylabels;
     % spikeFrames_all_cell = cell(trace_num,1);
 
-    if ~isempty(yData2)
-        yData2_shift = yData2+trace_y_shift;
+    % if ~isempty(yData2)
+    %     yData2_shift = yData2+trace_y_shift;
+    % end
+
+
+    % Adjust the y intervals to increase the readibility and avoid overlapping
+    offsets = zeros(1, trace_num);  % Initialize offsets for each trace
+    yData_shift = yData;  % Initialize adjusted data matrix
+    yData2_shift = yData2;  % Initialize adjusted data matrix
+
+    for i = 1:trace_num  % Iterate through each trace
+        if i > 1
+            % Calculate the offset based on the previous trace's min and the current trace's max
+            offsets(i) = offsets(i-1)-(max(yData(:,i))-min(yData(:,i-1)))-abs(min(yData(:,i-1))-max(yData(:,i)));
+        end
+        
+        % Adjust the trace by the calculated offset
+        yData_shift(:,i) = yData(:,i)+offsets(i);
+
+        if ~isempty(yData2)
+            yData2_shift(:,i) = yData2(:,i)+offsets(i);
+        end
     end
+
+
 
     % Plot the data traces
     plot(xData,yData_shift,'LineWidth',LineWidth,'Color',line_color);
@@ -145,7 +170,8 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
 
     set(gca,'box','off')
     set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
-    yticks(flip(trace_y_pos));
+    yticks(flip(offsets));
+    % yticks(flip(trace_y_pos));
     yticklabels(flip(trace_y_tick));
     set(gca,'Xtick',[xData(1):xtickInt:xData(end)]);
 
