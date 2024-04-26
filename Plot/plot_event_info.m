@@ -344,20 +344,30 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
 	for gn = 1:group_num
 		% bar plot and statistics
 		ax_intNwidth = nexttile(tlo_intNwidth);
-		% ax_stat = nexttile(tlo_barstat);
 
-		% Get the time intervals between the preceding and current events. Get the indices of NaN entries 
+		% Get the time intervals between the preceding and current events.
 		preEventInt = [event_info_struct(gn).event_info.preEventIntPeak]';
-		idxNaNInt = find(isnan(preEventInt));
 
-		% Get the event width (FWHM). Get the indices of NaN entries 
+		% Get the event width (FWHM). 
 		eventWidth = [event_info_struct(gn).event_info.FWHM]';
-		idxNaNFWHM = find(isnan(eventWidth));
 
-		% Remove the NaN entries
-		idxNaN = unique(vertcat(idxNaNInt,idxNaNFWHM));
-		preEventInt(idxNaN) = [];
-		eventWidth(idxNaN) = [];
+		% Remove the locations of NaN entries (Inclusive. If idx-a in array-1 is a NaN, remove the
+		% idx-a in array-2 even if it is not a NaN to keep array-1 and array-2 to be the same size)
+		cellDataWithoutNaN = rmNaN({preEventInt,eventWidth});
+		preEventInt = cellDataWithoutNaN{1};
+		eventWidth = cellDataWithoutNaN{2};
+
+		% % Get the time intervals between the preceding and current events. Get the indices of NaN entries 
+		% idxNaNInt = find(isnan(preEventInt));
+
+		% % Get the event width (FWHM). Get the indices of NaN entries 
+		% eventWidth = [event_info_struct(gn).event_info.FWHM]';
+		% idxNaNFWHM = find(isnan(eventWidth));
+
+		% % Remove the NaN entries
+		% idxNaN = unique(vertcat(idxNaNInt,idxNaNFWHM));
+		% preEventInt(idxNaN) = [];
+		% eventWidth(idxNaN) = [];
 
 		% Create a scatter plot to show the relationship between the time interval and the event width
 		stylishScatter(preEventInt,eventWidth,'plotWhere',gca,'titleStr',groupNames{gn},...
