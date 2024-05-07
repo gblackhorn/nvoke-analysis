@@ -114,8 +114,10 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 		alignedData.roi_map = trialData{traceData_col}.roi_map;
 		if isfield(trialData{traceData_col}, 'fovID')
 			alignedData.fovID = trialData{traceData_col}.fovID;
+			alignedData.fovLoc = trialData{traceData_col}.FOV_loc;
 		else
 			alignedData.fovID = 'NA';
+			alignedData.fovLoc = 'NA';
 		end
 
 		% Get the time info and calcium signal (usually 'lowpass' data and 'decon' data)

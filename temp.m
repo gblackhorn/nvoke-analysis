@@ -1022,3 +1022,24 @@ set(gca,'children',flipud(get(gca,'children')))
 recdata{11, 2}.FOV_loc = recdata{10, 2}.FOV_loc;
 recdata{11, 2}.mouseID = recdata{10, 2}.mouseID;
 recdata{11, 2}.fovID = recdata{10, 2}.fovID;
+
+%% ==========
+datafolderpath = 'D:\guoda\Documents\Workspace Large Files\OIST\confocal\20211014_ventralApproach_G137-G141';
+makeFolderThumbnails(datafolderpath, 'fileType', 'czi', 'method', 'mean', 'frameIndex', 'all', 'aspectRatio', 'original', 'newHeight', 256, 'imageDescriptor', 'BilateralInjection');
+
+
+%% ==========
+% Plot calcium traces by reading the csv file exported by the IDPS software
+close all
+saveFig = true; % true/false
+showYtickRight = true;
+[timeFluorTab,csvFolder,csvName] = readInscopixTraceCsv; % csvName does not contain the file extension
+timeFluorTab{:,2:end} = timeFluorTab{:,2:end} .* 100; % Convert the deltaF/F to deltaF/F %
+plot_TemporalData_Trace([],timeFluorTab{:,1},timeFluorTab{:,2:end},...
+	'ylabels',timeFluorTab.Properties.VariableNames,'showYtickRight',showYtickRight)
+
+if saveFig
+	msg = 'Save the ROI traces';
+	savePlot(gcf,'save_dir',csvFolder,'guiSave',true,...
+		'guiInfo',msg,'fname',csvName);
+end

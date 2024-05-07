@@ -108,7 +108,7 @@ end
 
 %% ==================== 
 % 2.1.2 Spatial filter and motion correct the movies
-movieKeyword = '*.isxd'; % Code will search for files with names like this and motion-correct them
+movieKeyword = '*sched_0.isxd'; % Code will search for files with names like this and motion-correct them
 rmBPfile = true; % true/false. Remove the spatial filtered file ('bp_file') after creating the motion-corrected video
 [movieFolder,~,chosenStatus] = getInputOutputFolders('inputFolder',FolderPathVA.project,...
 	'outputFolder',FolderPathVA.project,'inputMSG','Chose a folder containing cropped files');
@@ -196,6 +196,24 @@ else
 end
 
 
+%% ==========
+% If ROI signal is directly extracted from IDPS, following code can be used to plot the traces
+% 3.4 Plot calcium traces by reading the csv file exported by the IDPS software
+close all
+saveFig = true; % true/false
+showYtickRight = true; % Show the ROI signal value on the right Y axis. Left Y contain ROI names
+[timeFluorTab,csvFolder,csvName] = readInscopixTraceCsv; % csvName does not contain the file extension
+timeFluorTab{:,2:end} = timeFluorTab{:,2:end} .* 100; % Convert the deltaF/F to deltaF/F %
+plot_TemporalData_Trace([],timeFluorTab{:,1},timeFluorTab{:,2:end},...
+	'ylabels',timeFluorTab.Properties.VariableNames,'showYtickRight',showYtickRight)
+
+if saveFig
+	msg = 'Save the ROI traces';
+	savePlot(gcf,'save_dir',csvFolder,'guiSave',true,...
+		'guiInfo',msg,'fname',csvName);
+end
+
+
 %% ==================== 
 % Better use deigo cluster for this step. Prepare files in the bucket for tranfering them to deigo
 % Check file 'command_for_cluster.sh' for useful lines to run CNMFe on cluster
@@ -225,8 +243,8 @@ end
 
 %% ====================
 % 5.2 Convert ROI info to matlab file (.m). 
-% Place results.m from CNMFe, ROI info (csv files) and GPIO info (csv) from IDPS to the same folder, and run this
-% function
+% Place results.m from CNMFe, ROI info (csv files) and GPIO info (csv) from IDPS to the same folder,
+% and run this function
 % [ROIdata, recording_num, cell_num] = ROIinfo2matlab; % for data without CNMFe process
 input_dir = FolderPathVA.cnmfe;
 output_dir = FolderPathVA.ventralApproach;

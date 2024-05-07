@@ -65,7 +65,7 @@ function [recdata, varargout] = ROI_matinfo2matlab(varargin)
 		CalSig_raw = array2table(CalSig_raw, 'VariableNames', neuron_name); 
 
 		roi_readout_file = fullfile(roi_readout_file_info(n).folder, roi_readout_file_info(n).name);
-		opts = detectImportOptions(roi_readout_file); % creat import options based on file content
+		opts = detectImportOptions(roi_readout_file); % create import options based on file content
 		opts.DataLine = 3; % set data line from the third row of csv file. First 2 rows are 'char'
 		opts.VariableDescriptionsLine = 2; % set 2nd row as variable description
 		ROI_table = readtable(roi_readout_file, opts); % import file using modified opts, so data will be number arrays

@@ -16,7 +16,9 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
     yData2 = [];
     plotInterval = 10; % offset for traces on y axis to seperate them
     xtickInt = 10; % unit: second. x tick interval. 
-    scaleYData = true;
+    % scaleYData = true;
+    showYtickRight = false; % If true, display the value of y on the right side. Left y-tick shows
+                            % the ROI names
 
     % vis = 'on'; % set the 'visible' of figures
     % decon = true; % true/false plot decon trace
@@ -44,8 +46,8 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
     for ii = 1:2:(nargin-3)
         if strcmpi('yData2', varargin{ii})
             yData2 = varargin{ii+1}; % if yData2 is input, it will be plot as an overlay. It should have the same size as yData
-        elseif strcmpi('scaleYData', varargin{ii})
-            scaleYData = varargin{ii+1}; 
+        elseif strcmpi('showYtickRight', varargin{ii})
+            showYtickRight = varargin{ii+1}; 
         elseif strcmpi('plotInterval', varargin{ii})
             plotInterval = varargin{ii+1}; 
         elseif strcmpi('ylabels', varargin{ii})
@@ -128,6 +130,8 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
         end
     end
 
+    % Use offsets to calculate the plotInterval, which will be used to set the yLim
+    plotInterval = max(diff(offsets));
 
 
     % Plot the data traces
@@ -142,7 +146,8 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
     xlim([xData(1) xData(end)]); % set the x-axis limit to the beginnin and the end of xData
     ymax = max(yData_shift(:,1)); % Get the largest y value
     ymin = min(yData_shift(:,end)); % Get the smallest y value
-    ylim([ymin-plotInterval/2 ymax+plotInterval/2]) % add plotInterval to ymax and ymin and use them for ylim
+    newYl = [ymin-abs(plotInterval)/2 ymax+abs(plotInterval)/2];
+    ylim(newYl) % add plotInterval to ymax and ymin and use them for ylim
     hold on
 
     if isempty(marker1_xData)
@@ -174,6 +179,13 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
     % yticks(flip(trace_y_pos));
     yticklabels(flip(trace_y_tick));
     set(gca,'Xtick',[xData(1):xtickInt:xData(end)]);
+
+    % Display the value of y on the right side of the axis
+    if showYtickRight
+        yyaxis right
+        ylim(newYl)
+        ylabel('y-value')
+    end
 
     if ~isempty(shadeData)
         shade_type_num = numel(shadeData);
