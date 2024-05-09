@@ -99,7 +99,7 @@ function [corrAndDist,varargout] = roiCorrAndDistMultiRec(alignedData,binSize,va
 	end
 
 
-	% combine the corrFlat and distFlat from all a recordings together
+	% combine the corrFlat and distFlat from all recordings
 	corrFlatAllCell = {corrAndDist.corrFlat};
 	distFlatAllCell = {corrAndDist.distFlat};
 

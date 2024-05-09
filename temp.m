@@ -1043,3 +1043,14 @@ if saveFig
 	savePlot(gcf,'save_dir',csvFolder,'guiSave',true,...
 		'guiInfo',msg,'fname',csvName);
 end
+
+
+%% ==========
+% Copy the roi names to recdata{n,2}.locTag.roiNames
+
+% Loop through the recordings
+recNum = size(recdata,1);
+for n = 1:recNum
+	roiNames = recdata{n,2}.raw.Properties.VariableNames(2:end);
+	[recdata{n,2}.locTag.roiNames] = roiNames{:};
+end

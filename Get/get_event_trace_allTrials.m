@@ -161,9 +161,22 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 
 		% event_spec_fulltable = trialData{event_spec_fulltable_col};
 		aligned_time = [];
-		alignedData.traces =  struct('roi', cell(1, roi_num), 'value', cell(1, roi_num),...
-			'mean_val', cell(1, roi_num), 'std_val', cell(1, roi_num),...
-			'roi_coor', cell(1, roi_num), 'eventProp', cell(1, roi_num));
+
+		% Create an empty structure to store the ROI information
+		% Update this using the function 'empty_content_struct'. Add all the fieldnames
+		fieldNamesOfDataTraces = {'roi','value','mean_val','std_val','roi_coor',...
+		'subNuclei','eventProp'};
+		alignedData.traces = empty_content_struct(fieldNamesOfDataTraces,roi_num);
+		% alignedData.traces =  struct('roi', cell(1, roi_num), 'value', cell(1, roi_num),...
+		% 	'mean_val', cell(1, roi_num), 'std_val', cell(1, roi_num),...
+		% 	'roi_coor', cell(1, roi_num), 'eventProp', cell(1, roi_num));
+
+		% Add roi names to the 'roi' field in alignedData.traces
+		[alignedData.traces.roi] = event_spec_fulltable.Properties.VariableNames{:};
+		% Add roi location tag to the 'subNuclei' field in alignedData.traces
+		[alignedData.traces.subNuclei] = trialData{traceData_col}.locTag(:).locTags;
+
+		
 		empty_idx = []; % roi idx in alignedData.traces does not contain any event info
 		for n = 1:roi_num
 			% roiName = fullTracesData.Properties.VariableNames{n};

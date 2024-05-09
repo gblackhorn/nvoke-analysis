@@ -27,7 +27,7 @@ function [binaryMatrix,varargout] = recEventBinaryMatrix(alignedDataRec,binSize,
 	    end
 	end
 
-	% get the recording data and time from the trialName
+	% get the recording date and time from the trialName
 	underScoreIDX = strfind(alignedDataRec.trialName,'_');
 	recDateTime = alignedDataRec.trialName(1:(underScoreIDX(1)-1));
 
