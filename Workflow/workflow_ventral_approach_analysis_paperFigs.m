@@ -287,22 +287,6 @@ violinplotWithStat({foldDataAP,foldDataOGAP},'groupNames',{'AP without OG','AP w
 
 
 
-% % plot and compare a single bins from various stimulation groups
-% violinStimNames = {'og-5s ap-0.1s','og-5s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
-% violinBinIDX = [4,4]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
-% normToFirst = false; % true/false. violinPlot: normalize all the data to the mean of the first group (first stimNames)
-
-% if normToFirst
-% 	normStr = sprintf(' normTo[%s]',violinStimNames{1});
-% else
-% 	normStr = '';
-% end
-
-% titleStr = sprintf('violinPlot of a single bin from periStim freq%s',normStr);
-% [violinData,statInfo] = violinplotPeriStimFreq2(barStat,violinStimNames,violinBinIDX,...
-% 	'normToFirst',normToFirst,'titleStr',titleStr,...
-% 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','off');
-
 %% ====================
 % Fig 2 violin plot of specific bins in periStim event frequency
 % 9.1.3

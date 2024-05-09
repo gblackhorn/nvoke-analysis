@@ -362,7 +362,7 @@ recdata_organized = recordings;
 % Add FOV category code to FOV_loc
 % [recdata_organized] = add_fov_category(recdata_organized,...
 % 	'hemi_sort', hemi_sort, 'fov_contents', fov_contents);
-overwrite = true; %options: true/false
+overwrite = false; %options: true/false
 [recdata_organized] = auto_gen_mouseID_fovID(recdata_organized,'overwrite',overwrite);
 % [recdata_organized,mouseIDs,fovIDs] = auto_gen_mouseID_fovID(recdata_organized,'overwrite',overwrite);
 
@@ -380,6 +380,12 @@ recdata_source = recdata_organized; % The data giving FOV info
 recdata_organized = recdata_target_with_fov;
 
 clear recdata_target recdata_source recdata_target_with_fov
+
+
+%% ====================
+% 6.6 Add the location tag (subnuclei information) to ROIs
+overwrite = false; %options: true/false
+recdata_organized = addRoiLocTag2recdata(recdata_organized,'overwrite',overwrite);
 
 
 %% ====================
@@ -413,7 +419,7 @@ clear recdata_target recdata_source recdata_target_with_fov
 
 
 %% ====================
-% 6.6 sort the recordings using date and time
+% 6.7 sort the recordings using date and time
 recdata_organized_bk = recdata_organized;
 recNames = recdata_organized(:,1);
 
@@ -428,7 +434,7 @@ recdata_organized = recdata_organized(sortedIndices,:);
 
 
 %% ====================
-% 6.7 Save the modified 'recdata_organized'
+% 6.8 Save the modified 'recdata_organized'
 uisave('recdata_organized', fullfile(FolderPathVA.ventralApproach, 'recdata_organized'));
 
 

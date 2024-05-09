@@ -59,6 +59,7 @@ function [eventProp_all,varargout] = collect_event_prop(alignedData,varargin)
     		for rn = 1:roi_num
     			roiData = alignedData_trial.traces(rn);
     			roiName = roiData.roi; 
+                subNuclei = roiData.subNuclei;
                 eventProp_roi = roiData.eventProp;
                 roi_coor = roiData.roi_coor;
     			event_num = numel(eventProp_roi);
@@ -79,6 +80,7 @@ function [eventProp_all,varargout] = collect_event_prop(alignedData,varargin)
 
                                 eventProp_trial_roi{pcn}.trialName = trialName;
                                 eventProp_trial_roi{pcn}.roiName = roiName;
+                                eventProp_trial_roi{pcn}.subNuclei = subNuclei;
                                 eventProp_trial_roi{pcn}.fovID = fovID;
                                 eventProp_trial_roi{pcn}.stim_name = stim_name;
                                 eventProp_trial_roi{pcn}.combine_stim = combine_stim; % multiple stimuli combined in single recordings
@@ -129,18 +131,21 @@ function [eventProp_all,varargout] = collect_event_prop(alignedData,varargin)
         				case 'event'
         					prop_trialName = cell(1, event_num);
         					prop_roiName = cell(1, event_num);
+                            prop_subNuclei = cell(1, event_num);
                             prop_fovID = cell(1, event_num);
         					prop_stim_name = cell(1, event_num);
                             prop_roi_coor = cell(1, event_num);
 
         					prop_trialName(:) = {trialName};
         					prop_roiName(:) = {roiName};
+                            prop_subNuclei(:) = {subNuclei};
                             prop_fovID(:) = {fovID};
         					prop_stim_name(:) = {stim_name};
                             prop_roi_coor(:) = {roi_coor};
 
                             [eventProp_roi.trialName] = prop_trialName{:};
                             [eventProp_roi.roiName] = prop_roiName{:};
+                            [eventProp_roi.subNuclei] = prop_subNuclei{:};
                             [eventProp_roi.fovID] = prop_fovID{:};
                             [eventProp_roi.stim_name] = prop_stim_name{:};
                             [eventProp_roi.roi_coor] = prop_roi_coor{:};
