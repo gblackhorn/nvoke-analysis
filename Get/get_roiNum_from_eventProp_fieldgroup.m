@@ -20,7 +20,7 @@ function [TrialRoiList,varargout] = get_roiNum_from_eventProp_fieldgroup(eventPr
     field_contents = {eventProp.(field_name)};
     unique_fc = unique(field_contents);
     unique_fc_num = numel(unique_fc);
-    TrialRoiList_fields = {field_name,'list','numTrial','numRoi'};
+    TrialRoiList_fields = {field_name,'list','recNum','roiNum'};
     TrialRoiList = empty_content_struct(TrialRoiList_fields,unique_fc_num);
 
     for n = 1:unique_fc_num
@@ -30,8 +30,8 @@ function [TrialRoiList,varargout] = get_roiNum_from_eventProp_fieldgroup(eventPr
 
     	TrialRoiList(n).(field_name) = fc;
     	TrialRoiList(n).list = get_roiNum_from_eventProp(eventProp_sub);
-    	TrialRoiList(n).numTrial = numel(TrialRoiList(n).list);
-    	TrialRoiList(n).numTrial = sum([TrialRoiList(n).list.roi_num]);
+    	TrialRoiList(n).recNum = numel(TrialRoiList(n).list);
+    	TrialRoiList(n).recNum = sum([TrialRoiList(n).list.roi_num]);
     end
 end
 

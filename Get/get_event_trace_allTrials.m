@@ -42,6 +42,17 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 
 	rsquareThresh = 0.7; % used for fitting the decay of traces during OG
 
+	% Defaults for filtering out data
+	caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
+	disROI = true; % true/false. If true, Keep ROIs using the setting below, and delete the rest
+	disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-1s'};
+	disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
+	sponfreqFilter.status = true; % true/false. If true, use the following settings to filter ROIs
+	sponfreqFilter.field = 'sponfq'; % 
+	sponfreqFilter.thresh = 0.05; % Hz. default 0.06
+	sponfreqFilter.direction = 'high';
+
+
 	debug_mode = false; % true/false
 
 
@@ -79,6 +90,14 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	        scale_data = varargin{ii+1};
         elseif strcmpi('mod_pcn', varargin{ii})
         	mod_pcn = varargin{ii+1};
+        elseif strcmpi('caDeclineOnly', varargin{ii})
+        	caDeclineOnly = varargin{ii+1};
+        elseif strcmpi('disROI', varargin{ii})
+        	disROI = varargin{ii+1};
+        elseif strcmpi('disROI_setting', varargin{ii})
+        	disROI_setting = varargin{ii+1};
+        elseif strcmpi('sponfreqFilter', varargin{ii})
+        	sponfreqFilter = varargin{ii+1};
         elseif strcmpi('debug_mode', varargin{ii})
         	debug_mode = varargin{ii+1};
 	    end
@@ -403,4 +422,28 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	end
 
 	alignedData_allTrials = [data_cell{:}];
+
+	if caDeclineOnly
+		stimNames = {alignedData_allTrials.stim_name};
+		[ogIDX] = judge_array_content(stimNames,{'OG-LED'},'IgnoreCase',true); % index of trials using optogenetics stimulation 
+		caDe_og = [alignedData_allTrials(ogIDX).CaDecline]; % calcium decaline logical value of og trials
+		[disIDX_og] = judge_array_content(caDe_og,false); % og trials without significant calcium decline
+		disIDX = ogIDX(disIDX_og); 
+		alignedData_allTrials(disIDX) = [];
+	end
+
+	if disROI
+		alignedData_allTrials = discard_alignedData_roi(alignedData_allTrials,...
+			'stims',disROI_setting.stims,'eventCats',disROI_setting.eventCats);
+	end
+
+	% Filter ROIs using their spontaneous event freq
+	if sponfreqFilter.status
+		[alignedData_allTrials] = Filter_AlignedDataTraces_eventFreq_multiTrial(alignedData_allTrials,...
+			'freq_field',sponfreqFilter.field,'freq_thresh',sponfreqFilter.thresh,'filter_direction',sponfreqFilter.direction);
+	end
+
+	% Create a list showing the numbers of various events in each ROI
+	[alignedData_event_list] = eventcat_list(alignedData_allTrials);
+	varargout{1} = alignedData_event_list;
 end

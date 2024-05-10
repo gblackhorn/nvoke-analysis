@@ -18,25 +18,8 @@ clearvars -except recdata_organized opt alignedData_allTrials adata alignedData_
 % Even if you don't want to save the plots, FolderPathVA should exist to avoid bug
 
 GUI_chooseFolder = false; % true/false. Use GUI to locate the DataFolder and AnalysisFolder
+FolderPathVA = initProjFigPathVIIO(GUI_chooseFolder);
 
-if GUI_chooseFolder
-	DataFolder = uigetdir(matlabroot,'Choose a folder containing data and project folders');
-	AnalysisFolder = uigetdir(matlabroot,'Choose a folder containing analysis');
-else
-	PC_name = getenv('COMPUTERNAME'); 
-	% set folders for different situation
-	DataFolder = 'G:\Workspace\Inscopix_Seagate';
-
-	if strcmp(PC_name, 'GD-AW-OFFICE')
-		AnalysisFolder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
-	elseif strcmp(PC_name, 'BLADE14-GD')
-		AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
-	else
-		error('set var GUI_chooseFolder to true to select default folders using GUI')
-	end
-end
-
-[FolderPathVA] = set_folder_path_ventral_approach(DataFolder,AnalysisFolder);
 %% ====================
 % Save processed data
 save_dir = uigetdir(AnalysisFolder);
@@ -100,36 +83,15 @@ adata.sponfreqFilter.thresh = 0.05; % Hz. default 0.06
 adata.sponfreqFilter.direction = 'high';
 debug_mode = false; % true/false
 
-[alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
+[alignedData_allTrials,alignedData_event_list] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
 	'traceData_type', adata.traceData_type, 'event_data_group', adata.event_data_group,'eventTimeType',adata.eventTimeType,...
 	'event_filter', adata.event_filter, 'event_align_point', adata.event_align_point, 'cat_keywords', adata.cat_keywords,...
 	'pre_event_time', adata.pre_event_time, 'post_event_time', adata.post_event_time,...
 	'stim_section',adata.stim_section,'ss_range',adata.ss_range,...
 	'stim_time_error',adata.stim_time_error,'rebound_duration',adata.rebound_duration,...
-	'mod_pcn', adata.mod_pcn,'debug_mode',debug_mode);
-
-if adata.caDeclineOnly
-	adata.stimNames = {alignedData_allTrials.stim_name};
-	[adata.ogIDX] = judge_array_content(adata.stimNames,{'OG-LED'},'IgnoreCase',true); % index of trials using optogenetics stimulation 
-	adata.caDe_og = [alignedData_allTrials(adata.ogIDX).CaDecline]; % calcium decaline logical value of og trials
-	[adata.disIDX_og] = judge_array_content(adata.caDe_og,false); % og trials without significant calcium decline
-	adata.disIDX = adata.ogIDX(adata.disIDX_og); 
-	alignedData_allTrials(adata.disIDX) = [];
-end
-
-if adata.disROI
-	alignedData_allTrials = discard_alignedData_roi(alignedData_allTrials,...
-		'stims',adata.disROI_setting.stims,'eventCats',adata.disROI_setting.eventCats);
-end
-
-% Filter ROIs using their spontaneous event freq
-if adata.sponfreqFilter.status
-	[alignedData_allTrials] = Filter_AlignedDataTraces_eventFreq_multiTrial(alignedData_allTrials,...
-		'freq_field',adata.sponfreqFilter.field,'freq_thresh',adata.sponfreqFilter.thresh,'filter_direction',adata.sponfreqFilter.direction);
-end
-
-% Create a list showing the numbers of various events in each ROI
-[alignedData_event_list] = eventcat_list(alignedData_allTrials);
+	'mod_pcn', adata.mod_pcn,'caDeclineOnly',adata.caDeclineOnly,...
+	'disROI',adata.disROI,'disROI_setting',adata.disROI_setting,'sponfreqFilter',adata.sponfreqFilter,...
+	'debug_mode',debug_mode);
 
 
 %% ====================
@@ -497,7 +459,7 @@ end
 % them according to 'mgSetting.groupField'. Some analysis and plots can only be created using
 % the 'grouped_event'
 
-eprop.entry = 'event'; % options: 'roi' or 'event'
+eprop.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 eprop.modify_stim_name = true; % true/false. Change the stimulation name, 
@@ -511,12 +473,12 @@ end
 
 
 % Rename stim name of og to EXog if og-5s exhibited excitation effect
-eventType = eprop.entry; % 'roi' or 'event'. The entry type in eventProp
+% eventType = eprop.entry; % 'roi' or 'event'. The entry type in eventProp
 mgSetting.sponOnly = false; % true/false. If eventType is 'roi', and mgSetting.sponOnly is true. Only keep spon entries
 mgSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
 mgSetting.dis_spon = false; % true/false. Discard spontaneous events
 mgSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
-mgSetting.groupField = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+mgSetting.groupField = {'peak_category','subNuclei'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
 
 
 % rename the stimulation tag if og evokes spike at the onset of stimulation
@@ -539,7 +501,7 @@ debug_mode = false; % true/false
 
 % {'trig [EXog]','EXog','trig-AP',}
 tags_discard = {'rebound [ap','ap-0.25s','ap-0.5s','og-0.96s','opto-delay','rebound [og&ap-5s]',}; % Discard groups containing these words. 'spon','opto-delay','og&ap','rebound [og&ap-5s]'
-tags_keep = {'trig','trig-ap','rebound [og-5s]','spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
+tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
 tagsForMerge = {'trig [og&ap-5s]','trig [og-5s]'};
 NewGroupName = 'opto-evoked all';
 NewtagName = 'opto-evoked [opto-5s opto-5s_air-0.1s]';
@@ -563,7 +525,7 @@ parNames = {'rise_duration','FWHM','sponNorm_peak_mag_delta'}; % entry: event
         % 'sponNorm_peak_mag_delta','baseDiff','baseDiff_stimWin','val_rise',
     
 stat = true; % Set it to true to run anova when plotting bars
-stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
+% stat_fig = 'off'; % options: 'on', 'off'. display anova test figure or not
 
 % Modify the group name for labeling the plots
 [newStimNameEventCatCell] = modStimNameEventCat({grouped_event_info_filtered.group});

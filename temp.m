@@ -1054,3 +1054,10 @@ for n = 1:recNum
 	roiNames = recdata{n,2}.raw.Properties.VariableNames(2:end);
 	[recdata{n,2}.locTag.roiNames] = roiNames{:};
 end
+
+
+
+T = struct2table(eventStructForPlotFiltered,"AsArray",true);
+T = T(:,["group","numTrial","animalNum","numRoi"]);
+uit = uitable(f_number,'Data',table2cell(T(:,["group","numTrial","animalNum","numRoi"])),...
+	'ColumnName', T.Properties.VariableNames);
