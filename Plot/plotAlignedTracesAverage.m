@@ -6,7 +6,7 @@ function [tracesAverage,tracesShade,varargout] = plotAlignedTracesAverage(plotWh
     plot_combined_data = true; % mean value and std of all traces
     plot_raw_races = false; % true/false. true: plot every single trace
     plot_median = false;
-    medianProp = 'FWHM';
+    medianProp = 'FWHM'; % eventsProps.(medianProp). Plot the trace with the median in 'medianProp'
     shadeType = 'ste'; % std/ste
     y_range = [];
     tickInt_time = 1; % interval of tick for timeInfo (x axis)
@@ -102,8 +102,8 @@ function [tracesAverage,tracesShade,varargout] = plotAlignedTracesAverage(plotWh
                 'plot_combined_data',false,'plot_raw_races',true,'tickInt_time',tickInt_time);
         end
     end
-    titleName = sprintf('%s [%s] %g-animal %g-roi %g-trace',...
-        stimName,eventCat,nNum.recDateNum,nNum.roiNum,nNum.tracesNum);
+    titleName = sprintf('%s [%s] %g-animal %g-rec %g-roi %g-trace',...
+        stimName,eventCat,nNum.recDateNum,nNum.recNum,nNum.roiNum,nNum.tracesNum);
     title(titleName)
 
     varargout{1} = nNum;

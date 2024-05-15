@@ -1,4 +1,4 @@
-% Workflow for genertating figures for VIIO manuscript 
+% Workflow_for_genertating_figures for VIIO manuscript 
 % nRIM, Da Guo
 
 % Initiate the folder path for saving data
@@ -53,7 +53,56 @@ debug_mode = false; % true/false
 
 
 %% ==========
-% 2.2 Extract properties of spontaneous events and group them according to ROIs' subnuclous location
+% 2.2 
+
+%% ==========
+% 2.3 Create the mean spontaneous traces in DAO and PO
+% Note: 'event_type' for alignedData must be 'detected_events'
+save_fig = true; % true/false
+save_dir = FolderPathVA.fig;
+at.stimNames = ''; % If empty, do not screen recordings with stimulation, instead use all of them
+at.eventCat = 'spon'; % options: 'trig','trig-ap','rebound','spon', 'rebound'
+at.subNucleiTypes = {'DAO','PO'}; % Separate ROIs using the subnuclei tag.
+at.plot_combined_data = true; % mean value and std of all traces
+at.showRawtraces = false; % true/false. true: plot every single trace
+at.showMedian = false; % true/false. plot raw traces having a median value of the properties specified by 'at.medianProp'
+at.medianProp = 'FWHM'; % 
+at.shadeType = 'ste'; % plot the shade using std/ste
+at.y_range = [-1 2]; % [-10 5],[-3 5],[-2 1]
+at.sponNorm = true; % true/false
+at.normalized = false; % true/false. normalize the traces to their own peak amplitudes.
+
+close all
+
+% Create a cell to store the trace info
+traceInfo = cell(1,numel(at.subNucleiTypes));
+
+% Loop through the subNucleiTypes
+for i = 1:numel(at.subNucleiTypes)
+	[~,traceInfo{i}] = AlignedCatTracesSinglePlot(alignedData_allTrials,at.stimNames,at.eventCat,...
+		'subNucleiType',at.subNucleiTypes{i},'plot_combined_data',at.plot_combined_data,...
+		'showRawtraces',at.showRawtraces,'showMedian',at.showMedian,'medianProp',at.medianProp,...
+		'shadeType',at.shadeType,'sponNorm',at.sponNorm,'normalized',at.normalized,'y_range',at.y_range);
+	if i == 1
+		guiSave = 'on';
+	else
+		guiSave = 'off';
+	end
+	if save_fig
+		save_dir = savePlot(gcf,'guiSave', guiSave, 'save_dir', save_dir, 'fname', traceInfo{i}.fname);
+	end
+end
+traceInfo = [traceInfo{:}];
+
+if save_fig
+	save(fullfile(save_dir,'alignedCalTracesInfo'), 'traceInfo');
+	FolderPathVA.fig = save_dir;
+end
+
+
+
+%% ==========
+% 2.4 Extract properties of spontaneous events and group them according to ROIs' subnuclous location
 
 % Get and group (gg) Settings
 ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
@@ -82,7 +131,7 @@ tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','r
 	'tags_keep',tags_keep);
 
 %% ==========
-% 2.3 Plot event properties
+% 2.5 Plot event properties
 
 % Settings
 save_fig = true; % true/false
@@ -123,7 +172,7 @@ end
 
 
 %% ==========
-% 2.4 Get and group data using ROI as entry and plot spontaneous event frequency in DAO and PO
+% 2.6 Get and group data using ROI as entry and plot spontaneous event frequency in DAO and PO
 
 % Get and group data
 ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventProp

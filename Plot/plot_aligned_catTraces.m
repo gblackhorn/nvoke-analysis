@@ -9,7 +9,7 @@ function [varargout] = plot_aligned_catTraces(alignedData,varargin)
 	plot_combined_data = true; % plot the mean value of all trace and add a shade using std
 	shadeType = 'std'; % std/ste
 	plot_raw_races = true; % true: plot the traces in the trace_data
-	plot_median = false;
+	plot_median = false; % eventsProps.(medianProp). Plot the trace with the median in 'medianProp'
 	medianProp = 'FWHM';
 
 	y_range = [-20 30];
@@ -229,7 +229,8 @@ function [CellArrayDataDS] = downSampleHighFreqCell(CellArrayData)
 	CellArrayDataDS = CellArrayData;
 
 	% Get the data numbers in every cell
-	CellArrayDataNum = cellfun(@(x) length(x),CellArrayData);
+	% CellArrayDataNum = cellfun(@(x) length(x),CellArrayData);
+	CellArrayDataNum = cellfun(@(x) size(x,1),CellArrayData);
 
 	% Get the unique numbers
 	CellArrayDataNumUnique = unique(CellArrayDataNum);

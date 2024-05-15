@@ -22,7 +22,7 @@ FolderPathVA = initProjFigPathVIIO(GUI_chooseFolder);
 
 %% ====================
 % Save processed data
-save_dir = uigetdir(AnalysisFolder);
+save_dir = uigetdir(FolderPathVA.analysis);
 dt = datestr(now, 'yyyymmdd');
 % save(fullfile(save_dir, [dt, '_ProcessedData_ogEx']),...
 %     'recdata_organized','alignedData_allTrials','opt','adata');
@@ -39,6 +39,7 @@ uisave({'recdata_organized','alignedData_allTrials','opt','adata'},...
 % roi_idx = [5]; % roi number. 2 for 'neuron2'
 
 % [recdata_organized] = discard_data(recdata_organized,trial_idx,roi_idx);
+
 % %% ====================
 % % 8.6 discard rec if the fovID number is bigger than fov_max
 % fov_max = 6; % fov 1-6 are from the ChrimsonR positive CN axon side
@@ -313,7 +314,7 @@ filters = {[nan nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb e
 % 9.1.4 Plot traces and stim-aligned traces
 % Note: set adata.event_type to 'stimWin' when creating alignedData_allTrials
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 pause_after_trial = false;
 
 filter_roi_tf = false; % true/false. If true, screen ROIs
@@ -358,7 +359,7 @@ end
 % mean and std shade
 % note: 'event_type' for alignedData_allTrials must be 'detected_events'
 close all
-tplot.save_fig = true; % true/false
+tplot.save_fig = false; % true/false
 tplot.plot_combined_data = true; % mean value and std of all traces
 tplot.plot_raw_races = false; % true/false. true: plot every single trace
 tplot.plot_median = true; % true/false. plot raw traces having a median value of the properties specified by 'tplot.medianProp'
