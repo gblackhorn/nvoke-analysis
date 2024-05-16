@@ -30,29 +30,12 @@
 clearvars -except recdata_organized alignedData_allTrials seriesData_sync
 
 %% ====================
-% 1. Locate the folders to find and save data 
+% 1. Setup folders 
+% This section is necessary for most sections in this workflow script. 
+% Even if you don't want to save the plots, FolderPathVA should exist to avoid bug
+
 GUI_chooseFolder = false; % true/false. Use GUI to locate the DataFolder and AnalysisFolder
-
-if GUI_chooseFolder
-	DataFolder = uigetdir(matlabroot,'Choose a folder containing data and project folders');
-	AnalysisFolder = uigetdir(matlabroot,'Choose a folder containing analysis');
-else
-	PC_name = getenv('COMPUTERNAME'); 
-	% set folders for different situation
-	DataFolder = 'G:\Workspace\Inscopix_Seagate';
-
-	if strcmp(PC_name, 'GD-AW-OFFICE')
-		AnalysisFolder = 'D:\guoda\Documents\Workspace\Analysis\'; % office desktop
-	elseif strcmp(PC_name, 'LAPTOP-84IERS3H')
-		AnalysisFolder = 'C:\Users\guoda\Documents\Workspace\Analysis'; % laptop
-	elseif strcmp(PC_name,'DESKTOP-DVGTQ1P')
-	    AnalysisFolder = 'C:\Users\nRIM_lab\Documents\ExampleData_nVoke\Analysis'; % Ana
-	else
-		error('set var GUI_chooseFolder to true to select default folders using GUI')
-	end
-end
-
-[FolderPathVA] = set_folder_path_ventral_approach(DataFolder,AnalysisFolder);
+FolderPathVA = initProjFigPathVIIO(GUI_chooseFolder);
 
 
 %% ==================== 
@@ -386,6 +369,12 @@ clear recdata_target recdata_source recdata_target_with_fov
 % 6.6 Add the location tag (subnuclei information) to ROIs
 overwrite = false; %options: true/false
 recdata_organized = addRoiLocTag2recdata(recdata_organized,'overwrite',overwrite);
+
+%% ====================
+% 6.6.1 Copy location tag (subnuclei information) from another recdata_organized
+sourceData = recdata_source;
+targetData = recdata_organized;
+recdata_organized = copylocTag(sourceData, targetData);
 
 
 %% ====================

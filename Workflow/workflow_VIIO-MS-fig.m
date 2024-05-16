@@ -189,7 +189,7 @@ tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','r
 
 % Generate figures for spontaneous event frequency
 % Change parNames and keep other setting the same as in 2.3
-parNames = {'sponfq'}; 
+parNames = {'sponInterval'}; % 'sponfq', 'sponInterval'
 [save_dir, plot_info] = plot_event_info(roiStructForPlotFiltered,'entryType',ggSetting.entry,...
 	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
 	'fname_suffix','ROI','save_fig', save_fig, 'save_dir', save_dir);

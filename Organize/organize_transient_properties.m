@@ -75,7 +75,7 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
         % disp(['roi_num: ', num2str(n)])
         if debug_mode
             fprintf('  ROI (%d/%d): %s\n', n, roi_num,roi_names{n});
-            if n == 22
+            if n == 12
                 disp('pause for debugging')
                 pause
             end
@@ -105,7 +105,8 @@ function [transient_properties,varargout] = organize_transient_properties(RecInf
                         time_info, peak_par.peakMag, peak_par.peakLoc,...
                         'slope_per_low', 0.1, 'slope_per_high', 0.9, 'existing_peakInfo', peakInfo,...
                         'extension_time_pre', existing_peak_duration_extension_time_pre,...
-                        'extension_time_post', existing_peak_duration_extension_time_post);
+                        'extension_time_post', existing_peak_duration_extension_time_post,...
+                        'debugMode',debug_mode);
                 else
                     transient_properties{n} = peakInfo;
                 end

@@ -1061,3 +1061,49 @@ T = struct2table(eventStructForPlotFiltered,"AsArray",true);
 T = T(:,["group","numTrial","animalNum","numRoi"]);
 uit = uitable(f_number,'Data',table2cell(T(:,["group","numTrial","animalNum","numRoi"])),...
 	'ColumnName', T.Properties.VariableNames);
+
+
+
+%% ==========
+% Plot the roi map of an example recording
+% Used in VIIO figure 1 
+
+% remove the 'neuron' part from the roiName for clearer display in the plots. For example,
+% change neuron5 to 5
+roiNameExcessiveStr = 'neuron'; % remove this string from the ROI name to shorten it
+roiNames = {alignedData_allTrials.traces.roi};
+roiNamesShort = cell(size(roiNames));
+for i = 1:numel(roiNames)
+	roiNamesShort{i} = strrep(roiNames{i},roiNameExcessiveStr,'');
+end
+
+% Get the roi map matrix
+roi_map = alignedData_allTrials.roi_map;
+
+% Convert roiCoor to a MATLAB readable format
+roiCoor = {alignedData_allTrials.traces.roi_coor}';
+roiCoor = cell2mat(roiCoor);
+roiCoor = convert_roi_coor(roiCoor);
+
+figure
+plotRoiCoor2(roi_map,roiCoor,'plotWhere',gca,...
+	'textCell',roiNamesShort,'textColor','m','labelFontSize',12,'showMap',true); % plotWhere is [] to supress plot
+
+
+%% ==========
+% Plot calcium traces of the ROIs in the example recording for VIIO figure 1
+close all
+saveFig = true; % true/false
+showYtickRight = true; % Show the ROI signal value on the right Y axis. Left Y contain ROI names
+
+recName = extractDateTimeFromFileName(alignedData_allTrials.trialName);
+timeInfo = alignedData_allTrials.fullTime;
+traceData = [alignedData_allTrials.traces.fullTrace];
+plot_TemporalData_Trace([],timeInfo,traceData,...
+	'ylabels',roiNamesShort,'showYtickRight',showYtickRight)
+
+if saveFig
+	msg = 'Save the ROI traces';
+	savePlot(gcf,'save_dir',FolderPathVA.fig,'guiSave',true,...
+		'guiInfo',msg,'fname',[recName,'-traces']);
+end

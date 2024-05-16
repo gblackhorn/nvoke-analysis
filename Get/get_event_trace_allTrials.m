@@ -192,9 +192,11 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 
 		% Add roi names to the 'roi' field in alignedData.traces
 		[alignedData.traces.roi] = event_spec_fulltable.Properties.VariableNames{:};
-		% Add roi location tag to the 'subNuclei' field in alignedData.traces
-		[alignedData.traces.subNuclei] = trialData{traceData_col}.locTag(:).locTags;
 
+		% Add roi location tag to the 'subNuclei' field in alignedData.traces
+		if isfield(trialData{traceData_col},'locTag')
+			[alignedData.traces.subNuclei] = trialData{traceData_col}.locTag(:).locTags;
+		end
 		
 		empty_idx = []; % roi idx in alignedData.traces does not contain any event info
 		for n = 1:roi_num

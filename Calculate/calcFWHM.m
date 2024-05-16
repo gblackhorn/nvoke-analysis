@@ -22,6 +22,8 @@ function [FWHMs,varargout] = calcFWHM(traceData,timeInfo,riseLocs,peakLocs,varar
     		freq = varargin{ii+1};
         elseif strcmpi('queryIntScale', varargin{ii})
             queryIntScale = varargin{ii+1};
+        elseif strcmpi('debugMode', varargin{ii})
+            debugMode = varargin{ii+1};
         end
     end
 
@@ -55,7 +57,12 @@ function [FWHMs,varargout] = calcFWHM(traceData,timeInfo,riseLocs,peakLocs,varar
     for pn = 1:peakNum
 
         if debugMode
-            fprintf('   calcium event %d/%d\n',pn,peakNum)            
+            fprintf('   calcium event %d/%d\n',pn,peakNum)      
+            if pn == 44
+                disp('pause for debugging')
+                pause
+            end
+  
         end
         % If half-max window exists, Interpolate the traceData and calculate the FWHM
         if ~isnan(HMendLoc(pn))
@@ -105,36 +112,19 @@ function [FWHMs,varargout] = calcFWHM(traceData,timeInfo,riseLocs,peakLocs,varar
                 end
                 HF2Loc = getFirstClosest_multiWin(traceDataQuery,halfMax(pn),'small',[peakLocQuery,HMendLocQuery]);
 
-                % Convert the location idx of half-maximum to time
-                timeAtHM(pn,1) = rise2traceEndTimeQuery(HF1Loc);
-                timeAtHM(pn,2) = rise2traceEndTimeQuery(HF2Loc);
-
-                % % Plot traceData, interpolated trace data, mark the half-maximum
-                % % points
-                % figure
-                % hold on
-                % plot(rise2traceEndTime,rise2traceEndData,':b') % original trace data
-                % plot(rise2traceEndTimeQuery,traceDataQuery,'m') % interpolated trace
-                % plot(rise2traceEndTimeQuery(HF1Loc),traceDataQuery(HF1Loc),'o',...
-                %     rise2traceEndTimeQuery(HF2Loc),traceDataQuery(HF2Loc),'o') % plot half maximum points
+                if ~isnan(HF2Loc)
+                    % Convert the location idx of half-maximum to time
+                    timeAtHM(pn,1) = rise2traceEndTimeQuery(HF1Loc);
+                    timeAtHM(pn,2) = rise2traceEndTimeQuery(HF2Loc);
+                else
+                    % This may due to the half-max point on the right side of the peak is the last
+                    % data point. After the interpolation, the value of this data point is bigger
+                    % than halfMax(pn). Thus, HF2Loc is not existed
+                    timeAtHM(pn,1) = NaN;
+                    timeAtHM(pn,2) = NaN;
+                end
             end
         end
-        
-
-        
-
-        % % get the time of half-max before the peak
-        % rise2peakData = traceData(riseLocs(pn):peakLocs(pn));
-        % rise2peakTime = timeInfo(riseLocs(pn):peakLocs(pn));
-        % timeAtHM(pn,1) = interp1(rise2peakData,rise2peakTime,halfMax(pn));
-        % % timeAtHM(pn,1) = interp1(rise2peakData,rise2peakTime,halfMax(pn));
-
-        % % get the time of half-max after the peak
-        % if ~isnan(HMendLoc(pn))
-        %     peak2afterHMdata = traceData(peakLocs(pn):HMendLoc(pn));
-        %     peak2afterHMtime = timeInfo(peakLocs(pn):HMendLoc(pn));
-        %     timeAtHM(pn,2) = interp1(peak2afterHMdata,peak2afterHMtime,halfMax(pn));
-        % end
     end
 
     % calculate the full-width at half maximum

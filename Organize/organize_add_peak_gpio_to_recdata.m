@@ -105,7 +105,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
         % Debugging
         fprintf(' - recording_num: %d/%d (%s)\n', rn, recording_num, recording_name);
         if debug_mode
-            if rn == 44
+            if rn == 1
                 disp('pause for debugging')
                 pause
             end
@@ -164,7 +164,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 			'prom_par', prominence_factor,...
             'use_existing_peakInfo', true, 'existing_peakInfo', peak_properties_decon,...
 			'peakProperties_names', peak_properties_variable_names,...
-            'merge_peaks', merge_peaks, 'merge_time_interval', merge_time_interval); % ,'debug_mode',debug_mode
+            'merge_peaks', merge_peaks, 'merge_time_interval', merge_time_interval,'debug_mode',debug_mode); % ,'debug_mode',debug_mode
         recdata_organized{rn, col_trace}.lowpass = rec_data_lowpass.processed_data;
 
 		% smooth

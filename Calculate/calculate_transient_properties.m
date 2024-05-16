@@ -11,6 +11,8 @@ function [transient_properties,varargout] = calculate_transient_properties(roi_t
     max_RiseWin = 1; % unit: s. Maximum duration from check_start to peak. This window is used to find the
     % start point of a peak
 
+    debugMode = false; % true/false
+
     % Optionals
     for ii = 1:2:(nargin-4)
     	if strcmpi('slope_per_low', varargin{ii})
@@ -23,6 +25,8 @@ function [transient_properties,varargout] = calculate_transient_properties(roi_t
             extension_time_pre = varargin{ii+1};
         elseif strcmpi('extension_time_post', varargin{ii})
             extension_time_post = varargin{ii+1};
+        elseif strcmpi('debugMode', varargin{ii})
+            debugMode = varargin{ii+1};
         end
     end
 
@@ -68,7 +72,7 @@ function [transient_properties,varargout] = calculate_transient_properties(roi_t
 
             % % calculate the full-width at half maximum (FWHM)
             [FWHM,timeAtHM] = calcFWHM(roi_trace,time_info,rise_loc,peak_loc,...
-                'freq',recFreq,'maxTimeRange',5);
+                'freq',recFreq,'maxTimeRange',5,'debugMode',debugMode);
             % halfwidth_loc = calculate_halfwidth_loc(roi_trace,rise_loc,peak_loc,decay_loc);
             % FWHM = NaN(size(peak_loc));
             % for hwn = 1:size(halfwidth_loc, 1)
