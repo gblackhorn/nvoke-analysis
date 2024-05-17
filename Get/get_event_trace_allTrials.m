@@ -183,7 +183,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 
 		% Create an empty structure to store the ROI information
 		% Update this using the function 'empty_content_struct'. Add all the fieldnames
-		fieldNamesOfDataTraces = {'roi','value','mean_val','std_val','roi_coor',...
+		fieldNamesOfDataTraces = {'roi','value','mean_val','std_val','roi_coor','roiEdge',...
 		'subNuclei','eventProp'};
 		alignedData.traces = empty_content_struct(fieldNamesOfDataTraces,roi_num);
 		% alignedData.traces =  struct('roi', cell(1, roi_num), 'value', cell(1, roi_num),...
@@ -233,6 +233,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 							alignedData.traces(n).std_val = traceStd_val; 
 							alignedData.traces(n).eventProp = eventProp; 
 							alignedData.traces(n).roi_coor = trialData{traceData_col}.roi_center(n,:); % coordinate of roi (unit: pixel)
+							alignedData.traces(n).roiEdge = trialData{traceData_col}.roi_edge{n}; % coordinate of roi (unit: pixel)
 						else
 							% aligned_time = [];
 						end
@@ -254,6 +255,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 								[eventProp] = get_events_info(events_time,[],roi_event_spec_table,'style','event');
 		                        alignedData.traces(n).eventProp = eventProp;
 		                        alignedData.traces(n).roi_coor = trialData{traceData_col}.roi_center(n,:); 
+		                        alignedData.traces(n).roiEdge = trialData{traceData_col}.roi_edge{n}; % coordinate of roi (unit: pixel)
 		                    else
 		                        alignedData.traces(n).eventProp = [];
 							end

@@ -259,7 +259,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
             roi_idx = cell2mat(cellfun(@(x) str2double(x(7:end)), roi_names, 'UniformOutput',false)); % first 6 strings are neuron
 
             [imgRowSize,imgColSize] = size(recdata_organized{rn,2}.cnmfe_results.Cn);
-            [recdata_organized{rn,col_trace}.roi_map, recdata_organized{rn,2}.roi_center] = roimap(recdata_organized{rn,2}.cnmfe_results.A,...
+            [recdata_organized{rn,col_trace}.roi_map,recdata_organized{rn,2}.roi_center,recdata_organized{rn,2}.roi_edge] = roimap(recdata_organized{rn,2}.cnmfe_results.A,...
                 imgRowSize,imgColSize,roi_idx);
             % [recdata_organized{rn,col_trace}.roi_map, recdata_organized{rn,2}.roi_center] = roimap(recdata_organized{rn,2}.cnmfe_results, roi_idx);
         end

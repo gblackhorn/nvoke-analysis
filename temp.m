@@ -1107,3 +1107,22 @@ if saveFig
 	savePlot(gcf,'save_dir',FolderPathVA.fig,'guiSave',true,...
 		'guiInfo',msg,'fname',[recName,'-traces']);
 end
+
+%% ==========
+cnmfeResults = recdata_organized{1, 2}.cnmfe_results;
+[imgRowSize,imgColSize] = size(cnmfeResults.Cn);
+[roiMap,roiCenter,roiEdges] = roimap(cnmfeResults.A,imgRowSize,imgColSize);
+
+
+% [y, x] = find(roiEdges{1});
+
+close all
+roi_map_marked = imagesc(roiMap); % Display the ROI map
+colormap(gca,'gray'); % Optional: Choose a colormap that suits your data
+axis equal; % Keep the aspect ratio of the map
+axis off; % Turn off the axis box and labels
+hold on; % Keep the map displayed while plotting the labels
+
+plot(roiEdges(:,2), roiEdges(:,1), 'r', 'LineWidth', 2);
+% plot(x, y, 'r', 'LineWidth', 0.1);
+
