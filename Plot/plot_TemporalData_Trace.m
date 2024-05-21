@@ -1,4 +1,4 @@
-function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
+function [varargout] = plot_TemporalData_Trace(plotWhere, xData, yData, varargin)
     % Create a plot for temporal related data
 
     % Can be used to plot: 
@@ -6,112 +6,97 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
     %   2. Calcium fluorescence level aligned to stimulation 
 
     % Example: 
-
-    % plot_TemporalData_Trace(plotWhere,xData,yData) "PlotWhere" is used to specify the axis where
+    % plot_TemporalData_Trace(plotWhere, xData, yData) "PlotWhere" is used to specify the axis where
     % the plot will be created. "xData" is the time information. "yData" is a matrix containing the
     % temporal related values. Each column of "yData" contains a single set of temporal related
     % data.
 
-    % Defaults
-    yData2 = [];
-    plotInterval = 10; % offset for traces on y axis to seperate them
-    xtickInt = 10; % unit: second. x tick interval. 
-    % scaleYData = true;
-    showYtickRight = false; % If true, display the value of y on the right side. Left y-tick shows
-                            % the ROI names
+    % Define default values
+    defaults.yData2 = [];
+    defaults.plotInterval = 10;
+    defaults.xtickInt = 10;
+    defaults.showYtickRight = false;
+    defaults.plot_marker = false;
+    defaults.marker1_xData = {};
+    defaults.marker2_xData = {};
+    defaults.LineWidth = 1;
+    defaults.line_color = '#616887';
+    defaults.line_color2 = '#ADADAD';
+    defaults.marker1Size = 40;
+    defaults.marker2Size = 15;
+    defaults.marker1_style = '.'; % Updated to dot
+    defaults.marker2_style = '>';
+    defaults.marker1_color = '#8D73BA';
+    defaults.marker2_color = '#BA9973';
+    defaults.shadeData = {};
+    defaults.shadeColor = {'#F05BBD', '#4DBEEE', '#ED8564'};
+    defaults.titleStr = '';
+    defaults.ylabels = [];
 
-    % vis = 'on'; % set the 'visible' of figures
-    % decon = true; % true/false plot decon trace
-    plot_marker = false; % true/false
-    marker1_xData = {}; % plot markers for peaks. 
-    marker2_xData = {}; % plot markers for rise and decay frames
+    % Create an input parser object
+    p = inputParser;
 
-    LineWidth = 1;
-    line_color = '#616887';
-    line_color2 = '#ADADAD';
-    % line_color_decon = '#24283B';
-    markerSize = 20;
-    marker1_style = 'o';
-    marker2_style = '>';
-    marker1_color = '#8D73BA';
-    % markerPeak_color_decon = '#5B7A87';
-    marker2_color = '#BA9973';
+    % Define optional parameters and their default values
+    addParameter(p, 'yData2', defaults.yData2);
+    addParameter(p, 'plotInterval', defaults.plotInterval);
+    addParameter(p, 'xtickInt', defaults.xtickInt);
+    addParameter(p, 'showYtickRight', defaults.showYtickRight);
+    addParameter(p, 'plot_marker', defaults.plot_marker);
+    addParameter(p, 'marker1_xData', defaults.marker1_xData);
+    addParameter(p, 'marker2_xData', defaults.marker2_xData);
+    addParameter(p, 'LineWidth', defaults.LineWidth);
+    addParameter(p, 'line_color', defaults.line_color);
+    addParameter(p, 'line_color2', defaults.line_color2);
+    addParameter(p, 'marker1Size', defaults.marker1Size);
+    addParameter(p, 'marker2Size', defaults.marker2Size);
+    addParameter(p, 'marker1_style', defaults.marker1_style);
+    addParameter(p, 'marker2_style', defaults.marker2_style);
+    addParameter(p, 'marker1_color', defaults.marker1_color);
+    addParameter(p, 'marker2_color', defaults.marker2_color);
+    addParameter(p, 'shadeData', defaults.shadeData);
+    addParameter(p, 'shadeColor', defaults.shadeColor);
+    addParameter(p, 'titleStr', defaults.titleStr);
+    addParameter(p, 'ylabels', defaults.ylabels);
 
-    shadeData = {};
-    shadeColor = {'#F05BBD','#4DBEEE','#ED8564'};
+    % Parse the input arguments
+    parse(p, varargin{:});
 
-    titleStr = '';
+    % Access the parsed results
+    yData2 = p.Results.yData2;
+    plotInterval = p.Results.plotInterval;
+    xtickInt = p.Results.xtickInt;
+    showYtickRight = p.Results.showYtickRight;
+    plot_marker = p.Results.plot_marker;
+    marker1_xData = p.Results.marker1_xData;
+    marker2_xData = p.Results.marker2_xData;
+    LineWidth = p.Results.LineWidth;
+    line_color = p.Results.line_color;
+    line_color2 = p.Results.line_color2;
+    marker1Size = p.Results.marker1Size;
+    marker2Size = p.Results.marker2Size;
+    marker1_style = p.Results.marker1_style;
+    marker2_style = p.Results.marker2_style;
+    marker1_color = p.Results.marker1_color;
+    marker2_color = p.Results.marker2_color;
+    shadeData = p.Results.shadeData;
+    shadeColor = p.Results.shadeColor;
+    titleStr = p.Results.titleStr;
+    ylabels = p.Results.ylabels;
 
-    % Optionals for inputs
-    for ii = 1:2:(nargin-3)
-        if strcmpi('yData2', varargin{ii})
-            yData2 = varargin{ii+1}; % if yData2 is input, it will be plot as an overlay. It should have the same size as yData
-        elseif strcmpi('showYtickRight', varargin{ii})
-            showYtickRight = varargin{ii+1}; 
-        elseif strcmpi('plotInterval', varargin{ii})
-            plotInterval = varargin{ii+1}; 
-        elseif strcmpi('ylabels', varargin{ii})
-            ylabels = varargin{ii+1}; 
-        elseif strcmpi('xtickInt', varargin{ii})
-            xtickInt = varargin{ii+1};  % cell array. size equals to yData column. Each cell contains time information can be found in xData
-        elseif strcmpi('plot_marker', varargin{ii}) 
-            plot_marker = varargin{ii+1}; 
-        elseif strcmpi('marker1_xData', varargin{ii}) 
-            marker1_xData = varargin{ii+1}; % cell array. size equals to yData column. Each cell contains time information can be found in xData 
-        elseif strcmpi('marker2_xData', varargin{ii})
-            marker2_xData = varargin{ii+1};  % cell array. size equals to yData column. Each cell contains time information can be found in xData
-        elseif strcmpi('marker1_style', varargin{ii})
-            marker1_style = varargin{ii+1}; 
-        elseif strcmpi('marker2_style', varargin{ii})
-            marker2_style = varargin{ii+1}; 
-        elseif strcmpi('marker1_color', varargin{ii})
-            marker1_color = varargin{ii+1}; 
-        elseif strcmpi('marker2_color', varargin{ii})
-            marker2_color = varargin{ii+1}; 
-        elseif strcmpi('shadeData', varargin{ii})
-            shadeData = varargin{ii+1}; 
-        elseif strcmpi('titleStr', varargin{ii})
-            titleStr = varargin{ii+1}; 
-        end
-    end
-
-    if exist('ylabels')==0 || isempty(ylabels)
-        ylabels = NumArray2StringCell(size(yData,2));
-        % rowNames = [1:size(TemporalData,1)]; % Create a numerical array 
-        % rowNames = arrayfun(@num2str,rowNames,'UniformOutput',0); % The NUM2STR function converts a number 
-        % to the string representation of that number. This function is applied to each cell in the A array/matrix 
-        % using ARRAYFUN. The 'UniformOutput' parameter is set to 0 to instruct CELLFUN to encapsulate the outputs into a cell array.
+    if isempty(ylabels)
+        ylabels = NumArray2StringCell(size(yData, 2));
     end
 
     if isempty(plotWhere)
-        fig_canvas(1,'unit_width',0.9,'unit_height',0.9);
+        fig_canvas(1, 'unit_width', 0.9, 'unit_height', 0.9);
         plotWhere = gca;
     end
 
-
-    % % Scale yData using the value of plotInterval to make it the plot
-    % if scaleYData
-    %     yData = yData*plotInterval/2;
-    %     if ~isempty(yData2)
-    %         yData2 = yData2*plotInterval/2;
-    %     end
-    % end
-
-    trace_num = size(yData,2); % number of traces = number of yData columns
-    trace_length = size(yData,1); % data point number of yData
-    % trace_y_pos = [0:-plotInterval:(trace_num-1)*-plotInterval];
-    % trace_y_pos = [0:-20:(trace_num-1)*-20];
-    % trace_y_shift = repmat(trace_y_pos,trace_length,1);
-    % yData_shift = yData+trace_y_shift;
+    trace_num = size(yData, 2); % number of traces = number of yData columns
+    trace_length = size(yData, 1); % data point number of yData
     trace_y_tick = ylabels;
-    % spikeFrames_all_cell = cell(trace_num,1);
 
-    % if ~isempty(yData2)
-    %     yData2_shift = yData2+trace_y_shift;
-    % end
-
-
-    % Adjust the y intervals to increase the readibility and avoid overlapping
+    % Adjust the y intervals to increase the readability and avoid overlapping
     offsets = zeros(1, trace_num);  % Initialize offsets for each trace
     yData_shift = yData;  % Initialize adjusted data matrix
     yData2_shift = yData2;  % Initialize adjusted data matrix
@@ -119,31 +104,32 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
     for i = 1:trace_num  % Iterate through each trace
         if i > 1
             % Calculate the offset based on the previous trace's min and the current trace's max
-            offsets(i) = offsets(i-1)-(max(yData(:,i))-min(yData(:,i-1)))-abs(min(yData(:,i-1))-max(yData(:,i)));
+            offsets(i) = offsets(i-1) - (max(yData(:,i)) - min(yData(:,i-1))) - abs(min(yData(:,i-1)) - max(yData(:,i)));
         end
         
         % Adjust the trace by the calculated offset
-        yData_shift(:,i) = yData(:,i)+offsets(i);
+        yData_shift(:,i) = yData(:,i) + offsets(i);
 
         if ~isempty(yData2)
-            yData2_shift(:,i) = yData2(:,i)+offsets(i);
+            yData2_shift(:,i) = yData2(:,i) + offsets(i);
         end
     end
 
-    % Use offsets to calculate the plotInterval, which will be used to set the yLim
+    % Use offsets to calculate the plotInterval, which will be used to set the yLim and the raised
+    % value of marker1 (event peak)
     plotInterval = max(diff(offsets));
-
+    marker1_raiseVal = abs(plotInterval)/4;
 
     % Plot the data traces
-    plot(xData,yData_shift,'LineWidth',LineWidth,'Color',line_color);
+    plot(xData, yData_shift, 'LineWidth', LineWidth, 'Color', line_color);
     hold on
 
     % Plot the data traces using yData2 if it is not empty
     if ~isempty(yData2)
-        plot(xData,yData2_shift,'LineWidth',LineWidth,'Color',line_color2);
+        plot(xData, yData2_shift, 'LineWidth', LineWidth, 'Color', line_color2);
     end
 
-    xlim([xData(1) xData(end)]); % set the x-axis limit to the beginnin and the end of xData
+    xlim([xData(1) xData(end)]); % set the x-axis limit to the beginning and the end of xData
     ymax = max(yData_shift(:,1)); % Get the largest y value
     ymin = min(yData_shift(:,end)); % Get the smallest y value
     newYl = [ymin-abs(plotInterval)/2 ymax+abs(plotInterval)/2];
@@ -151,34 +137,33 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
     hold on
 
     if isempty(marker1_xData)
-        marker1_xData = cell(1,trace_num);
+        marker1_xData = cell(1, trace_num);
     end
     if isempty(marker2_xData)
-        marker2_xData = cell(1,trace_num);
+        marker2_xData = cell(1, trace_num);
     end
 
     if plot_marker
         for tn = 1:trace_num
             marker1_xData_trace = marker1_xData{tn};
-            [~,~,marker1_xData_idx] = intersect(marker1_xData_trace,xData); % Get the locations of the time points in xData
-            marker1_yData_trace = yData_shift(marker1_xData_idx,tn); % y values of trace at the marker1_xData
-            scatter(marker1_xData_trace,marker1_yData_trace,markerSize,marker1_style,...
-                'MarkerEdgeColor',marker1_color,'LineWidth', 1);
+            [~,~,marker1_xData_idx] = intersect(marker1_xData_trace, xData); % Get the locations of the time points in xData
+            marker1_yData_trace = yData_shift(marker1_xData_idx, tn); % y values of trace at the marker1_xData
+            scatter(marker1_xData_trace, marker1_yData_trace + marker1_raiseVal, marker1Size, marker1_style, ...
+                'MarkerEdgeColor', marker1_color, 'MarkerFaceColor', marker1_color, 'LineWidth', 1); % Adjusted to dot above the peak
 
             marker2_xData_trace = marker2_xData{tn};
-            [~,~,marker2_xData_idx] = intersect(marker2_xData_trace,xData); % Get the locations of the time points in xData
-            marker2_yData_trace = yData_shift(marker2_xData_idx,tn); % y values of trace at the marker2_xData
-            scatter(marker2_xData_trace,marker2_yData_trace,markerSize,marker2_style,...
-                'MarkerEdgeColor',marker2_color,'LineWidth', 1);
+            [~,~,marker2_xData_idx] = intersect(marker2_xData_trace, xData); % Get the locations of the time points in xData
+            marker2_yData_trace = yData_shift(marker2_xData_idx, tn); % y values of trace at the marker2_xData
+            scatter(marker2_xData_trace, marker2_yData_trace, marker2Size, marker2_style, ...
+                'MarkerEdgeColor', marker2_color, 'LineWidth', 1);
         end
     end
 
-    set(gca,'box','off')
-    set(gca,'TickDir','out'); % Make tick direction to be out.The only other option is 'in'
+    set(gca, 'box', 'off')
+    set(gca, 'TickDir', 'out'); % Make tick direction to be out. The only other option is 'in'
     yticks(flip(offsets));
-    % yticks(flip(trace_y_pos));
     yticklabels(flip(trace_y_tick));
-    set(gca,'Xtick',[xData(1):xtickInt:xData(end)]);
+    set(gca, 'Xtick', [xData(1):xtickInt:xData(end)]);
 
     % Display the value of y on the right side of the axis
     if showYtickRight
@@ -190,13 +175,18 @@ function [varargout] = plot_TemporalData_Trace(plotWhere,xData,yData,varargin)
     if ~isempty(shadeData)
         shade_type_num = numel(shadeData);
         for stn = 1:shade_type_num
-            draw_WindowShade(plotWhere,shadeData{stn},'shadeColor',shadeColor{stn});
+            draw_WindowShade(plotWhere, shadeData{stn}, 'shadeColor', shadeColor{stn});
         end
     end
 
-    set(gca,'children',flipud(get(gca,'children')))
+    set(gca, 'children', flipud(get(gca, 'children')))
 
     title(titleStr);
-    xlabel ('Time (s)');
+    xlabel('Time (s)');
     hold off
+end
+
+function strCell = NumArray2StringCell(numArray)
+    % Helper function to convert a numeric array to a cell array of strings
+    strCell = arrayfun(@num2str, numArray, 'UniformOutput', false);
 end

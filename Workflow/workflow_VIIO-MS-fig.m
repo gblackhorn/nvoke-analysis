@@ -5,6 +5,76 @@
 GUI_chooseFolder = false; % true/false. Use GUI to locate the DataFolder and AnalysisFolder
 FolderPathVA = initProjFigPathVIIO(GUI_chooseFolder);
 
+
+%% ==========
+% Figure 1
+% Plot the recording field and draw ROIs as overlay using the data processed with CNMFe
+% Plot the raw traces of ROIs from CNMFe result. These traces are background subtracted (including neuropil)
+
+saveFig = true; % true/false
+showYtickRight = true;
+save_dir = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\figures\VIIO_paper_figure\VIIO_Fig1_method_recExample';
+% Load the example recording data
+exampleRecFile = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\figures\VIIO_paper_figure\ProcessedData_VIIO_Fig1_example.mat';
+load(exampleRecFile); % Load data
+shortRecName = extractDateTimeFromFileName(alignedData_allTrials.trialName); % Get he yyyyddmm-hhmmss from recording file name
+imageMatrix = alignedData_allTrials.roi_map; % Get the 2D matrix for plotting the FOV
+roiBoundaries = {alignedData_allTrials.traces.roiEdge}; % Get the ROI edges
+roiNames = {alignedData_allTrials.traces.roi}; % Get the ROI names
+shortRoiNames = cellfun(@(x) x(7:end),roiNames,'UniformOutput',false); % Remove 'neuron' from the roi names
+
+% Plot FOV and label ROIs
+close all
+nameExampleRecFOV = [shortRecName,' FOV'];
+fExampleRecFOV = fig_canvas(1,'unit_width',0.4,'unit_height',0.4,'fig_name',nameExampleRecFOV); % Create a figure for plots
+plotCalciumImagingWithROIs(imageMatrix, roiBoundaries, shortRoiNames,...
+	'Title',nameExampleRecFOV,'AxesHandle',gca);
+
+% Get the raw data of CNMFe (BG and neuropil subtracted), and plot the traces
+timeData = alignedData_allTrials.fullTime;
+tracesData = [alignedData_allTrials.traces.fullTrace];
+eventTime = get_TrialEvents_from_alignedData(alignedData_allTrials,'peak_time'); % Get the time of event peaks
+nameCNMFeTrace = [shortRecName,' CNMFe result raw traces'];
+fCNMFeTrace = fig_canvas(1,'unit_width',0.4,'unit_height',0.4,'fig_name',nameCNMFeTrace); % Create a figure for plots
+plot_TemporalData_Trace(gca,timeData,tracesData,'ylabels',shortRoiNames,'showYtickRight',showYtickRight,...
+	'titleStr',nameCNMFeTrace,'plot_marker',true,'marker1_xData',eventTime);
+set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
+trace_xlim = xlim;
+
+
+% Read the IDPS exported csv file and plot the trace using the data in it
+nameIDPStrace = [shortRecName,' IDPS exported traces'];
+fIDPStrace = fig_canvas(1,'unit_width',0.4,'unit_height',0.4,'fig_name',nameIDPStrace); % Create a figure for plots
+[csvTraceTitle,csvFolder] = plotCalciumTracesFromIDPScsv('AxesHandle',gca,'folderPath',save_dir,...
+	'showYtickRight',showYtickRight,'Title',nameIDPStrace);
+set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
+
+
+
+% Example traces and event scatters for figure 2. Use the loaded 'exampleRecFile' at the beginning
+% of this section
+
+% Figure 2: Plot the calcium events as scatter and show the events number in a histogram (2 plots)
+nameEventScatter = [shortRecName,' eventScatter'];
+fEventScatter = plot_raster_with_hist(eventTime,trace_xlim,...
+	'rowNames',shortRoiNames,'hist_binsize',5,'xtickInt_scale',5,...
+	'titleStr',nameEventScatter);
+set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
+sgtitle(nameEventScatter)
+
+
+
+% Save figures
+if saveFig
+	% Save the fNum
+	savePlot(fExampleRecFOV,'guiSave', 'off', 'save_dir', save_dir,'fname', nameExampleRecFOV);
+	savePlot(fCNMFeTrace,'guiSave', 'off', 'save_dir', save_dir,'fname', nameCNMFeTrace);
+	savePlot(fIDPStrace,'guiSave', 'off', 'save_dir', save_dir,'fname', nameIDPStrace);
+	savePlot(fEventScatter,'guiSave', 'off', 'save_dir', save_dir,'fname', nameEventScatter);
+end
+
+
+
 %% ==========
 % Figure 2
 % The properties of spontaneous events in IO subnuclei (DAO vs PO)
@@ -38,7 +108,7 @@ adata.sponfreqFilter.status = true; % true/false. If true, use the following set
 adata.sponfreqFilter.field = 'sponfq'; % 
 adata.sponfreqFilter.thresh = 0.05; % Hz. default 0.06
 adata.sponfreqFilter.direction = 'high';
-debug_mode = false; % true/false
+debug_mode = true; % false/false
 
 % Create structure data for further analysis
 [alignedData_allTrials,alignedData_event_list] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
@@ -67,7 +137,7 @@ at.plot_combined_data = true; % mean value and std of all traces
 at.showRawtraces = false; % true/false. true: plot every single trace
 at.showMedian = false; % true/false. plot raw traces having a median value of the properties specified by 'at.medianProp'
 at.medianProp = 'FWHM'; % 
-at.shadeType = 'ste'; % plot the shade using std/ste
+at.shadeType = 'std'; % plot the shade using std/ste
 at.y_range = [-1 2]; % [-10 5],[-3 5],[-2 1]
 at.sponNorm = true; % true/false
 at.normalized = false; % true/false. normalize the traces to their own peak amplitudes.
@@ -130,13 +200,25 @@ tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','r
 [eventStructForPlotFiltered] = filter_entries_in_structure(eventStructForPlot,'group',...
 	'tags_keep',tags_keep);
 
+
+% Create grouped_event for plotting ROI properties
+ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventProp
+[roiStructForPlot] = getAndGroup_eventsProp(alignedData_allTrials,...
+	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
+
+% Keep spontaneous events and discard all others
+% tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
+[roiStructForPlotFiltered] = filter_entries_in_structure(roiStructForPlot,'group',...
+	'tags_keep',tags_keep);
+
 %% ==========
 % 2.5 Plot event properties
 
 % Settings
 save_fig = true; % true/false
 plot_combined_data = false;
-parNames = {'rise_duration','FWHM','sponNorm_peak_mag_delta'}; 
+parNames = {'FWHM','sponNorm_peak_mag_delta'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
 stat = true; % Set it to true to run anova when plotting bars
 
@@ -174,22 +256,25 @@ end
 %% ==========
 % 2.6 Get and group data using ROI as entry and plot spontaneous event frequency in DAO and PO
 
-% Get and group data
-ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventProp
+% % Get and group data
+% ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventProp
 
-% Create grouped_event for plotting event properties
-[roiStructForPlot] = getAndGroup_eventsProp(alignedData_allTrials,...
-	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
-	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
+% % Create grouped_event for plotting event properties
+% [roiStructForPlot] = getAndGroup_eventsProp(alignedData_allTrials,...
+% 	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+% 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
 
-% Keep spontaneous events and discard all others
-tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
-[roiStructForPlotFiltered] = filter_entries_in_structure(roiStructForPlot,'group',...
-	'tags_keep',tags_keep);
+% % Keep spontaneous events and discard all others
+% tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
+% [roiStructForPlotFiltered] = filter_entries_in_structure(roiStructForPlot,'group',...
+% 	'tags_keep',tags_keep);
 
 % Generate figures for spontaneous event frequency
 % Change parNames and keep other setting the same as in 2.3
-parNames = {'sponInterval'}; % 'sponfq', 'sponInterval'
+plot_combined_data = false;
+stat = true; % Set it to true to run anova when plotting bars
+parNames = {'sponfq','sponInterval','cv2'}; % 'sponfq', 'sponInterval'
+
 [save_dir, plot_info] = plot_event_info(roiStructForPlotFiltered,'entryType',ggSetting.entry,...
 	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
 	'fname_suffix','ROI','save_fig', save_fig, 'save_dir', save_dir);

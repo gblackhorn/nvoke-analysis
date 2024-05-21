@@ -104,6 +104,7 @@ function [eventProp_all,varargout] = collect_event_prop(alignedData,varargin)
                                 eventProp_trial_roi{pcn}.stimTrig = roiData.stimTrig;
                                 eventProp_trial_roi{pcn}.sponfq = roiData.sponfq;
                                 eventProp_trial_roi{pcn}.sponInterval = roiData.sponInterval;
+                                eventProp_trial_roi{pcn}.cv2 = roiData.cv2;
                                 eventProp_trial_roi{pcn}.stimfq = roiData.stimfq;
                                 eventProp_trial_roi{pcn}.stimfqNorm = roiData.stimfqNorm;
                                 eventProp_trial_roi{pcn}.stimfqDeltaNorm = roiData.stimfqDeltaNorm;

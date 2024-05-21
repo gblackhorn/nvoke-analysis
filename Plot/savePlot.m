@@ -68,7 +68,8 @@ function [varargout] = savePlot(fig_handle,varargin)
 			saveas(fig_handle, [filepath, '.jpg']);
 		end
 		if svgFormat
-			saveas(fig_handle, [filepath, '.svg']);
+			% saveas(fig_handle, [filepath, '.svg']);
+			print(fig_handle,filepath, '-dsvg','-vector');
 		end
 	end
 

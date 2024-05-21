@@ -185,15 +185,13 @@ end
 close all
 saveFig = true; % true/false
 showYtickRight = true; % Show the ROI signal value on the right Y axis. Left Y contain ROI names
-[timeFluorTab,csvFolder,csvName] = readInscopixTraceCsv; % csvName does not contain the file extension
-timeFluorTab{:,2:end} = timeFluorTab{:,2:end} .* 100; % Convert the deltaF/F to deltaF/F %
-plot_TemporalData_Trace([],timeFluorTab{:,1},timeFluorTab{:,2:end},...
-	'ylabels',timeFluorTab.Properties.VariableNames,'showYtickRight',showYtickRight)
+
+[csvTraceTitle,csvFolder] = plotCalciumTracesFromIDPScsv('showYtickRight',showYtickRight);
 
 if saveFig
 	msg = 'Save the ROI traces';
 	savePlot(gcf,'save_dir',csvFolder,'guiSave',true,...
-		'guiInfo',msg,'fname',csvName);
+		'guiInfo',msg,'fname',csvTraceTitle);
 end
 
 

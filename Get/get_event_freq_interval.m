@@ -40,10 +40,10 @@ function [freq,meanInterval,varargout] = get_event_freq_interval(all_events_time
 	    end
 
 	    % Get the time of events in this window
-	    event_time_cell{n} = all_events_time(idx_cell{n});
+	    event_time_cell{n} = ensureVertical(all_events_time(idx_cell{n}));
 
 	    % Get the interval time between the events
-	    event_interval_time_cell{n} = diff(event_time_cell{n});
+	    event_interval_time_cell{n} = ensureVertical(diff(event_time_cell{n}));
 	end
 
 	% Concatenate the entries in cell arrays 
@@ -67,5 +67,5 @@ function [freq,meanInterval,varargout] = get_event_freq_interval(all_events_time
 	varargout{2} = events_time;
 	varargout{3} = event_num;
 	varargout{4} = sumConWin;
-	varargout{5} = events_interval_time;
+	varargout{5} = event_interval_time_cell;
 end

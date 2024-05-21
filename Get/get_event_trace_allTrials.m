@@ -324,8 +324,8 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 					'err_duration', 0, 'exclude_duration', exclude_duration); % add 1s exclude duration after opto stimulation
 				[~,sponfq,stimfq,sponEventNum,stimEventNum,exepEventNum] = stim_effect_compare_eventFreq_roi2(events_time,...
 					combine_stimRange,duration_fullTime,'exepWinDur',exepWinDur);
-				[sponfq,sponInterval,sponIdx,sponEventTime,sponEventNum] = get_event_freq_interval(events_time,sponWin);
-
+				[sponfq,sponInterval,sponIdx,sponEventTime,sponEventNum,~,allIntervals] = get_event_freq_interval(events_time,sponWin);
+				[cv2,cv2Vector] = calculateCV2(events_time,stimWin);
 
 				% Get the effect of stimulation on each ROI
 				[alignedData.traces(n).stimEffect] = get_stimEffect(fullTime,roiTraceData,combine_stimRange,...
@@ -356,6 +356,9 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 				alignedData.traces(n).(newFieldName) = NFNtag;
 				alignedData.traces(n).sponfq = sponfq;
 				alignedData.traces(n).sponInterval = sponInterval;
+				alignedData.traces(n).allIntervals = allIntervals;
+				alignedData.traces(n).cv2 = cv2;
+				alignedData.traces(n).cv2Vector = cv2Vector;
 				alignedData.traces(n).stimfq = stimfq;
 				alignedData.traces(n).stimfqNorm = stimfq/sponfq;
 				alignedData.traces(n).stimfqDeltaNorm = (stimfq-sponfq)/sponfq;
