@@ -14,8 +14,9 @@ FolderPathVA = initProjFigPathVIIO(GUI_chooseFolder);
 saveFig = true; % true/false
 showYtickRight = true;
 save_dir = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\figures\VIIO_paper_figure\VIIO_Fig1_method_recExample';
+save_dir = fullfile(FolderPathVA.ventralApproach,'figures\VIIO_paper_figure\VIIO_Fig1_method_recExample');
 % Load the example recording data
-exampleRecFile = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\figures\VIIO_paper_figure\ProcessedData_VIIO_Fig1_example.mat';
+exampleRecFile = fullfile(FolderPathVA.ventralApproach,'figures\VIIO_paper_figure\ProcessedData_VIIO_Fig1_example.mat');
 load(exampleRecFile); % Load data
 shortRecName = extractDateTimeFromFileName(alignedData_allTrials.trialName); % Get he yyyyddmm-hhmmss from recording file name
 imageMatrix = alignedData_allTrials.roi_map; % Get the 2D matrix for plotting the FOV
@@ -55,12 +56,26 @@ set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector outp
 % of this section
 
 % Figure 2: Plot the calcium events as scatter and show the events number in a histogram (2 plots)
-nameEventScatter = [shortRecName,' eventScatter'];
-fEventScatter = plot_raster_with_hist(eventTime,trace_xlim,...
-	'rowNames',shortRoiNames,'hist_binsize',5,'xtickInt_scale',5,...
-	'titleStr',nameEventScatter);
+nameEventScatter = [shortRecName,' eventScatter colorful'];
+
+% Get the amplitude of event peaks
+colorData = get_TrialEvents_from_alignedData(alignedData_allTrials,'sponnorm_peak_mag_delta'); 
+
+% Create a raster plot
+fEventScatter = fig_canvas(1,'unit_width',0.4,'unit_height',0.4,'fig_name',nameEventScatter); % Create a figure for plots
+plot_TemporalRaster(eventTime,'plotWhere',gca,'colorData',colorData,'norm2roi',true,...
+	'rowNames',shortRoiNames,'x_window',trace_xlim,'xtickInt',25,...
+	'yInterval',5,'sz',20); % Plot raster
 set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
-sgtitle(nameEventScatter)
+title(nameEventScatter)
+
+
+% fEventScatter = plot_raster_with_hist(eventTime,trace_xlim,...
+% 	'rowNames',shortRoiNames,'hist_binsize',5,'xtickInt_scale',5,...
+% 	'titleStr',nameEventScatter);
+% sgtitle(nameEventScatter)
+
+set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 
 
 
