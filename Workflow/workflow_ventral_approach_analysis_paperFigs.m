@@ -22,12 +22,12 @@ FolderPathVA = initProjFigPathVIIO(GUI_chooseFolder);
 
 %% ====================
 % Save processed data
-save_dir = uigetdir(FolderPathVA.analysis);
-dt = datestr(now, 'yyyymmdd');
+% save_dir = uigetdir(FolderPathVA.analysis);
+% dt = datestr(now, 'yyyymmdd');
 % save(fullfile(save_dir, [dt, '_ProcessedData_ogEx']),...
 %     'recdata_organized','alignedData_allTrials','opt','adata');
 uisave({'recdata_organized','alignedData_allTrials','opt','adata'},...
-	fullfile(save_dir, [dt, '_ProcessedData_ogEx']));
+	fullfile(FolderPathVA.analysis, 'ProcessedData_ogEx'));
 % 'recdata_organized','alignedData_allTrials','grouped_event','adata','grouped_event_setting','opt','adata'
 
 

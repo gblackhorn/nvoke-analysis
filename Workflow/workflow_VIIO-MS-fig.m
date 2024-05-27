@@ -51,7 +51,6 @@ fIDPStrace = fig_canvas(1,'unit_width',0.4,'unit_height',0.4,'fig_name',nameIDPS
 set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 
 
-
 % Example traces and event scatters for figure 2. Use the loaded 'exampleRecFile' at the beginning
 % of this section
 
@@ -70,15 +69,6 @@ set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector outp
 title(nameEventScatter)
 
 
-% fEventScatter = plot_raster_with_hist(eventTime,trace_xlim,...
-% 	'rowNames',shortRoiNames,'hist_binsize',5,'xtickInt_scale',5,...
-% 	'titleStr',nameEventScatter);
-% sgtitle(nameEventScatter)
-
-set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
-
-
-
 % Save figures
 if saveFig
 	% Save the fNum
@@ -87,7 +77,6 @@ if saveFig
 	savePlot(fIDPStrace,'guiSave', 'off', 'save_dir', save_dir,'fname', nameIDPStrace);
 	savePlot(fEventScatter,'guiSave', 'off', 'save_dir', save_dir,'fname', nameEventScatter);
 end
-
 
 
 %% ==========
@@ -123,7 +112,7 @@ adata.sponfreqFilter.status = true; % true/false. If true, use the following set
 adata.sponfreqFilter.field = 'sponfq'; % 
 adata.sponfreqFilter.thresh = 0.05; % Hz. default 0.06
 adata.sponfreqFilter.direction = 'high';
-debug_mode = true; % false/false
+debug_mode = false; % true/false
 
 % Create structure data for further analysis
 [alignedData_allTrials,alignedData_event_list] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
@@ -231,35 +220,32 @@ ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventPro
 % 2.5 Plot event properties
 
 % Settings
-save_fig = true; % true/false
+save_fig = false; % true/false
 plot_combined_data = false;
-parNames = {'FWHM','sponNorm_peak_mag_delta'}; 
+parNames = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_mag_delta'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
 stat = true; % Set it to true to run anova when plotting bars
 
 close all
-% % Modify the group name for labeling the plots
-% [newStimNameEventCatCell] = modStimNameEventCat({grouped_event_info_filtered.group});
-% [grouped_event_info_filtered.group] = newStimNameEventCatCell{:};
 
 % Generate and save figures
 [save_dir, plot_info] = plot_event_info(eventStructForPlotFiltered,'entryType',ggSetting.entry,...
 	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
-	'fname_suffix','event','save_fig', save_fig, 'save_dir', save_dir);
+	'fname_preffix','event','save_fig', save_fig, 'save_dir', FolderPathVA.fig);
 
 % Create a UI table displaying the n numberss
-fNum = nNumberTab(eventStructForPlotFiltered,ggSetting.entry);
+fNum = nNumberTab(eventStructForPlotFiltered,'event');
 
 % Save data
 if save_fig
 	% Save the fNum
-	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'nNumInfo-events');
+	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo');
 
 	% Save the statistics info
 	eventPropStatInfo.eventStructForPlotFiltered = eventStructForPlotFiltered;
 	eventPropStatInfo.plot_info = plot_info;
-	dt = datestr(now, 'yyyymmdd');
-	save(fullfile(save_dir, [dt, '_eventPropStatInfo']), 'eventPropStatInfo');
+	% dt = datestr(now, 'yyyymmdd');
+	save(fullfile(save_dir, 'event propStatInfo'), 'eventPropStatInfo');
 end
 
 % Update the folder path 
@@ -269,42 +255,28 @@ end
 
 
 %% ==========
-% 2.6 Get and group data using ROI as entry and plot spontaneous event frequency in DAO and PO
-
-% % Get and group data
-% ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventProp
-
-% % Create grouped_event for plotting event properties
-% [roiStructForPlot] = getAndGroup_eventsProp(alignedData_allTrials,...
-% 	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
-% 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
-
-% % Keep spontaneous events and discard all others
-% tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
-% [roiStructForPlotFiltered] = filter_entries_in_structure(roiStructForPlot,'group',...
-% 	'tags_keep',tags_keep);
-
-% Generate figures for spontaneous event frequency
-% Change parNames and keep other setting the same as in 2.3
+% 2.6 Plot ROI properties. 
+% Use data organized in section 2.3
+close all
 plot_combined_data = false;
 stat = true; % Set it to true to run anova when plotting bars
 parNames = {'sponfq','sponInterval','cv2'}; % 'sponfq', 'sponInterval'
 
-[save_dir, plot_info] = plot_event_info(roiStructForPlotFiltered,'entryType',ggSetting.entry,...
+[save_dir, plot_info] = plot_event_info(roiStructForPlotFiltered,'entryType','roi',...
 	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
-	'fname_suffix','ROI','save_fig', save_fig, 'save_dir', save_dir);
+	'fname_preffix','ROI','save_fig', save_fig, 'save_dir', save_dir);
 
 % Create a UI table displaying the n numberss
-fNum = nNumberTab(eventStructForPlotFiltered,ggSetting.entry);
+fNum = nNumberTab(eventStructForPlotFiltered,'roi');
 
 
 % Save the statistics info
 if save_fig
 	% Save the fNum
-	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'nNumInfo-ROI');
+	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'ROI nNumInfo');
 
 	roiPropStatInfo.roiStructForPlotFiltered = roiStructForPlotFiltered;
 	roiPropStatInfo.plot_info = plot_info;
-	dt = datestr(now, 'yyyymmdd');
-	save(fullfile(save_dir, [dt, '_roiPropStatInfo']), 'roiPropStatInfo');
+	% dt = datestr(now, 'yyyymmdd');
+	save(fullfile(save_dir, 'ROI propStatInfo'), 'roiPropStatInfo');
 end
