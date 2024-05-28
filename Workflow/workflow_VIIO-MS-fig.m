@@ -134,6 +134,7 @@ debug_mode = false; % true/false
 % Note: 'event_type' for alignedData must be 'detected_events'
 save_fig = true; % true/false
 save_dir = FolderPathVA.fig;
+at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'. Indicate what value should be used to normalize the traces
 at.stimNames = ''; % If empty, do not screen recordings with stimulation, instead use all of them
 at.eventCat = 'spon'; % options: 'trig','trig-ap','rebound','spon', 'rebound'
 at.subNucleiTypes = {'DAO','PO'}; % Separate ROIs using the subnuclei tag.
@@ -142,9 +143,9 @@ at.showRawtraces = false; % true/false. true: plot every single trace
 at.showMedian = false; % true/false. plot raw traces having a median value of the properties specified by 'at.medianProp'
 at.medianProp = 'FWHM'; % 
 at.shadeType = 'std'; % plot the shade using std/ste
-at.y_range = [-1 2]; % [-10 5],[-3 5],[-2 1]
-at.sponNorm = true; % true/false
-at.normalized = false; % true/false. normalize the traces to their own peak amplitudes.
+at.y_range = [-10 20]; % [-10 5],[-3 5],[-2 1]
+% at.sponNorm = true; % true/false
+% at.normalized = false; % true/false. normalize the traces to their own peak amplitudes.
 
 close all
 
@@ -154,9 +155,11 @@ traceInfo = cell(1,numel(at.subNucleiTypes));
 % Loop through the subNucleiTypes
 for i = 1:numel(at.subNucleiTypes)
 	[~,traceInfo{i}] = AlignedCatTracesSinglePlot(alignedData_allTrials,at.stimNames,at.eventCat,...
-		'subNucleiType',at.subNucleiTypes{i},'plot_combined_data',at.plot_combined_data,...
+		'normMethod',at.normMethod,'subNucleiType',at.subNucleiTypes{i},...
 		'showRawtraces',at.showRawtraces,'showMedian',at.showMedian,'medianProp',at.medianProp,...
-		'shadeType',at.shadeType,'sponNorm',at.sponNorm,'normalized',at.normalized,'y_range',at.y_range);
+		'plot_combined_data',at.plot_combined_data,'shadeType',at.shadeType,'y_range',at.y_range);
+	% 'sponNorm',at.sponNorm,'normalized',at.normalized,
+
 	if i == 1
 		guiSave = 'on';
 	else
@@ -220,7 +223,7 @@ ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventPro
 % 2.5 Plot event properties
 
 % Settings
-save_fig = false; % true/false
+save_fig = true; % true/false
 plot_combined_data = false;
 parNames = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_mag_delta'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
@@ -236,16 +239,40 @@ close all
 % Create a UI table displaying the n numberss
 fNum = nNumberTab(eventStructForPlotFiltered,'event');
 
+% Run linear-mixed-model analysis on the data and plot the results in the UI table
+fLMM = figure('Name', 'event bar stat LMM');
+figPos = [0.1 0.1 0.8 0.4]; % left, bottom, width, height
+set(fLMM, 'Units', 'normalized', 'Position', figPos);
+tlo_LMM = tiledlayout(fLMM, ceil(numel(parNames)/4), 4);
+dataStruct = [eventStructForPlotFiltered(:).event_info];
+hierarchicalVars = {'trialName', 'roiName'};
+clear LMMstat
+for i = 1:length(parNames)
+	[LMMstat.(parNames{i}),anovaResults,~,statInfo] = lmm_analysis(dataStruct, parNames{i}, 'subNuclei', hierarchicalVars);
+	axLMM = nexttile(tlo_LMM);
+	uit_pos = get(axLMM, 'Position');
+	uit_unit = get(axLMM, 'Units');
+	uit = uitable(fLMM, 'Data', ensureHorizontal(struct2cell(statInfo)), 'ColumnName', fieldnames(statInfo),...
+	    'Units', uit_unit, 'Position', uit_pos);
+	% Adjust table appearance
+	jScroll = findjobj(uit);
+	jTable = jScroll.getViewport.getView;
+	jTable.setAutoResizeMode(jTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+	drawnow;
+end
+sgtitle(fLMM, statInfo.method);
+
 % Save data
 if save_fig
 	% Save the fNum
 	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo');
+	savePlot(fLMM,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event bar stat LMM')
 
 	% Save the statistics info
 	eventPropStatInfo.eventStructForPlotFiltered = eventStructForPlotFiltered;
 	eventPropStatInfo.plot_info = plot_info;
 	% dt = datestr(now, 'yyyymmdd');
-	save(fullfile(save_dir, 'event propStatInfo'), 'eventPropStatInfo');
+	save(fullfile(save_dir, 'event propStatInfo'), 'eventPropStatInfo', 'LMMstat');
 end
 
 % Update the folder path 

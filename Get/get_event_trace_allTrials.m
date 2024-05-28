@@ -269,6 +269,9 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 				alignedData.traces(n).fullTrace = roiTraceData;
 				alignedData.traces(n).fullTraceDecon = roiTraceDataDecon;
 
+				% Add the std of highpass filtered trace
+				alignedData.traces(n).hpStd = event_spec_fulltable{'highpass_std', roiName}{:};
+
 				% modify the names of peak categories 
 				if ~isempty(alignedData.traces(n).eventProp) && mod_pcn 
 					[cat_setting] = CaImg_char_pat('event_group');

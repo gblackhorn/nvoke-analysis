@@ -6,7 +6,7 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	plot_combined_data = true; % mean trace for each single group. std・ste value can be used as mean_trace_shade to plot shade
 	plot_combined_data_shade = true; % std・ste value for plot_combined_data
 	plot_stim_shade = false; % true/false
-	plot_raw_races = true; % true: plot the traces in the trace_data
+	plot_raw_traces = true; % true: plot the traces in the trace_data
 	% save_fig = false;
 	% save_dir = '';
 	mean_trace = [];
@@ -36,8 +36,8 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	        mean_trace = varargin{ii+1};
 	    elseif strcmpi('mean_trace_shade', varargin{ii})
 	        mean_trace_shade = varargin{ii+1};
-	    elseif strcmpi('plot_raw_races', varargin{ii})
-	        plot_raw_races = varargin{ii+1};
+	    elseif strcmpi('plot_raw_traces', varargin{ii})
+	        plot_raw_traces = varargin{ii+1};
 	    % elseif strcmpi('save_fig', varargin{ii})
 	    %     save_fig = varargin{ii+1};
 	    % elseif strcmpi('save_dir', varargin{ii})
@@ -90,7 +90,7 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 		% end
 	end
 
-	if plot_raw_races
+	if plot_raw_traces
 		if isa(trace_data, 'double')
 			h = plot(time_info, trace_data, 'LineWidth', line_width, 'Color', line_color);
 		elseif isa(trace_data, 'cell')
