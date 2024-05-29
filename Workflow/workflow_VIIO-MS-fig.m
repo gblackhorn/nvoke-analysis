@@ -223,7 +223,7 @@ ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventPro
 % 2.5 Plot event properties
 
 % Settings
-save_fig = true; % true/false
+save_fig = false; % true/false
 plot_combined_data = false;
 parNames = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_mag_delta'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
@@ -240,19 +240,26 @@ close all
 fNum = nNumberTab(eventStructForPlotFiltered,'event');
 
 % Run linear-mixed-model analysis on the data and plot the results in the UI table
-fLMM = figure('Name', 'event bar stat LMM');
+MM_modelType = 'GLMM'; % LMM/GLMM
+GLMM_distribution = 'gamma'; % For continuous, positively skewed data
+GLMM_link = 'log'; % For continuous, positively skewed data
+fMM_name = sprintf('event bar stat %s', MM_modelType);
+fMM = figure('Name', fMM_name);
 figPos = [0.1 0.1 0.8 0.4]; % left, bottom, width, height
-set(fLMM, 'Units', 'normalized', 'Position', figPos);
-tlo_LMM = tiledlayout(fLMM, ceil(numel(parNames)/4), 4);
+set(fMM, 'Units', 'normalized', 'Position', figPos);
+tlo_LMM = tiledlayout(fMM, ceil(numel(parNames)/4), 4);
 dataStruct = [eventStructForPlotFiltered(:).event_info];
 hierarchicalVars = {'trialName', 'roiName'};
-clear LMMstat
+clear MMstat
 for i = 1:length(parNames)
-	[LMMstat.(parNames{i}),anovaResults,~,statInfo] = lmm_analysis(dataStruct, parNames{i}, 'subNuclei', hierarchicalVars);
+	% [MMstat.(parNames{i}),anovaResults,~,statInfo] = lmm_analysis(dataStruct, parNames{i}, 'subNuclei', hierarchicalVars);
+	[MMstat.(parNames{i}),anovaResults,~,statInfo] = mixed_model_analysis(dataStruct,...
+		parNames{i}, 'subNuclei', hierarchicalVars,...
+		'modelType', MM_modelType, 'distribution', GLMM_distribution, 'link', GLMM_link);
 	axLMM = nexttile(tlo_LMM);
 	uit_pos = get(axLMM, 'Position');
 	uit_unit = get(axLMM, 'Units');
-	uit = uitable(fLMM, 'Data', ensureHorizontal(struct2cell(statInfo)), 'ColumnName', fieldnames(statInfo),...
+	uit = uitable(fMM, 'Data', ensureHorizontal(struct2cell(statInfo)), 'ColumnName', fieldnames(statInfo),...
 	    'Units', uit_unit, 'Position', uit_pos);
 	% Adjust table appearance
 	jScroll = findjobj(uit);
@@ -260,19 +267,19 @@ for i = 1:length(parNames)
 	jTable.setAutoResizeMode(jTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
 	drawnow;
 end
-sgtitle(fLMM, statInfo.method);
+sgtitle(fMM, statInfo.method);
 
 % Save data
 if save_fig
 	% Save the fNum
 	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo');
-	savePlot(fLMM,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event bar stat LMM')
+	savePlot(fMM,'guiSave', 'off', 'save_dir', save_dir, 'fname', fMM_name);
 
 	% Save the statistics info
 	eventPropStatInfo.eventStructForPlotFiltered = eventStructForPlotFiltered;
 	eventPropStatInfo.plot_info = plot_info;
 	% dt = datestr(now, 'yyyymmdd');
-	save(fullfile(save_dir, 'event propStatInfo'), 'eventPropStatInfo', 'LMMstat');
+	save(fullfile(save_dir, 'event propStatInfo'), 'eventPropStatInfo', 'MMstat');
 end
 
 % Update the folder path 
