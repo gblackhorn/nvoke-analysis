@@ -3,52 +3,57 @@ function [varargout] = mixed_model_analysis(dataStruct, responseVar, groupVar, h
     % observations are not independent. It can be used to analyze data using either Linear Mixed Models (LMM)
     % or Generalized Linear Mixed Models (GLMM).
 
-    % - Hierarchical Data: Data with multiple levels of grouping (e.g., measurements nested within
-    % ROIs, which are nested within trials, which are nested within animals).
-    % - Fixed Effects: Effects of interest (e.g., treatment effects or subNuclei locations) can be
-    % modeled as fixed effects.
-    % - Random Effects: Variability within and between these nested levels can be modeled as random
-    % effects.
-    % - GLMM: Allows for non-normal distributions and link functions.
+    % This function is designed to analyze data with a hierarchical or nested structure, where
+        % observations are not independent. It can be used to analyze data using either Linear Mixed Models (LMM)
+        % or Generalized Linear Mixed Models (GLMM).
 
-    % Input:
-    % - dataStruct: A structure containing the data to be analyzed.
-    % - responseVar: A string specifying the name of the response variable (e.g., 'FWHM').
-    % - groupVar: A string specifying the name of the grouping variable (e.g., 'subNuclei').
-    % - hierarchicalVars: A cell array of strings specifying the names of the hierarchical variables
-    %   (e.g., {'trialName', 'roiName'}).
-    % - varargin: Optional parameters including:
-    %   - 'modelType': 'LMM' (default) or 'GLMM'
-    %   - 'distribution': Distribution for GLMM 
-    %   - 'link': Link function for GLMM 
-    %   - 'dispStat': true (default is false) to display statistics
+        % - Hierarchical Data: Data with multiple levels of grouping (e.g., measurements nested within
+        % ROIs, which are nested within trials, which are nested within animals).
+        % - Fixed Effects: Effects of interest (e.g., treatment effects or subNuclei locations) can be
+        % modeled as fixed effects.
+        % - Random Effects: Variability within and between these nested levels can be modeled as random
+        % effects.
+        % - GLMM: Allows for non-normal distributions and link functions.
 
-    % Choosing Distribution and Link Functions for GLMM
-        % Poisson Distribution (for count data)
-            % Use When: Your response variable represents counts (e.g., number of events).
-            % Distribution: 'poisson'
-            % Link Function: 'log'
-            % Example: Analyzing the number of occurrences of an event in a fixed period.
-        % Binomial Distribution (for binary or proportion data)
-            % Use When: Your response variable is binary (e.g., success/failure) or proportions.
-            % Distribution: 'binomial'
-            % Link Function: 'logit'
-            % Example: Analyzing the presence or absence of a trait.
-        % Gamma Distribution (for continuous, positively skewed data)
-            % Use When: Your response variable is continuous and positively skewed.
-            % Distribution: 'gamma'
-            % Link Function: 'log'
-            % Example: Analyzing skewed continuous variables like response times or expenditures.
-        % Inverse Gaussian Distribution (for continuous, positively skewed data)
-            % Use When: Your response variable is continuous and positively skewed, especially when data variance increases with the mean.
-            % Distribution: 'inverse gaussian'
-            % Link Function: 'log'
-            % Example: Analyzing highly skewed continuous variables where the variance is related to the mean.
-        % Negative Binomial Distribution (for overdispersed count data)
-            % Use When: Your count data shows overdispersion (variance greater than the mean).
-            % Distribution: 'negative binomial'
-            % Link Function: 'log'
-            % Example: Analyzing count data with overdispersion, like the number of customer complaints per day.
+        % Input:
+        % - dataStruct: A structure containing the data to be analyzed.
+        % - responseVar: A string specifying the name of the response variable (e.g., 'FWHM').
+        % - groupVar: A string specifying the name of the grouping variable (e.g., 'subNuclei').
+        % - hierarchicalVars: A cell array of strings specifying the names of the hierarchical variables
+        %   (e.g., {'trialName', 'roiName'}).
+        % - varargin: Optional parameters including:
+        %   - 'modelType': 'LMM' (default) or 'GLMM'
+        %   - 'distribution': Distribution for GLMM 
+        %   - 'link': Link function for GLMM 
+        %   - 'dispStat': true (default is false) to display statistics
+
+        % Choosing Distribution and Link Functions for GLMM
+            % Poisson Distribution (for count data)
+                % Use When: Your response variable represents counts (e.g., number of events).
+                % Distribution: 'poisson'
+                % Link Function: 'log'
+                % Example: Analyzing the number of occurrences of an event in a fixed period.
+            % Binomial Distribution (for binary or proportion data)
+                % Use When: Your response variable is binary (e.g., success/failure) or proportions.
+                % Distribution: 'binomial'
+                % Link Function: 'logit'
+                % Example: Analyzing the presence or absence of a trait.
+            % Gamma Distribution (for continuous, positively skewed data)
+                % Use When: Your response variable is continuous and positively skewed.
+                % Distribution: 'gamma'
+                % Link Function: 'log'
+                % Example: Analyzing skewed continuous variables like response times or expenditures.
+            % Inverse Gaussian Distribution (for continuous, positively skewed data)
+                % Use When: Your response variable is continuous and positively skewed, especially when data variance increases with the mean.
+                % Distribution: 'inverse gaussian'
+                % Link Function: 'log'
+                % Example: Analyzing highly skewed continuous variables where the variance is related to the mean.
+            % Negative Binomial Distribution (for overdispersed count data)
+                % Use When: Your count data shows overdispersion (variance greater than the mean).
+                % Distribution: 'negative binomial'
+                % Link Function: 'log'
+                % Example: Analyzing count data with overdispersion, like the number of customer complaints per day.
+
 
     % Parse optional parameters
     p = inputParser;
@@ -63,10 +68,16 @@ function [varargout] = mixed_model_analysis(dataStruct, responseVar, groupVar, h
     dispStat = p.Results.dispStat;
 
     % Convert the specified fields to categorical and collect all necessary fields
-    LMMdata.(responseVar) = [dataStruct.(responseVar)]';
-    LMMdata.(groupVar) = categorical({dataStruct.(groupVar)}');
+    responseValues = [dataStruct.(responseVar)]';
+    
+    % Find valid indices (non-NaN) for response values
+    validIndices = ~isnan(responseValues);
+    
+    % Filter out NaNs from response values and corresponding fields
+    LMMdata.(responseVar) = responseValues(validIndices);
+    LMMdata.(groupVar) = categorical({dataStruct(validIndices).(groupVar)}');
     for i = 1:length(hierarchicalVars)
-        LMMdata.(hierarchicalVars{i}) = categorical({dataStruct.(hierarchicalVars{i})}');
+        LMMdata.(hierarchicalVars{i}) = categorical({dataStruct(validIndices).(hierarchicalVars{i})}');
     end
     
     % Convert the structured data to a table
@@ -74,7 +85,7 @@ function [varargout] = mixed_model_analysis(dataStruct, responseVar, groupVar, h
     
     % Construct the formula for the mixed model
     % - Fixed effects: groupVar
-    % - Random effects: hierachiRandom
+    % - Random effects: hierarchicalVars
     hierachiRandom = sprintf('(1|%s)', hierarchicalVars{1});
     if length(hierarchicalVars) > 1
         for i = 2:length(hierarchicalVars)
