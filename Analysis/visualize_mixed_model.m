@@ -2,7 +2,7 @@ function visualize_mixed_model(lme, dataStruct, responseVar, groupVar, hierarchi
     % Extract observed values from the data structure
     observedValues = [dataStruct.(responseVar)]';
     
-    % Remove NaNs from observed values and corresponding predicted values
+    % Remove NaNs from observed values and corresponding fields
     validIndices = ~isnan(observedValues);
     observedValues = observedValues(validIndices);
     
@@ -38,9 +38,9 @@ function visualize_mixed_model(lme, dataStruct, responseVar, groupVar, hierarchi
     reffectsTable = array2table(reffects, 'VariableNames', {'Estimate'});
     
     % Prepare the grouping variable for random effects
-    groupLevels = [];
+    groupLevels = {};
     for i = 1:length(hierarchicalVars)
-        levels = unique({dataStruct.(hierarchicalVars{i})});
+        levels = unique({dataStruct(validIndices).(hierarchicalVars{i})});
         groupLevels = [groupLevels; levels(:)']; %#ok<AGROW>
     end
     
@@ -70,7 +70,7 @@ function visualize_mixed_model(lme, dataStruct, responseVar, groupVar, hierarchi
     end
     
     % Calculate predicted values for each group
-    uniqueGroups = unique({dataStruct.(groupVar)});
+    uniqueGroups = unique({dataStruct(validIndices).(groupVar)});
     predictedByGroup = arrayfun(@(grp) mean(predict(lme, struct2table(dataStruct(strcmp({dataStruct.(groupVar)}, grp))))), uniqueGroups);
     
     % Plot predicted values for each group

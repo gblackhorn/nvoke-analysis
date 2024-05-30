@@ -253,21 +253,24 @@ hierarchicalVars = {'trialName', 'roiName'};
 clear MMstat
 for i = 1:length(parNames)
 	% [MMstat.(parNames{i}),anovaResults,~,statInfo] = lmm_analysis(dataStruct, parNames{i}, 'subNuclei', hierarchicalVars);
-	[MMstat.(parNames{i}),anovaResults,~,statInfo] = mixed_model_analysis(dataStruct,...
+	[MMstat.(parNames{i}).MM,MMstat.(parNames{i}).FixedEffectsLinear,chiLRT,statInfo] = mixed_model_analysis(dataStruct,...
 		parNames{i}, 'subNuclei', hierarchicalVars,...
 		'modelType', MM_modelType, 'distribution', GLMM_distribution, 'link', GLMM_link);
 	axLMM = nexttile(tlo_LMM);
 	uit_pos = get(axLMM, 'Position');
 	uit_unit = get(axLMM, 'Units');
-	uit = uitable(fMM, 'Data', ensureHorizontal(struct2cell(statInfo)), 'ColumnName', fieldnames(statInfo),...
+	uit = uitable(fMM, 'Data', ensureHorizontal(struct2cell(chiLRT)), 'ColumnName', fieldnames(chiLRT),...
 	    'Units', uit_unit, 'Position', uit_pos);
+	% uit = uitable(fMM, 'Data', ensureHorizontal(struct2cell(statInfo)), 'ColumnName', fieldnames(statInfo),...
+	%     'Units', uit_unit, 'Position', uit_pos);
 	% Adjust table appearance
 	jScroll = findjobj(uit);
 	jTable = jScroll.getViewport.getView;
 	jTable.setAutoResizeMode(jTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
 	drawnow;
 end
-sgtitle(fMM, statInfo.method);
+sgtitle(fMM, chiLRT.method);
+% sgtitle(fMM, statInfo.method);
 
 % Save data
 if save_fig
