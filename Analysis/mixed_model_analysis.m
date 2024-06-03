@@ -1,4 +1,4 @@
-function [lme, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVar, hierarchicalVars, varargin)
+function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVar, hierarchicalVars, varargin)
     % This function is designed to analyze data with a hierarchical or nested structure, where
     % observations are not independent. It can be used to analyze data using either Linear Mixed Models (LMM)
     % or Generalized Linear Mixed Models (GLMM).
@@ -76,14 +76,14 @@ function [lme, varargout] = mixed_model_analysis(dataStruct, responseVar, groupV
     validIndices = ~isnan(responseValues);
     
     % Filter out NaNs from response values and corresponding fields
-    LMMdata.(responseVar) = responseValues(validIndices);
-    LMMdata.(groupVar) = categorical({dataStruct(validIndices).(groupVar)}');
+    MMdata.(responseVar) = responseValues(validIndices);
+    MMdata.(groupVar) = categorical({dataStruct(validIndices).(groupVar)}');
     for i = 1:length(hierarchicalVars)
-        LMMdata.(hierarchicalVars{i}) = categorical({dataStruct(validIndices).(hierarchicalVars{i})}');
+        MMdata.(hierarchicalVars{i}) = categorical({dataStruct(validIndices).(hierarchicalVars{i})}');
     end
     
     % Convert the structured data to a table
-    tbl = struct2table(LMMdata);
+    tbl = struct2table(MMdata);
     
     % Construct the formula for the mixed model
     % - Fixed effects: groupVar
@@ -99,22 +99,22 @@ function [lme, varargout] = mixed_model_analysis(dataStruct, responseVar, groupV
     
     % Fit the model
     if strcmp(modelType, 'LMM')
-        lme = fitlme(tbl, formula);
-        lme_noFix = fitlme(tbl, formula_noFix);
+        me = fitlme(tbl, formula);
+        me_noFix = fitlme(tbl, formula_noFix);
     elseif strcmp(modelType, 'GLMM')
-        lme = fitglme(tbl, formula, 'Distribution', distribution, 'Link', link);
-        lme_noFix = fitglme(tbl, formula_noFix, 'Distribution', distribution, 'Link', link);
+        me = fitglme(tbl, formula, 'Distribution', distribution, 'Link', link);
+        me_noFix = fitglme(tbl, formula_noFix, 'Distribution', distribution, 'Link', link);
     else
         error('Unsupported model type');
     end
 
     % Optionally display the model summary
     if dispStat
-        disp(lme);
+        disp(me);
     end
 
     % Extract fixed effects
-    [fixedEffectsEstimates, ~, fixedEffectsStats] = fixedEffects(lme);
+    [fixedEffectsEstimates, ~, fixedEffectsStats] = fixedEffects(me);
     
     % Optionally display fixed effects
     if dispStat
@@ -123,7 +123,7 @@ function [lme, varargout] = mixed_model_analysis(dataStruct, responseVar, groupV
     end
     
     % Extract random effects
-    randomEffectsTable = randomEffects(lme);
+    randomEffectsTable = randomEffects(me);
     
     % Optionally display random effects
     if dispStat
@@ -132,15 +132,15 @@ function [lme, varargout] = mixed_model_analysis(dataStruct, responseVar, groupV
     end
 
     % Extract the coefficients and p-values
-    intercept = lme.Coefficients.Estimate(1);
-    groupEffect = lme.Coefficients.Estimate(2:end);
-    pValueGroup = lme.Coefficients.pValue(2:end);
+    intercept = me.Coefficients.Estimate(1);
+    groupEffect = me.Coefficients.Estimate(2:end);
+    pValueGroup = me.Coefficients.pValue(2:end);
 
     % Optionally display the results in a readable format
     if dispStat
         fprintf('Intercept (Baseline): %.4f\n', intercept);
         for i = 1:length(groupEffect)
-            fprintf('Effect of %s (compared to baseline): %.4f (p-value: %.4f)\n', lme.Coefficients.Name{i+1}, groupEffect(i), pValueGroup(i));
+            fprintf('Effect of %s (compared to baseline): %.4f (p-value: %.4f)\n', me.Coefficients.Name{i+1}, groupEffect(i), pValueGroup(i));
         end
     end
 
@@ -151,15 +151,16 @@ function [lme, varargout] = mixed_model_analysis(dataStruct, responseVar, groupV
     fixedEffectsStats.Name = groupLevels; 
 
     % Convert the values on log scale to linear scale
-    if strcmpi(lme.Link.Name,'log')
+    if strcmpi(modelType,'GLMM') && strcmpi(me.Link.Name,'log')
         fixedEffectsStats = log2linear(fixedEffectsStats);
     end
+    fixedEffectsStats = dataset2table(fixedEffectsStats); % Convert the dataset to a table
     varargout{1} = fixedEffectsStats;
     
     % ANOVA is performed on the fitted model using the anova function to test the significance of
     % the fixed effects. It tells whether there are any statistically significant differences
     % between the groups.
-    anovaResults = anova(lme);
+    anovaResults = anova(me);
     % if strcmp(modelType, 'LMM')
     %     anovaResults = anova(lme);
     % else
@@ -179,26 +180,32 @@ function [lme, varargout] = mixed_model_analysis(dataStruct, responseVar, groupV
 
     % Compare the GLMM without the fix effects (groupVar), lme_noFix, to the GLMM with both fixed and
     % random effects, lme, and return the results of a likelihood ratio test (chiLRT)
-    chiLRT = compare(lme_noFix,lme);
-    chiLRT.formula = categorical({formula_noFix; formula}); % add formulas to the table
+    if me.LogLikelihood > me_noFix.LogLikelihood
+        chiLRT = compare(me_noFix,me);
+        chiLRT.formula = {formula_noFix; formula}; % add formulas to the dataset
+        chiLRT = dataset2table(chiLRT); % Convert the dataset to a table
+        chiLRT{:,1} = categorical(chiLRT{:,1}); % Change the Model names to categorical for easier display
+    else
+        chiLRT = createDummyChiLRTtab(me_noFix,me);
+    end
     varargout{2} = chiLRT;
 
 
     % Initialize multi-comparison results
     multiComparisonResults = [];
-    % statInfo = struct('method', {}, 'group1', {}, 'group2', {}, 'p', {}, 'h', {});
+    mmPvalue = struct('method', {}, 'group1', {}, 'group2', {}, 'p', {}, 'h', {});
 
     
     % Perform multiple comparisons if the group effect is significant
     if any(anovaResults.pValue < 0.05) % strcmp(modelType, 'LMM') && 
         if length(groupLevels) > 2
             % Perform multiple comparisons manually
-            [multiComparisonResults, statInfo] = performPostHocComparisons(lme, groupLevels, dispStat);
+            [multiComparisonResults, mmPvalue] = performPostHocComparisons(me, groupLevels, dispStat);
         else
             % Extract the p-value from the fixed effects for two groups
             pValue = pValueGroup(1);
             hValue = pValue < 0.05;
-            statInfo = struct('method', 'Linear-mixed-model', 'group1', groupLevels{1}, 'group2', groupLevels{2}, 'p', pValue, 'h', hValue);
+            mmPvalue = struct('method', modelType, 'group1', groupLevels{1}, 'group2', groupLevels{2}, 'p', pValue, 'h', hValue);
             if dispStat
                 fprintf('\nFixed Effects Results:\n%s vs. %s: p-value = %.4f, h = %d\n', ...
                     groupLevels{1}, groupLevels{2}, pValue, hValue);
@@ -216,14 +223,14 @@ function [lme, varargout] = mixed_model_analysis(dataStruct, responseVar, groupV
     end
 
     % Add multi-comparison results and statInfo to the output
-    varargout{3} = statInfo;
+    varargout{3} = mmPvalue;
     varargout{4} = multiComparisonResults;
 end
 
-function [results, statInfo] = performPostHocComparisons(lme, groupLevels, dispStat)
+function [results, mmPvalue] = performPostHocComparisons(me, groupLevels, dispStat)
     % Extract the fixed effects and their covariance matrix
-    fixedEffectsEstimates = fixedEffects(lme);
-    covarianceMatrix = lme.CoefficientCovariance;
+    fixedEffectsEstimates = fixedEffects(me);
+    covarianceMatrix = me.CoefficientCovariance;
 
     % Number of groups
     numGroups = length(groupLevels);
@@ -231,7 +238,7 @@ function [results, statInfo] = performPostHocComparisons(lme, groupLevels, dispS
     % Prepare results storage
     comparisons = nchoosek(1:numGroups, 2);
     results = [];
-    statInfo = struct('method', {}, 'group1', {}, 'group2', {}, 'p', {}, 'h', {});
+    mmPvalue = struct('method', {}, 'group1', {}, 'group2', {}, 'p', {}, 'h', {});
 
     % Perform pairwise comparisons
     for i = 1:size(comparisons, 1)
@@ -244,15 +251,15 @@ function [results, statInfo] = performPostHocComparisons(lme, groupLevels, dispS
         
         % Calculate confidence intervals and p-values
         tValue = estimateDiff / seDiff;
-        df = lme.DFE;
+        df = me.DFE;
         pValue = 2 * tcdf(-abs(tValue), df);
         hValue = pValue < 0.05;
         
         % Store the results
         results = [results; group1, group2, estimateDiff, seDiff, tValue, df, pValue, hValue];
         
-        % Append results to statInfo
-        statInfo(end+1) = struct('method', 'Linear-mixed-model', 'group1', groupLevels{group1}, 'group2', groupLevels{group2}, 'p', pValue, 'h', hValue); %#ok<AGROW>
+        % Append results to mmPvalue
+        mmPvalue(end+1) = struct('method', 'Linear-mixed-model', 'group1', groupLevels{group1}, 'group2', groupLevels{group2}, 'p', pValue, 'h', hValue); %#ok<AGROW>
     end
 
     % Optionally display pairwise comparison results
@@ -301,28 +308,35 @@ function fixedEffectsStatsLinear = log2linear(fixedEffectsStatsLog);
     fixedEffectsStatsLinear.SE = SElinear;
 end
 
-function structVar = titledDataset2struct(tdsVar)
-    % Convert a titledDataset var to a structure var
+% function structVar = titledDataset2struct(tdsVar)
+%     % Convert a titledDataset var to a structure var
 
-    % Get the variable names.
-    colNames = tdsVar.Properties.VarNames;
+%     % Get the variable names.
+%     colNames = tdsVar.Properties.VarNames;
 
-    % Create an empty strucut var
-    structVar = empty_content_struct(colNames,size(tdsVar,1));
+%     % Create an empty strucut var
+%     structVar = empty_content_struct(colNames,size(tdsVar,1));
 
-    % Fill the values to the structvar
-    for i = 1:length(colNames)
-        % Get the contents
-        contents = tdsVar.(colNames{i});
+%     % Fill the values to the structvar
+%     for i = 1:length(colNames)
+%         % Get the contents
+%         contents = tdsVar.(colNames{i});
 
-        % Check if the contents are number array
-        if isdouble(contents)
-            contents = num2cell(contents);
-        else
-            contents = cellstr(contents);
-        end
+%         % Check if the contents are number array
+%         if isdouble(contents)
+%             contents = num2cell(contents);
+%         else
+%             contents = cellstr(contents);
+%         end
 
-        % Fill the structVar with the cell array contents
-        [structVar.(colNames{i})] = contents{:};
-    end
+%         % Fill the structVar with the cell array contents
+%         [structVar.(colNames{i})] = contents{:};
+%     end
+% end
+
+function dummyChiLRTtab = createDummyChiLRTtab(mmResult1, mmResult2)
+    dummyChiLRTtab = [mmResult1.ModelCriterion; mmResult2.ModelCriterion];
+    dummyChiLRTtab.formula = {char(mmResult1.Formula); char(mmResult2.Formula)};
+    % dummyChiLRTtab.formula = categorical({mmResult1.Formula; mmResult2.Formula});
+    dummyChiLRTtab = dataset2table(dummyChiLRTtab); % Convert the dataset to a table
 end

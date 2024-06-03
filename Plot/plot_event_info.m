@@ -63,9 +63,14 @@ function params = parse_inputs(varargin)
     defaultSaveDir = '';
     defaultSavePathNoGui = '';
     defaultFnamePreffix = '';
-    defaultStat = false;
+    defaultMmModel = ''; % '': Do not use MM model for analysis. 'LMM': Linear-Mixed-Model. 'GLMM': Generalized-Mixed_Model
+    defaultMmGroup = 'subNuclei'; % Check the input 'hierarchicalVars' input in the function 'mixed_model_analysis' for more details
+    defaultMmHierarchicalVars = {'trialName', 'roiName'}; % Check the input 'hierarchicalVars' input in the function 'mixed_model_analysis' for more details
+    defaultMmDistribution = 'gamma'; % Check the input 'distribution' input in the function 'mixed_model_analysis' for more details
+    defaultMmLink = 'log'; % Check the input 'link' input in the function 'mixed_model_analysis' for more details
     defaultStatFig = 'off';
     defaultFontSize = 12;
+    defaultTileColNum = 4;
     defaultFontWeight = 'bold';
     defaultTickAngle = 15;
 
@@ -78,9 +83,14 @@ function params = parse_inputs(varargin)
     addParameter(p, 'save_dir', defaultSaveDir);
     addParameter(p, 'savepath_nogui', defaultSavePathNoGui);
     addParameter(p, 'fname_preffix', defaultFnamePreffix);
-    addParameter(p, 'stat', defaultStat);
+    addParameter(p, 'mmModel', defaultMmModel);
+    addParameter(p, 'mmGroup', defaultMmGroup);
+    addParameter(p, 'mmHierarchicalVars', defaultMmHierarchicalVars);
+    addParameter(p, 'mmDistribution', defaultMmDistribution);
+    addParameter(p, 'mmLink', defaultMmLink);
     addParameter(p, 'stat_fig', defaultStatFig);
     addParameter(p, 'FontSize', defaultFontSize);
+    addParameter(p, 'tileColNum', defaultTileColNum);
     addParameter(p, 'FontWeight', defaultFontWeight);
     addParameter(p, 'TickAngle', defaultTickAngle);
     parse(p, varargin{:});
@@ -146,27 +156,39 @@ function [bar_data, bar_stat] = plot_bars(event_info_struct, parNames, params)
     bar_stat = struct();
 
     f_bar = create_figure('bar plots');
+    % f_stat = uifigure('Name', 'bar stat', 'Position', [0.1 0.1 0.8 0.4]);
     f_stat = create_figure('bar stat');
+    set(f_stat, 'Position', [0.05 0.1 0.95 0.4]);
     f_violin = create_figure('violin plots');
 
-    tlo_bar = tiledlayout(f_bar, ceil(numel(parNames)/4), 4);
-    tlo_barstat = tiledlayout(f_stat, ceil(numel(parNames)/4), 4);
-    tlo_violin = tiledlayout(f_violin, ceil(numel(parNames)/4), 4);
+    tlo_bar = tiledlayout(f_bar, ceil(numel(parNames)/params.tileColNum), params.tileColNum);
+    tlo_barstat = tiledlayout(f_stat, ceil(numel(parNames)/params.tileColNum)*2+1, params.tileColNum);
+    tlo_violin = tiledlayout(f_violin, ceil(numel(parNames)/params.tileColNum), params.tileColNum);
 
     groupNames = {event_info_struct.group};
 
     for pn = 1:numel(parNames)
         par = parNames{pn};
         ax_bar = nexttile(tlo_bar);
-        ax_stat = nexttile(tlo_barstat);
+
+        statTileLoc1 = floor(pn/params.tileColNum)*params.tileColNum+mod(pn,params.tileColNum)+params.tileColNum;
+        statTileLoc2 = floor(pn/params.tileColNum)*params.tileColNum+mod(pn,params.tileColNum)+params.tileColNum*2;
+        % statTileLoc = floor(pn/params.tileColNum)*params.tileColNum*2+pn+params.tileColNum;
+        ax_stat1 = nexttile(tlo_barstat,statTileLoc1);
+        ax_stat2 = nexttile(tlo_barstat,statTileLoc2);
+        % ax_stat = nexttile(tlo_barstat,params.tileColNum+pn,[2 1]);
+
         if numel(event_info_struct) > 1
             [bar_data.(par), bar_stat.(par)] = plot_event_info_bar(event_info_struct, par, 'plotWhere', ax_bar,...
-                'stat', params.stat, 'stat_fig', params.stat_fig, 'FontSize', params.FontSize,...
+                'stat', true, 'stat_fig', params.stat_fig,...
+                'mmModel', params.mmModel, 'mmGrouop', params.mmGroup, 'mmHierarchicalVars', params.mmHierarchicalVars,...
+                'mmDistribution', params.mmDistribution, 'mmLink', params.mmLink,...
+                'FontSize', params.FontSize,...
                 'FontWeight', params.FontWeight);
             title(replace(par, '_', '-'));
 
             % Ensure the stat table is plotted within the correct figure context
-            plot_stat_table(ax_stat, bar_stat.(par));
+            plot_stat_table(ax_stat1, ax_stat2, bar_stat.(par));
         end
 
 
@@ -180,7 +202,21 @@ function [bar_data, bar_stat] = plot_bars(event_info_struct, parNames, params)
     % Ensure there are field names to access
     if ~isempty(statParNames)
         % Set the super title of the figure f_stat using the method field of the first bar_stat entry
-        sgtitle(f_stat, bar_stat.(statParNames{1}).method);
+        if ~isempty(params.mmModel)
+            % Replace underscores with spaces
+            ParNamesCombined = cellfun(@(x) strrep(x, '_', ' '), statParNames, 'UniformOutput', false);
+
+            % Combine into one line separated with ' | '
+            ParNamesCombined = strjoin(ParNamesCombined, ' | ');
+
+            statTitleStr = sprintf('%s\n\n1. %s: Model comparison. no-fixed-effect vs fixed-effects\n[%s]\nVS\n[%s]\n\n2. %s analysis',...
+                ParNamesCombined,params.mmModel,char(bar_stat.(statParNames{1}).chiLRT.formula{1}),char(bar_stat.(statParNames{1}).chiLRT.formula{2}),params.mmModel);
+            statTitleStr = strrep(statTitleStr, '_', ' ');
+            sgtitle(f_stat, statTitleStr);
+            % sgtitle(f_stat, [params.mmModel, ' ', char(bar_stat.(statParNames{1}).method.Formula)]);
+        else
+            sgtitle(f_stat, bar_stat.(statParNames{1}).method);
+        end
     end
 end
 
@@ -192,21 +228,38 @@ function f = create_figure(name)
 end
 
 
-function plot_stat_table(ax_stat, bar_stat)
-    % Set the current figure to the one containing ax_stat
-    figure(ax_stat.Parent.Parent);
+function plot_stat_table(ax_stat1, ax_stat2, bar_stat)
+    % Set the current figure to the one containing ax_stat1
+    figure(ax_stat1.Parent.Parent);
+
+    set(ax_stat1, 'XTickLabel', []);
+    set(ax_stat1, 'YTickLabel', []);
+    set(ax_stat2, 'XTickLabel', []);
+    set(ax_stat2, 'YTickLabel', []);
     
-    uit_pos = get(ax_stat, 'Position');
-    uit_unit = get(ax_stat, 'Units');
-    
+    uit_pos1 = get(ax_stat1, 'Position');
+    uit_unit1 = get(ax_stat1, 'Units');
+    uit_pos2 = get(ax_stat2, 'Position');
+    uit_unit2 = get(ax_stat2, 'Units');
+
     % Create the table in the correct figure and context
     if isfield(bar_stat, 'c')
         MultCom_stat = bar_stat.c(:, ["g1", "g2", "p", "h"]);
         uit = uitable('Data', table2cell(MultCom_stat), 'ColumnName', MultCom_stat.Properties.VariableNames,...
-            'Units', uit_unit, 'Position', uit_pos);
+            'Units', uit_unit1, 'Position', uit_pos1);
+    elseif isfield(bar_stat, 'fixedEffectsStats') % if LMM or GLMM (mixed models) are used
+        chiLRTCell = table2cell(bar_stat.chiLRT);
+        chiLRTCell = convertCategoricalToChar(chiLRTCell);
+        uit = uitable('Data', chiLRTCell, 'ColumnName', bar_stat.chiLRT.Properties.VariableNames,...
+                    'Units', uit_unit1, 'Position', uit_pos1);
+
+        fixedEffectsStatsCell = table2cell(bar_stat.fixedEffectsStats);
+        fixedEffectsStatsCell = convertCategoricalToChar(fixedEffectsStatsCell);
+        uit = uitable('Data', fixedEffectsStatsCell, 'ColumnName', bar_stat.fixedEffectsStats.Properties.VariableNames,...
+                    'Units', uit_unit2, 'Position', uit_pos2);
     else
         uit = uitable('Data', ensureHorizontal(struct2cell(bar_stat)), 'ColumnName', fieldnames(bar_stat),...
-            'Units', uit_unit, 'Position', uit_pos);
+            'Units', uit_unit1, 'Position', uit_pos1);
     end
     
     % Adjust table appearance
@@ -214,6 +267,21 @@ function plot_stat_table(ax_stat, bar_stat)
     jTable = jScroll.getViewport.getView;
     jTable.setAutoResizeMode(jTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
     drawnow;
+end
+
+
+function convertedCellArray = convertCategoricalToChar(cellArray)
+    % Check and convert categorical or nominal data to char in a cell array
+    convertedCellArray = cellArray;  % Copy the input cell array
+    
+    % Iterate through each element in the cell array
+    for i = 1:numel(cellArray)
+        % Check if the current element is categorical or nominal
+        if iscategorical(cellArray{i}) || isa(cellArray{i}, 'nominal')
+            % Convert to char
+            convertedCellArray{i} = char(cellArray{i});
+        end
+    end
 end
 
 

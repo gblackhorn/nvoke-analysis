@@ -231,58 +231,34 @@ stat = true; % Set it to true to run anova when plotting bars
 
 close all
 
+% Setup parameters for linear-mixed-model (LMM) or generalized-mixed-model (GLMM) analysis
+mmModel = 'GLMM'; % LMM/GLMM
+mmGroup = 'subNuclei'; % LMM/GLMM
+mmHierarchicalVars = {'trialName', 'roiName'};
+mmDistribution = 'gamma'; % For continuous, positively skewed data
+mmLink = 'log'; % For continuous, positively skewed data
+
 % Generate and save figures
 [save_dir, plot_info] = plot_event_info(eventStructForPlotFiltered,'entryType',ggSetting.entry,...
 	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
+	'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
+	'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'fname_preffix','event','save_fig', save_fig, 'save_dir', FolderPathVA.fig);
 
 % Create a UI table displaying the n numberss
 fNum = nNumberTab(eventStructForPlotFiltered,'event');
 
-% Run linear-mixed-model analysis on the data and plot the results in the UI table
-MM_modelType = 'GLMM'; % LMM/GLMM
-GLMM_distribution = 'gamma'; % For continuous, positively skewed data
-GLMM_link = 'log'; % For continuous, positively skewed data
-fMM_name = sprintf('event bar stat %s', MM_modelType);
-fMM = figure('Name', fMM_name);
-figPos = [0.1 0.1 0.8 0.4]; % left, bottom, width, height
-set(fMM, 'Units', 'normalized', 'Position', figPos);
-tlo_LMM = tiledlayout(fMM, ceil(numel(parNames)/4), 4);
-dataStruct = [eventStructForPlotFiltered(:).event_info];
-hierarchicalVars = {'trialName', 'roiName'};
-clear MMstat
-for i = 1:length(parNames)
-	% [MMstat.(parNames{i}),anovaResults,~,statInfo] = lmm_analysis(dataStruct, parNames{i}, 'subNuclei', hierarchicalVars);
-	[MMstat.(parNames{i}).MM,MMstat.(parNames{i}).FixedEffectsLinear,chiLRT,statInfo] = mixed_model_analysis(dataStruct,...
-		parNames{i}, 'subNuclei', hierarchicalVars,...
-		'modelType', MM_modelType, 'distribution', GLMM_distribution, 'link', GLMM_link);
-	axLMM = nexttile(tlo_LMM);
-	uit_pos = get(axLMM, 'Position');
-	uit_unit = get(axLMM, 'Units');
-	uit = uitable(fMM, 'Data', ensureHorizontal(struct2cell(chiLRT)), 'ColumnName', fieldnames(chiLRT),...
-	    'Units', uit_unit, 'Position', uit_pos);
-	% uit = uitable(fMM, 'Data', ensureHorizontal(struct2cell(statInfo)), 'ColumnName', fieldnames(statInfo),...
-	%     'Units', uit_unit, 'Position', uit_pos);
-	% Adjust table appearance
-	jScroll = findjobj(uit);
-	jTable = jScroll.getViewport.getView;
-	jTable.setAutoResizeMode(jTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
-	drawnow;
-end
-sgtitle(fMM, chiLRT.method);
-% sgtitle(fMM, statInfo.method);
-
 % Save data
 if save_fig
 	% Save the fNum
 	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo');
-	savePlot(fMM,'guiSave', 'off', 'save_dir', save_dir, 'fname', fMM_name);
+	% savePlot(fMM,'guiSave', 'off', 'save_dir', save_dir, 'fname', fMM_name);
 
 	% Save the statistics info
 	eventPropStatInfo.eventStructForPlotFiltered = eventStructForPlotFiltered;
 	eventPropStatInfo.plot_info = plot_info;
 	% dt = datestr(now, 'yyyymmdd');
-	save(fullfile(save_dir, 'event propStatInfo'), 'eventPropStatInfo', 'MMstat');
+	save(fullfile(save_dir, 'event propStatInfo'), 'eventPropStatInfo');
 end
 
 % Update the folder path 
@@ -291,26 +267,33 @@ if save_dir~=0
 end
 
 
-%% ==========
+%%% ==========
 % 2.6 Plot ROI properties. 
 % Use data organized in section 2.3
-close all
-plot_combined_data = false;
-stat = true; % Set it to true to run anova when plotting bars
-parNames = {'sponfq','sponInterval','cv2'}; % 'sponfq', 'sponInterval'
+% close all
+% plot_combined_data = false;
+% stat = true; % Set it to true to run anova when plotting bars
+parNamesROI = {'sponfq','sponInterval','cv2'}; % 'sponfq', 'sponInterval'
+mmHierarchicalVarsROI = {'trialName'};
+
+if save_fig
+	close all
+end
 
 [save_dir, plot_info] = plot_event_info(roiStructForPlotFiltered,'entryType','roi',...
-	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
+	'plot_combined_data', plot_combined_data, 'parNames', parNamesROI, 'stat', stat,...
+	'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVarsROI,...
+	'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'fname_preffix','ROI','save_fig', save_fig, 'save_dir', save_dir);
 
 % Create a UI table displaying the n numberss
-fNum = nNumberTab(eventStructForPlotFiltered,'roi');
+fNumROI = nNumberTab(eventStructForPlotFiltered,'roi');
 
 
 % Save the statistics info
 if save_fig
-	% Save the fNum
-	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'ROI nNumInfo');
+	% Save the fNumROI
+	savePlot(fNumROI,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'ROI nNumInfo');
 
 	roiPropStatInfo.roiStructForPlotFiltered = roiStructForPlotFiltered;
 	roiPropStatInfo.plot_info = plot_info;

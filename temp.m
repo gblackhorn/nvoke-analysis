@@ -1123,6 +1123,102 @@ axis equal; % Keep the aspect ratio of the map
 axis off; % Turn off the axis box and labels
 hold on; % Keep the map displayed while plotting the labels
 
-plot(roiEdges(:,2), roiEdges(:,1), 'r', 'LineWidth', 2);
+plot(roiEdges{1}(:,2), roiEdges{1}(:,1), 'r', 'LineWidth', 1);
 % plot(x, y, 'r', 'LineWidth', 0.1);
 
+
+
+%% ==========
+targetFolder = 'D:\guoda\Documents\MATLAB\Codes\nvoke-analysis';
+targetFunction = 'roimap';
+callerFiles = findFunctionCalls(targetFolder, targetFunction);
+
+%% ==========
+close all
+imageMatrix = recdata_organized{1, 2}.roi_map;
+roiBoundaries = recdata_organized{1, 2}.roi_edge;
+roiNames = recdata_organized{1, 2}.decon.Properties.VariableNames;
+
+plotCalciumImagingWithROIs(imageMatrix, roiBoundaries, roiNames,'Title','20210326-151454')
+
+
+%% ==========
+% Example usage
+% Example usage
+plotWhere = [];
+xData = 0:0.1:100; % Example time data
+yData = rand(1001, 3); % Example calcium trace data
+
+% Example marker data
+marker1_xData = {
+    [10, 20, 30],    % Markers for first trace
+    [15, 25, 35],    % Markers for second trace
+    [12, 22, 32]     % Markers for third trace
+};
+marker2_xData = {
+    [5, 15, 25],     % Markers for first trace
+    [8, 18, 28],     % Markers for second trace
+    [10, 20, 30]     % Markers for third trace
+};
+
+% Call the function to plot the data
+plot_TemporalData_Trace(plotWhere, xData, yData, ...
+    'plot_marker', true, ...
+    'marker1_xData', marker1_xData, ...
+    'marker2_xData', marker2_xData, ...
+    'showYtickRight', true, ...
+    'titleStr', 'Calcium Traces with Markers');
+
+
+%% ==========
+fwhmData = [eventStructForPlotFiltered(1).event_info,eventStructForPlotFiltered(2).event_info];
+fwhmData = [eventStructForPlotFiltered(:).event_info];
+responseVar = 'FWHM';
+groupVar = 'subNuclei';
+hierarchicalVars = {'trialName', 'roiName'};
+modelType = 'GLMM';
+distribution = 'gamma';
+link = 'log';
+
+
+[me,fixedEffectsStats,chiLRT,statInfo,multiComparisonResults]= mixed_model_analysis(fwhmData,...
+	responseVar, groupVar, hierarchicalVars,'modelType',modelType,'distribution',distribution,'link',link);
+%% ==========
+lme = MMstat.FWHM;
+responseVar = 'FWHM';
+groupVar = 'subNuclei';
+hierarchicalVars = {'trialName', 'roiName'};
+visualize_mixed_model(lme, dataStruct, responseVar, groupVar, hierarchicalVars)
+
+
+
+
+% Residuals for Gamma GLMM
+gammaResiduals = residuals(lme, 'ResidualType', 'Raw');
+figure;
+subplot(2,1,1);
+histogram(gammaResiduals);
+title('Gamma GLMM Residuals');
+xlabel('Residuals');
+ylabel('Frequency');
+
+% Residuals for Inverse Gaussian GLMM
+invGaussResiduals = residuals(glmmInvGauss, 'ResidualType', 'Raw');
+subplot(2,1,2);
+histogram(invGaussResiduals);
+title('Inverse Gaussian GLMM Residuals');
+xlabel('Residuals');
+ylabel('Frequency');
+
+
+a = [0.29707, 0.2299, 0.36424];
+b = [0.074927, -0.015563, 0.16542];
+b2 = b+a(1);
+
+aExp = arrayfun(@exp,a)
+bExp = arrayfun(@exp,b)
+b2Exp = arrayfun(@exp,b2)
+
+
+uit = uitable('Data', table2cell(bar_stat.chiLRT), 'ColumnName', bar_stat.chiLRT.Properties.VariableNames,...
+            'Units', uit_unit, 'Position', uit_pos);
