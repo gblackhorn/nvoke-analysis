@@ -1222,3 +1222,14 @@ b2Exp = arrayfun(@exp,b2)
 
 uit = uitable('Data', table2cell(bar_stat.chiLRT), 'ColumnName', bar_stat.chiLRT.Properties.VariableNames,...
             'Units', uit_unit, 'Position', uit_pos);
+
+
+
+
+%% ==========
+% Name of your main script or function
+mainScript = 'workflow_VIIO_MS_fig';
+rootFolder = 'D:\guoda\Documents\MATLAB\Codes';
+outputDir = 'D:\guoda\Documents\Workspace\manuscript\Paper\VIIO_NO-effect\VIIO\CODE\GD';
+
+collectFunctionsAndCopy(mainScript, rootFolder, outputDir)

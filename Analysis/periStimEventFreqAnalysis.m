@@ -153,14 +153,6 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 		'fig_name','diff between event freq stat'); % create a figure
 	tloDiffStat = tiledlayout(fDiffStat,fDiff_rowNum,fDiff_colNum);
 
-	% % Fig C. Plot the diff. dataB is normalized to the means of dataA (every bin is normalized separately)
-	% [fDiff2,~,~] = fig_canvas(diffPairNum,'unit_width',0.4,'unit_height',0.4,'column_lim',2,...
-	% 	'fig_name','diff between event freq normDataB'); % create a figure
-	% tloDiff2 = tiledlayout(fDiff2,fDiff_rowNum,fDiff_colNum);
-	% [fDiffStat2,~,~] = fig_canvas(diffPairNum,'unit_width',0.4,'unit_height',0.4,'column_lim',2,...
-	% 	'fig_name','diff between event freq stat normDataB'); % create a figure
-	% tloDiffStat2 = tiledlayout(fDiffStat2,fDiff_rowNum,fDiff_colNum);
-
 
 	% organize the data in PSEF to compare peri-stim event frequencies from recordings applied with
 	% different stimulation
@@ -175,13 +167,6 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 		new_xticks = diffStat(dpn).xA;
 		new_xticksLabel = diffStat(dpn).binNamesAB;
 
-		% if diffStat(dpn).shiftBins
-		% 	new_xticks = diffStat(dpn).xA;
-		% 	new_xticksLabel = diffStat(dpn).binNamesAB;
-		% else
-		% 	new_xticks = diffStat(dpn).binEdgesA;
-		% 	new_xticksLabel = {};
-		% end
 
 		% fig B
 		ax = nexttile(tloDiff);
@@ -199,21 +184,6 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 			'VariableNames',ttestP1TableVarNames(1:length(diffStat(dpn).ttestAB)),'RowNames',{'p','h'});
 		plotUItable(fDiffStat,ax,ttestP1Table);
 
-		% % fig C
-		% ax = nexttile(tloDiff2);
-		% [diffStat(dpn).ttestABnorm,diffStat(dpn).diffABnorm]=plot_diff_usingRawData(diffStat(dpn).xA,diffStat(dpn).dataA,diffStat(dpn).dataBnorm,...
-		% 	'legStrA',diffStat(dpn).groupA,'legStrB',diffStat(dpn).groupB,'ylabelStr',ylabelStr,...
-		% 	'new_xticks',new_xticks,'new_xticksLabel',new_xticksLabel,'figTitleStr',figTitleStrCell{dpn},...
-		% 	'stimShadeDataA',diffStat(dpn).shadeA.shadeData,'stimShadeDataB',diffStat(dpn).shadeB.shadeData,...
-		% 	'stimShadeColorA',diffStat(dpn).shadeA.color,'stimShadeColorB',diffStat(dpn).shadeB.color,...
-		% 	'save_fig',false,'save_dir',save_dir,'plotWhere',gca);
-
-		% % fig C stat
-		% ax = nexttile(tloDiffStat2);
-		% % ttestP1TableVarNames = NumArray2StringCell(diffStat(dpn).xA);
-		% ttestP1TableNorm = array2table(diffStat(dpn).ttestABnorm,...
-		% 	'VariableNames',ttestP1TableVarNames(1:length(diffStat(dpn).ttestABnorm)),'RowNames',{'p','h'});
-		% plotUItable(fDiffStat2,ax,ttestP1TableNorm);
 	end
 
 	% Fig C. Plot the dataB normalized to the means of dataA (every bin is normalized separately,
