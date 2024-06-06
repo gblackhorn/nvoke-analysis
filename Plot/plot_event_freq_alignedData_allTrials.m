@@ -14,6 +14,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	filter_roi_tf = false; % do not filter ROIs by default
 	stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
 	filters = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+	subNucleiFilter = ''; % ''/'DAO'/'PO'. Used to screen ROIs.If empty, nothing will be filtered
 
 	plot_unit_width = 0.4; % normalized size of a single plot to the display
 	plot_unit_height = 0.4; % nomralized size of a single plot to the display
@@ -69,6 +70,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 	        stim_names = varargin{ii+1}; % number array. An index of ROI traces will be collected 
 	    elseif strcmpi('filters', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
 	        filters = varargin{ii+1}; % normalize every FluoroData trace with its max value
+	    elseif strcmpi('subNucleiFilter', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
+	        subNucleiFilter = varargin{ii+1}; % normalize every FluoroData trace with its max value
 	    elseif strcmpi('baseBinEdgestart', varargin{ii})
             baseBinEdgestart = varargin{ii+1};
 	    elseif strcmpi('baseBinEdgeEnd', varargin{ii})
@@ -153,11 +156,6 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		% Get the subplot number and create a title string for the figure
 	stim_type_num = numel(stim_names); % Get the number of stimulation types
 	stimShadeDataAll = empty_content_struct({'stimTypeName','shadeData','stimName','color'},stim_type_num);
-	% if normToBase
-	% 	titleStr = sprintf('event freq in %g s bins [%s] normToBase',binWidth,PropName);
-	% else
-	% 	titleStr = sprintf('event freq in %g s bins [%s]',binWidth,PropName);
-	% end
 	titleStr = sprintf('event freq in %g s bins [%s]%s%s',binWidth,PropName,normToBaseStr,apCorrectionStr);
 	titleStr = strrep(titleStr,'_',' ');
 
@@ -179,6 +177,15 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 			'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,'splitLongStim',splitLongStim,...
 			'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
 
+		% Filter the 'EventFreqInBins' using the subNucleiFilter input if it is not empty
+		if ~isempty(subNucleiFilter)
+			% Logical indexing to find entries where the field subNulei is (subNucleiFilter)
+			isSubNucleiTF = arrayfun(@(x) strcmp(x.subNuclei, subNucleiFilter), EventFreqInBins);
+
+			% Extract the entries
+			EventFreqInBins = EventFreqInBins(isSubNucleiTF);
+		end
+
 		% Calculate the number of recordings, the number of dates
 		% (animal number), the number of neurons and the number of
 		% stimulation repeats
@@ -187,9 +194,6 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		stimShadeDataAll(stn).stimTypeName = stim_names{stn};
 		stimShadeDataAll(stn).shadeData = stimShadeData;
 		stimShadeDataAll(stn).stimName = stimShadeName;
-		% [EventFreqInBins,binEdges] = get_EventFreqInBins_AllTrials(alignedData,stim_names{stn},'PropName',PropName,...
-		% 	'binWidth',binWidth,'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
-		% 	'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
 		
 
 		% collect event frequencies from all rois and combine them to a matrix 
@@ -235,12 +239,14 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		sub_titleStr = sprintf('%s: ex-%s in-%s rb-%s exApOg-%s stimEventsPos-%s \n[%g animals %g cells %g stims]',...
 		stim_names{stn},filterStr{1},filterStr{2},filterStr{3},filterStr{4},stimEventsStr,...
 		barStat(stn).recDateNum,barStat(stn).roiNum,barStat(stn).stimRepeatNum); % string for the subtitle
+
+		efStruct = efArray2struct(ef, EventFreqInBins, xdata);
 		[barInfo] = barplot_with_stat(ef,'xdata',xdata,'plotWhere',gca);
 
 		% plot shade to indicate the stimulation period
 		hold on
-		for sn = 1:numel(stimShadeData)
-			if strcmpi(stimShadeName{sn},'og')
+		for sn = 1:numel(stimShadeData) 
+			if strcmpi(stimShadeName{sn},'og')  
 				shadeColor = shadeColors{1};
 			elseif strcmpi(stimShadeName{sn},'ap')
 				shadeColor = shadeColors{2};
@@ -253,9 +259,6 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		hold off
 
 		xlim([binEdges(1) binEdges(end)])
-		% % mark the bin edges with peri-stimulus time
-		% xticks(binEdges);
-		% xticklabels(NumArray2StringCell(binEdges));
 
 		% mark the bar with the customized binName
 		xticklabels(binNames)
@@ -332,3 +335,58 @@ function [recNum,recDateNum,roiNum,stimRepeatNum] = calcDataNum(EventFreqInBins)
 	roiNum = numel(trialNamesAll);
 	stimRepeatNum = sum([EventFreqInBins.stimNum]);
 end
+
+
+function efStruct = efArray2struct(ef, EventFreqInBins, xdata)
+	% Convert the ef double array to a structure var for GLMM analysis and plot
+
+	% Borrow 'TrialNames', 'roiNames', 'subNuclei', and 'stimNum' from struct var 'EventFreqInBins'
+
+	% xdata is used to tag various columns of ef data
+
+	% Get the ROI number and the bin number
+	roiNum = size(ef, 1);
+	binNum = size(ef, 2);
+
+	% Validate the data
+	if roiNum ~=  length(EventFreqInBins)
+		error('The row number of ef and the length of EventFreqInBins must be the same')
+	end
+	if binNum ~= length(xdata)
+		error('The col number of ef and the length of xdata must be the same')
+	end
+
+	% Create an empty cell to pre-allocate RAM
+	efStructCell = cell(1, binNum);
+	% efStructFieldNames = {'val', 'xdata', 'trialNames', 'roiNames', 'subNuclei', 'stimNum'};
+
+	% Extract the fields' content from EventFreqInBins
+	trialNames = {EventFreqInBins.TrialNames};
+	roiNames = {EventFreqInBins.roiNames};
+	subNuclei = {EventFreqInBins.subNuclei};
+	stimNum = [EventFreqInBins.stimNum];
+
+	% Loop through the columns of ef
+	for i = 1:binNum
+		efDataCell = ensureHorizontal(num2cell(ef(:, i)));
+		xdataCell = num2cell(repmat(xdata(i), 1, roiNum));
+		efStructCell{i} = struct('val', efDataCell, 'xdata', xdataCell,...
+			'trialNames', trialNames, 'roiNames', roiNames, 'subNuclei', subNuclei, 'stimNum', stimNum);
+	end
+
+	% Concatenate the cell
+	efStruct = horzcat(efStructCell{:});
+end
+
+% function 
+% 	% Statistics
+% 	% GLMM analysis
+% 	[me,fixedEffectsStats,chiLRT,mmPvalue,multiComparisonResults]= mixed_model_analysis(structData,...
+% 		'val', 'xdata', 'mmHierarchicalVars','modelType',mmType,'distribution',mmDistribution,'link',mmLink);
+% 	statInfo.method = me;
+% 	statInfo.fixedEffectsStats = fixedEffectsStats;
+% 	statInfo.chiLRT = chiLRT;
+% 	statInfo.mmPvalue = mmPvalue;
+% 	statInfo.multCompare = multiComparisonResults;
+
+% end

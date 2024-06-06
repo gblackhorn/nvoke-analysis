@@ -100,13 +100,6 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
 
     for gn = 1:group_num
         barInfo.data(gn).group = group_names{gn};
-        % if exist('group_names', 'var')
-        %     barInfo.data(gn).group = group_names{gn};
-        % else
-        %     barInfo.data(gn).group = sprintf('group%d',gn);
-        % end
-
-        % Find non-NaN elements
         nonNanIndices = ~isnan(group_data{gn});
         group_data{gn} = group_data{gn}(nonNanIndices);
 
@@ -166,51 +159,6 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
     [barInfo.stat,barInfoStatTab] = ttestOrANOVA(group_data,'groupNames',group_names);
 
 
-
-    % barInfo_stat_fields = {'stat_method','p','tbl','c','ci','gnames','stats'};
-    % barInfo.stat = empty_content_struct(barInfo_stat_fields,1);
-
-    % if group_num>1
-    %     switch stat
-    %         case 'anova' % one-way ANOVA
-    %             if group_num == 2
-    %                 if numel(barInfo.data(1).group_data) ~= numel(barInfo.data(2).group_data)
-    %                     stat = 'upttest';
-    %                 else % use paired t-test if there are only two groups of data, and both contain the same number of data
-    %                     stat = 'pttest'
-    %                     warning('one-way ANOVA is changed to paired t-test. Two groups have the same number data points')
-    %                 end
-    %             end
-    %         case 'pttest' % paired t-test
-    %             if group_num ~= 2
-    %                 stat = 'anova';
-    %             else
-    %                 if numel(barInfo.data(1).group_data) ~= numel(barInfo.data(2).group_data)
-    %                    stat = 'anova';
-    %                 end 
-    %             end
-    %         case 'upttest' % unpaired t-test
-    %             if group_num ~= 2
-    %                 stat = 'anova';
-    %             % else
-    %             %     if numel(barInfo.data(1).group_data) ~= numel(barInfo.data(2).group_data)
-    %             %        stat = 'anova';
-    %             %     end 
-    %             end
-    %         otherwise
-    %     end
-
-    %     switch stat
-    %         case 'anova' % one-way ANOVA
-    %             [barInfo.stat] = anova1_with_multiComp(data_all,data_all_group);
-    %         case 'pttest' % paired t-test
-    %             [barInfo.stat.h,barInfo.stat.p,barInfo.stat.ci,barInfo.stat.stats] = ttest(barInfo.data(1).group_data,barInfo.data(2).group_data);
-    %         case 'upttest' % unpaired t-test
-    %             [barInfo.stat.h,barInfo.stat.p,barInfo.stat.ci,barInfo.stat.stats] = ttest2(barInfo.data(1).group_data,barInfo.data(2).group_data);
-    %         otherwise
-    %     end
-    %     barInfo.stat.stat_method = stat;
-    % end
 
     if plotData && save_fig 
         dt = datestr(now, 'yyyymmdd');

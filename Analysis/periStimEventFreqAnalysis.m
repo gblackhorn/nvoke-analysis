@@ -1,111 +1,95 @@
 function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
-	% Return a new eventProp including event baseDiff 
+	% Generate plots showing the event frequency in various period of the peri-stimulation window
+
+	% varargout contains the statistics comparing the event frequency in recordings applied with
+	% various stimulations
+	%		varargout{1} = barStat;
+	% 		varargout{2} = diffStat;
+	% 		varargout{3} = save_dir;
+
 
 	% alignedData: output of function 'get_event_trace_allTrials'
 
+	% Initialize input parser
+	p = inputParser;
 
-	% Defaults
-	filter_roi_tf = false; % true/false. If true, screen ROIs
-	stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-	filters = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
-	diffPair = {[1 3], [2 3]}; % binned freq will be compared between stimualtion groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
+	% Add parameters to the parser with default values and comments
+	addParameter(p, 'filter_roi_tf', false); % true/false. If true, screen ROIs
+	addParameter(p, 'stim_names', {'og-5s','ap-0.1s','og-5s ap-0.1s'}); % compare the alignedData.stim_name with these strings and decide what filter to use
+	addParameter(p, 'filters', {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}); % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+	addParameter(p, 'subNucleiFilter', '',...
+					@(x) any(validatestring(x,{'','PO','DAO'}))); % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+	addParameter(p, 'diffPair', {[1 3], [2 3]}); % binned freq will be compared between stimulation groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
+	addParameter(p, 'propName', 'peak_time'); % 'rise_time'/'peak_time'. Choose one to find the locations of events
+	addParameter(p, 'binWidth', 1); % the width of histogram bin. the default value is 1 s.
+	addParameter(p, 'stimIDX', []); % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
+	addParameter(p, 'preStim_duration', 5); % unit: second. include events happened before the onset of stimulations
+	addParameter(p, 'postStim_duration', 10); % unit: second. include events happened after the end of stimulations
+	addParameter(p, 'customizeEdges', false); % customize the bins using function 'setPeriStimSectionForEventFreqCalc'
+	addParameter(p, 'stimEffectDuration', 1); % unit: second. Use this to set the end for the stimulation effect range
+	addParameter(p, 'splitLongStim', [1]); % If the stimDuration is longer than stimEffectDuration, the stimDuration 
+	                                      % part after the stimEffectDuration will be splitted. If it is [1 1], the
+	                                      % time during stimulation will be splitted using edges below
+	                                      % [stimStart, stimEffectDuration, stimEffectDuration+splitLongStim, stimEnd]
+	addParameter(p, 'stimEventsPos', false); % true/false. If true, only use the peri-stim ranges with stimulation related events
+	addParameter(p, 'stimEvents', struct('stimName', {'og-5s', 'ap-0.1s', 'og-5s ap-0.1s'}, 'eventCat', {'rebound', 'trig', 'rebound'}));
+	addParameter(p, 'normToBase', true); % true/false. normalize the data to baseline (data before baseBinEdge)
+	addParameter(p, 'baseBinEdgestart', -5); % where to start to use the bin for calculating the baseline. -1
+	addParameter(p, 'baseBinEdgeEnd', -2); % 0
+	addParameter(p, 'apCorrection', false); % true/false. If true, correct baseline bin used for normalization. 
+	addParameter(p, 'groupAforNormB', 'og-5s'); % plot the normB (the fold of dataA) in fig C if the groupA is this
+	addParameter(p, 'xTickAngle', 45);
+	addParameter(p, 'errorBarColor', {'#ED8564', '#5872ED', '#EDBF34', '#40EDC3', '#5872ED'});
+	addParameter(p, 'scatterColor', {'#ED8564', '#5872ED', '#EDBF34', '#40EDC3', '#5872ED'});
+	addParameter(p, 'scatterSize', 20);
+	addParameter(p, 'scatterAlpha', 0.5);
+	addParameter(p, 'stimShadeColorA', {'#F05BBD','#4DBEEE','#ED8564'});
+	addParameter(p, 'stimShadeColorB', {'#F05BBD','#4DBEEE','#ED8564'});
+	addParameter(p, 'shadeHeightScale', 0.05); % percentage of y axes
+	addParameter(p, 'shadeGapScale', 0.01); % diff between two shades in percentage of y axes
+	addParameter(p, 'save_fig', false); % true/false
+	addParameter(p, 'save_dir', ''); 
+	addParameter(p, 'gui_save', 'off');
+	addParameter(p, 'debug_mode', false); % true/false
 
-	propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
-	binWidth = 1; % the width of histogram bin. the default value is 1 s.
-	stimIDX = []; % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
-	preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
-	postStim_duration = 10; % unit: second. include events happened after the end of stimulations
+	% Parse the inputs
+	parse(p, varargin{:});
 
-	customizeEdges = false; % customize the bins using function 'setPeriStimSectionForEventFreqCalc'
-	stimEffectDuration = 1; % unit: second. Use this to set the end for the stimulation effect range
+	% Assign parsed values to variables
+	filter_roi_tf = p.Results.filter_roi_tf;
+	stim_names = p.Results.stim_names;
+	filters = p.Results.filters;
+	subNucleiFilter = p.Results.subNucleiFilter;
+	diffPair = p.Results.diffPair;
+	propName = p.Results.propName;
+	binWidth = p.Results.binWidth;
+	stimIDX = p.Results.stimIDX;
+	preStim_duration = p.Results.preStim_duration;
+	postStim_duration = p.Results.postStim_duration;
+	customizeEdges = p.Results.customizeEdges;
+	stimEffectDuration = p.Results.stimEffectDuration;
+	splitLongStim = p.Results.splitLongStim;
+	stimEventsPos = p.Results.stimEventsPos;
+	stimEvents = p.Results.stimEvents;
+	normToBase = p.Results.normToBase;
+	baseBinEdgestart = p.Results.baseBinEdgestart;
+	baseBinEdgeEnd = p.Results.baseBinEdgeEnd;
+	apCorrection = p.Results.apCorrection;
+	groupAforNormB = p.Results.groupAforNormB;
+	xTickAngle = p.Results.xTickAngle;
+	errorBarColor = p.Results.errorBarColor;
+	scatterColor = p.Results.scatterColor;
+	scatterSize = p.Results.scatterSize;
+	scatterAlpha = p.Results.scatterAlpha;
+	stimShadeColorA = p.Results.stimShadeColorA;
+	stimShadeColorB = p.Results.stimShadeColorB;
+	shadeHeightScale = p.Results.shadeHeightScale;
+	shadeGapScale = p.Results.shadeGapScale;
+	save_fig = p.Results.save_fig;
+	save_dir = p.Results.save_dir;
+	gui_save = p.Results.gui_save;
+	debug_mode = p.Results.debug_mode;
 
-	splitLongStim = [1]; % If the stimDuration is longer than stimEffectDuration, the stimDuration 
-						%  part after the stimEffectDuration will be splitted. If it is [1 1], the
-						% time during stimulation will be splitted using edges below
-						% [stimStart, stimEffectDuration, stimEffectDuration+splitLongStim, stimEnd] 
-
-	stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
-	stimEvents(1).stimName = 'og-5s';
-	stimEvents(1).eventCat = 'rebound';
-	stimEvents(2).stimName = 'ap-0.1s';
-	stimEvents(2).eventCat = 'trig';
-	stimEvents(3).stimName = 'og-5s ap-0.1s';
-	stimEvents(3).eventCat = 'rebound';
-
-	normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
-	baseBinEdgestart = -preStim_duration; % where to start to use the bin for calculating the baseline. -1
-	baseBinEdgeEnd = -2; % 0
-	apCorrection = false; % true/false. If true, correct baseline bin used for normalization. 
-
-	groupAforNormB = 'og-5s'; % plot the normB (the fold of dataA) in fig C if the groupA is this
-	xTickAngle = 45;
-	errorBarColor = {'#ED8564', '#5872ED', '#EDBF34', '#40EDC3', '#5872ED'};
-	scatterColor = errorBarColor;
-	scatterSize = 20;
-	scatterAlpha = 0.5;
-	stimShadeColorA = {'#F05BBD','#4DBEEE','#ED8564'};
-	stimShadeColorB = {'#F05BBD','#4DBEEE','#ED8564'};
-	shadeHeightScale = 0.05; % percentage of y axes
-	shadeGapScale = 0.01; % diff between two shade in percentage of y axes
-
-	save_fig = false; % true/false
-	save_dir = '';
-	gui_save = 'off';
-
-	debug_mode = false; % true/false
-
-	% Optionals
-	for ii = 1:2:(nargin-1)
-	    if strcmpi('filter_roi_tf', varargin{ii})
-	        filter_roi_tf = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
-        elseif strcmpi('stim_names', varargin{ii})
-	        stim_names = varargin{ii+1};
-        elseif strcmpi('filters', varargin{ii})
-	        filters = varargin{ii+1};
-        elseif strcmpi('diffPair', varargin{ii})
-	        diffPair = varargin{ii+1};
-        elseif strcmpi('propName', varargin{ii})
-	        propName = varargin{ii+1};
-        elseif strcmpi('binWidth', varargin{ii})
-	        binWidth = varargin{ii+1};
-        elseif strcmpi('stimIDX', varargin{ii})
-	        stimIDX = varargin{ii+1};
-        elseif strcmpi('preStim_duration', varargin{ii})
-	        preStim_duration = varargin{ii+1};
-        elseif strcmpi('postStim_duration', varargin{ii})
-	        postStim_duration = varargin{ii+1};
-        elseif strcmpi('customizeEdges', varargin{ii}) 
-            customizeEdges = varargin{ii+1}; 
-        elseif strcmpi('PeriBaseRange', varargin{ii}) 
-            PeriBaseRange = varargin{ii+1}; 
-        elseif strcmpi('stimEffectDuration', varargin{ii}) 
-            stimEffectDuration = varargin{ii+1}; 
-        elseif strcmpi('splitLongStim', varargin{ii})
-	        splitLongStim = varargin{ii+1};
-        elseif strcmpi('stimEventsPos', varargin{ii})
-	        stimEventsPos = varargin{ii+1};
-        elseif strcmpi('stimEvents', varargin{ii})
-	        stimEvents = varargin{ii+1};
-        elseif strcmpi('normToBase', varargin{ii})
-	        normToBase = varargin{ii+1};
-        elseif strcmpi('xTickAngle', varargin{ii})
-	        xTickAngle = varargin{ii+1};
-        elseif strcmpi('baseBinEdgestart', varargin{ii})
-	        baseBinEdgestart = varargin{ii+1};
-        elseif strcmpi('baseBinEdgeEnd', varargin{ii})
-	        baseBinEdgeEnd = varargin{ii+1};
-        elseif strcmpi('apCorrection', varargin{ii})
-	        apCorrection = varargin{ii+1};
-        elseif strcmpi('save_fig', varargin{ii})
-	        save_fig = varargin{ii+1};
-        elseif strcmpi('save_dir', varargin{ii})
-	        save_dir = varargin{ii+1};
-        elseif strcmpi('gui_save', varargin{ii})
-	        gui_save = varargin{ii+1};
-        elseif strcmpi('debug_mode', varargin{ii})
-	        debug_mode = varargin{ii+1};
-	    end
-	end	
 
 	% Create the label string
 	if normToBase
@@ -123,8 +107,8 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	    'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 	    'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim,...
 	    'xlabelStr',xlabelStr,'ylabelStr',ylabelStr,'xTickAngle',xTickAngle,...
-        'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
-		'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'binWidth',binWidth,...
+        'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,'binWidth',binWidth,...
+		'subNucleiFilter',subNucleiFilter,'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
 		'save_fig',save_fig,'save_dir',save_dir,'gui_save',gui_save,'debug_mode',debug_mode);
 
 	% Get the binned data from barStat

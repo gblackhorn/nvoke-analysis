@@ -139,14 +139,16 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
             'ex',stim_ex,'in',stim_in,'rb',stim_rb,'exApOg',stim_exApOg);
         EventsProps = {alignedDataTraces_filtered.eventProp}; % get the event properties of rois from current trial
         roiNames = {alignedDataTraces_filtered.roi}; % get the roi names from current trial
+        subNuclei = {alignedDataTraces_filtered.subNuclei}; % get the roi names from current trial
 
 
         % Collect peri-stimulus events from every ROI and organized them in bins
         roi_num = numel(EventsProps); % number of ROIs
         TrialNames = repmat({TrialName},1,roi_num); % create a 1*roi_num cell containing the 'TrialNames' in every element
-        EventFreqInBins = emptyStruct({'TrialNames','roiNames','EventFqInBins','stimNum'},[1, roi_num]); % create an empty structure
+        EventFreqInBins = emptyStruct({'TrialNames','roiNames','subNuclei','EventFqInBins','stimNum'},[1, roi_num]); % create an empty structure
         [EventFreqInBins.TrialNames] = TrialNames{:}; % add trial names in struct EventFreqInBins
         [EventFreqInBins.roiNames] = roiNames{:}; % add roi names in struct EventFreqInBins
+        [EventFreqInBins.subNuclei] = subNuclei{:}; % add roi names in struct EventFreqInBins
         % binNames = {};
 
         % Get the time of stimulation related events
