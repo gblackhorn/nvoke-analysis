@@ -59,11 +59,13 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
     addParameter(p, 'distribution', 'gamma', @ischar);
     addParameter(p, 'link', 'log', @ischar);
     addParameter(p, 'dispStat', false, @islogical);
+    addParameter(p, 'groupVarType', '', @ischar); % 'double', 'categorical', 'datetime', 'string', 'logical', etc.
     parse(p, varargin{:});
     modelType = p.Results.modelType;
     distribution = p.Results.distribution;
     link = p.Results.link;
     dispStat = p.Results.dispStat;
+    groupVarType = p.Results.groupVarType;
 
     % Convert the specified fields to categorical and collect all necessary fields
     responseValues = [dataStruct.(responseVar)]';
@@ -79,16 +81,39 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
         MMdata.(hierarchicalVars{i}) = categorical({dataStruct(validIndices).(hierarchicalVars{i})}');
     end
 
-    % Convert the groupVar to string if they are numbers. Check the first entry
-    if isnumeric(dataStruct(1).(groupVar))
-        MMdata.(groupVar) = cellfun(@num2str, MMdata.(groupVar), 'UniformOutput',false);
-    end
+    % % Convert the groupVar to string if they are numbers. Check the first entry
+    % if isnumeric(dataStruct(1).(groupVar))
+    %     MMdata.(groupVar) = cellfun(@num2str, MMdata.(groupVar), 'UniformOutput',false);
+    % end
 
-    % Convert the groupVar to categorical
-    MMdata.(groupVar) = categorical(MMdata.(groupVar));
+    switch groupVarType % if empty, keep the type of groupVar data
+        case 'double'
+            % Convert the groupVar to double
+            MMdata.(groupVar) = double(MMdata.(groupVar));
+        case 'categorical'
+            % % Convert the groupVar to string if they are numbers. Check the first entry
+            if isnumeric(dataStruct(1).(groupVar))
+                MMdata.(groupVar) = cellfun(@num2str, MMdata.(groupVar), 'UniformOutput',false);
+            end
+
+            % Convert the groupVar to categorical
+            MMdata.(groupVar) = categorical(MMdata.(groupVar));
+        case 'string'
+            % Convert the groupVar to string
+            MMdata.(groupVar) = string(MMdata.(groupVar));
+        case 'logical'
+            % Convert the groupVar to logical
+            MMdata.(groupVar) = logical(MMdata.(groupVar));
+        case ''
+    end
 
     % Convert the structured data to a table
     tbl = struct2table(MMdata);
+
+    if iscell(tbl.(groupVar))  && isnumeric(tbl.(groupVar){1}) 
+        tbl.(groupVar) = cell2mat(tbl.(groupVar));
+    end
+
     
     % Construct the formula for the mixed model
     % - Fixed effects: groupVar
@@ -116,6 +141,8 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
     % Optionally display the model summary
     if dispStat
         disp(me);
+
+        visualizeFitting()
     end
 
     % Extract fixed effects
@@ -150,7 +177,9 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
     end
 
     % Extract group variable levels
-    groupLevels = categories(tbl.(groupVar));
+    % Convert the groupVar to categorical
+    groupCategories = categorical(tbl.(groupVar));
+    groupLevels = categories(groupCategories);
 
     % Replace the Name of fixed effect with the categories in the groupVar field
     fixedEffectsStats.Name = groupLevels; 
@@ -349,3 +378,4 @@ function dummyChiLRTtab = createDummyChiLRTtab(mmResult1, mmResult2)
     % dummyChiLRTtab.formula = categorical({mmResult1.Formula; mmResult2.Formula});
     dummyChiLRTtab = dataset2table(dummyChiLRTtab); % Convert the dataset to a table
 end
+

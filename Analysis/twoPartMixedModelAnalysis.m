@@ -73,6 +73,7 @@ function [GLMMresults, varargout] = twoPartMixedModelAnalysis(dataStruct, respon
     addParameter(p, 'distribution2', 'gamma', @ischar);
     addParameter(p, 'link2', 'log', @ischar);
     addParameter(p, 'dispStat', false, @islogical);
+    addParameter(p, 'groupVarType', '', @ischar); % 'double', 'categorical', 'datetime', 'string', 'logical', etc.
 
     parse(p, varargin{:});
     modelType = p.Results.modelType;
@@ -81,6 +82,7 @@ function [GLMMresults, varargout] = twoPartMixedModelAnalysis(dataStruct, respon
     distribution2 = p.Results.distribution2;
     link2 = p.Results.link2;
     dispStat = p.Results.dispStat;
+    groupVarType = p.Results.groupVarType;
 
 
     % Create an empty structure to store the GLMM results
@@ -94,7 +96,7 @@ function [GLMMresults, varargout] = twoPartMixedModelAnalysis(dataStruct, respon
 
     % Run the part 1 model
     [me1,fixedEffectsStats1,chiLRT1,mmPvalue1,multiComparisonResults1]= mixed_model_analysis(dataStruct,...
-        'valBinary', groupVar, hierarchicalVars,...
+        'valBinary', groupVar, hierarchicalVars, 'groupVarType', groupVarType,...
         'modelType',modelType,'distribution',distribution1,'link',link1);
     GLMMresults(1).method = modelType;
     GLMMresults(1).detail = me1;
@@ -107,6 +109,10 @@ function [GLMMresults, varargout] = twoPartMixedModelAnalysis(dataStruct, respon
     if dispStat
         disp('')
         disp(fixedEffectsStats1);
+
+        % Plot the original data and the fit data to examine the fitting
+        visualizeMeFitting(me1, groupVar,...
+            'titlePrefix','[binary model]', 'figName', 'OriginalData-vs-fitData_binary');
     end
 
 
@@ -115,7 +121,7 @@ function [GLMMresults, varargout] = twoPartMixedModelAnalysis(dataStruct, respon
 
     % Run the part 2 model
     [me2,fixedEffectsStats2,chiLRT2,mmPvalue2,multiComparisonResults2]= mixed_model_analysis(nonZeroDataStruct,...
-        responseVar, groupVar, hierarchicalVars,...
+        responseVar, groupVar, hierarchicalVars, 'groupVarType', groupVarType,...
         'modelType',modelType,'distribution',distribution2,'link',link2);
     GLMMresults(2).method = modelType;
     GLMMresults(2).detail = me2;
@@ -123,4 +129,16 @@ function [GLMMresults, varargout] = twoPartMixedModelAnalysis(dataStruct, respon
     GLMMresults(2).chiLRT = chiLRT2;
     GLMMresults(2).mmPvalue = mmPvalue2;
     GLMMresults(2).multCompare = multiComparisonResults2;
+
+
+    % Display the summary of the non-binary model
+    if dispStat
+        disp('')
+        disp(fixedEffectsStats1);
+
+        % Plot the original data and the fit data to examine the fitting
+        visualizeMeFitting(me2, groupVar,...
+            'titlePrefix','[nonBinary model]', 'figName', 'OriginalData-vs-fitData_nonBinary');
+    end
+
 end

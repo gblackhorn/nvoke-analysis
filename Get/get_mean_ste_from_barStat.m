@@ -1,4 +1,4 @@
-function [xData,meanVal,steVal,varargout] = get_mean_ste_from_barStat(barStat,stimName,varargin)
+function [xData,meanVal,seVal,varargout] = get_mean_ste_from_barStat(barStat,stimName,varargin)
 	% Get data from barStat (an output from function 'plot_event_freq_alignedData_allTrials')
 
 
@@ -20,10 +20,10 @@ function [xData,meanVal,steVal,varargout] = get_mean_ste_from_barStat(barStat,st
 	if ~isempty(idx)
 		xData = {barStat(idx).data.group};
 		xData = cellfun(@str2double, xData); % convert the string cell array to a number array
-		rawData = {barStat(idx).data.group_data};
+		rawData = {barStat(idx).data.groupData};
 
-		meanVal = [barStat(idx).data.mean_val];
-		steVal = [barStat(idx).data.ste_val];
+		meanVal = [barStat(idx).data.meanVal];
+		seVal = [barStat(idx).data.seVal];
 		binEdges = barStat(idx).binEdges;
 
 		binNames = barStat(idx).binNames;

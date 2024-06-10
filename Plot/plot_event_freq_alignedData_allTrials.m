@@ -129,7 +129,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 	titleStr = strrep(titleStr,'_',' ');
 
 		% Create a figure and start to plot 
-	barStat = empty_content_struct({'stim','method','multiComp','data','binEdges','binNames','baseRange','recNum','recDateNum','roiNum','stimRepeatNum'},...
+	barStat = empty_content_struct({'stim','data','binEdges','binNames','baseRange','recNum','recDateNum','roiNum','stimRepeatNum','GLMMstat','anovaCombineBase'},...
 		stim_type_num);
 	[f,f_rowNum,f_colNum] = fig_canvas(stim_type_num,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
 		'fig_name',titleStr); % create a figure
@@ -215,14 +215,16 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 
 		% Bar plot of the event freq in various time 
 		% barInfo.data = barplot_with_stat(ef,'xdata',xdata,'plotWhere',gca);
-		barInfo.data = barPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', gca);
+		barStat(stn).data = barPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', ax);
 
 		% Run GLMM to evaluate the difference of every freq in various time bins
-        barInfo.stat = twoPartMixedModelAnalysis(efStruct, 'val', 'xdata', mmlHierarchicalVars);
+        barStat(stn).GLMMstat = twoPartMixedModelAnalysis(efStruct, 'val', 'xdata', mmlHierarchicalVars,...
+        	'groupVarType', 'categorical', 'dispStat', true);
 		% barInfo.stat = GLMManalysis(efStruct, 'val', 'xdata', mmlHierarchicalVars,...
 		% 	mmType, mmDistribution, mmLink);
 
 		% plot shade to indicate the stimulation period
+		ax;
 		hold on
 		for sn = 1:numel(stimShadeData) 
 			if strcmpi(stimShadeName{sn},'og')  
@@ -233,7 +235,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 				shadeColor = shadeColors{3};
 			end
 			stimShadeDataAll(stn).color{sn} = shadeColor;
-			draw_WindowShade(gca,stimShadeData{sn},'shadeColor',shadeColor);
+			draw_WindowShade(ax,stimShadeData{sn},'shadeColor',shadeColor);
 		end
 		hold off
 
@@ -248,9 +250,9 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		title(sub_titleStr)
 
 		barStat(stn).stim = stim_names{stn};
-		barStat(stn).method = barInfo.stat.method;
+		% barStat(stn).method = barInfo.stat.method;
 		% barStat(stn).multiComp = barInfo.stat.c;
-		barStat(stn).data = barInfo.data;
+		% barStat(stn).data = barInfo.data;
 		barStat(stn).binEdges = binEdges;
 		barStat(stn).binNames = binNames;
 

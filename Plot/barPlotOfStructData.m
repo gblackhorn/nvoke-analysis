@@ -99,9 +99,9 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     [uniqueGroups, ~, groupIdx] = unique(groups);
     nGroups = numel(uniqueGroups);
 
-    % Creat barInfo.data and calculate mean, std, and ste for plotting
+    % Creat barInfo and calculate mean, std, and ste for plotting
     barInfoDataFields = {'group', 'groupData', 'meanVal', 'stdVal', 'seVal', 'nNum'};
-    barInfo.data = empty_content_struct(barInfoDataFields,nGroups);
+    barInfo = empty_content_struct(barInfoDataFields,nGroups);
 
     % % Calculate means and standard deviations for each group
     % nGroups = numel(uniqueGroups);
@@ -110,13 +110,13 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     % ses = zeros(1, nGroups);
 
     for i = 1:nGroups
-    	barInfo.data(i).group = uniqueGroups(i); 
-    	barInfo.data(i).groupData = valData(groupIdx == i); 
-    	barInfo.data(i).meanVal = mean(barInfo.data(i).groupData, "omitnan"); 
-    	barInfo.data(i).stdVal = std(barInfo.data(i).groupData, "omitnan");
-    	barInfo.data(i).seVal = ste(barInfo.data(i).groupData, 'omitnan', true);
-    	barInfo.data(i).nNum = sum(~isnan(barInfo.data(i).groupData));
-    	% barInfo.data(i).nNum = numel(barInfo.data(i).groupData);
+    	barInfo(i).group = uniqueGroups(i); 
+    	barInfo(i).groupData = valData(groupIdx == i); 
+    	barInfo(i).meanVal = mean(barInfo(i).groupData, "omitnan"); 
+    	barInfo(i).stdVal = std(barInfo(i).groupData, "omitnan");
+    	barInfo(i).seVal = ste(barInfo(i).groupData, 'omitnan', true);
+    	barInfo(i).nNum = sum(~isnan(barInfo(i).groupData));
+    	% barInfo(i).nNum = numel(barInfo(i).groupData);
         % groupVals = valData(groupIdx == i);
         % means(i) = mean(groupVals, "omitnan");
         % stds(i) = std(groupVals, "omitnan");
@@ -133,16 +133,16 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     end
 
     % x = [1:1:group_num];
-    x = [barInfo.data.group];
-    y = [barInfo.data.meanVal];
-    yError = [barInfo.data.seVal];
+    x = [barInfo.group];
+    y = [barInfo.meanVal];
+    yError = [barInfo.seVal];
 
     groupNames = arrayfun(@num2str, x, 'UniformOutput', false);
 
 
     % Plot bars
     barPlotInfo = barplot_with_errBar(y(:)','barX',x,'plotWhere',plotWhere,...
-        'errBarVal',yError(:)','barNames',groupNames,'dataNumVal',[barInfo.data.nNum],...
+        'errBarVal',yError(:)','barNames',groupNames,'dataNumVal',[barInfo.nNum],...
         'TickAngle', TickAngle, 'FontSize', FontSize, 'FontWeight', FontWeight);
     ylabel(ylabelStr);
     titleStr = replace(titleStr, '_', '-');

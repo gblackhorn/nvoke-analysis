@@ -63,7 +63,7 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
             % add data from 'periStimFreqBarData' to 'violinData'
             barData = periStimFreqBarData(stimIDX(n));
             violinData(n).stim = barData.stim;
-            violinData(n).eventFreq = barData.data(binIDX(n)).group_data;
+            violinData(n).eventFreq = barData.data(binIDX(n)).groupData;
             violinData(n).binNum = binIDX(n);
             violinData(n).binName = barData.binNames{binIDX(n)};
             violinData(n).recNum = barData.recNum;
