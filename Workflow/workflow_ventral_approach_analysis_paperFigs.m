@@ -146,7 +146,7 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 % of stimulation and compare each pair of bins
 close all
 save_fig = false; % true/false
-gui_save = 'on';
+gui_save = true;
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
@@ -193,7 +193,7 @@ debug_mode = false; % true/false
 	'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim,...
 	'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 	'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,...
-	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save','on','debug_mode',debug_mode);
+	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'gui_save',gui_save,'debug_mode',debug_mode);
 
 
 % Compare the fold change of AP (norm to AP baseline) and OGAP (norm to the AP bin in OG recordings)

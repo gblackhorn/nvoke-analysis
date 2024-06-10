@@ -49,7 +49,7 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	addParameter(p, 'shadeGapScale', 0.01); % diff between two shades in percentage of y axes
 	addParameter(p, 'save_fig', false); % true/false
 	addParameter(p, 'save_dir', ''); 
-	addParameter(p, 'gui_save', 'off');
+	addParameter(p, 'gui_save', false);
 	addParameter(p, 'debug_mode', false); % true/false
 
 	% Parse the inputs

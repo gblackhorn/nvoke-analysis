@@ -1,129 +1,98 @@
-function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargin)
-	% Plot the event frequency in specified time bins to examine the effect of stimulation and
-	% compare each pair of bins
-	% ROIs can be filtered according to the effect of stimulations on them
+function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, varargin)
+    % Plot the event frequency in specified time bins to examine the effect of stimulation and
+    % compare each pair of bins.
+    % ROIs can be filtered according to the effect of stimulations on them.
+    %
+    % Note: When using 'normToBase', trials applied with 'ap-0.1s' will be normalized to an earlier
+    % bin (decided by baseBinEdgeEnd_apCorrection).
+    %
+    % Example:
+    %   plot_calcium_signals_alignedData_allTrials(alignedData, 'filter_roi_tf', true);
+    %
 
-	% Note: When using 'normToBase', trials applied with 'ap-0.1s' will be normalized to an earlier
-	% bin (decided by baseBinEdgeEnd_apCorrection)
+    % Initialize input parser
+    p = inputParser;
 
-	% Example:
-	%	plot_calcium_signals_alignedData_allTrials(alignedData,'filter_roi_tf',true); 
-	%		
+    % Define required inputs
+    addRequired(p, 'alignedData', @isstruct);
 
-	% Defaults
-	filter_roi_tf = false; % do not filter ROIs by default
-	stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-	filters = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
-	subNucleiFilter = ''; % ''/'DAO'/'PO'. Used to screen ROIs.If empty, nothing will be filtered
+    % Add optional parameters to the parser with default values and comments
+    addParameter(p, 'filter_roi_tf', false, @islogical); % Filter ROIs by stimulation effect
+    addParameter(p, 'stim_names', {'og-5s','ap-0.1s','og-5s ap-0.1s'}, @iscell); % Names of stimulations to compare
+    addParameter(p, 'filters', {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}, @iscell); % Filters for different stimulations
+    addParameter(p, 'subNucleiFilter', '', @ischar); % Filter for sub-nuclei ('', 'DAO', 'PO')
+    addParameter(p, 'plot_unit_width', 0.4, @isnumeric); % Width of a single plot (normalized)
+    addParameter(p, 'plot_unit_height', 0.4, @isnumeric); % Height of a single plot (normalized)
+    addParameter(p, 'normToBase', false, @islogical); % Normalize data to baseline
+    addParameter(p, 'baseBinEdgestart', -1, @isnumeric); % Start of baseline bin
+    addParameter(p, 'baseBinEdgeEnd', 0, @isnumeric); % End of baseline bin
+    addParameter(p, 'baseBinEdgeEnd_apCorrection', -1, @isnumeric); % End of baseline bin for AP correction
+    addParameter(p, 'apCorrection', true, @islogical); % Apply AP correction
+    addParameter(p, 'splitLongStim', [1], @isnumeric); % Split long stimulations
+    addParameter(p, 'binWidth', 1, @isnumeric); % Width of histogram bins (s)
+    addParameter(p, 'PropName', 'rise_time', @ischar); % Property name ('rise_time', 'peak_time')
+    addParameter(p, 'stimIDX', [], @isnumeric); % Indices of stimulation repeats
+    addParameter(p, 'AlignEventsToStim', true, @islogical); % Align events to stimulation onsets
+    addParameter(p, 'preStim_duration', 5, @isnumeric); % Duration before stimulation onset (s)
+    addParameter(p, 'postStim_duration', 5, @isnumeric); % Duration after stimulation end (s)
+    addParameter(p, 'round_digit_sig', 2, @isnumeric); % Significant digits for duration rounding
+    addParameter(p, 'customizeEdges', false, @islogical); % Customize histogram bins
+    addParameter(p, 'stimEffectDuration', 1, @isnumeric); % Duration of stimulation effect (s)
+    addParameter(p, 'stimEventsPos', false, @islogical); % Use peri-stim ranges with stimulation events
+    addParameter(p, 'stimEvents', struct('stimName', {'og-5s', 'ap-0.1s', 'og-5s ap-0.1s'}, 'eventCat', {'rebound', 'trig', 'rebound'}), @isstruct); % Stimulation events
+    addParameter(p, 'xlabelStr', 'Time (s)', @ischar); % X-axis label
+    addParameter(p, 'xTickAngle', 45, @isnumeric); % Angle of X-axis tick labels
+    addParameter(p, 'ylabelStr', '', @ischar); % Y-axis label
+    addParameter(p, 'shadeColors', {'#F05BBD','#4DBEEE','#ED8564'}, @iscell); % Colors for shading stimulation periods
+    addParameter(p, 'mmType', 'GLMM', @ischar); % Type of mixed-model for stat
+    addParameter(p, 'mmlHierarchicalVars', {'trialNames','roiNames'}, @iscell); % Hierarchical vars used fo nested random effects
+    addParameter(p, 'mmDistribution', 'Poisson', @ischar); % mix-model distribution
+    addParameter(p, 'mmLink', 'log', @ischar); % mix-model link function
+    addParameter(p, 'save_fig', false, @islogical); % Save figure
+    addParameter(p, 'save_dir', '', @ischar); % Directory to save figure
+    addParameter(p, 'gui_save', false, @islogical); % GUI save option
+    addParameter(p, 'debug_mode', false, @islogical); % Enable debug mode
 
-	plot_unit_width = 0.4; % normalized size of a single plot to the display
-	plot_unit_height = 0.4; % nomralized size of a single plot to the display
+    % Parse the inputs
+    parse(p, alignedData, varargin{:});
 
-	normToBase = false; % normalize the data to baseline (data before baseBinEdgeEnd)
-	baseBinEdgestart = -1; % where to start to use the bin for calculating the baseline
-	baseBinEdgeEnd = 0;
-	baseBinEdgeEnd_apCorrection = -1; % use an earlier bin for AP stimulation
-	apCorrection = true;
-
-	splitLongStim = [1]; % If the stimDuration is longer than stimEffectDuration, the stimDuration 
-						%  part after the stimEffectDuration will be splitted. If it is [1 1], the
-						% time during stimulation will be splitted using edges below
-						% [stimStart, stimEffectDuration, stimEffectDuration+splitLongStim, stimEnd] 
-	
-	binWidth = 1; % the width of histogram bin. the default value is 1 s.
-	PropName = 'rise_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
-	stimIDX = []; % specify stimulation repeats around which the events will be gathered 
-	% plotHisto = false; % true/false [default].Plot histogram if true.
-
-	AlignEventsToStim = true; % align the EventTimeStamps to the onsets of the stimulations: subtract EventTimeStamps with stimulation onset time
-	preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
-	postStim_duration = 5; % unit: second. include events happened after the end of stimulations
-	round_digit_sig = 2; % round to the Nth significant digit for duration
-
-	customizeEdges = false; % customize the bins using function 'setPeriStimSectionForEventFreqCalc'
-	stimEffectDuration = 1; % unit: second. Use this to set the end for the stimulation effect range
-
-	stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
-	stimEvents(1).stimName = 'og-5s';
-	stimEvents(1).eventCat = 'rebound';
-	stimEvents(2).stimName = 'ap-0.1s';
-	stimEvents(2).eventCat = 'trig';
-	stimEvents(3).stimName = 'og-5s ap-0.1s';
-	stimEvents(3).eventCat = 'rebound';
-
-	xlabelStr = 'Time (s)';
-	xTickAngle = 45;
-	ylabelStr = '';
-	shadeColors = {'#F05BBD','#4DBEEE','#ED8564'}; % og, ap, others
-
-	save_fig = false;
-	save_dir = '';
-	gui_save = false;
-
-	debug_mode = false;
-
-	% Optionals
-	for ii = 1:2:(nargin-1)
-	    if strcmpi('filter_roi_tf', varargin{ii})
-	        filter_roi_tf = varargin{ii+1}; % number array. An index of ROI traces will be collected 
-	    elseif strcmpi('stim_names', varargin{ii})
-	        stim_names = varargin{ii+1}; % number array. An index of ROI traces will be collected 
-	    elseif strcmpi('filters', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
-	        filters = varargin{ii+1}; % normalize every FluoroData trace with its max value
-	    elseif strcmpi('subNucleiFilter', varargin{ii}) % trace mean value comparison (stim vs non stim). output of stim_effect_compare_trace_mean_alltrial
-	        subNucleiFilter = varargin{ii+1}; % normalize every FluoroData trace with its max value
-	    elseif strcmpi('baseBinEdgestart', varargin{ii})
-            baseBinEdgestart = varargin{ii+1};
-	    elseif strcmpi('baseBinEdgeEnd', varargin{ii})
-            baseBinEdgeEnd = varargin{ii+1};
-	    elseif strcmpi('normToBase', varargin{ii})
-            normToBase = varargin{ii+1};
-	    elseif strcmpi('apCorrection', varargin{ii})
-            apCorrection = varargin{ii+1};
-        elseif strcmpi('splitLongStim', varargin{ii})
-            splitLongStim = varargin{ii+1};
-	    elseif strcmpi('binWidth', varargin{ii})
-            binWidth = varargin{ii+1};
-	    elseif strcmpi('PropName', varargin{ii})
-            PropName = varargin{ii+1};
-	    elseif strcmpi('stimIDX', varargin{ii})
-            stimIDX = varargin{ii+1};
-	    elseif strcmpi('preStim_duration', varargin{ii})
-            preStim_duration = varargin{ii+1};
-	    elseif strcmpi('postStim_duration', varargin{ii})
-            postStim_duration = varargin{ii+1};
-        elseif strcmpi('customizeEdges', varargin{ii}) 
-            customizeEdges = varargin{ii+1}; 
-        elseif strcmpi('PeriBaseRange', varargin{ii}) 
-            PeriBaseRange = varargin{ii+1}; 
-        elseif strcmpi('stimEffectDuration', varargin{ii}) 
-            stimEffectDuration = varargin{ii+1}; 
-	    elseif strcmpi('stimEventsPos', varargin{ii})
-            stimEventsPos = varargin{ii+1};
-	    elseif strcmpi('stimEvents', varargin{ii})
-            stimEvents = varargin{ii+1};
-	    elseif strcmpi('round_digit_sig', varargin{ii})
-            round_digit_sig = varargin{ii+1};
-	    elseif strcmpi('plot_unit_width', varargin{ii})
-            plot_unit_width = varargin{ii+1};
-	    elseif strcmpi('plot_unit_height', varargin{ii})
-            plot_unit_height = varargin{ii+1};
-	    elseif strcmpi('xlabelStr', varargin{ii})
-            xlabelStr = varargin{ii+1};
-	    elseif strcmpi('xTickAngle', varargin{ii})
-            xTickAngle = varargin{ii+1};
-	    elseif strcmpi('ylabelStr', varargin{ii})
-            ylabelStr = varargin{ii+1};
-	    elseif strcmpi('save_fig', varargin{ii})
-            save_fig = varargin{ii+1};
-	    elseif strcmpi('save_dir', varargin{ii})
-            save_dir = varargin{ii+1};
-	    elseif strcmpi('gui_save', varargin{ii})
-            gui_save = varargin{ii+1};
-	    elseif strcmpi('debug_mode', varargin{ii})
-            debug_mode = varargin{ii+1};
-	    end
-	end
+    % Assign parsed values to variables
+    alignedData = p.Results.alignedData;
+    filter_roi_tf = p.Results.filter_roi_tf;
+    stim_names = p.Results.stim_names;
+    filters = p.Results.filters;
+    subNucleiFilter = p.Results.subNucleiFilter;
+    plot_unit_width = p.Results.plot_unit_width;
+    plot_unit_height = p.Results.plot_unit_height;
+    normToBase = p.Results.normToBase;
+    baseBinEdgestart = p.Results.baseBinEdgestart;
+    baseBinEdgeEnd = p.Results.baseBinEdgeEnd;
+    baseBinEdgeEnd_apCorrection = p.Results.baseBinEdgeEnd_apCorrection;
+    apCorrection = p.Results.apCorrection;
+    splitLongStim = p.Results.splitLongStim;
+    binWidth = p.Results.binWidth;
+    PropName = p.Results.PropName;
+    stimIDX = p.Results.stimIDX;
+    AlignEventsToStim = p.Results.AlignEventsToStim;
+    preStim_duration = p.Results.preStim_duration;
+    postStim_duration = p.Results.postStim_duration;
+    round_digit_sig = p.Results.round_digit_sig;
+    customizeEdges = p.Results.customizeEdges;
+    stimEffectDuration = p.Results.stimEffectDuration;
+    stimEventsPos = p.Results.stimEventsPos;
+    stimEvents = p.Results.stimEvents;
+    xlabelStr = p.Results.xlabelStr;
+    xTickAngle = p.Results.xTickAngle;
+    ylabelStr = p.Results.ylabelStr;
+    shadeColors = p.Results.shadeColors;
+    mmType = p.Results.mmType;
+    mmlHierarchicalVars = p.Results.mmlHierarchicalVars;
+    mmDistribution = p.Results.mmDistribution;
+    mmLink = p.Results.mmLink;
+    save_fig = p.Results.save_fig;
+    save_dir = p.Results.save_dir;
+    gui_save = p.Results.gui_save;
+    debug_mode = p.Results.debug_mode;
 
 
 
@@ -240,8 +209,18 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 		stim_names{stn},filterStr{1},filterStr{2},filterStr{3},filterStr{4},stimEventsStr,...
 		barStat(stn).recDateNum,barStat(stn).roiNum,barStat(stn).stimRepeatNum); % string for the subtitle
 
+		% Convert the ef array to a structure var for plotting and GLMM analysis
 		efStruct = efArray2struct(ef, EventFreqInBins, xdata);
-		[barInfo] = barplot_with_stat(ef,'xdata',xdata,'plotWhere',gca);
+		barInfo = empty_content_struct({'data', 'stat'}, 1);
+
+		% Bar plot of the event freq in various time 
+		% barInfo.data = barplot_with_stat(ef,'xdata',xdata,'plotWhere',gca);
+		barInfo.data = barPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', gca);
+
+		% Run GLMM to evaluate the difference of every freq in various time bins
+        barInfo.stat = twoPartMixedModelAnalysis(efStruct, 'val', 'xdata', mmlHierarchicalVars);
+		% barInfo.stat = GLMManalysis(efStruct, 'val', 'xdata', mmlHierarchicalVars,...
+		% 	mmType, mmDistribution, mmLink);
 
 		% plot shade to indicate the stimulation period
 		hold on
@@ -270,7 +249,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData,varargi
 
 		barStat(stn).stim = stim_names{stn};
 		barStat(stn).method = barInfo.stat.method;
-		barStat(stn).multiComp = barInfo.stat.c;
+		% barStat(stn).multiComp = barInfo.stat.c;
 		barStat(stn).data = barInfo.data;
 		barStat(stn).binEdges = binEdges;
 		barStat(stn).binNames = binNames;
@@ -378,15 +357,16 @@ function efStruct = efArray2struct(ef, EventFreqInBins, xdata)
 	efStruct = horzcat(efStructCell{:});
 end
 
-% function 
-% 	% Statistics
-% 	% GLMM analysis
-% 	[me,fixedEffectsStats,chiLRT,mmPvalue,multiComparisonResults]= mixed_model_analysis(structData,...
-% 		'val', 'xdata', 'mmHierarchicalVars','modelType',mmType,'distribution',mmDistribution,'link',mmLink);
-% 	statInfo.method = me;
-% 	statInfo.fixedEffectsStats = fixedEffectsStats;
-% 	statInfo.chiLRT = chiLRT;
-% 	statInfo.mmPvalue = mmPvalue;
-% 	statInfo.multCompare = multiComparisonResults;
+function statInfo = GLMManalysis(structData, responseVar, groupVar, hierarchicalVars, mmType, mmDistribution, mmLink)
+	% Statistics
+	% GLMM analysis
+	[me,fixedEffectsStats,chiLRT,mmPvalue,multiComparisonResults]= mixed_model_analysis(structData,...
+		responseVar, groupVar, hierarchicalVars,'modelType',mmType,'distribution',mmDistribution,'link',mmLink);
+	statInfo.method = mmType;
+	statInfo.detail = me;
+	statInfo.fixedEffectsStats = fixedEffectsStats;
+	statInfo.chiLRT = chiLRT;
+	statInfo.mmPvalue = mmPvalue;
+	statInfo.multCompare = multiComparisonResults;
 
-% end
+end

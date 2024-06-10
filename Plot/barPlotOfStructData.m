@@ -54,6 +54,7 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     defaultFaceColor = '#4D4D4D';
     defaultFontSize = 14;
     defaultFontWeight = 'bold';
+    defaultYlabelStr = '';
 
     % Add optional parameters to the parser
     addParameter(p, 'plotWhere', defaultPlotWhere);
@@ -63,6 +64,7 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     addParameter(p, 'FaceColor', defaultFaceColor);
     addParameter(p, 'FontSize', defaultFontSize);
     addParameter(p, 'FontWeight', defaultFontWeight);
+    addParameter(p, 'ylabelStr', defaultYlabelStr);
 
     % Parse the inputs
     parse(p, structData, valField, groupField, varargin{:});
@@ -72,19 +74,29 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     valField = p.Results.valField;
     groupField = p.Results.groupField;
     plotWhere = p.Results.plotWhere;
-    dtitleStr = p.Results.TickAngle;
+    titleStr = p.Results.titleStr;
     TickAngle = p.Results.TickAngle;
     EdgeColor = p.Results.EdgeColor;
     FaceColor = p.Results.FaceColor;
     FontSize = p.Results.FontSize;
     FontWeight = p.Results.FontWeight;
+    ylabelStr = p.Results.ylabelStr;
 
     % Extract the values and group data from structData
     valData = [structData.(valField)];
-    groupData = {structData.(groupField)};
+    if isnumeric(structData(1).(groupField))
+    	groups = [structData.(groupField)];
+    else
+    	groups = {structData.(groupField)};
+    end
+
+    % % Check the type of elements in gorupData. If numeric, convert them to char
+    % if isnumeric(groups{1})
+    % 	groups = cellfun(@num2str, groups, 'UniformOutput', false);
+    % end
 
     % Get unique groups and their indices
-    [uniqueGroups, ~, groupIdx] = unique(groupData);
+    [uniqueGroups, ~, groupIdx] = unique(groups);
     nGroups = numel(uniqueGroups);
 
     % Creat barInfo.data and calculate mean, std, and ste for plotting
@@ -100,9 +112,9 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     for i = 1:nGroups
     	barInfo.data(i).group = uniqueGroups(i); 
     	barInfo.data(i).groupData = valData(groupIdx == i); 
-    	barInfo.data(i).meanVal = mean(groupVals, "omitnan"); 
-    	barInfo.data(i).stdVal = std(groupVals, "omitnan");
-    	barInfo.data(i).seVal = ste(groupVals, 'omitnan', true);
+    	barInfo.data(i).meanVal = mean(barInfo.data(i).groupData, "omitnan"); 
+    	barInfo.data(i).stdVal = std(barInfo.data(i).groupData, "omitnan");
+    	barInfo.data(i).seVal = ste(barInfo.data(i).groupData, 'omitnan', true);
     	barInfo.data(i).nNum = sum(~isnan(barInfo.data(i).groupData));
     	% barInfo.data(i).nNum = numel(barInfo.data(i).groupData);
         % groupVals = valData(groupIdx == i);
@@ -121,7 +133,7 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     end
 
     % x = [1:1:group_num];
-    x = [barInfo.data.group]
+    x = [barInfo.data.group];
     y = [barInfo.data.meanVal];
     yError = [barInfo.data.seVal];
 
@@ -129,8 +141,8 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
 
 
     % Plot bars
-    [barPlotInfo] = barplot_with_errBar(y(:)','barX',x,'plotWhere',plotWhere,...
-        'errBarVal',yError(:)','barNames',groupNames,'dataNumVal',[barInfo.data.n],...
+    barPlotInfo = barplot_with_errBar(y(:)','barX',x,'plotWhere',plotWhere,...
+        'errBarVal',yError(:)','barNames',groupNames,'dataNumVal',[barInfo.data.nNum],...
         'TickAngle', TickAngle, 'FontSize', FontSize, 'FontWeight', FontWeight);
     ylabel(ylabelStr);
     titleStr = replace(titleStr, '_', '-');

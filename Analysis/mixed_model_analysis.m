@@ -3,10 +3,6 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
     % observations are not independent. It can be used to analyze data using either Linear Mixed Models (LMM)
     % or Generalized Linear Mixed Models (GLMM).
 
-    % This function is designed to analyze data with a hierarchical or nested structure, where
-        % observations are not independent. It can be used to analyze data using either Linear Mixed Models (LMM)
-        % or Generalized Linear Mixed Models (GLMM).
-
         % - Hierarchical Data: Data with multiple levels of grouping (e.g., measurements nested within
         % ROIs, which are nested within trials, which are nested within animals).
         % - Fixed Effects: Effects of interest (e.g., treatment effects or subNuclei locations) can be
@@ -59,7 +55,7 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
 
     % Parse optional parameters
     p = inputParser;
-    addParameter(p, 'modelType', 'LMM', @(x) ismember(x, {'LMM', 'GLMM'}));
+    addParameter(p, 'modelType', 'GLMM', @(x) ismember(x, {'LMM', 'GLMM'}));
     addParameter(p, 'distribution', 'gamma', @ischar);
     addParameter(p, 'link', 'log', @ischar);
     addParameter(p, 'dispStat', false, @islogical);
@@ -77,11 +73,20 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
     
     % Filter out NaNs from response values and corresponding fields
     MMdata.(responseVar) = responseValues(validIndices);
-    MMdata.(groupVar) = categorical({dataStruct(validIndices).(groupVar)}');
+    MMdata.(groupVar) = {dataStruct(validIndices).(groupVar)}';
+    % MMdata.(groupVar) = categorical({dataStruct(validIndices).(groupVar)}');
     for i = 1:length(hierarchicalVars)
         MMdata.(hierarchicalVars{i}) = categorical({dataStruct(validIndices).(hierarchicalVars{i})}');
     end
-    
+
+    % Convert the groupVar to string if they are numbers. Check the first entry
+    if isnumeric(dataStruct(1).(groupVar))
+        MMdata.(groupVar) = cellfun(@num2str, MMdata.(groupVar), 'UniformOutput',false);
+    end
+
+    % Convert the groupVar to categorical
+    MMdata.(groupVar) = categorical(MMdata.(groupVar));
+
     % Convert the structured data to a table
     tbl = struct2table(MMdata);
     
@@ -197,10 +202,10 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
 
     
     % Perform multiple comparisons if the group effect is significant
-    if any(anovaResults.pValue < 0.05) % strcmp(modelType, 'LMM') && 
+    if any(fixedEffectsStats.pValue < 0.05) % strcmp(modelType, 'LMM') && 
         if length(groupLevels) > 2
             % Perform multiple comparisons manually
-            [multiComparisonResults, mmPvalue] = performPostHocComparisons(me, groupLevels, dispStat);
+            [multiComparisonResults, mmPvalue] = performPostHocComparisons(me, groupLevels, dispStat, modelType);
         else
             % Extract the p-value from the fixed effects for two groups
             pValue = pValueGroup(1);
@@ -227,10 +232,11 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
     varargout{4} = multiComparisonResults;
 end
 
-function [results, mmPvalue] = performPostHocComparisons(me, groupLevels, dispStat)
+function [results, mmPvalue] = performPostHocComparisons(me, groupLevels, dispStat, modelType)
     % Extract the fixed effects and their covariance matrix
-    fixedEffectsEstimates = fixedEffects(me);
+    [fixedEffectsEstimates, ~, fixedEffectsSE] = fixedEffects(me);
     covarianceMatrix = me.CoefficientCovariance;
+    SEs = fixedEffectsSE.SE;
 
     % Number of groups
     numGroups = length(groupLevels);
@@ -246,20 +252,23 @@ function [results, mmPvalue] = performPostHocComparisons(me, groupLevels, dispSt
         group2 = comparisons(i, 2);
         
         % Estimate difference and its standard error
-        estimateDiff = fixedEffectsEstimates(group1 + 1) - fixedEffectsEstimates(group2 + 1);
-        seDiff = sqrt(covarianceMatrix(group1 + 1, group1 + 1) + covarianceMatrix(group2 + 1, group2 + 1) - 2 * covarianceMatrix(group1 + 1, group2 + 1));
+        estimateDiff = fixedEffectsEstimates(group1) - fixedEffectsEstimates(group2);
+        % estimateDiff = fixedEffectsEstimates(group1 + 1) - fixedEffectsEstimates(group2 + 1);
+        seDiff = sqrt(SEs(group1)^2 + SEs(group2)^2);
+        % seDiff = sqrt(covarianceMatrix(group1 + 1, group1 + 1) + covarianceMatrix(group2 + 1, group2 + 1) - 2 * covarianceMatrix(group1 + 1, group2 + 1));
         
         % Calculate confidence intervals and p-values
         tValue = estimateDiff / seDiff;
         df = me.DFE;
-        pValue = 2 * tcdf(-abs(tValue), df);
+        pValue = 2 * (1 - tcdf(abs(tValue), df));
         hValue = pValue < 0.05;
-        
+
+
         % Store the results
         results = [results; group1, group2, estimateDiff, seDiff, tValue, df, pValue, hValue];
         
         % Append results to mmPvalue
-        mmPvalue(end+1) = struct('method', 'Linear-mixed-model', 'group1', groupLevels{group1}, 'group2', groupLevels{group2}, 'p', pValue, 'h', hValue); %#ok<AGROW>
+        mmPvalue(end+1) = struct('method', modelType, 'group1', groupLevels{group1}, 'group2', groupLevels{group2}, 'p', pValue, 'h', hValue); %#ok<AGROW>
     end
 
     % Optionally display pairwise comparison results
