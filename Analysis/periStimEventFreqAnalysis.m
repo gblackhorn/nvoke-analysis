@@ -145,8 +145,8 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	% plot fig B and fig C. compare the peri-stim event frequencies from recordings applied with
 	% different stimulation
 	for dpn = 1:diffPairNum
-		figTitleStrCell{dpn} = sprintf('diff between %s and %s in %gs bins%s%s',...
-			diffStat(dpn).groupA,diffStat(dpn).groupB,binWidth,normToBaseStr);
+		figTitleStrCell{dpn} = sprintf('%s diff between %s and %s in %gs bins%s%s',...
+			subNucleiFilter, diffStat(dpn).groupA,diffStat(dpn).groupB,binWidth,normToBaseStr);
 
 		new_xticks = diffStat(dpn).xA;
 		new_xticksLabel = diffStat(dpn).binNamesAB;
@@ -158,8 +158,8 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 			'legStrA',diffStat(dpn).groupA,'legStrB',diffStat(dpn).groupB,'ylabelStr',ylabelStr,...
 			'new_xticks',new_xticks,'new_xticksLabel',new_xticksLabel,'figTitleStr',figTitleStrCell{dpn},...
 			'stimShadeDataA',diffStat(dpn).shadeA.shadeData,'stimShadeDataB',diffStat(dpn).shadeB.shadeData,...
-			'stimShadeColorA',diffStat(dpn).shadeA.color,'stimShadeColorB',diffStat(dpn).shadeB.color,...
 			'xTickAngle',xTickAngle,'save_fig',false,'save_dir',save_dir,'plotWhere',gca);
+		%'stimShadeColorA',diffStat(dpn).shadeA.color,'stimShadeColorB',diffStat(dpn).shadeB.color,...
 
 		% fig B stat
 		ax = nexttile(tloDiffStat);
@@ -172,8 +172,8 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 
 	% Fig C. Plot the dataB normalized to the means of dataA (every bin is normalized separately,
 	% so these are the multiples of dataA)
-	titleStrBnorm = sprintf('event freq as n-fold of %s data\n%sData normalized to %s data',...
-		groupAforNormB,normToBaseStr,groupAforNormB);
+	titleStrBnorm = sprintf('%s event freq as n-fold of %s data\n%sData normalized to %s data',...
+		subNucleiFilter, groupAforNormB,normToBaseStr,groupAforNormB);
 	titleStrBnorm = strrep(titleStrBnorm,'_', ' ');
 	[fdataBnorm,~,~] = fig_canvas(1,'unit_width',0.4,'unit_height',0.4,'column_lim',2,...
 		'fig_name',titleStrBnorm); % create a figure
@@ -213,10 +213,10 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	% Save figure and statistics
 	if save_fig
 
-		titleStr = sprintf('periStimEventFreqDiff in %g s bins [%s]%s',binWidth,propName,normToBaseStr);
+		titleStr = sprintf('%s periStimEventFreqDiff in %g s bins [%s]%s',subNucleiFilter, binWidth,propName,normToBaseStr);
 		titleStr = strrep(titleStr,'_',' ');
-		titleStrNormB = sprintf('event freq as n-fold of %s data %s',groupAforNormB,normToBaseStr);
-		titleStrNormBstat = sprintf('event freq as n-fold of %s data %s stat',groupAforNormB,normToBaseStr);
+		titleStrNormB = sprintf('%s event freq as n-fold of %s data %s',subNucleiFilter,groupAforNormB,normToBaseStr);
+		titleStrNormBstat = sprintf('%s event freq as n-fold of %s data %s stat',subNucleiFilter,groupAforNormB,normToBaseStr);
 		% titleStrNormB = strrep(titleStrNormB,'_',' ');
 
 		save_dir = savePlot(fDiff,'save_dir',save_dir,'guiSave','off',...

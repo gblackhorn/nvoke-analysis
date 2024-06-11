@@ -137,7 +137,11 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     y = [barInfo.meanVal];
     yError = [barInfo.seVal];
 
-    groupNames = arrayfun(@num2str, x, 'UniformOutput', false);
+    if isnumeric(x)
+    	groupNames = arrayfun(@num2str, x, 'UniformOutput', false);
+    else
+    	groupNames = x;
+    end
 
 
     % Plot bars

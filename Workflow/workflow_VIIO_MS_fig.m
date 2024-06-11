@@ -300,3 +300,59 @@ if save_fig
 	% dt = datestr(now, 'yyyymmdd');
 	save(fullfile(save_dir, 'ROI propStatInfo'), 'roiPropStatInfo');
 end
+
+
+
+%% ==========
+% 3.1 Peri-stimulus event frequency analysis
+close all
+save_fig = false; % true/false
+gui_save = true;
+
+filter_roi_tf = true; % true/false. If true, screen ROIs
+stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
+filters = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+subNucleiFilter = 'DAO';
+diffPair = {[1 3], [2 3], [1 2]}; % {[1 3], [2 3]}. binned freq will be compared between stimualtion groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
+
+propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
+binWidth = 1; % the width of histogram bin. the default value is 1 s.
+stimIDX = []; % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
+preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
+postStim_duration = 15; % unit: second. include events happened after the end of stimulations
+customizeEdges = true; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
+stimEffectDuration = 1; % unit: second. Use this to set the end for the stimulation effect range
+splitLongStim = [1]; % If the stimDuration is longer than stimEffectDuration, the stimDuration 
+					%  part after the stimEffectDuration will be splitted. If it is [1 1], the
+					% time during stimulation will be splitted using edges below
+					% [stimStart, stimEffectDuration, stimEffectDuration+splitLongStim, stimEnd] 
+					
+stimEventsPos = false; % true/false. If true, only use the peri-stim ranges with stimulation related events
+stimEvents(1).stimName = 'og-5s';
+stimEvents(1).eventCat = 'rebound';
+stimEvents(1).eventCatFollow = 'spon'; % The category of first event following the eventCat one
+stimEvents(2).stimName = 'ap-0.1s';
+stimEvents(2).eventCat = 'trig';
+stimEvents(2).eventCatFollow = 'spon'; % The category of first event following the eventCat one
+stimEvents(3).stimName = 'og-5s ap-0.1s';
+stimEvents(3).eventCat = 'rebound';
+stimEvents(3).eventCatFollow = 'spon'; % The category of first event following the eventCat one
+
+normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
+baseBinEdgestart = -preStim_duration; % where to start to use the bin for calculating the baseline. -1
+baseBinEdgeEnd = -2; % 0
+apCorrection = false; % true/false. If true, correct baseline bin used for normalization. 
+
+
+debug_mode = false; % true/false
+
+% plot periStim event freq, and diff among them
+[barStat,diffStat,FolderPathVA.fig] = periStimEventFreqAnalysisSubnucleiVIIO(alignedData_allTrials,'propName',propName,...
+	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
+	'diffPair',diffPair,'binWidth',binWidth,'stimIDX',stimIDX,'normToBase',normToBase,...
+	'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
+	'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim,...
+	'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
+	'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,...
+	'save_fig',save_fig,'saveDir',FolderPathVA.fig,'gui_save',gui_save,'debug_mode',debug_mode);
+

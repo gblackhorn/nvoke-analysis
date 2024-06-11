@@ -125,11 +125,11 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		% Get the subplot number and create a title string for the figure
 	stim_type_num = numel(stim_names); % Get the number of stimulation types
 	stimShadeDataAll = empty_content_struct({'stimTypeName','shadeData','stimName','color'},stim_type_num);
-	titleStr = sprintf('event freq in %g s bins [%s]%s%s',binWidth,PropName,normToBaseStr,apCorrectionStr);
+	titleStr = sprintf('%s event freq in %g s bins [%s]%s%s',subNucleiFilter,binWidth,PropName,normToBaseStr,apCorrectionStr);
 	titleStr = strrep(titleStr,'_',' ');
 
 		% Create a figure and start to plot 
-	barStat = empty_content_struct({'stim','data','binEdges','binNames','baseRange','recNum','recDateNum','roiNum','stimRepeatNum','GLMMstat','anovaCombineBase'},...
+	barStat = empty_content_struct({'stim','data','dataStruct','binEdges','binNames','baseRange','recNum','recDateNum','roiNum','stimRepeatNum','GLMMstat','anovaCombineBase'},...
 		stim_type_num);
 	[f,f_rowNum,f_colNum] = fig_canvas(stim_type_num,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
 		'fig_name',titleStr); % create a figure
@@ -205,44 +205,53 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 			stimEventsStr = 'none';
 		end
 
-		sub_titleStr = sprintf('%s: ex-%s in-%s rb-%s exApOg-%s stimEventsPos-%s \n[%g animals %g cells %g stims]',...
-		stim_names{stn},filterStr{1},filterStr{2},filterStr{3},filterStr{4},stimEventsStr,...
+		sub_titleStr = sprintf('%s %s: ex-%s in-%s rb-%s exApOg-%s stimEventsPos-%s \n[%g animals %g cells %g stims]',...
+		subNucleiFilter,stim_names{stn},filterStr{1},filterStr{2},filterStr{3},filterStr{4},stimEventsStr,...
 		barStat(stn).recDateNum,barStat(stn).roiNum,barStat(stn).stimRepeatNum); % string for the subtitle
 
 		% Convert the ef array to a structure var for plotting and GLMM analysis
 		efStruct = efArray2struct(ef, EventFreqInBins, xdata);
+
+		% Replace the contents in xdata, center of bin time, to binNames
+		xdataUnique = unique(xdata);
+		xdataUnique = num2cell(xdataUnique(:)); % convert xdataUnique from number to cell
+		replacementCell = [xdataUnique, binNames(:)]; % Create a replacementCell, in which old xdata and binNames are paired
+		efStruct = replaceFieldValues(efStruct, 'xdata', replacementCell);
+
+
 		barInfo = empty_content_struct({'data', 'stat'}, 1);
 
 		% Bar plot of the event freq in various time 
 		% barInfo.data = barplot_with_stat(ef,'xdata',xdata,'plotWhere',gca);
 		barStat(stn).data = barPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', ax);
+		barStat(stn).dataStruct = efStruct;
 
 		% Run GLMM to evaluate the difference of every freq in various time bins
         barStat(stn).GLMMstat = twoPartMixedModelAnalysis(efStruct, 'val', 'xdata', mmlHierarchicalVars,...
-        	'groupVarType', 'categorical', 'dispStat', true);
+        	'groupVarType', 'categorical', 'dispStat', false);
 		% barInfo.stat = GLMManalysis(efStruct, 'val', 'xdata', mmlHierarchicalVars,...
 		% 	mmType, mmDistribution, mmLink);
 
-		% plot shade to indicate the stimulation period
-		ax;
-		hold on
-		for sn = 1:numel(stimShadeData) 
-			if strcmpi(stimShadeName{sn},'og')  
-				shadeColor = shadeColors{1};
-			elseif strcmpi(stimShadeName{sn},'ap')
-				shadeColor = shadeColors{2};
-			else
-				shadeColor = shadeColors{3};
-			end
-			stimShadeDataAll(stn).color{sn} = shadeColor;
-			draw_WindowShade(ax,stimShadeData{sn},'shadeColor',shadeColor);
-		end
-		hold off
+		% % plot shade to indicate the stimulation period
+		% ax;
+		% hold on
+		% for sn = 1:numel(stimShadeData) 
+		% 	if strcmpi(stimShadeName{sn},'og')  
+		% 		shadeColor = shadeColors{1};
+		% 	elseif strcmpi(stimShadeName{sn},'ap')
+		% 		shadeColor = shadeColors{2};
+		% 	else
+		% 		shadeColor = shadeColors{3};
+		% 	end
+		% 	stimShadeDataAll(stn).color{sn} = shadeColor;
+		% 	draw_WindowShade(ax,stimShadeData{sn},'shadeColor',shadeColor);
+		% end
+		% hold off
 
-		xlim([binEdges(1) binEdges(end)])
+		% xlim([binEdges(1) binEdges(end)])
 
 		% mark the bar with the customized binName
-		xticklabels(binNames)
+		% xticklabels(binNames)
 		xlabel(xlabelStr)
 		xtickangle(xTickAngle)
 
@@ -257,10 +266,10 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		barStat(stn).binNames = binNames;
 
 		% combine baseline data and run anova to compare baseline and the rest bins
-		xdataStr_combineBase = NumArray2StringCell(xdata);
-		[xdataStr_combineBase{idxBaseData}] = deal(baseRangeStr);
+		% xdataStr_combineBase = NumArray2StringCell(xdata);
+		% [xdataStr_combineBase{idxBaseData}] = deal(baseRangeStr);
 		efDataCell = num2cell(ef,1);
-		[efArray,xdataStr_combineBaseArray] = createDataAndGroupNameArray(efDataCell,xdataStr_combineBase);
+		[efArray,xdataStr_combineBaseArray] = createDataAndGroupNameArray(efDataCell,binNames);
 		stat_combineBase = anova1_with_multiComp(efArray,xdataStr_combineBaseArray);
 
 		barStat(stn).anovaCombineBase = stat_combineBase;

@@ -91,6 +91,9 @@ function [barInfo,varargout] = barplot_with_errBar(barData,varargin)
     hB = bar(gca,barX,barVal,'EdgeColor', barEdgeColor, 'FaceColor', barFaceColor);
 
     % plot error bar
+    if iscell(barX)
+        barX = categorical(barX);
+    end
     hEB = errorbar(gca,barX,barVal,errBarVal,'LineStyle','None');
     set(hEB,'Color','k','LineWidth',errBarLineWidth,'CapSize',errBarCapSize);
 
