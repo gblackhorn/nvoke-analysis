@@ -74,6 +74,7 @@ function [GLMMresults, varargout] = twoPartMixedModelAnalysis(dataStruct, respon
     addParameter(p, 'link2', 'log', @ischar);
     addParameter(p, 'dispStat', false, @islogical);
     addParameter(p, 'groupVarType', '', @ischar); % 'double', 'categorical', 'datetime', 'string', 'logical', etc.
+    addParameter(p, 'figNamePrefix', '', @ischar); % 'double', 'categorical', 'datetime', 'string', 'logical', etc.
 
     parse(p, varargin{:});
     modelType = p.Results.modelType;
@@ -83,6 +84,7 @@ function [GLMMresults, varargout] = twoPartMixedModelAnalysis(dataStruct, respon
     link2 = p.Results.link2;
     dispStat = p.Results.dispStat;
     groupVarType = p.Results.groupVarType;
+    figNamePrefix = p.Results.figNamePrefix;
 
 
     % Create an empty structure to store the GLMM results
@@ -105,15 +107,6 @@ function [GLMMresults, varargout] = twoPartMixedModelAnalysis(dataStruct, respon
     GLMMresults(1).mmPvalue = mmPvalue1;
     GLMMresults(1).multCompare = multiComparisonResults1;
 
-    % Display the summary of the binary model
-    if dispStat
-        disp('')
-        disp(fixedEffectsStats1);
-
-        % Plot the original data and the fit data to examine the fitting
-        visualizeMeFitting(me1, groupVar,...
-            'titlePrefix','[binary model]', 'figName', 'OriginalData-vs-fitData_binary');
-    end
 
 
     % Filter non-zero data
@@ -131,14 +124,45 @@ function [GLMMresults, varargout] = twoPartMixedModelAnalysis(dataStruct, respon
     GLMMresults(2).multCompare = multiComparisonResults2;
 
 
-    % Display the summary of the non-binary model
+    % Display the summary of the binary model
     if dispStat
-        disp('')
-        disp(fixedEffectsStats1);
 
-        % Plot the original data and the fit data to examine the fitting
-        visualizeMeFitting(me2, groupVar,...
-            'titlePrefix','[nonBinary model]', 'figName', 'OriginalData-vs-fitData_nonBinary');
+        % fBinary = visualizeMeFitting(me1, groupVar,...
+        %     'titlePrefix','[binary model]', 'figName', figNameBinary);
     end
 
+    % Display the summary of the models
+    f = [];
+    fName = '';
+    if dispStat
+        % disp('Binary model')
+        % disp(fixedEffectsStats1);
+
+        % disp('NonBinary model')
+        % disp(fixedEffectsStats2);
+
+        % Create a figure
+        fName = sprintf('%s visualizeMeFitting', figNamePrefix);
+        f = fig_canvas(2,'unit_width',0.4,'unit_height',0.4,...
+        'row_lim',1,'column_lim',2,'fig_name',fName);
+        tiledlayout(1,2)
+
+
+        % Plot the original data and the fit data to examine the fitting
+        % titleBinary = sprintf('%s %s', figNamePrefix, 'OriginalData-vs-fitData_binary');
+        axBinary = nexttile;
+        axBinary = visualizeMeFitting(me1, groupVar, 'plotWhere', axBinary,...
+            'titlePrefix',[figNamePrefix ' [binary model]']);
+
+
+
+        % Plot the original data and the fit data to examine the fitting
+        % figNameNonBinary = sprintf('%s %s', figNamePrefix, 'OriginalData-vs-fitData_binary');
+        axNonBinary = nexttile;
+        axNonBinary = visualizeMeFitting(me2, groupVar, 'plotWhere', axNonBinary,...
+            'titlePrefix',[figNamePrefix, ' [nonBinary model]']);
+    end
+
+    varargout{1} = f; % plot to visualize the me fitting
+    varargout{2} = fName;
 end

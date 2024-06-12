@@ -1,4 +1,4 @@
-function visualizeMeFitting(me, groupVar, varargin)
+function [varargout] = visualizeMeFitting(me, groupVar, varargin)
     % Visualize the fitting of mixed-model (me)
 
     % me: The output of mixed-model, such as fitglme
@@ -10,10 +10,12 @@ function visualizeMeFitting(me, groupVar, varargin)
 
     % Parse optional parameters
     p = inputParser;
+    addParameter(p, 'plotWhere', []);
     addParameter(p, 'titlePrefix', '', @ischar);
     addParameter(p, 'figName', 'OriginalData vs fitData', @ischar);
 
     parse(p, varargin{:});
+    plotWhere = p.Results.plotWhere;
     titlePrefix = p.Results.titlePrefix;
     figName = p.Results.figName;
 
@@ -64,7 +66,13 @@ function visualizeMeFitting(me, groupVar, varargin)
     predictions = predict(me, newData);
 
     % Visualize the original data and GLMM fit in grouped bar style
-    figure('Name', figName);
+    if isempty(plotWhere)
+	    % fhandle = figure('Name', figName);
+	    f = fig_canvas(1,'unit_width',0.3,'unit_height',0.3,...
+        'row_lim',1,'column_lim',1,'fig_name',figName);
+	else
+		plotWhere;
+	end
     hold on;
 
     % Define colors
@@ -97,4 +105,6 @@ function visualizeMeFitting(me, groupVar, varargin)
     title(titleStr);
     grid on;
     hold off;
+
+    varargout{1} = gca;
 end

@@ -10,6 +10,7 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
     % binIDX = [4, 4]; % the nth bin from the data listed in stimNames
 
     normToFirst = true; % normalize all the data to the mean of the first group (first stimNames)
+    mmlHierarchicalVars = {'trialNames','roiNames'};
 
     plot_unit_width = 0.4; % normalized size of a single plot to the display
     plot_unit_height = 0.4; % nomralized size of a single plot to the display
@@ -26,6 +27,8 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
             titleStr = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
         elseif strcmpi('normToFirst', varargin{ii})
             normToFirst = varargin{ii+1};
+        elseif strcmpi('mmlHierarchicalVars', varargin{ii})
+            mmlHierarchicalVars = varargin{ii+1};
         elseif strcmpi('save_fig', varargin{ii})
             save_fig = varargin{ii+1};
         elseif strcmpi('save_dir', varargin{ii})
@@ -37,8 +40,8 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
 
     % create some empty vars
     stimIDX = NaN(size(stimNames));
-    violinDataField = {'stim','eventFreq','eventFreqNorm','stimMod','binName',...
-        'recNum','recDateNum','roiNum','stimRepeatNum'};
+    violinDataField = {'stim','eventFreq','eventFreqNorm','eventFreqStruct','eventFreqStructNorm',...
+        'stimMod','binName','recNum','recDateNum','roiNum','stimRepeatNum'};
     violinData = empty_content_struct(violinDataField,numel(stimNames));
 
     % decide which field should be used for the plot
@@ -63,14 +66,19 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
             % add data from 'periStimFreqBarData' to 'violinData'
             barData = periStimFreqBarData(stimIDX(n));
             violinData(n).stim = barData.stim;
+            violinData(n).binName = barData.binNames{binIDX(n)};
             violinData(n).eventFreq = barData.data(binIDX(n)).groupData;
             violinData(n).binNum = binIDX(n);
-            violinData(n).binName = barData.binNames{binIDX(n)};
             violinData(n).recNum = barData.recNum;
             violinData(n).recDateNum = barData.recDateNum;
             violinData(n).roiNum = barData.roiNum;
             violinData(n).stimRepeatNum = barData.stimRepeatNum;
 
+            % Get the datastruct enties with tagged with 'violinData(n).binName'
+            eventFreqStructAll = barData.dataStruct;
+            xdataAll = {eventFreqStructAll.xdata};
+            binNamesTF = strcmpi(xdataAll, violinData(n).binName);
+            violinData(n).eventFreqStruct = eventFreqStructAll(binNamesTF);
             % use the first stim group to normalize other group data
             if n == 1
                 normMean = mean(violinData(n).eventFreq);
@@ -78,11 +86,26 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
 
             % normalize the data with the mean of first group data
             violinData(n).eventFreqNorm = violinData(n).eventFreq/normMean;
+            % violinData(n).eventFreqStructNorm = violinData(n).eventFreqStruct;
+
+            % Normalize the data with the mean of first group data in the eventFreq Struct
+            violinData(n).eventFreqStructNorm = replaceFieldWithArray(violinData(n).eventFreqStruct,...
+                'val',[violinData(n).eventFreqStruct.val]/normMean);
+
+
+            % add 'stimMod' content to violinData.stimMod. 
+            violinData(n) = addFieldCompatibleStimName(violinData(n));
+
+            % Add stim name to the xdata in eventFreq struct
+            xdata = {violinData(n).eventFreqStruct.xdata};
+            xdataUpdate = cellfun(@(x) sprintf('%s %s',violinData(n).stimMod,x),xdata,'UniformOutput',false);
+            violinData(n).eventFreqStruct = replaceFieldWithArray(violinData(n).eventFreqStruct,...
+                'xdata',xdataUpdate);
+            violinData(n).eventFreqStructNorm = replaceFieldWithArray(violinData(n).eventFreqStructNorm,...
+                'xdata',xdataUpdate);
         end
     end
 
-    % add 'stimMod' content to violinData.stimMod. 
-    [violinData] = addFieldCompatibleStimName(violinData);
 
 
     % If data are from different bins of the same stimulation, add the bin name to the data name
@@ -92,14 +115,22 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
         end
     end
 
+    % Combine the eventFreqStructNorm from the violinData
+    eventFreqStructNormCombine = [violinData(:).eventFreqStructNorm];
 
-    % form a struct var for violin plot
-    violinDataStruct = empty_content_struct({violinData.stimMod},1);
+    % Run GLMM to evaluate the differnece of every freq in various time bins
+    [GLMMstat, GLMMfBinary, GLMMfBinaryName, GLMMfNonBinary, GLMMfNonBinaryName] = twoPartMixedModelAnalysis(eventFreqStructNormCombine,...
+        'val', 'xdata', mmlHierarchicalVars,'groupVarType', 'categorical',...
+        'dispStat', save_fig, 'figNamePrefix', titleStr);
 
-    for n = 1:numel(violinData)
-        violinDataStruct.(violinData(n).stimMod) = violinData(n).(dataField);
-        % violinDataStruct.(violinData(n).stimMod) = eventFreqData;
-    end
+
+    % % form a struct var for violin plot
+    % violinDataStruct = empty_content_struct({violinData.stimMod},1);
+
+    % for n = 1:numel(violinData)
+    %     violinDataStruct.(violinData(n).stimMod) = violinData(n).(dataField);
+    %     % violinDataStruct.(violinData(n).stimMod) = eventFreqData;
+    % end
 
 
     
@@ -118,6 +149,17 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
     [statInfo,save_dir] = violinplotWithStat(violinDataCell,...
         'groupNames',groupNames,'extraUItable',figInfoTable,...
         'titleStr',titleStr,'save_fig',save_fig,'save_dir',save_dir,'gui_save',gui_save);
+
+    % Add GLMM stat info to the statInfo struct var
+    statInfo.GLMMstat = GLMMstat;
+
+    % Save GLMM fitting figure
+    if save_fig
+        savePlot(GLMMfBinary,'save_dir',save_dir,'guiSave',false,...
+            'fname',GLMMfBinaryName);
+        savePlot(GLMMfNonBinary,'save_dir',save_dir,'guiSave',false,...
+            'fname',GLMMfNonBinaryName);
+    end
 
     varargout{1} = save_dir;
 
@@ -147,16 +189,16 @@ function [violinDataNew,varargout] = addFieldCompatibleStimName(violinData)
     varargout{1} = {violinDataNew.stimMod};
 end
 
-function [dataVector,dataGroupCell] = prepareStructDataforAnova(violinDataStruct)
-    fields = fieldnames(violinDataStruct);
-    groupNum = numel(fields);
-    dataVector = cell(groupNum,1);
-    dataGroupCell = cell(groupNum,1);
-    for n = 1:groupNum
-        dataVector{n} = violinDataStruct.(fields{n});
-        dataVector{n} = reshape(dataVector{n},[],1);
-        dataGroupCell{n} = repmat({fields{n}},numel(dataVector{n}),1);
-    end
-    dataVector = vertcat(dataVector{:});
-    dataGroupCell = vertcat(dataGroupCell{:});
-end
+% function [dataVector,dataGroupCell] = prepareStructDataforAnova(violinDataStruct)
+%     fields = fieldnames(violinDataStruct);
+%     groupNum = numel(fields);
+%     dataVector = cell(groupNum,1);
+%     dataGroupCell = cell(groupNum,1);
+%     for n = 1:groupNum
+%         dataVector{n} = violinDataStruct.(fields{n});
+%         dataVector{n} = reshape(dataVector{n},[],1);
+%         dataGroupCell{n} = repmat({fields{n}},numel(dataVector{n}),1);
+%     end
+%     dataVector = vertcat(dataVector{:});
+%     dataGroupCell = vertcat(dataGroupCell{:});
+% end
