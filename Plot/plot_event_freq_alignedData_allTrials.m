@@ -216,7 +216,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		xdataUnique = unique(xdata);
 		xdataUnique = num2cell(xdataUnique(:)); % convert xdataUnique from number to cell
 		replacementCell = [xdataUnique, binNames(:)]; % Create a replacementCell, in which old xdata and binNames are paired
-		efStruct = replaceFieldValues(efStruct, 'xdata', replacementCell);
+		% efStruct = replaceFieldValues(efStruct, 'xdata', replacementCell);
 
 
 		barInfo = empty_content_struct({'data', 'stat'}, 1);

@@ -96,7 +96,7 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     % end
 
     % Get unique groups and their indices
-    [uniqueGroups, ~, groupIdx] = unique(groups);
+    [uniqueGroups, ~, groupIdx] = unique(groups, 'stable');
     nGroups = numel(uniqueGroups);
 
     % Creat barInfo and calculate mean, std, and ste for plotting

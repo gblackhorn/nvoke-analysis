@@ -11,7 +11,7 @@ FolderPathVA = initProjFigPathVIIO(GUI_chooseFolder);
 % Plot the recording field and draw ROIs as overlay using the data processed with CNMFe
 % Plot the raw traces of ROIs from CNMFe result. These traces are background subtracted (including neuropil)
 
-saveFig = true; % true/false
+saveFig = false; % true/false
 showYtickRight = true;
 save_dir = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\figures\VIIO_paper_figure\VIIO_Fig1_method_recExample';
 save_dir = fullfile(FolderPathVA.ventralApproach,'figures\VIIO_paper_figure\VIIO_Fig1_method_recExample');
