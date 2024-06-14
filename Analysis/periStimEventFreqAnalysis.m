@@ -163,7 +163,8 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 
 		% fig B stat
 		ax = nexttile(tloDiffStat);
-		ttestP1TableVarNames = NumArray2StringCell(diffStat(dpn).xA);
+		ttestP1TableVarNames = diffStat(dpn).binNamesAB;
+		% ttestP1TableVarNames = NumArray2StringCell(diffStat(dpn).xA);
 		ttestP1Table = array2table(diffStat(dpn).ttestAB,...
 			'VariableNames',ttestP1TableVarNames(1:length(diffStat(dpn).ttestAB)),'RowNames',{'p','h'});
 		plotUItable(fDiffStat,ax,ttestP1Table);
@@ -232,8 +233,8 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 		end
 		% save_dir = savePlot(fDiffStat2,'save_dir',save_dir,'guiSave','off',...
 		% 	'fname',[titleStrNormB,'ttest']);
-		save(fullfile(save_dir, ['periStimEventAnalysisStat']),...
-		    'barStat','diffStat');
+		% save(fullfile(save_dir, ['periStimEventAnalysisStat']),...
+		%     'barStat','diffStat');
 	end 
 	varargout{1} = barStat;
 	varargout{2} = diffStat;

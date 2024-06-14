@@ -212,18 +212,18 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		% Convert the ef array to a structure var for plotting and GLMM analysis
 		efStruct = efArray2struct(ef, EventFreqInBins, xdata);
 
-		% Replace the contents in xdata, center of bin time, to binNames
-		xdataUnique = unique(xdata);
-		xdataUnique = num2cell(xdataUnique(:)); % convert xdataUnique from number to cell
-		replacementCell = [xdataUnique, binNames(:)]; % Create a replacementCell, in which old xdata and binNames are paired
-		% efStruct = replaceFieldValues(efStruct, 'xdata', replacementCell);
+		% % Replace the contents in xdata, center of bin time, to binNames
+		% xdataUnique = unique(xdata);
+		% xdataUnique = num2cell(xdataUnique(:)); % convert xdataUnique from number to cell
+		% replacementCell = [xdataUnique, binNames(:)]; % Create a replacementCell, in which old xdata and binNames are paired
+		% % efStruct = replaceFieldValues(efStruct, 'xdata', replacementCell);
 
 
 		barInfo = empty_content_struct({'data', 'stat'}, 1);
 
 		% Bar plot of the event freq in various time 
 		% barInfo.data = barplot_with_stat(ef,'xdata',xdata,'plotWhere',gca);
-		barStat(stn).data = barPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', ax);
+		barStat(stn).data = barPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', ax, 'xtickLabel', binNames);
 		barStat(stn).dataStruct = efStruct;
 
 		% Run GLMM to evaluate the difference of every freq in various time bins
@@ -263,6 +263,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		% barStat(stn).multiComp = barInfo.stat.c;
 		% barStat(stn).data = barInfo.data;
 		barStat(stn).binEdges = binEdges;
+		barStat(stn).binX = xdata;
 		barStat(stn).binNames = binNames;
 
 		% combine baseline data and run anova to compare baseline and the rest bins

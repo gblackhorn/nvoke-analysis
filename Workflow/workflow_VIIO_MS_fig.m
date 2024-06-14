@@ -306,7 +306,7 @@ end
 %% ==========
 % 3.1 Peri-stimulus event frequency analysis
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 gui_save = true;
 
 filter_roi_tf = true; % true/false. If true, screen ROIs

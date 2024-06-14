@@ -74,6 +74,11 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
             violinData(n).roiNum = barData.roiNum;
             violinData(n).stimRepeatNum = barData.stimRepeatNum;
 
+            % Replace the contents in xdata, center of bin time, to binNames
+            binXcell = num2cell(barData.binX(:)); % convert xdataUnique from number to cell
+            replacementCell = [binXcell, barData.binNames(:)]; % Create a replacementCell, in which old xdata and binNames are paired
+            barData.dataStruct = replaceFieldValues(barData.dataStruct, 'xdata', replacementCell);
+
             % Get the datastruct enties with tagged with 'violinData(n).binName'
             eventFreqStructAll = barData.dataStruct;
             xdataAll = {eventFreqStructAll.xdata};
@@ -155,10 +160,8 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
 
     % Save GLMM fitting figure
     if save_fig
-        savePlot(GLMMfBinary,'save_dir',save_dir,'guiSave',false,...
-            'fname',GLMMfBinaryName);
-        savePlot(GLMMfNonBinary,'save_dir',save_dir,'guiSave',false,...
-            'fname',GLMMfNonBinaryName);
+        savePlot(GLMMfittingFig,'save_dir',save_dir,'guiSave',false,...
+            'fname',GLMMfittingFigName);
     end
 
     varargout{1} = save_dir;

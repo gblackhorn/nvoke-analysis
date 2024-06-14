@@ -46,25 +46,17 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     addRequired(p, 'valField', @ischar);
     addRequired(p, 'groupField', @ischar);
 
-    % Define default values for optional parameters
-    defaultPlotWhere = [];
-    defaultTitleStr = 'Bar plot';
-    defaultTickAngle = 0;
-    defaultEdgeColor = 'none';
-    defaultFaceColor = '#4D4D4D';
-    defaultFontSize = 14;
-    defaultFontWeight = 'bold';
-    defaultYlabelStr = '';
 
     % Add optional parameters to the parser
-    addParameter(p, 'plotWhere', defaultPlotWhere);
-    addParameter(p, 'titleStr', defaultTitleStr);
-    addParameter(p, 'TickAngle', defaultTickAngle);
-    addParameter(p, 'EdgeColor', defaultEdgeColor);
-    addParameter(p, 'FaceColor', defaultFaceColor);
-    addParameter(p, 'FontSize', defaultFontSize);
-    addParameter(p, 'FontWeight', defaultFontWeight);
-    addParameter(p, 'ylabelStr', defaultYlabelStr);
+    addParameter(p, 'plotWhere', []);
+    addParameter(p, 'titleStr', 'Bar plot', @ischar);
+    addParameter(p, 'xtickLabel', {}, @iscell);
+    addParameter(p, 'TickAngle', 0, @isnumeric);
+    addParameter(p, 'EdgeColor', 'none', @ischar);
+    addParameter(p, 'FaceColor', '#4D4D4D', @ischar);
+    addParameter(p, 'FontSize', 14, @isnumeric);
+    addParameter(p, 'FontWeight', 'bold', @ischar);
+    addParameter(p, 'ylabelStr', '', @ischar);
 
     % Parse the inputs
     parse(p, structData, valField, groupField, varargin{:});
@@ -75,6 +67,7 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     groupField = p.Results.groupField;
     plotWhere = p.Results.plotWhere;
     titleStr = p.Results.titleStr;
+    xtickLabel = p.Results.xtickLabel;
     TickAngle = p.Results.TickAngle;
     EdgeColor = p.Results.EdgeColor;
     FaceColor = p.Results.FaceColor;
@@ -148,6 +141,9 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     barPlotInfo = barplot_with_errBar(y(:)','barX',x,'plotWhere',plotWhere,...
         'errBarVal',yError(:)','barNames',groupNames,'dataNumVal',[barInfo.nNum],...
         'TickAngle', TickAngle, 'FontSize', FontSize, 'FontWeight', FontWeight);
+    if ~isempty(xtickLabel)
+        xticklabels(xtickLabel)
+    end
     ylabel(ylabelStr);
     titleStr = replace(titleStr, '_', '-');
     titleStr = replace(titleStr, ':', '-');
