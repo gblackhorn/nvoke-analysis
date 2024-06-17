@@ -302,6 +302,92 @@ if save_fig
 end
 
 
+%% ==========
+% 2.7 Compare the sync and async spon events 
+
+% Add sync info to the alignedData
+synchTimeWindow = 1;
+minROIsCluster = 2;
+[alignedData_withSynchInfo, cohensDPO, cohensDDAO] = clusterSpikeAmplitudeAnalysis(alignedData_allTrials,...
+	'synchTimeWindow', 1, 'minROIsCluster', 2);
+
+% Discard those without sync tag in the eventProp (Due to single neuron)
+mustHaveField = 'synchronicityIndex';
+[alignedData_withSynchInfo] = validateAlignedDataStructForEventAnalysis(alignedData_withSynchInfo, mustHaveField);
+
+% Get and group (gg) Settings
+ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
+                % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
+                % 'event': events are seperated (struct length = events_num). mean values were not calculated
+ggSetting.modify_stim_name = true; % true/false. Change the stimulation name, 
+ggSetting.sponOnly = false; % true/false. If eventType is 'roi', and ggSetting.sponOnly is true. Only keep spon entries
+ggSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
+ggSetting.dis_spon = false; % true/false. Discard spontaneous events
+ggSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
+ggSetting.groupField = {'peak_category','subNuclei','type'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+ggSetting.mark_EXog = false; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
+ggSetting.og_tag = {'og', 'og&ap'}; % find og events with these strings. 'og' to 'Exog', 'og&ap' to 'EXog&ap'
+ggSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', 'rebound', 'delay'
+ggSetting.sort_order_plus = {'ap', 'EXopto'};
+debug_mode = false; % true/false
+
+% Create grouped_event for plotting event properties
+[eventStructForPlot] = getAndGroup_eventsProp(alignedData_withSynchInfo,...
+	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
+
+% Keep spontaneous events and discard all others
+tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
+[eventStructForPlotFiltered] = filter_entries_in_structure(eventStructForPlot,'group',...
+	'tags_keep',tags_keep);
+
+%% ==========
+% Plot event properties
+
+% Settings
+save_fig = true; % true/false
+plot_combined_data = false;
+parNames = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_mag_delta'}; 
+    % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
+stat = true; % Set it to true to run anova when plotting bars
+
+close all
+
+% Setup parameters for linear-mixed-model (LMM) or generalized-mixed-model (GLMM) analysis
+mmModel = 'GLMM'; % LMM/GLMM
+mmGroup = 'type'; % LMM/GLMM
+mmHierarchicalVars = {'trialName', 'roiName'};
+mmDistribution = 'gamma'; % For continuous, positively skewed data
+mmLink = 'log'; % For continuous, positively skewed data
+
+% Generate and save figures
+[save_dir, plot_info] = plot_event_info(eventStructForPlotFiltered,'entryType',ggSetting.entry,...
+	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
+	'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
+	'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+	'fname_preffix','event','save_fig', save_fig, 'save_dir', FolderPathVA.fig);
+
+% Create a UI table displaying the n numberss
+fNum = nNumberTab(eventStructForPlotFiltered,'event');
+
+% Save data
+if save_fig
+	% Save the fNum
+	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo');
+	% savePlot(fMM,'guiSave', 'off', 'save_dir', save_dir, 'fname', fMM_name);
+
+	% Save the statistics info
+	eventPropStatInfo.eventStructForPlotFiltered = eventStructForPlotFiltered;
+	eventPropStatInfo.plot_info = plot_info;
+	% dt = datestr(now, 'yyyymmdd');
+	save(fullfile(save_dir, 'event propStatInfo'), 'eventPropStatInfo');
+end
+
+% Update the folder path 
+if save_dir~=0
+	FolderPathVA.fig = save_dir;
+end
+
 
 %% ==========
 % 3.1 Peri-stimulus event frequency analysis

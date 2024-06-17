@@ -38,3 +38,46 @@ ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventPro
 % tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
 [roiStructForPlotFiltered] = filter_entries_in_structure(roiStructForPlot,'group',...
     'tags_keep',tags_keep);
+
+
+
+%% ==========
+epCellNum = numel(eventProp_all_cell);
+fieldsInFirstRec = fieldnames(eventProp_all_cell{1});
+for i = 2:epCellNum
+	if ~isempty(eventProp_all_cell{i})
+		fields = fieldnames(eventProp_all_cell{i});
+		tf = isequal(fieldsInFirstRec, fields);
+
+		if ~tf
+			noticeStr = sprintf('Recording %d has different fields', i);
+			disp(noticeStr)
+		end
+	end
+end
+
+
+%% ==========
+% Define two cell arrays
+cellArray2Index =7 ;
+fieldsInCellArray2 = fieldnames(eventProp_all_cell{cellArray2Index});
+
+% Compare the cell arrays using strcmp
+comparisonResult = strcmpi(fieldsInFirstRec, fieldsInCellArray2);
+
+% Find the indices of differing elements
+differingIndices = find(~comparisonResult);
+
+% Display the differing elements
+if isempty(differingIndices)
+    disp('The cell arrays contain exactly the same contents.');
+else
+    disp('The cell arrays do not contain the same contents.');
+    disp('Differences found at the following indices:');
+    for i = 1:length(differingIndices)
+        index = differingIndices(i);
+        fprintf('Index %d:\n', index);
+        fprintf('  Rec 1: %s\n', fieldsInFirstRec{index});
+        fprintf('  Rec %d: %s\n', cellArray2Index, fieldsInCellArray2{index});
+    end
+end
