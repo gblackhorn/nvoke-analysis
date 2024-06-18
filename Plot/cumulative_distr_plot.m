@@ -33,6 +33,8 @@ function [varargout] = cumulative_distr_plot(CellArrayData,varargin)
 	        plotWhere = varargin{ii+1};
 	    elseif strcmpi('plotCombine', varargin{ii})
 	        plotCombine = varargin{ii+1};
+	    elseif strcmpi('colorGroup', varargin{ii})
+	        colorGroup = varargin{ii+1};
 	    elseif strcmpi('FontSize', varargin{ii})
 	        FontSize = varargin{ii+1};
 	    elseif strcmpi('FontWeight', varargin{ii})

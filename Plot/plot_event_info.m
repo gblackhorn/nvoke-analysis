@@ -69,6 +69,8 @@ function params = parse_inputs(varargin)
     defaultMmDistribution = 'gamma'; % Check the input 'distribution' input in the function 'mixed_model_analysis' for more details
     defaultMmLink = 'log'; % Check the input 'link' input in the function 'mixed_model_analysis' for more details
     defaultStatFig = 'off';
+    defaultColorGroup = {'#3FF5E6', '#F55E58', '#F5A427', '#4CA9F5', '#33F577',...
+        '#408F87', '#8F4F7A', '#798F7D', '#8F7832', '#28398F', '#000000'};
     defaultFontSize = 12;
     defaultTileColNum = 4;
     defaultFontWeight = 'bold';
@@ -89,6 +91,7 @@ function params = parse_inputs(varargin)
     addParameter(p, 'mmDistribution', defaultMmDistribution);
     addParameter(p, 'mmLink', defaultMmLink);
     addParameter(p, 'stat_fig', defaultStatFig);
+    addParameter(p, 'colorGroup', defaultColorGroup);
     addParameter(p, 'FontSize', defaultFontSize);
     addParameter(p, 'tileColNum', defaultTileColNum);
     addParameter(p, 'FontWeight', defaultFontWeight);
@@ -155,9 +158,9 @@ function [bar_data, bar_stat] = plot_bars(event_info_struct, parNames, params)
     bar_data = struct();
     bar_stat = struct();
 
-    f_bar = create_figure('bar plots');
+    f_bar = create_figure([params.fname_preffix, ' bar plots']);
     % f_stat = uifigure('Name', 'bar stat', 'Position', [0.1 0.1 0.8 0.4]);
-    f_stat = create_figure('bar stat');
+    f_stat = create_figure([params.fname_preffix, ' bar stat']);
     set(f_stat, 'Position', [0.05 0.1 0.95 0.4]);
     f_violin = create_figure('violin plots');
 
@@ -308,7 +311,8 @@ function plot_violinplot(event_info_struct, par, groupNames, ax_violin, params)
 end
 
 function plot_cumulative_distributions(event_info_struct, parNames, params)
-    f_cd = create_figure('cumulative distribution plots');
+    figNameStr = sprintf('%s cumulative distribution plots', params.fname_preffix);
+    f_cd = create_figure(figNameStr);
     tlo = tiledlayout(f_cd, ceil(numel(parNames)/4), 4);
 
     for pn = 1:numel(parNames)
@@ -319,7 +323,8 @@ function plot_cumulative_distributions(event_info_struct, parNames, params)
             event_info_cell{gn} = [event_info_struct(gn).event_info.(par)]';
         end
         cumulative_distr_plot(event_info_cell, 'groupNames', {event_info_struct.group}, 'plotWhere', ax,...
-            'plotCombine',false,'stat', true, 'FontSize', params.FontSize, 'FontWeight', params.FontWeight);
+            'plotCombine',false,'stat', true, 'colorGroup', params.colorGroup,...
+            'FontSize', params.FontSize, 'FontWeight', params.FontWeight);
         title(replace(par, '_', '-'));
     end
 end

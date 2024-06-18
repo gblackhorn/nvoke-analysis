@@ -109,7 +109,7 @@ function [sortedIDX,sortedFdSection,sortedEventMarker,sortedRowNames,timeDuratio
 				rangEventsCat = cell(size(rangEventsTime));
 				for sn = 1:stimNum
 					if debugMode
-						fprintf('  - section %d/%d\n',sn,stimNum)
+						% fprintf('  - section %d/%d\n',sn,stimNum)
 						% if sn == 6
 						% 	pause
 						% end
@@ -129,7 +129,7 @@ function [sortedIDX,sortedFdSection,sortedEventMarker,sortedRowNames,timeDuratio
 			for sn = 1:stimNum
 				% for debugging
 				if debugMode
-					fprintf('  - section %d/%d\n',sn,stimNum)
+					% fprintf('  - section %d/%d\n',sn,stimNum)
 					% if sn == 6
 					% 	pause
 					% end

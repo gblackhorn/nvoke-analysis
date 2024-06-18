@@ -117,7 +117,11 @@ function [varargout] = plot_TemporalData_Trace(plotWhere, xData, yData, varargin
 
     % Use offsets to calculate the plotInterval, which will be used to set the yLim and the raised
     % value of marker1 (event peak)
-    plotInterval = max(diff(offsets));
+    if numel(offsets) == 1 % When there is only one ROI
+        plotInterval = (max(yData) - min(yData))/2;
+    else
+        plotInterval = max(diff(offsets));
+    end
     marker1_raiseVal = abs(plotInterval)/4;
 
     % Plot the data traces
@@ -140,7 +144,7 @@ function [varargout] = plot_TemporalData_Trace(plotWhere, xData, yData, varargin
         marker1_xData = cell(1, trace_num);
     end
     if isempty(marker2_xData)
-        marker2_xData = cell(1, trace_num);
+        marker2_xData = cell(1, trace_num); 
     end
 
     if plot_marker

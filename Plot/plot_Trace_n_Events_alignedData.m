@@ -245,6 +245,7 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 		trace_xlim = xlim;
 		f1_xticks = xticks;
 		sgtitle(fig_title{1})
+		set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 
 			% color plot (default xtick interval is 10)
 		FluroData_trans = FluroData.'; % transpose the FluroData. row of matrix will be plotted as rows in color plot
@@ -260,6 +261,7 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 			'rowNames',rowNames,'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...
 			'titleStr',fig_title{2});
 		sgtitle(fig_title{2})
+		set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 
 
 		% Figure 3: Plot a color plot. Difference between this one and the one in figure 1 is every
@@ -273,6 +275,7 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 			'eventsTime',eventTime,'eventsTimeSort',eventsTimeSort,'markEvents',plot_marker,...
 			'roiNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{3},'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
 		sgtitle(fig_title{3})
+		set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 		
 		fig_title{4} = sprintf('%s %s single-stim fluorescence signal %s firstSponAfterStimDelaySort-%s',...
 			title_str_stem,norm_str,sortStr,eventsTimeSort); % Create the title string
@@ -282,6 +285,7 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 			'stimEventCat',eventCat,'followEventCat',eventCatFollow,'markEvents',plot_marker,...
 			'roiNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{4},'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
 		sgtitle(fig_title{4})
+		set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 
 
 		% % Figure 3: Plot a color plot. Difference between this one and the one in figure 1 is every

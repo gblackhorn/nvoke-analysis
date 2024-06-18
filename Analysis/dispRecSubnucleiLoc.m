@@ -1,4 +1,4 @@
-function dispRecSubnucleiLoc(alignedDataStruct, targetFunction)
+function dispRecSubnucleiLoc(alignedDataStruct)
     % dispRecSubnucleiLoc reads alignedDataStructure and list the subnuclei information of
     % recordings
 

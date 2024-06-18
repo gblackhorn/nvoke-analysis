@@ -197,7 +197,7 @@ ggSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', '
 ggSetting.sort_order_plus = {'ap', 'EXopto'};
 debug_mode = false; % true/false
 
-% Create grouped_event for plotting event properties
+% a. Create grouped_event for plotting event properties
 [eventStructForPlot] = getAndGroup_eventsProp(alignedData_allTrials,...
 	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
@@ -208,7 +208,7 @@ tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','r
 	'tags_keep',tags_keep);
 
 
-% Create grouped_event for plotting ROI properties
+% b. Create grouped_event for plotting ROI properties
 ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventProp
 [roiStructForPlot] = getAndGroup_eventsProp(alignedData_allTrials,...
 	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
@@ -217,6 +217,30 @@ ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventPro
 % Keep spontaneous events and discard all others
 % tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
 [roiStructForPlotFiltered] = filter_entries_in_structure(roiStructForPlot,'group',...
+	'tags_keep',tags_keep);
+
+
+% c. Create grouped_event for plotting event properties (Separate sync and async neurons)
+% Add sync info to the alignedData
+synchTimeWindow = 1;
+minROIsCluster = 2;
+[alignedData_withSynchInfo, cohensDPO, cohensDDAO] = clusterSpikeAmplitudeAnalysis(alignedData_allTrials,...
+	'synchTimeWindow', 1, 'minROIsCluster', 2);
+
+% Discard those without sync tag in the eventProp (Due to single neuron)
+mustHaveField = 'synchronicityIndex';
+[alignedData_withSynchInfo] = validateAlignedDataStructForEventAnalysis(alignedData_withSynchInfo, mustHaveField);
+
+% Create grouped_event for plotting event properties
+ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
+ggSetting.groupField = {'peak_category','subNuclei','type'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+[eventStructForPlot_syncTag] = getAndGroup_eventsProp(alignedData_withSynchInfo,...
+	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
+
+% Keep spontaneous events and discard all others
+tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
+[eventStructForPlotFiltered_syncTag] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
 	'tags_keep',tags_keep);
 
 %% ==========
@@ -266,7 +290,6 @@ if save_dir~=0
 	FolderPathVA.fig = save_dir;
 end
 
-
 %%% ==========
 % 2.6 Plot ROI properties. 
 % Use data organized in section 2.3
@@ -303,43 +326,97 @@ end
 
 
 %% ==========
-% 2.7 Compare the sync and async spon events 
+% 2.7 Plot event properties. Compare the sync and async spon events in PO and DAO
 
-% Add sync info to the alignedData
-synchTimeWindow = 1;
-minROIsCluster = 2;
-[alignedData_withSynchInfo, cohensDPO, cohensDDAO] = clusterSpikeAmplitudeAnalysis(alignedData_allTrials,...
-	'synchTimeWindow', 1, 'minROIsCluster', 2);
+% Settings
+save_fig = true; % true/false
+plot_combined_data = false;
+parNames = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_mag_delta'}; 
+    % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
+stat = true; % Set it to true to run anova when plotting bars
 
-% Discard those without sync tag in the eventProp (Due to single neuron)
-mustHaveField = 'synchronicityIndex';
-[alignedData_withSynchInfo] = validateAlignedDataStructForEventAnalysis(alignedData_withSynchInfo, mustHaveField);
+close all
 
-% Get and group (gg) Settings
-ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
-                % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
-                % 'event': events are seperated (struct length = events_num). mean values were not calculated
-ggSetting.modify_stim_name = true; % true/false. Change the stimulation name, 
-ggSetting.sponOnly = false; % true/false. If eventType is 'roi', and ggSetting.sponOnly is true. Only keep spon entries
-ggSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
-ggSetting.dis_spon = false; % true/false. Discard spontaneous events
-ggSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
-ggSetting.groupField = {'peak_category','subNuclei','type'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
-ggSetting.mark_EXog = false; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
-ggSetting.og_tag = {'og', 'og&ap'}; % find og events with these strings. 'og' to 'Exog', 'og&ap' to 'EXog&ap'
-ggSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', 'rebound', 'delay'
-ggSetting.sort_order_plus = {'ap', 'EXopto'};
-debug_mode = false; % true/false
+% Setup parameters for linear-mixed-model (LMM) or generalized-mixed-model (GLMM) analysis
+mmModel = 'GLMM'; % LMM/GLMM
+mmHierarchicalVars = {'trialName', 'roiName'};
+mmDistribution = 'gamma'; % For continuous, positively skewed data
+mmLink = 'log'; % For continuous, positively skewed data
+colorGroupCell = {{'#8C0383', '#FF00CC'},{'#003264', '#00AAD4'}};
 
-% Create grouped_event for plotting event properties
-[eventStructForPlot] = getAndGroup_eventsProp(alignedData_withSynchInfo,...
-	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
-	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
+% Keep events from PO or DAO neurons and generate plots
+subNucleiStr = {'spon-PO','spon-DAO'};
+for sn = 1:numel(subNucleiStr)
+	tags_keep = subNucleiStr{sn}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
+	[eventStructForPlotFiltered_syncTagSubGroup] = filter_entries_in_structure(eventStructForPlotFiltered_syncTag,'group',...
+		'tags_keep',tags_keep);
 
-% Keep spontaneous events and discard all others
-tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
-[eventStructForPlotFiltered] = filter_entries_in_structure(eventStructForPlot,'group',...
-	'tags_keep',tags_keep);
+	% Generate and save figures
+	mmGroup = 'type'; % LMM/GLMM
+	[save_dir, plot_info] = plot_event_info(eventStructForPlotFiltered_syncTagSubGroup,'entryType',ggSetting.entry,...
+		'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
+		'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
+		'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+		'colorGroup',colorGroupCell{sn},'fname_preffix',[tags_keep,'-event'],'save_fig', save_fig, 'save_dir', FolderPathVA.fig);
+
+	% Create a UI table displaying the n numberss
+	fNum = nNumberTab(eventStructForPlotFiltered,'event');
+
+	% Save data
+	if save_fig
+		% Save the fNum
+		savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo');
+
+		% Save the statistics info
+		eventPropStatInfo.eventStructForPlotFiltered = eventStructForPlotFiltered;
+		eventPropStatInfo.plot_info = plot_info;
+		% dt = datestr(now, 'yyyymmdd');
+		save(fullfile(save_dir, [tags_keep,'-event propStatInfo']), 'eventPropStatInfo');
+	end
+
+	% Update the folder path 
+	if save_dir~=0
+		FolderPathVA.fig = save_dir;
+	end
+end
+
+% Keep events from PO or DAO neurons and generate plots
+colorGroupCell = {{'#00AAD4', '#FF00CC'},{'#003264', '#8C0383'}};
+syncTagsStr = {'-synch','-asynch'};
+for st = 1:numel(syncTagsStr)
+	tags_keep = syncTagsStr{st}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
+	[eventStructForPlotFiltered_syncTagSubGroup] = filter_entries_in_structure(eventStructForPlotFiltered_syncTag,'group',...
+		'tags_keep',tags_keep);
+
+	% Generate and save figures
+	tags_keep = replace(tags_keep,'-','');
+	mmGroup = 'subNuclei'; % LMM/GLMM
+	[save_dir, plot_info] = plot_event_info(eventStructForPlotFiltered_syncTagSubGroup,'entryType',ggSetting.entry,...
+		'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
+		'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
+		'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+		'colorGroup',colorGroupCell{st},'fname_preffix',[tags_keep,'-event'],'save_fig', save_fig, 'save_dir', FolderPathVA.fig);
+
+	% Create a UI table displaying the n numberss
+	fNum = nNumberTab(eventStructForPlotFiltered,'event');
+
+	% Save data
+	if save_fig
+		% Save the fNum
+		savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo');
+
+		% Save the statistics info
+		eventPropStatInfo.eventStructForPlotFiltered = eventStructForPlotFiltered;
+		eventPropStatInfo.plot_info = plot_info;
+		% dt = datestr(now, 'yyyymmdd');
+		save(fullfile(save_dir, [tags_keep,'-event propStatInfo']), 'eventPropStatInfo');
+	end
+
+	% Update the folder path 
+	if save_dir~=0
+		FolderPathVA.fig = save_dir;
+	end
+end
 
 %% ==========
 % Plot event properties
