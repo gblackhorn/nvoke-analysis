@@ -5,6 +5,59 @@
 GUI_chooseFolder = false; % true/false. Use GUI to locate the DataFolder and AnalysisFolder
 FolderPathVA = initProjFigPathVIIO(GUI_chooseFolder);
 
+%% ==========
+% 0.1 (optional): Update the 'alignedData_allTrials' using the 'recdata_organized'
+
+% Settings
+adata.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
+adata.eventTimeType = 'peak_time'; % rise_time/peak_time. Pick one for event time
+adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
+adata.event_data_group = 'peak_lowpass';
+adata.event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
+adata.event_align_point = 'rise'; % options: 'rise', 'peak'
+adata.rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes. Exclude these events from 'spon'
+adata.cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
+%					find a way to combine categories, such as 'nostim' and 'nostimfar'
+adata.pre_event_time = 5; % unit: s. duration before stimulation in the aligned traces
+adata.post_event_time = 10; % unit: s. duration after stimulation in the aligned traces
+adata.stim_section = true; % true: use a specific section of stimulation to calculate the calcium level delta. For example the last 1s
+adata.ss_range = 1; % range of stim_section (compare the cal-level in baseline and here to examine the effect of the stimulation). single number (last n second during stimulation) or a 2-element array (start and end. 0s is stimulation onset)
+adata.stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
+adata.mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
+% filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
+adata.caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
+adata.disROI = true; % true/false. If true, Keep ROIs using the setting below, and delete the rest
+adata.disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-1s'};
+adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
+adata.sponfreqFilter.status = true; % true/false. If true, use the following settings to filter ROIs
+adata.sponfreqFilter.field = 'sponfq'; % 
+adata.sponfreqFilter.thresh = 0.05; % Hz. default 0.05
+adata.sponfreqFilter.direction = 'high';
+debug_mode = false; % true/false
+
+% Create structure data for further analysis (event traces are aligned to event rises)
+[alignedData_allTrials,alignedData_event_list] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
+	'traceData_type', adata.traceData_type, 'event_data_group', adata.event_data_group,'eventTimeType',adata.eventTimeType,...
+	'event_filter', adata.event_filter, 'event_align_point', adata.event_align_point, 'cat_keywords', adata.cat_keywords,...
+	'pre_event_time', adata.pre_event_time, 'post_event_time', adata.post_event_time,...
+	'stim_section',adata.stim_section,'ss_range',adata.ss_range,...
+	'stim_time_error',adata.stim_time_error,'rebound_duration',adata.rebound_duration,...
+	'mod_pcn', adata.mod_pcn,'caDeclineOnly',adata.caDeclineOnly,...
+	'disROI',adata.disROI,'disROI_setting',adata.disROI_setting,'sponfreqFilter',adata.sponfreqFilter,...
+	'debug_mode',debug_mode);
+
+% Create structure data for further analysis (Peri-stim windows are aligned)
+adata.event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
+[alignedData_stimWin,alignedData_event_list] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
+	'traceData_type', adata.traceData_type, 'event_data_group', adata.event_data_group,'eventTimeType',adata.eventTimeType,...
+	'event_filter', adata.event_filter, 'event_align_point', adata.event_align_point, 'cat_keywords', adata.cat_keywords,...
+	'pre_event_time', adata.pre_event_time, 'post_event_time', adata.post_event_time,...
+	'stim_section',adata.stim_section,'ss_range',adata.ss_range,...
+	'stim_time_error',adata.stim_time_error,'rebound_duration',adata.rebound_duration,...
+	'mod_pcn', adata.mod_pcn,'caDeclineOnly',adata.caDeclineOnly,...
+	'disROI',adata.disROI,'disROI_setting',adata.disROI_setting,'sponfreqFilter',adata.sponfreqFilter,...
+	'debug_mode',debug_mode);
+
 
 %% ==========
 % Figure 1
@@ -54,7 +107,8 @@ set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector outp
 % Example traces and event scatters for figure 2. Use the loaded 'exampleRecFile' at the beginning
 % of this section
 
-% Figure 2: Plot the calcium events as scatter and show the events number in a histogram (2 plots)
+% Example traces for Figure 2: Plot the calcium events as scatter and show the events number in a
+% histogram (2 plots)
 nameEventScatter = [shortRecName,' eventScatter colorful'];
 
 % Get the amplitude of event peaks
@@ -84,46 +138,6 @@ end
 % The properties of spontaneous events in IO subnuclei (DAO vs PO)
 % Load the stimEffectFiltered 'recdata_organized' and 'alignedData_allTrials' variables
 
-%% ==========
-% 2.1 (optional): Update the 'alignedData_allTrials' using the 'recdata_organized'
-
-% Settings
-adata.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
-adata.eventTimeType = 'peak_time'; % rise_time/peak_time. Pick one for event time
-adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
-adata.event_data_group = 'peak_lowpass';
-adata.event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
-adata.event_align_point = 'rise'; % options: 'rise', 'peak'
-adata.rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes. Exclude these events from 'spon'
-adata.cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
-%					find a way to combine categories, such as 'nostim' and 'nostimfar'
-adata.pre_event_time = 5; % unit: s. duration before stimulation in the aligned traces
-adata.post_event_time = 10; % unit: s. duration after stimulation in the aligned traces
-adata.stim_section = true; % true: use a specific section of stimulation to calculate the calcium level delta. For example the last 1s
-adata.ss_range = 1; % range of stim_section (compare the cal-level in baseline and here to examine the effect of the stimulation). single number (last n second during stimulation) or a 2-element array (start and end. 0s is stimulation onset)
-adata.stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
-adata.mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
-% filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
-adata.caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
-adata.disROI = true; % true/false. If true, Keep ROIs using the setting below, and delete the rest
-adata.disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-1s'};
-adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
-adata.sponfreqFilter.status = true; % true/false. If true, use the following settings to filter ROIs
-adata.sponfreqFilter.field = 'sponfq'; % 
-adata.sponfreqFilter.thresh = 0.05; % Hz. default 0.06
-adata.sponfreqFilter.direction = 'high';
-debug_mode = false; % true/false
-
-% Create structure data for further analysis
-[alignedData_allTrials,alignedData_event_list] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
-	'traceData_type', adata.traceData_type, 'event_data_group', adata.event_data_group,'eventTimeType',adata.eventTimeType,...
-	'event_filter', adata.event_filter, 'event_align_point', adata.event_align_point, 'cat_keywords', adata.cat_keywords,...
-	'pre_event_time', adata.pre_event_time, 'post_event_time', adata.post_event_time,...
-	'stim_section',adata.stim_section,'ss_range',adata.ss_range,...
-	'stim_time_error',adata.stim_time_error,'rebound_duration',adata.rebound_duration,...
-	'mod_pcn', adata.mod_pcn,'caDeclineOnly',adata.caDeclineOnly,...
-	'disROI',adata.disROI,'disROI_setting',adata.disROI_setting,'sponfreqFilter',adata.sponfreqFilter,...
-	'debug_mode',debug_mode);
 
 
 %% ==========
@@ -469,7 +483,7 @@ end
 %% ==========
 % 3.1 Peri-stimulus event frequency analysis
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 gui_save = true;
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
@@ -519,3 +533,38 @@ debug_mode = false; % true/false
 	'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,...
 	'save_fig',save_fig,'saveDir',FolderPathVA.fig,'gui_save',gui_save,'debug_mode',debug_mode);
 
+
+%% ====================
+% Fig 3
+% 9.1.4 Plot traces and stim-aligned traces
+% Note: set adata.event_type to 'stimWin' when creating alignedData_allTrials
+close all
+save_fig = false; % true/false
+pause_after_trial = false;
+
+TraceType = 'aligned'; % 'full'/'aligned'. Plot the full trace or stimulation aligned trace
+markers_name = {}; % of which will be labled in trace plot: 'peak_loc', 'rise_loc'
+if save_fig
+	save_dir = uigetdir(FolderPathVA.fig,'Choose a folder to save plots');
+	if save_dir~=0
+		FolderPathVA.fig = save_dir;
+	end 
+else
+	save_dir = '';
+end
+
+trial_num = numel(alignedData_stimWin);
+for tn = 1:trial_num
+    close all
+	alignedData = alignedData_stimWin(tn);
+	% trialNameParts = split(alignedData.trialName, '_');
+	% subfolderName = trialNameParts{1};
+	% subfolderPath = fullfile(save_dir,subfolderName);
+	% mkdir(subfolderPath);
+
+	PlotTraceFromAlignedDataVar(alignedData,'TraceType',TraceType,'markers_name',markers_name,...
+		'save_fig',save_fig,'save_dir',save_dir);
+	if pause_after_trial
+		pause
+	end
+end

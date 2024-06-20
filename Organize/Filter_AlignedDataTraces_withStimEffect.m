@@ -35,6 +35,7 @@ function [alignedDataTraces_filtered,varargout] = Filter_AlignedDataTraces_withS
 
     roi_num = numel(alignedDataTraces);
     tf_idx = logical(ones(1,roi_num)); % default: keep all ROIs
+    tfStruct = empty_content_struct({'subNuclei', 'tf'}, roi_num);
 
     stimEffect_all = {alignedDataTraces.(SE_name)};
     for rn = 1:roi_num
@@ -63,11 +64,16 @@ function [alignedDataTraces_filtered,varargout] = Filter_AlignedDataTraces_withS
         if ~ex_tf || ~in_tf || ~rb_tf || ~exApOg_tf % if the ROI receives "discard" tag for at least once
             tf_idx(rn) = false; % mark the ROI with 'discard'
         end
+
+        % Fill the info into the tfStruct
+        tfStruct(rn).subNuclei = alignedDataTraces(rn).subNuclei;
+        tfStruct(rn).tf = tf_idx(rn);
     end
 
     alignedDataTraces_filtered = alignedDataTraces(tf_idx); % using the logical array tf_idx to filter ROIs
     varargout{1} = find(tf_idx); % the locations of ROIs in the original 
-    varargout{2} = sprintf('%d/%d ROIs are kept (filter: ex-%d, in-%d, rb-%d)',...
+    varargout{2} = tfStruct; % a structure including the subnuclei and tf (1: kept. 2: discarded)
+    varargout{3} = sprintf('%d/%d ROIs are kept (filter: ex-%d, in-%d, rb-%d)',...
         length(varargout{1}),roi_num,ex,in,rb);
 end
 

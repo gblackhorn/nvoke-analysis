@@ -42,6 +42,10 @@ ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventPro
 
 
 %% ==========
+[dataStructure_withSynchInfo, cohensDPO, cohensDDAO] = clusterSpikeAmplitudeAnalysis(dataStructure,...
+	'synchTimeWindow', 1, 'minROIsCluster', 2);
+
+%% ==========
 epCellNum = numel(eventProp_all_cell);
 fieldsInFirstRec = fieldnames(eventProp_all_cell{1});
 for i = 2:epCellNum
@@ -59,25 +63,106 @@ end
 
 %% ==========
 % Define two cell arrays
-cellArray2Index =7 ;
+% Define the index for the second cell array
+cellArray2Index = 7;
+
+% Get the field names of the structures in the cell arrays
 fieldsInCellArray2 = fieldnames(eventProp_all_cell{cellArray2Index});
 
-% Compare the cell arrays using strcmp
-comparisonResult = strcmpi(fieldsInFirstRec, fieldsInCellArray2);
+% Example field names for the first record (replace with actual data)
+fieldsInFirstRec = fieldnames(eventProp_all_cell{1}); % Adjust this index as needed
 
-% Find the indices of differing elements
-differingIndices = find(~comparisonResult);
+% Combine and find unique field names from both cell arrays
+allFields = unique([fieldsInFirstRec; fieldsInCellArray2]);
 
-% Display the differing elements
+% Initialize logical arrays to track presence of fields
+presenceInFirstRec = ismember(allFields, fieldsInFirstRec);
+presenceInCellArray2 = ismember(allFields, fieldsInCellArray2);
+
+% Find indices where the fields differ
+differingIndices = find(presenceInFirstRec ~= presenceInCellArray2);
+
+% Display the differing fields
 if isempty(differingIndices)
     disp('The cell arrays contain exactly the same contents.');
 else
     disp('The cell arrays do not contain the same contents.');
-    disp('Differences found at the following indices:');
+    disp('Differences found in the following fields:');
     for i = 1:length(differingIndices)
         index = differingIndices(i);
-        fprintf('Index %d:\n', index);
-        fprintf('  Rec 1: %s\n', fieldsInFirstRec{index});
-        fprintf('  Rec %d: %s\n', cellArray2Index, fieldsInCellArray2{index});
+        fprintf('Field: %s\n', allFields{index});
+        if presenceInFirstRec(index)
+            fprintf('  Present in Rec 1\n');
+        else
+            fprintf('  Missing in Rec 1\n');
+        end
+        if presenceInCellArray2(index)
+            fprintf('  Present in Rec %d\n', cellArray2Index);
+        else
+            fprintf('  Missing in Rec %d\n', cellArray2Index);
+        end
     end
 end
+
+
+
+%% ==========
+
+stimList = {tfIdxWithSubNucleiInfo.stim};
+OGidx = strcmpi('og-5s', stimList);
+filterlistOG = tfIdxWithSubNucleiInfo(OGidx);
+
+subNucleiList = {filterlistOG.subNuclei};
+POidx = strcmpi('PO', subNucleiList);
+DAOidx = strcmpi('DAO', subNucleiList);
+
+filterListPO = filterlistOG(POidx);
+filterListDAO = filterlistOG(DAOidx);
+
+roiNumAllPO = numel(filterListPO);
+roiNumAllDAO = numel(filterListDAO);
+
+roiNumKeptPO = sum([filterListPO.tf]);
+roiNumKeptDAO = sum([filterListDAO.tf]);
+
+roiNumDisPO = roiNumAllPO-roiNumKeptPO;
+roiNumDisDAO = roiNumAllDAO-roiNumKeptDAO;
+
+reportOG = sprintf('Number of neurons in og-5s recordings: %d', sum(OGidx));
+reportPO = sprintf('PO neurons: %d in total, %d kept, %d discarded', roiNumAllPO, roiNumKeptPO, roiNumDisPO);
+reportDAO = sprintf('DAO neurons: %d in total, %d kept, %d discarded', roiNumAllDAO, roiNumKeptDAO, roiNumDisDAO);
+
+disp(reportOG)
+disp(reportPO)
+disp(reportDAO)
+
+%% ==========
+recNum = numel(alignedData);
+roiNumAll = 0;
+for n = 1:recNum
+	roiNum = numel(alignedData(n).traces);
+	if ~isempty(roiNum)
+		roiNumAll = roiNumAll+roiNum;
+	end
+end
+
+disp(sprintf('Total number of ROI is %d', roiNumAll))
+
+
+for n = 1:numel(EventFreqInBins_cell)
+	if ~isempty(EventFreqInBins_cell{1, n})
+		recName = EventFreqInBins_cell{1, n}(1).TrialNames(1:15);
+		disp(sprintf('%d. %s', n, recName))
+	else
+		disp(sprintf('%d. empty recording', n))
+	end
+end
+
+
+roiNum = 0;
+for n = 1:numel(alignedData_filtered)
+	if ~isempty(alignedData_filtered(n).traces)
+		roiNum = roiNum + numel(alignedData_filtered(n).traces);
+	end
+end
+disp(roiNum)

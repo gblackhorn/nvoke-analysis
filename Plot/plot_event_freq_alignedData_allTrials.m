@@ -112,8 +112,14 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 
 	% Filter the ROIs in all trials according to the stimulation effect
 	if filter_roi_tf
-		[alignedData] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData,...
+		[alignedData,tfIdxWithSubNucleiInfo,roiNumAll,roiNumKep,roiNumDis] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData,...
 			'stim_names',stim_names,'filters',filters);
+
+		% Report the number of kept and discarded neurons
+		for sn = 1:stim_names
+			reportFilterResults(tfIdxWithSubNucleiInfo,stim_names{sn})
+		end
+
 		title_prefix = 'filtered';
 	else
 		title_prefix = '';
@@ -139,8 +145,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 	tloStat = tiledlayout(fstat,fstat_rowNum,fstat_colNum);
 	for stn = 1:stim_type_num
 		PeriBaseRange = [baseBinEdgestart baseBinEdgeEnd];
-		[EventFreqInBins,binEdges,stimShadeData,stimShadeName,stimEventCatName,binNames] = get_EventFreqInBins_trials(alignedData,stim_names{stn},'PropName',PropName,...
-			'binWidth',binWidth,'stimIDX',stimIDX,...
+		[EventFreqInBins,binEdges,stimShadeData,stimShadeName,stimEventCatName,binNames] = get_EventFreqInBins_trials(alignedData,stim_names{stn},...
+			'PropName',PropName,'binWidth',binWidth,'stimIDX',stimIDX,...
 			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 			'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'PeriBaseRange',PeriBaseRange,...
 			'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,'splitLongStim',splitLongStim,...
@@ -232,23 +238,6 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		% barInfo.stat = GLMManalysis(efStruct, 'val', 'xdata', mmlHierarchicalVars,...
 		% 	mmType, mmDistribution, mmLink);
 
-		% % plot shade to indicate the stimulation period
-		% ax;
-		% hold on
-		% for sn = 1:numel(stimShadeData) 
-		% 	if strcmpi(stimShadeName{sn},'og')  
-		% 		shadeColor = shadeColors{1};
-		% 	elseif strcmpi(stimShadeName{sn},'ap')
-		% 		shadeColor = shadeColors{2};
-		% 	else
-		% 		shadeColor = shadeColors{3};
-		% 	end
-		% 	stimShadeDataAll(stn).color{sn} = shadeColor;
-		% 	draw_WindowShade(ax,stimShadeData{sn},'shadeColor',shadeColor);
-		% end
-		% hold off
-
-		% xlim([binEdges(1) binEdges(end)])
 
 		% mark the bar with the customized binName
 		% xticklabels(binNames)
@@ -301,6 +290,35 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 	
 	varargout{3} = save_dir;
 end
+
+function reportFilterResults(tfIdxWithSubNucleiInfo,stimName)
+	stimList = {tfIdxWithSubNucleiInfo.stim};
+	OGidx = strcmpi(stimName, stimList);
+	filterlistOG = tfIdxWithSubNucleiInfo(OGidx);
+
+	subNucleiList = {filterlistOG.subNuclei};
+	POidx = strcmpi('PO', subNucleiList);
+	DAOidx = strcmpi('DAO', subNucleiList);
+
+	filterListPO = filterlistOG(POidx);
+	filterListDAO = filterlistOG(DAOidx);
+
+	roiNumAllPO = numel(filterListPO);
+	roiNumAllDAO = numel(filterListDAO);
+
+	roiNumKeptPO = sum([filterListPO.tf]);
+	roiNumKeptDAO = sum([filterListDAO.tf]);
+
+	roiNumDisPO = roiNumAllPO-roiNumKeptPO;
+	roiNumDisDAO = roiNumAllDAO-roiNumKeptDAO;
+
+	reportOG = sprintf('Number of neurons in og-5s recordings: %d', sum(OGidx));
+	reportPO = sprintf('PO neurons: %d in total, %d kept, %d discarded', roiNumAllPO, roiNumKeptPO, roiNumDisPO);
+	reportDAO = sprintf('DAO neurons: %d in total, %d kept, %d discarded', roiNumAllDAO, roiNumKeptDAO, roiNumDisDAO);
+
+	disp(reportOG)
+	disp(reportPO)
+	disp(reportDAO)
 
 function [recNum,recDateNum,roiNum,stimRepeatNum] = calcDataNum(EventFreqInBins)
 	% calculte the n numbers using the structure var 'EventFreqInBins'

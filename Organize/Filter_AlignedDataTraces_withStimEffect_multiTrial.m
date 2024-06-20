@@ -41,6 +41,8 @@ function [alignedData_filtered,varargout] = Filter_AlignedDataTraces_withStimEff
 	roiNum_all = 0;
 	roiNum_kept = 0;
 	roiNum_dis = 0;
+	disTrialIdx = [];
+	roi_idxWithSubNinfo_cell = cell(1, trial_num);
 
 	% Filter the trials one by one
 	for tn = 1:trial_num
@@ -53,24 +55,36 @@ function [alignedData_filtered,varargout] = Filter_AlignedDataTraces_withStimEff
 		if ~isempty(filter_idx) 
 			filter_chosen = filters{filter_idx}; % Get the filter logical array
 			screen_data_tf = true; % run filter
-		else
+        else
+        	disTrialIdx = [disTrialIdx tn];
+            roiNum_dis = roiNum_dis+numel(trialData.traces);
 			screen_data_tf = false; % do not run filter
 		end
 
 
 		% Filter the ROIs in the trials using a specific filter 
 		if screen_data_tf
-			[trialData.traces,roi_idx] = Filter_AlignedDataTraces_withStimEffect(trialData.traces,...
+			trialDataFiltered = trialData;
+			[trialDataFiltered.traces,roi_idx,roi_idxWithSubNinfo_cell{tn}] = Filter_AlignedDataTraces_withStimEffect(trialData.traces,...
 				'ex',filter_chosen(1),'in',filter_chosen(2),'rb',filter_chosen(3),'exApOg',filter_chosen(4));
 
 			% Assign the filtered ROIs to alignedData_filtered.traces
-			alignedData_filtered(tn) = trialData;
+			alignedData_filtered(tn) = trialDataFiltered;
 			roiNum_kept = roiNum_kept+numel(roi_idx);
+			roiNum_dis = roiNum_dis+numel(trialData.traces)-numel(roi_idx);
+
+            % Ensure the contents in roi_idxWithSubNinfo_cell{tn} is
+            % horizontal. Add stimulation name to a new field
+            roi_idxWithSubNinfo_cell{tn} = ensureHorizontal(roi_idxWithSubNinfo_cell{tn});
+            [roi_idxWithSubNinfo_cell{tn}.stim] = deal(stimName);
 		end
 	end
-	roiNum_dis = roiNum_all-roiNum_kept;
 
-	varargout{1} = roiNum_all;
-	varargout{2} = roiNum_kept;
-	varargout{3} = roiNum_dis;
+	alignedData_filtered(disTrialIdx) = [];
+	roi_idxWithSubNinfo = [roi_idxWithSubNinfo_cell{:}];
+
+	varargout{1} = roi_idxWithSubNinfo;
+	varargout{2} = roiNum_all;
+	varargout{3} = roiNum_kept;
+	varargout{4} = roiNum_dis;
 end

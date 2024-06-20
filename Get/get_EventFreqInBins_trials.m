@@ -1,4 +1,4 @@
-function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,StimName,varargin)
+function [EventFreqInBinsAll,varargout] = get_EventFreqInBins_trials(alignedData,StimName,varargin)
     % Collect events from trials, stored in alignedData, applied with the same kind of stimulation
     % (repeat number can be different) and calculate the event frequency in time bins. Return a
     % struct var containing the frequencies trial names and roi names. 
@@ -239,7 +239,7 @@ function [EventFreqInBins,varargout] = get_EventFreqInBins_trials(alignedData,St
             binNames = {};
         end
     end
-    EventFreqInBins = [EventFreqInBins_cell{:}];
+    EventFreqInBinsAll = [EventFreqInBins_cell{:}];
     varargout{1} = binEdges;
     varargout{2} = stimShadeData;
     varargout{3} = stimShadeName;
