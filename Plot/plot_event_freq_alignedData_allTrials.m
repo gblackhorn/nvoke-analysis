@@ -116,7 +116,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 			'stim_names',stim_names,'filters',filters);
 
 		% Report the number of kept and discarded neurons
-		for sn = 1:stim_names
+		for sn = 1:numel(stim_names)
 			reportFilterResults(tfIdxWithSubNucleiInfo,stim_names{sn})
 		end
 
@@ -312,13 +312,14 @@ function reportFilterResults(tfIdxWithSubNucleiInfo,stimName)
 	roiNumDisPO = roiNumAllPO-roiNumKeptPO;
 	roiNumDisDAO = roiNumAllDAO-roiNumKeptDAO;
 
-	reportOG = sprintf('Number of neurons in og-5s recordings: %d', sum(OGidx));
+	reportOG = sprintf('Number of neurons in %s recordings: %d', stimName, sum(OGidx));
 	reportPO = sprintf('PO neurons: %d in total, %d kept, %d discarded', roiNumAllPO, roiNumKeptPO, roiNumDisPO);
 	reportDAO = sprintf('DAO neurons: %d in total, %d kept, %d discarded', roiNumAllDAO, roiNumKeptDAO, roiNumDisDAO);
 
 	disp(reportOG)
 	disp(reportPO)
 	disp(reportDAO)
+end
 
 function [recNum,recDateNum,roiNum,stimRepeatNum] = calcDataNum(EventFreqInBins)
 	% calculte the n numbers using the structure var 'EventFreqInBins'
