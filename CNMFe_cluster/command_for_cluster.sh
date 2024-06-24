@@ -45,22 +45,20 @@ rsync -av --include '*/' --include '*.sh' --exclude '*' $flashHomeDir/ deigo:$bu
 # 3. Copy data files from bucket to flash using rsync
 
 # Set folder path on Bucket to Copy data from bucket to flash
-bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2024-01_30Hz/'
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2024-06_reprocess/'
 bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2024-01_20Hz/'
 # bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/Moscope/INSCOPIX_tiff/M8/'
-# bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/Moscope/INSCOPIX_tiff/M9_BMC/'
-bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/20240516_re-process_VIIO-fig1/'
 
 # Create a folder, if it doesn't exist, to store data
-mkdir /flash/UusisaariU/GD/data_re-process_VIIO-fig1 # make a folder with a fixed name
+mkdir /flash/UusisaariU/GD/data_2024-06_reprocess # make a folder with a fixed name
 mktemp -d /flash/UusisaariU/GD/20230609_reMC_data.XXXXXX # make a folder whos name is a fixed string followed by a random string (.XXXXXX) 
 mkdir /flash/UusisaariU/GD/data_2021-04-05/2021-04-05-13-45-02 # make a folder with a fixed name
 
 
 # Assign the new dir to 'flashdatadir'
+flashdatadir='/flash/UusisaariU/GD/data_2024-06_reprocess/'
 flashdatadir='/flash/UusisaariU/GD/data_2024-01_30Hz/'
 flashdatadir='/flash/UusisaariU/GD/data_2024-01_20Hz/'
-flashdatadir='/flash/UusisaariU/GD/data_re-process_VIIO-fig1/'
 
 # Copy the content in bucketdatadir to flashdatadir using rsync
 rsync -av --no-group --no-perms deigo:$bucketdatadir/ $flashdatadir/ 

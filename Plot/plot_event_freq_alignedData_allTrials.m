@@ -116,8 +116,9 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 			'stim_names',stim_names,'filters',filters);
 
 		% Report the number of kept and discarded neurons
+		filterReport = cell(numel(stim_names),1);
 		for sn = 1:numel(stim_names)
-			reportFilterResults(tfIdxWithSubNucleiInfo,stim_names{sn})
+			filterReport{sn} = reportFilterResults(tfIdxWithSubNucleiInfo,stim_names{sn});
 		end
 
 		title_prefix = 'filtered';
@@ -286,12 +287,21 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 			'guiInfo',msg,'fname',[titleStr,'_MultiComp']);
 		save(fullfile(save_dir, [titleStr, '_stat']),...
 		    'barStat');
+
+		if filter_roi_tf
+			filterInfoFile = fullfile(save_dir, [titleStr, '_filterInfo']);
+			filterInfoFileID = fopen(filterInfoFile, 'w');
+			for i = 1:numel(filter_roi_tf)
+				fprintf(filterInfoFileID, '%s\n', filterReport{i});
+			end
+			fclose(filterInfoFileID);
+		end
 	end 
 	
 	varargout{3} = save_dir;
 end
 
-function reportFilterResults(tfIdxWithSubNucleiInfo,stimName)
+function filterReport = reportFilterResults(tfIdxWithSubNucleiInfo,stimName)
 	stimList = {tfIdxWithSubNucleiInfo.stim};
 	OGidx = strcmpi(stimName, stimList);
 	filterlistOG = tfIdxWithSubNucleiInfo(OGidx);
@@ -314,7 +324,9 @@ function reportFilterResults(tfIdxWithSubNucleiInfo,stimName)
 
 	reportOG = sprintf('Number of neurons in %s recordings: %d', stimName, sum(OGidx));
 	reportPO = sprintf('PO neurons: %d in total, %d kept, %d discarded', roiNumAllPO, roiNumKeptPO, roiNumDisPO);
-	reportDAO = sprintf('DAO neurons: %d in total, %d kept, %d discarded', roiNumAllDAO, roiNumKeptDAO, roiNumDisDAO);
+	reportDAO = sprintf('DAO neurons: %d in total, %d kept, %d discarded\n', roiNumAllDAO, roiNumKeptDAO, roiNumDisDAO);
+
+	filterReport = sprintf('%s\n%s\n%s\n',reportOG,reportPO,reportDAO);
 
 	disp(reportOG)
 	disp(reportPO)

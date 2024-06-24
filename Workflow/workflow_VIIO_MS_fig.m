@@ -46,6 +46,14 @@ debug_mode = false; % true/false
 	'disROI',adata.disROI,'disROI_setting',adata.disROI_setting,'sponfreqFilter',adata.sponfreqFilter,...
 	'debug_mode',debug_mode);
 
+% c. Create grouped_event for plotting event properties (Separate sync and async neurons)
+% Add sync info to the alignedData
+synchTimeWindow = 1;
+minROIsCluster = 2;
+[alignedData_allTrials, cohensDPO, cohensDDAO] = clusterSpikeAmplitudeAnalysis(alignedData_allTrials,...
+	'synchTimeWindow', 1, 'minROIsCluster', 2);
+
+
 % Create structure data for further analysis (Peri-stim windows are aligned)
 adata.event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
 [alignedData_stimWin,alignedData_event_list] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
@@ -234,12 +242,12 @@ ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventPro
 	'tags_keep',tags_keep);
 
 
-% c. Create grouped_event for plotting event properties (Separate sync and async neurons)
-% Add sync info to the alignedData
-synchTimeWindow = 1;
-minROIsCluster = 2;
-[alignedData_withSynchInfo, cohensDPO, cohensDDAO] = clusterSpikeAmplitudeAnalysis(alignedData_allTrials,...
-	'synchTimeWindow', 1, 'minROIsCluster', 2);
+% % c. Create grouped_event for plotting event properties (Separate sync and async neurons)
+% % Add sync info to the alignedData
+% synchTimeWindow = 1;
+% minROIsCluster = 2;
+% [alignedData_withSynchInfo, cohensDPO, cohensDDAO] = clusterSpikeAmplitudeAnalysis(alignedData_allTrials,...
+% 	'synchTimeWindow', 1, 'minROIsCluster', 2);
 
 % Discard those without sync tag in the eventProp (Due to single neuron)
 mustHaveField = 'synchronicityIndex';
@@ -261,7 +269,7 @@ tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','r
 % 2.5 Plot event properties
 
 % Settings
-save_fig = false; % true/false
+save_fig = true; % true/false
 plot_combined_data = false;
 parNames = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_mag_delta'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
@@ -432,58 +440,58 @@ for st = 1:numel(syncTagsStr)
 	end
 end
 
-%% ==========
-% Plot event properties
+% %% ==========
+% % Plot event properties
 
-% Settings
-save_fig = true; % true/false
-plot_combined_data = false;
-parNames = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_mag_delta'}; 
-    % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
-stat = true; % Set it to true to run anova when plotting bars
+% % Settings
+% save_fig = false; % true/false
+% plot_combined_data = false;
+% parNames = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_mag_delta'}; 
+%     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
+% stat = true; % Set it to true to run anova when plotting bars
 
-close all
+% close all
 
-% Setup parameters for linear-mixed-model (LMM) or generalized-mixed-model (GLMM) analysis
-mmModel = 'GLMM'; % LMM/GLMM
-mmGroup = 'type'; % LMM/GLMM
-mmHierarchicalVars = {'trialName', 'roiName'};
-mmDistribution = 'gamma'; % For continuous, positively skewed data
-mmLink = 'log'; % For continuous, positively skewed data
+% % Setup parameters for linear-mixed-model (LMM) or generalized-mixed-model (GLMM) analysis
+% mmModel = 'GLMM'; % LMM/GLMM
+% mmGroup = 'type'; % LMM/GLMM
+% mmHierarchicalVars = {'trialName', 'roiName'};
+% mmDistribution = 'gamma'; % For continuous, positively skewed data
+% mmLink = 'log'; % For continuous, positively skewed data
 
-% Generate and save figures
-[save_dir, plot_info] = plot_event_info(eventStructForPlotFiltered,'entryType',ggSetting.entry,...
-	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
-	'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
-	'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-	'fname_preffix','event','save_fig', save_fig, 'save_dir', FolderPathVA.fig);
+% % Generate and save figures
+% [save_dir, plot_info] = plot_event_info(eventStructForPlotFiltered,'entryType',ggSetting.entry,...
+% 	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
+% 	'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
+% 	'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+% 	'fname_preffix','event','save_fig', save_fig, 'save_dir', FolderPathVA.fig);
 
-% Create a UI table displaying the n numberss
-fNum = nNumberTab(eventStructForPlotFiltered,'event');
+% % Create a UI table displaying the n numberss
+% fNum = nNumberTab(eventStructForPlotFiltered,'event');
 
-% Save data
-if save_fig
-	% Save the fNum
-	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo');
-	% savePlot(fMM,'guiSave', 'off', 'save_dir', save_dir, 'fname', fMM_name);
+% % Save data
+% if save_fig
+% 	% Save the fNum
+% 	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo');
+% 	% savePlot(fMM,'guiSave', 'off', 'save_dir', save_dir, 'fname', fMM_name);
 
-	% Save the statistics info
-	eventPropStatInfo.eventStructForPlotFiltered = eventStructForPlotFiltered;
-	eventPropStatInfo.plot_info = plot_info;
-	% dt = datestr(now, 'yyyymmdd');
-	save(fullfile(save_dir, 'event propStatInfo'), 'eventPropStatInfo');
-end
+% 	% Save the statistics info
+% 	eventPropStatInfo.eventStructForPlotFiltered = eventStructForPlotFiltered;
+% 	eventPropStatInfo.plot_info = plot_info;
+% 	% dt = datestr(now, 'yyyymmdd');
+% 	save(fullfile(save_dir, 'event propStatInfo'), 'eventPropStatInfo');
+% end
 
-% Update the folder path 
-if save_dir~=0
-	FolderPathVA.fig = save_dir;
-end
+% % Update the folder path 
+% if save_dir~=0
+% 	FolderPathVA.fig = save_dir;
+% end
 
 
 %% ==========
 % 3.1 Peri-stimulus event frequency analysis
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 gui_save = true;
 
 filter_roi_tf = true; % true/false. If true, screen ROIs

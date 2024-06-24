@@ -26,7 +26,7 @@ function newRecdata = addRoiLocTag2recdata(recdata,varargin)
     % Ask user to confirm the overwrite mode
     if overwrite
         fprintf('Overwrite mode is on. Recording containing the location tag will be overwritten\n')
-        userConfirm = input('Confirm [y/n. Default-N]: ',"s")
+        userConfirm = input('Confirm [y/n. Default-N]: ',"s");
         if isempty(userConfirm)
             userConfirm = 'n';
         end

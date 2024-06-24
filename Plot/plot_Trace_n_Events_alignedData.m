@@ -230,11 +230,11 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 			norm_str = '';
 		end
 		if sortROI
-			sortStr = 'Sorted-with-eventNum';
+			sortStr = 'eventNumSorted';
 		else
 			sortStr = '';
 		end
-		fig_title{1} = sprintf('%s %s fluorescence signal %s',title_str_stem,norm_str,sortStr); % Create the title string
+		fig_title{1} = sprintf('%s %s fluorTrace %s',title_str_stem,norm_str,sortStr); % Create the title string
 		f(1) = fig_canvas(2,'unit_width',plot_unit_width,'unit_height',plot_unit_height,...
 			'column_lim',1,'fig_name',fig_title{1}); % create a figure
 		tlo = tiledlayout(f(1), 3, 1); % setup tiles
@@ -255,8 +255,8 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 
 
 		% Figure 2: Plot the calcium events as scatter and show the events number in a histogram (2 plots)
-		fig_title{2} = sprintf('%s event [%s] raster and histbin %s',title_str_stem,event_type,sortStr);
-		fig_title{2} = strrep(fig_title{2},'_',' ');
+		fig_title{2} = sprintf('%s event [%s] rasterAndHist %s',title_str_stem,event_type,sortStr);
+		fig_title{2} = strrep(fig_title{2},'_','');
 		f(2) = plot_raster_with_hist(eventTime,trace_xlim,'shadeData',patchCoor,...
 			'rowNames',rowNames,'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...
 			'titleStr',fig_title{2});
@@ -267,7 +267,7 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 		% Figure 3: Plot a color plot. Difference between this one and the one in figure 1 is every
 		% ROI trace is cut to several sections using stimulation repeat. One row contains the start
 		% of stim to the start of the next stim. Each ROI contains the stim repeat number of rows
-		fig_title{3} = sprintf('%s %s single-stim fluorescence signal %s stimEventsDelaySort-%s',...
+		fig_title{3} = sprintf('%s %s periStimColorMap %s stimEventsDelaySort-%s',...
 			title_str_stem,norm_str,sortStr,eventsTimeSort); % Create the title string
 		
 		f(3) = plot_TemporalData_Color_seperateStimRepeats(gca,FluroData,timeData,stimInfo,...
@@ -277,7 +277,7 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 		sgtitle(fig_title{3})
 		set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 		
-		fig_title{4} = sprintf('%s %s single-stim fluorescence signal %s firstSponAfterStimDelaySort-%s',...
+		fig_title{4} = sprintf('%s %s periStimColorMap %s firstSponAfterStimDelaySort-%s',...
 			title_str_stem,norm_str,sortStr,eventsTimeSort); % Create the title string
 		f(4) = plot_TemporalData_Color_seperateStimRepeats(gca,FluroData,timeData,stimInfo,...
 			'preTime',preTime,'postTime',postTime,'stimRefType',stimRefType,...

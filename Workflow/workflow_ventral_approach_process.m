@@ -242,7 +242,7 @@ recdata_backup = recdata; %recdata
 
 %% ====================
 % 5.4 Save recdata before applying further processes
-uisave('recdata', fullfile(FolderPathVA.ventralApproach, 'recdata'));
+uisave('recdata', fullfile(FolderPathVA.ventralApproach, 'recdata')); 
 
 
 %% ====================
@@ -355,9 +355,9 @@ overwrite = false; %options: true/false
 
 % 6.5 Copy the FOV_loc struct-field from a sourceData, if exists, to a newly formed recdata_organized
 % recdata_target = recdata_organized; % The data receiving FOV info
-recdata_source = recdata_organized; % The data giving FOV info
+recdata_source = recdata_organized_all; % The data giving FOV info
 
-[recdata_target_with_fov,trial_list_wo_fov] = copy_fovInfo(recdata_source,recdata_target);
+[recdata_target_with_fov,trial_list_wo_fov] = copy_fovInfo(recdata_source,recdata_organized);
 recdata_organized = recdata_target_with_fov;
 
 clear recdata_target recdata_source recdata_target_with_fov
@@ -365,12 +365,12 @@ clear recdata_target recdata_source recdata_target_with_fov
 
 %% ====================
 % 6.6 Add the location tag (subnuclei information) to ROIs
-overwrite = false; %options: true/false
+overwrite = true; %options: true/false
 recdata_organized = addRoiLocTag2recdata(recdata_organized,'overwrite',overwrite);
 
 %% ====================
 % 6.6.1 Copy location tag (subnuclei information) from another recdata_organized
-sourceData = recdata_source;
+sourceData = recdata_organized_old;
 targetData = recdata_organized;
 recdata_organized = copylocTag(sourceData, targetData);
 
