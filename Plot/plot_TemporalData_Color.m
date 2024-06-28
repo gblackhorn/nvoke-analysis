@@ -12,6 +12,9 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
 
     % Defaults
     colorLUT = 'turbo'; % default look up table (LUT)/colormap. Other sets are: 'parula','hot','jet', etc.
+    magentaMap = [linspace(0, 1, 256)' zeros(256, 1) linspace(0, 1, 256)'];
+    cyanMap = [zeros(256, 1) linspace(0, 1, 256)' linspace(0, 1, 256)'];
+
     show_colorbar = true; % true/false. Show color next to the plot if true.
     xtickInt = 10; % interval between x ticks
     breakerLine = NaN; % Input a row index. below this row, a horizontal line will be draw to seperate the heatmap
@@ -65,6 +68,15 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
         set(gca,'xticklabel',[])
     end
 
+    switch colorLUT
+        case 'magentaMap'
+            colormap(magentaMap)
+        case 'cyanMap'
+            colormap(cyanMap)
+        otherwise
+            colormap(colorLUT)
+    end
+    clim([0 1])
     hold on
 
 

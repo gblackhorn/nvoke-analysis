@@ -22,7 +22,7 @@ adata.pre_event_time = 5; % unit: s. duration before stimulation in the aligned 
 adata.post_event_time = 10; % unit: s. duration after stimulation in the aligned traces
 adata.stim_section = true; % true: use a specific section of stimulation to calculate the calcium level delta. For example the last 1s
 adata.ss_range = 1; % range of stim_section (compare the cal-level in baseline and here to examine the effect of the stimulation). single number (last n second during stimulation) or a 2-element array (start and end. 0s is stimulation onset)
-adata.stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
+adata.stim_time_error = 0.05; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 adata.mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
 adata.caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
@@ -46,12 +46,14 @@ debug_mode = false; % true/false
 	'disROI',adata.disROI,'disROI_setting',adata.disROI_setting,'sponfreqFilter',adata.sponfreqFilter,...
 	'debug_mode',debug_mode);
 
-% c. Create grouped_event for plotting event properties (Separate sync and async neurons)
 % Add sync info to the alignedData
 synchTimeWindow = 1;
 minROIsCluster = 2;
 [alignedData_allTrials, cohensDPO, cohensDDAO] = clusterSpikeAmplitudeAnalysis(alignedData_allTrials,...
 	'synchTimeWindow', 1, 'minROIsCluster', 2);
+
+% Show the subnuclei information of the recordings
+dispRecSubnucleiLoc(alignedData_allTrials)
 
 
 % Create structure data for further analysis (Peri-stim windows are aligned)
@@ -541,13 +543,42 @@ debug_mode = false; % true/false
 	'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,...
 	'save_fig',save_fig,'saveDir',FolderPathVA.fig,'gui_save',gui_save,'debug_mode',debug_mode);
 
+% Violin plot of selected bins
+subNuclei = {'PO','DAO'};
+for sn = 1:numel(subNuclei)
+	subN = subNuclei{sn};
+	fName = sprintf('violinPlot peri-stim eventFreq %s', subN);
+	[f,f_rowNum,f_colNum] = fig_canvas(3,'unit_width',0.4,'unit_height',0.3,...
+		'column_lim',1,'fig_name','fName'); % create a figure 
+	tlo = tiledlayout(f,f_rowNum,f_colNum);
+	for sn = 1:numel(barStat.(subN)) % Loop through various stimulation groups
+		stimNames = {barStat.(subN).stim};
+		switch stimNames{sn}
+			case 'og-5s'
+				binNames = {'baseline', 'lateFirstStim1', 'lateFirstStim2', 'postFirstStim'};
+			case 'ap-0.1s'
+				binNames = {'baseline', 'firstStim', 'baseAfter'};
+			case 'og-5s ap-0.1s'
+				binNames = {'baseline', 'secondStim', 'lateFirstStim', 'postFirstStim'};
+		end
+		ax = nexttile(tlo);
+		violinPlotPeriStimBins(barStat.(subN)(sn), binNames, ax);
+	end
+	if save_fig
+		savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',false,'fname',fName);
+	end
+end
+
+
+
+
+
 
 %% ====================
-% Fig 3
-% 9.1.4 Plot traces and stim-aligned traces
+% 3.2 Plot traces and stim-aligned traces
 % Note: set adata.event_type to 'stimWin' when creating alignedData_allTrials
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 pause_after_trial = false;
 
 TraceType = 'aligned'; % 'full'/'aligned'. Plot the full trace or stimulation aligned trace
@@ -576,3 +607,35 @@ for tn = 1:trial_num
 		pause
 	end
 end
+
+%% ==================== 
+% 3.3 Violin plot showing the difference of
+% stim-related-event_to_following_event_time and the spontaneous_event_interval
+close all
+save_fig = true; % true/false
+stimNameAll = {'og-5s','ap-0.1s'}; % 'og-5s' 'ap-0.1s'
+stimEventCatAll = {'rebound','trig'}; % 'rebound', 'trig'
+maxDiff = 5; % the max difference between the stim-related and the following events
+
+% loop through different stim-event pairs
+
+for n = 1:numel(stimNameAll) 
+	stimName = stimNameAll{n};
+	stimEventCat = stimEventCatAll{n};
+	% [intData,eventIntMean,eventInt,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
+	% 'maxDiff',maxDiff);
+
+	[intData,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
+	'maxDiff',maxDiff);
+
+	if save_fig
+		if n == 1 
+			guiSave = 'on';
+		else
+			guiSave = 'off';
+		end
+		FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',guiSave,'fname',fname);
+		save(fullfile(FolderPathVA.fig, [fname,' data']),'intData');
+	end
+end
+

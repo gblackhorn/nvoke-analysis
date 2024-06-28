@@ -41,6 +41,7 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 	plot_unit_width = 0.4; % normalized size of a single plot to the display
 	plot_unit_height = 0.4; % nomralized size of a single plot to the display
 
+	colorLUT = 'turbo';
 	show_colorbar = false; % true/false. Show color scale next to the fluorescence signal color plot.
 	hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins
 	xtickInt_scale = 5; % xtickInt = hist_binsize * xtickInt_scale. Use by figure 2
@@ -81,6 +82,8 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
             plot_unit_width = varargin{ii+1};
 	    elseif strcmpi('plot_unit_height', varargin{ii})
             plot_unit_height = varargin{ii+1};
+	    elseif strcmpi('colorLUT', varargin{ii})
+            colorLUT = varargin{ii+1};
 	    elseif strcmpi('show_colorbar', varargin{ii})
             show_colorbar = varargin{ii+1};
 	    elseif strcmpi('hist_binsize', varargin{ii})
@@ -273,7 +276,8 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 		f(3) = plot_TemporalData_Color_seperateStimRepeats(gca,FluroData,timeData,stimInfo,...
 			'preTime',preTime,'postTime',postTime,'stimRefType',stimRefType,...
 			'eventsTime',eventTime,'eventsTimeSort',eventsTimeSort,'markEvents',plot_marker,...
-			'roiNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{3},'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
+			'roiNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{3},...
+			'colorLUT',colorLUT,'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
 		sgtitle(fig_title{3})
 		set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 		
@@ -283,7 +287,8 @@ function [f,varargout] = plot_Trace_n_Events_alignedData(alignedData_trial,varar
 			'preTime',preTime,'postTime',postTime,'stimRefType',stimRefType,...
 			'eventCat',event_eventCat,'eventsTime',eventTime,'eventsTimeSort',eventsTimeSort,...
 			'stimEventCat',eventCat,'followEventCat',eventCatFollow,'markEvents',plot_marker,...
-			'roiNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{4},'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
+			'roiNames',rowNames,'show_colorbar',show_colorbar,'titleStr',fig_title{4},...
+			'colorLUT',colorLUT,'debug_mode',debug_mode); % ,'shadeData',patchCoor,'stimTypes',stimTypes
 		sgtitle(fig_title{4})
 		set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 

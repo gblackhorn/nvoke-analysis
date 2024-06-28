@@ -71,7 +71,7 @@ adata.pre_event_time = 5; % unit: s. duration before stimulation in the aligned 
 adata.post_event_time = 10; % unit: s. duration after stimulation in the aligned traces
 adata.stim_section = true; % true: use a specific section of stimulation to calculate the calcium level delta. For example the last 1s
 adata.ss_range = 1; % range of stim_section (compare the cal-level in baseline and here to examine the effect of the stimulation). single number (last n second during stimulation) or a 2-element array (start and end. 0s is stimulation onset)
-adata.stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
+adata.stim_time_error = 0.05; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 adata.mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
 adata.caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
@@ -125,6 +125,7 @@ stimEvents(3).stimName = 'og-5s ap-0.1s';
 stimEvents(3).eventCat = 'trig-ap';
 stimEvents(3).eventCatFollow = 'spon'; % The category of first event following the eventCat one
 stimEvents(3).stimRefType = 'start'; % The category of first event following the eventCat one
+colorLUT = 'turbo'; % 'turbo' ,'magentaMap', 'cyanMap'
 followDelayType = 'stim'; % stim/stimEvent. Calculate the delay of the following events using the stimulation start or the stim-evoked event time
 eventsTimeSort = 'all'; % 'off'/'inROI','all'. sort traces according to eventsTime
 hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins
@@ -136,7 +137,7 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_allTri
 	'norm_FluorData',norm_FluorData,'sortROI',sortROI,'event_type',event_type,...
 	'preTime',preTime,'postTime',postTime,'followDelayType',followDelayType,...
 	'activeHeatMap',activeHeatMap,'stimEvents',stimEvents,'eventsTimeSort',eventsTimeSort,...
-	'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,...
+	'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,'colorLUT',colorLUT,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'debug_mode',debug_mode);
 
 
@@ -654,7 +655,10 @@ maxDiff = 5; % the max difference between the stim-related and the following eve
 for n = 1:numel(stimNameAll) 
 	stimName = stimNameAll{n};
 	stimEventCat = stimEventCatAll{n};
-	[intData,eventIntMean,eventInt,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
+	% [intData,eventIntMean,eventInt,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
+	% 'maxDiff',maxDiff);
+
+	[intData,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
 	'maxDiff',maxDiff);
 
 	if save_fig
@@ -664,7 +668,7 @@ for n = 1:numel(stimNameAll)
 			guiSave = 'off';
 		end
 		FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',guiSave,'fname',fname);
-		save(fullfile(FolderPathVA.fig, [fname,' data']),'intData','eventIntMean','eventInt');
+		save(fullfile(FolderPathVA.fig, [fname,' data']),'intData');
 	end
 end
 

@@ -18,7 +18,7 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
         % - hierarchicalVars: A cell array of strings specifying the names of the hierarchical variables
         %   (e.g., {'trialName', 'roiName'}).
         % - varargin: Optional parameters including:
-        %   - 'modelType': 'LMM' (default) or 'GLMM'
+        %   - 'modelType': 'GLMM' (default) or 'LMM'
         %   - 'distribution': Distribution for GLMM 
         %   - 'link': Link function for GLMM 
         %   - 'dispStat': true (default is false) to display statistics
@@ -259,6 +259,15 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
     % Add multi-comparison results and statInfo to the output
     varargout{3} = mmPvalue;
     varargout{4} = multiComparisonResults;
+
+    % Compose a structure to summarize the result
+    statInfo.method = me;
+    statInfo.fixedEffectsStats = fixedEffectsStats;
+    statInfo.chiLRT = chiLRT;
+    statInfo.mmPvalue = mmPvalue;
+    statInfo.multCompare = multiComparisonResults;
+    varargout{5} = statInfo;
+
 end
 
 function [results, mmPvalue] = performPostHocComparisons(me, groupLevels, dispStat, modelType)
