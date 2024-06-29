@@ -244,16 +244,9 @@ ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventPro
 	'tags_keep',tags_keep);
 
 
-% % c. Create grouped_event for plotting event properties (Separate sync and async neurons)
-% % Add sync info to the alignedData
-% synchTimeWindow = 1;
-% minROIsCluster = 2;
-% [alignedData_withSynchInfo, cohensDPO, cohensDDAO] = clusterSpikeAmplitudeAnalysis(alignedData_allTrials,...
-% 	'synchTimeWindow', 1, 'minROIsCluster', 2);
-
 % Discard those without sync tag in the eventProp (Due to single neuron)
 mustHaveField = 'synchronicityIndex';
-[alignedData_withSynchInfo] = validateAlignedDataStructForEventAnalysis(alignedData_withSynchInfo, mustHaveField);
+[alignedData_withSynchInfo] = validateAlignedDataStructForEventAnalysis(alignedData_allTrials, mustHaveField);
 
 % Create grouped_event for plotting event properties
 ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
@@ -570,10 +563,6 @@ for sn = 1:numel(subNuclei)
 end
 
 
-
-
-
-
 %% ====================
 % 3.2 Plot traces and stim-aligned traces
 % Note: set adata.event_type to 'stimWin' when creating alignedData_allTrials
@@ -638,4 +627,14 @@ for n = 1:numel(stimNameAll)
 		save(fullfile(FolderPathVA.fig, [fname,' data']),'intData');
 	end
 end
+
+%% ==================== 
+% 3.4 Plot event properties and percentages for OG-ex neurons
+% Compare DAO and PO
+close all
+save_fig = true; % true/false
+ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
+ggSetting.groupField = {'peak_category','subNuclei'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+summarizeExOgEffect(alignedData_allTrials, 'save_fig', save_fig, 'save_dir', FolderPathVA.fig,...
+	'adata', adata, 'ggSetting', ggSetting);
 

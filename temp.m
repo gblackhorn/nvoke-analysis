@@ -166,3 +166,53 @@ for n = 1:numel(alignedData_filtered)
 	end
 end
 disp(roiNum)
+
+
+%% ==========
+% Get the recording '20230219-152710'
+alignedData_OgInExampleDAO = alignedData_allTrials(28);
+% Generate a random permutation of indices from 1 to 23 (9 out of the neuron numbers)
+random_indices = randperm(length(alignedData_OgInExampleDAO.traces), 9);
+
+% Select the 9 random entries from the struct array
+alignedData_OgInExampleDAO.traces = alignedData_OgInExampleDAO.traces(random_indices);
+
+close all
+save_fig = true; % true/false
+
+filter_roi_tf = true; % true/false. If true, screen ROIs
+stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
+filters = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+
+event_type = 'peak_time'; % rise_time/peak_time
+norm_FluorData = true; % true/false. whether to normalize the FluroData
+sortROI = true; % true/false. Sort ROIs according to the event number: high to low
+preTime = 10; % fig3 include time before stimulation starts for plotting
+postTime = 10; % fig3 include time after stimulation ends for plotting. []: until the next stimulation starts
+activeHeatMap = true; % true/false. If true, only plot the traces with specified events in figure 3
+stimEvents(1).stimName = 'og-5s';
+stimEvents(1).eventCat = 'rebound';
+stimEvents(1).eventCatFollow = 'spon'; % The category of first event following the eventCat one
+stimEvents(1).stimRefType = 'end'; % The category of first event following the eventCat one
+stimEvents(2).stimName = 'ap-0.1s';
+stimEvents(2).eventCat = 'trig';
+stimEvents(2).eventCatFollow = 'spon'; % The category of first event following the eventCat one
+stimEvents(2).stimRefType = 'start'; % The category of first event following the eventCat one
+stimEvents(3).stimName = 'og-5s ap-0.1s';
+stimEvents(3).eventCat = 'trig-ap';
+stimEvents(3).eventCatFollow = 'spon'; % The category of first event following the eventCat one
+stimEvents(3).stimRefType = 'start'; % The category of first event following the eventCat one
+colorLUT = 'cyanMap'; % 'turbo' ,'magentaMap', 'cyanMap'
+followDelayType = 'stim'; % stim/stimEvent. Calculate the delay of the following events using the stimulation start or the stim-evoked event time
+eventsTimeSort = 'all'; % 'off'/'inROI','all'. sort traces according to eventsTime
+hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins
+xtickInt_scale = 5; % xtickInt = hist_binsize * xtickInt_scale. Use by figure 2
+debug_mode = false; % true/false. 
+
+FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_OgInExampleDAO,...
+	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
+	'norm_FluorData',norm_FluorData,'sortROI',sortROI,'event_type',event_type,...
+	'preTime',preTime,'postTime',postTime,'followDelayType',followDelayType,...
+	'activeHeatMap',activeHeatMap,'stimEvents',stimEvents,'eventsTimeSort',eventsTimeSort,...
+	'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,'colorLUT',colorLUT,...
+	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'debug_mode',debug_mode);
