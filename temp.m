@@ -216,3 +216,138 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_OgInEx
 	'activeHeatMap',activeHeatMap,'stimEvents',stimEvents,'eventsTimeSort',eventsTimeSort,...
 	'hist_binsize',hist_binsize,'xtickInt_scale',xtickInt_scale,'colorLUT',colorLUT,...
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'debug_mode',debug_mode);
+
+
+
+
+
+%% ==========
+% 2.3 Create the mean spontaneous traces in DAO and PO
+% Note: 'event_type' for alignedData must be 'detected_events'
+save_fig = true; % true/false
+save_dir = FolderPathVA.fig;
+at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'. Indicate what value should be used to normalize the traces
+at.stimNames = ''; % If empty, do not screen recordings with stimulation, instead use all of them
+at.eventCat = 'spon'; % options: 'trig','trig-ap','rebound','spon', 'rebound'
+at.subNucleiTypes = {'DAO','PO'}; % Separate ROIs using the subnuclei tag.
+at.plot_combined_data = true; % mean value and std of all traces
+at.showRawtraces = false; % true/false. true: plot every single trace
+at.showMedian = false; % true/false. plot raw traces having a median value of the properties specified by 'at.medianProp'
+at.medianProp = 'FWHM'; % 
+at.shadeType = 'std'; % plot the shade using std/ste
+at.y_range = [-10 20]; % [-10 5],[-3 5],[-2 1]
+% at.sponNorm = true; % true/false
+% at.normalized = false; % true/false. normalize the traces to their own peak amplitudes.
+
+close all
+
+% Create a cell to store the trace info
+traceInfo = cell(1,numel(at.subNucleiTypes));
+
+% Loop through the subNucleiTypes
+for i = 1:numel(at.subNucleiTypes)
+	[~,traceInfo{i}] = AlignedCatTracesSinglePlot(alignedData_allTrials,at.stimNames,at.eventCat,...
+		'normMethod',at.normMethod,'subNucleiType',at.subNucleiTypes{i},...
+		'showRawtraces',at.showRawtraces,'showMedian',at.showMedian,'medianProp',at.medianProp,...
+		'plot_combined_data',at.plot_combined_data,'shadeType',at.shadeType,'y_range',at.y_range);
+	% 'sponNorm',at.sponNorm,'normalized',at.normalized,
+
+	if i == 1
+		guiSave = 'on';
+	else
+		guiSave = 'off';
+	end
+	if save_fig
+		save_dir = savePlot(gcf,'guiSave', guiSave, 'save_dir', save_dir, 'fname', traceInfo{i}.fname);
+	end
+end
+traceInfo = [traceInfo{:}];
+
+if save_fig
+	save(fullfile(save_dir,'alignedCalTracesInfo'), 'traceInfo');
+	FolderPathVA.fig = save_dir;
+end
+
+
+%% ==========
+spon2spon_intervals = intData.violinData.spon2spon;
+trig2spon_intervals = intData.violinData.trig2spon;
+
+[h, p] = kstest2(spon2spon_intervals, trig2spon_intervals);
+disp(['K-S test p-value: ', num2str(p)]);
+
+
+
+
+
+
+
+%% ==========
+alignedDataDAO = screenSubNucleiROIs(alignedData_allTrials,'DAO');
+alignedDataPO = screenSubNucleiROIs(alignedData_allTrials,'PO');
+
+% 3.3 Violin plot showing the difference of
+% stim-related-event_to_following_event_time and the spontaneous_event_interval
+close all
+save_fig = false; % true/false
+stimNameAll = {'og-5s'}; % 'og-5s' 'ap-0.1s'
+stimEventCatAll = {'rebound'}; % 'rebound', 'trig'
+maxDiff = 5; % the max difference between the stim-related and the following events
+
+% loop through different stim-event pairs
+
+for n = 1:numel(stimNameAll) 
+	stimName = stimNameAll{n};
+	stimEventCat = stimEventCatAll{n};
+	% [intData,eventIntMean,eventInt,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
+	% 'maxDiff',maxDiff);
+
+	[intData,f,fname] = stimEventSponEventIntAnalysis(alignedDataPO,stimName,stimEventCat,...
+	'maxDiff',maxDiff);
+
+	if save_fig
+		if n == 1 
+			guiSave = 'on';
+		else
+			guiSave = 'off';
+		end
+		FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',guiSave,'fname',fname);
+		save(fullfile(FolderPathVA.fig, [fname,' data']),'intData');
+	end
+end
+
+
+%% =========
+% Compare the late OG bins in DAO and PO
+dataDAO = barStat.DAO(1).dataStruct;
+dataPO = barStat.PO(1).dataStruct;
+
+lateOGxdata1 = 1.5;
+lateOGxdata2 = 3.5;
+
+IDXlateOG1DAO = find([dataDAO.xdata] == lateOGxdata1);
+IDXlateOG2DAO = find([dataDAO.xdata] == lateOGxdata2);
+dataLateOG1DAO = dataDAO(IDXlateOG1DAO);
+dataLateOG2DAO = dataDAO(IDXlateOG2DAO);
+
+IDXlateOG1PO = find([dataPO.xdata] == lateOGxdata1);
+IDXlateOG2PO = find([dataPO.xdata] == lateOGxdata2);
+dataLateOG1PO = dataPO(IDXlateOG1PO);
+dataLateOG2PO = dataPO(IDXlateOG2PO);
+
+dataLateOG1Comb = [dataLateOG1DAO, dataLateOG1PO];
+dataLateOG2Comb = [dataLateOG2DAO, dataLateOG2PO];
+
+
+[GLMMresultsLateOG1] = twoPartMixedModelAnalysis(dataLateOG1Comb, 'val',...
+	'subNuclei', {'trialNames', 'roiNames'});
+[GLMMresultsLateOG2] = twoPartMixedModelAnalysis(dataLateOG2Comb, 'val',...
+	'subNuclei', {'trialNames', 'roiNames'});
+
+
+dataLateOG1CombCell = {[dataLateOG1DAO.val], [dataLateOG1PO.val]};
+dataLateOG2CombCell = {[dataLateOG2DAO.val], [dataLateOG2PO.val]};
+
+[statLateOG1,statTabLateOG1] = ttestOrANOVA(dataLateOG1CombCell);
+[statLateOG2,statTabLateOG2] = ttestOrANOVA(dataLateOG2CombCell);
+

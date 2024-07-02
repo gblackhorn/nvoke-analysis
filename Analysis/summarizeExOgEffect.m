@@ -5,7 +5,7 @@ function [varargout] = summarizeExOgEffect(alignedData, varargin)
     %
 
 
-        % Settings
+    % Settings for creating aligned data
     adata.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
     adata.eventTimeType = 'peak_time'; % rise_time/peak_time. Pick one for event time
     adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
@@ -34,7 +34,7 @@ function [varargout] = summarizeExOgEffect(alignedData, varargin)
 
 
 
-    % Get and group (gg) Settings
+    % Settings for collecting events
     ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
                     % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
                     % 'event': events are seperated (struct length = events_num). mean values were not calculated
@@ -51,6 +51,20 @@ function [varargout] = summarizeExOgEffect(alignedData, varargin)
     debug_mode = false; % true/false
 
 
+    % Settings for creating mean OG-trig events
+    at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'. Indicate what value should be used to normalize the traces
+    at.stimNames = ''; % If empty, do not screen recordings with stimulation, instead use all of them
+    at.eventCat = 'trig'; % options: 'trig','trig-ap','rebound','spon', 'rebound'
+    at.subNucleiTypes = {'DAO','PO'}; % Separate ROIs using the subnuclei tag.
+    at.plot_combined_data = true; % mean value and std of all traces
+    at.showRawtraces = false; % true/false. true: plot every single trace
+    at.showMedian = false; % true/false. plot raw traces having a median value of the properties specified by 'at.medianProp'
+    at.medianProp = 'FWHM'; % 
+    at.shadeType = 'std'; % plot the shade using std/ste
+    at.y_range = [-10 20]; % [-10 5],[-3 5],[-2 1]
+
+
+
     % Initialize input parser
     p = inputParser;
 
@@ -62,7 +76,7 @@ function [varargout] = summarizeExOgEffect(alignedData, varargin)
     addParameter(p, 'save_dir', '', @ischar); 
     addParameter(p, 'stat', true, @islogical); 
     addParameter(p, 'plot_combined_data', false, @islogical); 
-    addParameter(p, 'parNames', {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_mag_delta'}, @iscell); % Names of paremeters to be plotted
+    addParameter(p, 'parNames', {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd'}, @iscell); % Names of paremeters to be plotted
     % addParameter(p, 'filters', {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}, @iscell); % Filters for different stimulations
     addParameter(p, 'mmModel', 'GLMM', @ischar); % LMM/GLMM. Setup parameters for linear-mixed-model (LMM) or generalized-mixed-model (GLMM) analysis
     addParameter(p, 'mmGroup', 'subNuclei', @ischar); % 
@@ -115,10 +129,19 @@ function [varargout] = summarizeExOgEffect(alignedData, varargin)
     neuronNumAllDAO = eventStructSponDAO.roiNum;
     neuronNumAllPO = eventStructSponPO.roiNum;
 
-    % Merge og and og-ap groups
+    % Merge the og-trig events from og and og-ap groups
     combinedTrigDAO = mergeEventStruct(eventStructForPlot, 'trig [og-5s]-DAO', 'trig [og&ap-5s]-DAO', 'ogEX-DAO');
     combinedTrigPO = mergeEventStruct(eventStructForPlot, 'trig [og-5s]-PO', 'trig [og&ap-5s]-PO', 'ogEX-PO');
+    eventStructSponAndTrig = [eventStructSponDAO, eventStructSponPO, combinedTrigDAO, combinedTrigPO];
     eventStructTrig = [combinedTrigDAO, combinedTrigPO];
+
+
+    % Merge the offStim events from og and og-ap groups
+    combinedOffStimDAO = mergeEventStruct(eventStructForPlot, 'rebound [og-5s]-DAO', 'rebound [og&ap-5s]-DAO', 'ogOffStim-DAO');
+    combinedOffStimPO = mergeEventStruct(eventStructForPlot, 'rebound [og-5s]-PO', 'rebound [og&ap-5s]-PO', 'ogOffStim-PO');
+    eventStructSponAndOffStim = [eventStructSponDAO, eventStructSponPO, combinedOffStimDAO, combinedOffStimPO];
+    eventStructOffStim = [combinedOffStimDAO, combinedOffStimPO];
+
 
 
     % Get the n number from the og ex groups
@@ -130,31 +153,104 @@ function [varargout] = summarizeExOgEffect(alignedData, varargin)
     neuronNumTrigPO = combinedTrigPO.roiNum;
 
 
-    % Plot ogEX trig event prop
-    [save_dir, plot_info] = plot_event_info(eventStructTrig,'entryType',ggSetting.entry,...
+    % Plot event prop for ogEX trig and spon 
+    [save_dir, plotInfoSponAndTrig] = plot_event_info(eventStructSponAndTrig,'entryType',ggSetting.entry,...
         'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
         'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
         'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-        'fname_preffix','event','save_fig', save_fig, 'save_dir', save_dir);
+        'fname_preffix','sponAndTrigEvent','save_fig', save_fig, 'save_dir', save_dir);
+    if save_fig
+        close all
+    end
+
+
+    % Plot ogEX trig delay
+    [save_dir, plotInfoTrig] = plot_event_info(eventStructTrig,'entryType',ggSetting.entry,...
+        'plot_combined_data', plot_combined_data, 'parNames', [parNames, 'peak_delay'], 'stat', stat,...
+        'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
+        'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+        'fname_preffix','trigEvent','save_fig', save_fig, 'save_dir', save_dir);
+    if save_fig
+        close all
+    end
+
+    % % Create a UI table displaying the n numberss
+    % fNumTrig = nNumberTab(eventStructTrig,'event');
+
+
+    % Plot event prop for spon and offStim events
+    [save_dir, plotInfoSponAndOffStim] = plot_event_info(eventStructSponAndOffStim,'entryType',ggSetting.entry,...
+        'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
+        'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
+        'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+        'fname_preffix','sponAndOffStimEvent','save_fig', save_fig, 'save_dir', save_dir);
+    if save_fig
+        close all
+    end
+
+
+    % Plot ogEX trig event prop
+    [save_dir, plotInfoOffStim] = plot_event_info(eventStructOffStim,'entryType',ggSetting.entry,...
+        'plot_combined_data', plot_combined_data, 'parNames', [parNames, 'peak_delay'], 'stat', stat,...
+        'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
+        'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+        'fname_preffix','offStimEvent','save_fig', save_fig, 'save_dir', save_dir);
+    if save_fig
+        close all
+    end
+
+    % % Create a UI table displaying the n numberss
+    % fNumOffStim = nNumberTab(eventStructOffStim,'event');
 
     % Create a UI table displaying the n numberss
-    fNum = nNumberTab(eventStructTrig,'event');
+    fNumSponAndTrig = nNumberTab(eventStructSponAndTrig,'event');
+
+    % Create a UI table displaying the n numberss
+    fNumSponAndOffStim = nNumberTab(eventStructSponAndOffStim,'event');
+
+
 
     % Bar plot the percentage of neurons showing OG-ex events
     neuronPercOgEx = [neuronNumTrigDAO/neuronNumAllDAO, neuronNumTrigPO/neuronNumAllPO];
     barLabelOgEx = {'DAO', 'PO'};
     fBarPlotOgExPerc = plotPercentages(neuronPercOgEx, barLabelOgEx);
 
+    % Create a cell to store the trace info
+    traceInfo = cell(1,numel(at.subNucleiTypes));
+
+
+    % Create the mean traces of OG-trig in DAO and PO for examples
+    % Loop through the subNucleiTypes
+    for i = 1:numel(at.subNucleiTypes)
+        [~,traceInfo{i}] = AlignedCatTracesSinglePlot(alignedDataOG,at.stimNames,at.eventCat,...
+            'normMethod',at.normMethod,'subNucleiType',at.subNucleiTypes{i},...
+            'showRawtraces',at.showRawtraces,'showMedian',at.showMedian,'medianProp',at.medianProp,...
+            'plot_combined_data',at.plot_combined_data,'shadeType',at.shadeType,'y_range',at.y_range);
+        % 'sponNorm',at.sponNorm,'normalized',at.normalized,
+        if save_fig
+            save_dir = savePlot(gcf,'guiSave', false, 'save_dir', save_dir, 'fname', traceInfo{i}.fname);
+        end
+    end
+    traceInfo = [traceInfo{:}];
+
+
+
     % Save eventProp plotting data
     if save_fig
         % Save the fNum
-        savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo');
+        savePlot(fNumSponAndTrig,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'sponAndTrig event nNumInfo ');
+        % savePlot(fNumTrig,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo Trig');
+        savePlot(fNumSponAndOffStim,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'sponAndOffStim event nNumInfo ');
+        % savePlot(fNumOffStim,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo OffStim');
         savePlot(fBarPlotOgExPerc,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'ogExNeuronPerc');
         % savePlot(fMM,'guiSave', 'off', 'save_dir', save_dir, 'fname', fMM_name);
 
         % Save the statistics info
         eventPropStatInfo.eventStructForPlot = eventStructTrig;
-        eventPropStatInfo.plot_info = plot_info;
+        eventPropStatInfo.plotInfoSponAndTrig = plotInfoSponAndTrig;
+        eventPropStatInfo.plotInfoTrig = plotInfoTrig;
+        eventPropStatInfo.plotInfoSponAndOffStim = plotInfoSponAndOffStim;
+        eventPropStatInfo.plotInfoOffStim = plotInfoOffStim;
         % dt = datestr(now, 'yyyymmdd');
         save(fullfile(save_dir, 'event propStatInfo'), 'eventPropStatInfo');
     end

@@ -18,11 +18,11 @@ adata.event_align_point = 'rise'; % options: 'rise', 'peak'
 adata.rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes. Exclude these events from 'spon'
 adata.cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
-adata.pre_event_time = 5; % unit: s. duration before stimulation in the aligned traces
+adata.pre_event_time = 10; % unit: s. duration before stimulation in the aligned traces
 adata.post_event_time = 10; % unit: s. duration after stimulation in the aligned traces
 adata.stim_section = true; % true: use a specific section of stimulation to calculate the calcium level delta. For example the last 1s
 adata.ss_range = 1; % range of stim_section (compare the cal-level in baseline and here to examine the effect of the stimulation). single number (last n second during stimulation) or a 2-element array (start and end. 0s is stimulation onset)
-adata.stim_time_error = 0.05; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
+adata.stim_time_error = 0; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
 adata.mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
 % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
 adata.caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
@@ -601,7 +601,7 @@ end
 % 3.3 Violin plot showing the difference of
 % stim-related-event_to_following_event_time and the spontaneous_event_interval
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 stimNameAll = {'og-5s','ap-0.1s'}; % 'og-5s' 'ap-0.1s'
 stimEventCatAll = {'rebound','trig'}; % 'rebound', 'trig'
 maxDiff = 5; % the max difference between the stim-related and the following events

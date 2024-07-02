@@ -110,150 +110,160 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
     % Convert the structured data to a table
     tbl = struct2table(MMdata);
 
-    if iscell(tbl.(groupVar))  && isnumeric(tbl.(groupVar){1}) 
-        tbl.(groupVar) = cell2mat(tbl.(groupVar));
-    end
-
-    
-    % Construct the formula for the mixed model
-    % - Fixed effects: groupVar
-    % - Random effects: hierarchicalVars
-    hierachiRandom = sprintf('(1|%s)', hierarchicalVars{1});
-    if length(hierarchicalVars) > 1
-        for i = 2:length(hierarchicalVars)
-            hierachiRandom = strcat(hierachiRandom, sprintf(' + (1|%s:%s)', hierarchicalVars{i-1}, hierarchicalVars{i}));
+    if ~isempty(tbl)
+        if iscell(tbl.(groupVar))  && isnumeric(tbl.(groupVar){1}) 
+            tbl.(groupVar) = cell2mat(tbl.(groupVar));
         end
-    end
-    formula = sprintf('%s ~ 1 + %s + %s', responseVar, groupVar, hierachiRandom);
-    formula_noFix = sprintf('%s ~ 1 + %s', responseVar, hierachiRandom); % plug off the fixed effect
-    
-    % Fit the model
-    if strcmp(modelType, 'LMM')
-        me = fitlme(tbl, formula);
-        me_noFix = fitlme(tbl, formula_noFix);
-    elseif strcmp(modelType, 'GLMM')
-        me = fitglme(tbl, formula, 'Distribution', distribution, 'Link', link);
-        me_noFix = fitglme(tbl, formula_noFix, 'Distribution', distribution, 'Link', link);
-    else
-        error('Unsupported model type');
-    end
 
-    % Optionally display the model summary
-    if dispStat
-        disp(me);
-
-        visualizeFitting()
-    end
-
-    % Extract fixed effects
-    [fixedEffectsEstimates, ~, fixedEffectsStats] = fixedEffects(me);
-    
-    % Optionally display fixed effects
-    if dispStat
-        disp('Fixed Effects:');
-        disp(fixedEffectsEstimates);
-    end
-    
-    % Extract random effects
-    randomEffectsTable = randomEffects(me);
-    
-    % Optionally display random effects
-    if dispStat
-        disp('Random Effects:');
-        disp(randomEffectsTable);
-    end
-
-    % Extract the coefficients and p-values
-    intercept = me.Coefficients.Estimate(1);
-    groupEffect = me.Coefficients.Estimate(2:end);
-    pValueGroup = me.Coefficients.pValue(2:end);
-
-    % Optionally display the results in a readable format
-    if dispStat
-        fprintf('Intercept (Baseline): %.4f\n', intercept);
-        for i = 1:length(groupEffect)
-            fprintf('Effect of %s (compared to baseline): %.4f (p-value: %.4f)\n', me.Coefficients.Name{i+1}, groupEffect(i), pValueGroup(i));
-        end
-    end
-
-    % Extract group variable levels
-    % Convert the groupVar to categorical
-    groupCategories = categorical(tbl.(groupVar));
-    groupLevels = categories(groupCategories);
-
-    % Replace the Name of fixed effect with the categories in the groupVar field
-    fixedEffectsStats.Name = groupLevels; 
-
-    % Convert the values on log scale to linear scale
-    if strcmpi(modelType,'GLMM') && strcmpi(me.Link.Name,'log')
-        fixedEffectsStats = log2linear(fixedEffectsStats);
-    end
-    fixedEffectsStats = dataset2table(fixedEffectsStats); % Convert the dataset to a table
-    varargout{1} = fixedEffectsStats;
-    
-    % ANOVA is performed on the fitted model using the anova function to test the significance of
-    % the fixed effects. It tells whether there are any statistically significant differences
-    % between the groups.
-    anovaResults = anova(me);
-    % if strcmp(modelType, 'LMM')
-    %     anovaResults = anova(lme);
-    % else
-    %     anovaResults = []; % ANOVA is not typically used for GLMMs in the same way
-    % end
-    
-    % Optionally display ANOVA results
-    if dispStat && strcmp(modelType, 'LMM')
-        disp('ANOVA Results:');
-        disp(anovaResults);
-    end
-    
-    % Prepare output variables
-    % varargout{1} = lme;
-    % varargout{2} = lme_noFix;
-    % varargout{2} = anovaResults;
-
-    % Compare the GLMM without the fix effects (groupVar), lme_noFix, to the GLMM with both fixed and
-    % random effects, lme, and return the results of a likelihood ratio test (chiLRT)
-    if me.LogLikelihood > me_noFix.LogLikelihood
-        chiLRT = compare(me_noFix,me);
-        chiLRT.formula = {formula_noFix; formula}; % add formulas to the dataset
-        chiLRT = dataset2table(chiLRT); % Convert the dataset to a table
-        chiLRT{:,1} = categorical(chiLRT{:,1}); % Change the Model names to categorical for easier display
-    else
-        chiLRT = createDummyChiLRTtab(me_noFix,me);
-    end
-    varargout{2} = chiLRT;
-
-
-    % Initialize multi-comparison results
-    multiComparisonResults = [];
-    mmPvalue = struct('method', {}, 'group1', {}, 'group2', {}, 'p', {}, 'h', {});
-
-    
-    % Perform multiple comparisons if the group effect is significant
-    if any(fixedEffectsStats.pValue < 0.05) % strcmp(modelType, 'LMM') && 
-        if length(groupLevels) > 2
-            % Perform multiple comparisons manually
-            [multiComparisonResults, mmPvalue] = performPostHocComparisons(me, groupLevels, dispStat, modelType);
-        else
-            % Extract the p-value from the fixed effects for two groups
-            pValue = pValueGroup(1);
-            hValue = pValue < 0.05;
-            mmPvalue = struct('method', modelType, 'group1', groupLevels{1}, 'group2', groupLevels{2}, 'p', pValue, 'h', hValue);
-            if dispStat
-                fprintf('\nFixed Effects Results:\n%s vs. %s: p-value = %.4f, h = %d\n', ...
-                    groupLevels{1}, groupLevels{2}, pValue, hValue);
+        
+        % Construct the formula for the mixed model
+        % - Fixed effects: groupVar
+        % - Random effects: hierarchicalVars
+        hierachiRandom = sprintf('(1|%s)', hierarchicalVars{1});
+        if length(hierarchicalVars) > 1
+            for i = 2:length(hierarchicalVars)
+                hierachiRandom = strcat(hierachiRandom, sprintf(' + (1|%s:%s)', hierarchicalVars{i-1}, hierarchicalVars{i}));
             end
         end
-    % elseif strcmp(modelType, 'GLMM') && length(groupLevels) == 2
-    %     % Perform post-hoc comparison for GLMM with two groups
-    %     pValue = pValueGroup(1);
-    %     hValue = pValue < 0.05;
-    %     statInfo = struct('method', 'Generalized-linear-mixed-model', 'group1', groupLevels{1}, 'group2', groupLevels{2}, 'p', pValue, 'h', hValue);
-    %     if dispStat
-    %         fprintf('\nFixed Effects Results:\n%s vs. %s: p-value = %.4f, h = %d\n', ...
-    %             groupLevels{1}, groupLevels{2}, pValue, hValue);
-    %     end
+        formula = sprintf('%s ~ 1 + %s + %s', responseVar, groupVar, hierachiRandom);
+        formula_noFix = sprintf('%s ~ 1 + %s', responseVar, hierachiRandom); % plug off the fixed effect
+        
+        % Fit the model
+        if strcmp(modelType, 'LMM')
+            me = fitlme(tbl, formula);
+            me_noFix = fitlme(tbl, formula_noFix);
+        elseif strcmp(modelType, 'GLMM')
+            me = fitglme(tbl, formula, 'Distribution', distribution, 'Link', link);
+            me_noFix = fitglme(tbl, formula_noFix, 'Distribution', distribution, 'Link', link);
+        else
+            error('Unsupported model type');
+        end
+
+        % Optionally display the model summary
+        if dispStat
+            disp(me);
+
+            visualizeFitting()
+        end
+
+        % Extract fixed effects
+        [fixedEffectsEstimates, ~, fixedEffectsStats] = fixedEffects(me);
+        
+        % Optionally display fixed effects
+        if dispStat
+            disp('Fixed Effects:');
+            disp(fixedEffectsEstimates);
+        end
+        
+        % Extract random effects
+        randomEffectsTable = randomEffects(me);
+        
+        % Optionally display random effects
+        if dispStat
+            disp('Random Effects:');
+            disp(randomEffectsTable);
+        end
+
+        % Extract the coefficients and p-values
+        intercept = me.Coefficients.Estimate(1);
+        groupEffect = me.Coefficients.Estimate(2:end);
+        pValueGroup = me.Coefficients.pValue(2:end);
+
+        % Optionally display the results in a readable format
+        if dispStat
+            fprintf('Intercept (Baseline): %.4f\n', intercept);
+            for i = 1:length(groupEffect)
+                fprintf('Effect of %s (compared to baseline): %.4f (p-value: %.4f)\n', me.Coefficients.Name{i+1}, groupEffect(i), pValueGroup(i));
+            end
+        end
+
+        % Extract group variable levels
+        % Convert the groupVar to categorical
+        groupCategories = categorical(tbl.(groupVar));
+        groupLevels = categories(groupCategories);
+
+        % Replace the Name of fixed effect with the categories in the groupVar field
+        fixedEffectsStats.Name = groupLevels; 
+
+        % Convert the values on log scale to linear scale
+        if strcmpi(modelType,'GLMM') && strcmpi(me.Link.Name,'log')
+            fixedEffectsStats = log2linear(fixedEffectsStats);
+        end
+        fixedEffectsStats = dataset2table(fixedEffectsStats); % Convert the dataset to a table
+        varargout{1} = fixedEffectsStats;
+        
+        % ANOVA is performed on the fitted model using the anova function to test the significance of
+        % the fixed effects. It tells whether there are any statistically significant differences
+        % between the groups.
+        anovaResults = anova(me);
+        % if strcmp(modelType, 'LMM')
+        %     anovaResults = anova(lme);
+        % else
+        %     anovaResults = []; % ANOVA is not typically used for GLMMs in the same way
+        % end
+        
+        % Optionally display ANOVA results
+        if dispStat && strcmp(modelType, 'LMM')
+            disp('ANOVA Results:');
+            disp(anovaResults);
+        end
+        
+        % Prepare output variables
+        % varargout{1} = lme;
+        % varargout{2} = lme_noFix;
+        % varargout{2} = anovaResults;
+
+        % Compare the GLMM without the fix effects (groupVar), lme_noFix, to the GLMM with both fixed and
+        % random effects, lme, and return the results of a likelihood ratio test (chiLRT)
+        if me.LogLikelihood > me_noFix.LogLikelihood
+            chiLRT = compare(me_noFix,me);
+            chiLRT.formula = {formula_noFix; formula}; % add formulas to the dataset
+            chiLRT = dataset2table(chiLRT); % Convert the dataset to a table
+            chiLRT{:,1} = categorical(chiLRT{:,1}); % Change the Model names to categorical for easier display
+        else
+            chiLRT = createDummyChiLRTtab(me_noFix,me);
+        end
+        varargout{2} = chiLRT;
+
+
+        % Initialize multi-comparison results
+        multiComparisonResults = [];
+        mmPvalue = struct('method', {}, 'group1', {}, 'group2', {}, 'p', {}, 'h', {});
+
+        
+        % Perform multiple comparisons if the group effect is significant
+        if any(fixedEffectsStats.pValue < 0.05) % strcmp(modelType, 'LMM') && 
+            if length(groupLevels) > 2
+                % Perform multiple comparisons manually
+                [multiComparisonResults, mmPvalue] = performPostHocComparisons(me, groupLevels, dispStat, modelType);
+            else
+                % Extract the p-value from the fixed effects for two groups
+                pValue = pValueGroup(1);
+                hValue = pValue < 0.05;
+                mmPvalue = struct('method', modelType, 'group1', groupLevels{1}, 'group2', groupLevels{2}, 'p', pValue, 'h', hValue);
+                if dispStat
+                    fprintf('\nFixed Effects Results:\n%s vs. %s: p-value = %.4f, h = %d\n', ...
+                        groupLevels{1}, groupLevels{2}, pValue, hValue);
+                end
+            end
+        % elseif strcmp(modelType, 'GLMM') && length(groupLevels) == 2
+        %     % Perform post-hoc comparison for GLMM with two groups
+        %     pValue = pValueGroup(1);
+        %     hValue = pValue < 0.05;
+        %     statInfo = struct('method', 'Generalized-linear-mixed-model', 'group1', groupLevels{1}, 'group2', groupLevels{2}, 'p', pValue, 'h', hValue);
+        %     if dispStat
+        %         fprintf('\nFixed Effects Results:\n%s vs. %s: p-value = %.4f, h = %d\n', ...
+        %             groupLevels{1}, groupLevels{2}, pValue, hValue);
+        %     end
+        end
+    else
+        % Add multi-comparison results and statInfo to the output
+        mmPvalue = [];
+        multiComparisonResults = [];
+        me = '';
+        fixedEffectsStats = [];
+        chiLRT = [];
+        mmPvalue = [];
     end
 
     % Add multi-comparison results and statInfo to the output

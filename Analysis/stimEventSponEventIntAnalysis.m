@@ -21,7 +21,7 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	groupVarType = 'categorical';
 
 	plotUnitWidth = 0.3;
-	plotUnitHeight = 0.2;
+	plotUnitHeight = 0.1;
 	columnLim = 2;
 
 	debugMode = false; % true/false
@@ -82,17 +82,18 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	% Create figure canvas
 	titleStr = sprintf('stimEvent-followEvent-diff vs sponEvent-int [%s %s maxDiff-%gs]',...
 		stimName,stimEventCat,maxDiff);
-	[f,f_rowNum,f_colNum] = fig_canvas(8,'unit_width',plotUnitWidth,'unit_height',plotUnitHeight,...
+	[f,f_rowNum,f_colNum] = fig_canvas(10,'unit_width',plotUnitWidth,'unit_height',plotUnitHeight,...
 		'column_lim',columnLim,'fig_name',titleStr); % create a figure
 	tlo = tiledlayout(f,f_rowNum,f_colNum);
 
 	% Plot violin
-	axViolin = nexttile(1,[4,1]);
+	axViolin = nexttile(1,[5,1]);
 	violinplot(violinData);
 
 	% Plot nNumber
 	axNum = nexttile(2);
 	plotSummaryTableInUITable(axNum, combinedNumTable);
+
 
 	% Plot GLMM stat
 	axGlmmTitle = nexttile(4);
@@ -111,10 +112,21 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 	sgtitle(titleStr);
 
+	% Plot Kolmogorov-Smirnov Test stat: If two vectors are from the same continuous distribution
+	axKS = nexttile(10);
+	spon2spon_intervals = intData.violinData.spon2spon;
+	trig2spon_intervals = intData.violinData.trig2spon;
+
+	[hKS, pKS] = kstest2(violinData.(stimAndFollowingIntName), violinData.(sponAndSponIntName));
+	% disp(['K-S test p-value: ', num2str(p)]);
+
+
 
 	intData.eventIntStruct = combinedEventInt;
 	intData.violinData = violinData;
 	intData.GlmmReport = meStatReport;
+	intData.KStest.h = hKS;
+	intData.KStest.p = pKS;
 
 	varargout{1} = intData;
 	varargout{2} = f;

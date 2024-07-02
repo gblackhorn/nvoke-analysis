@@ -162,7 +162,7 @@ function [bar_data, bar_stat] = plot_bars(event_info_struct, parNames, params)
     % f_stat = uifigure('Name', 'bar stat', 'Position', [0.1 0.1 0.8 0.4]);
     f_stat = create_figure([params.fname_preffix, ' bar stat']);
     set(f_stat, 'Position', [0.05 0.1 0.95 0.4]);
-    f_violin = create_figure('violin plots');
+    f_violin = create_figure([params.fname_preffix, ' violin plots']);
 
     tlo_bar = tiledlayout(f_bar, ceil(numel(parNames)/params.tileColNum), params.tileColNum);
     tlo_barstat = tiledlayout(f_stat, ceil(numel(parNames)/params.tileColNum)*2+1, params.tileColNum);
@@ -250,7 +250,7 @@ function plot_stat_table(ax_stat1, ax_stat2, bar_stat)
         MultCom_stat = bar_stat.c(:, ["g1", "g2", "p", "h"]);
         uit = uitable('Data', table2cell(MultCom_stat), 'ColumnName', MultCom_stat.Properties.VariableNames,...
             'Units', uit_unit1, 'Position', uit_pos1);
-    elseif isfield(bar_stat, 'fixedEffectsStats') % if LMM or GLMM (mixed models) are used
+    elseif isfield(bar_stat, 'fixedEffectsStats') && ~isempty(bar_stat.method) % if LMM or GLMM (mixed models) are used
         chiLRTCell = table2cell(bar_stat.chiLRT);
         chiLRTCell = convertCategoricalToChar(chiLRTCell);
         uit = uitable('Data', chiLRTCell, 'ColumnName', bar_stat.chiLRT.Properties.VariableNames,...
@@ -304,10 +304,12 @@ function plot_violinplot(event_info_struct, par, groupNames, ax_violin, params)
         event_info_cell{gn} = [event_info_struct(gn).event_info.(par)]';
     end
     [violinData, violinGroups] = createDataAndGroupNameArray(event_info_cell, groupNames);
-    violinplot(violinData, violinGroups);
-    set(ax_violin, 'box', 'off', 'TickDir', 'out', 'FontSize', params.FontSize, 'FontWeight', params.FontWeight);
-    xtickangle(params.TickAngle);
-    title(replace(par, '_', '-'));
+    if ~isempty(violinData)
+        violinplot(violinData, violinGroups);
+        set(ax_violin, 'box', 'off', 'TickDir', 'out', 'FontSize', params.FontSize, 'FontWeight', params.FontWeight);
+        xtickangle(params.TickAngle);
+        title(replace(par, '_', '-'));
+    end
 end
 
 function plot_cumulative_distributions(event_info_struct, parNames, params)
@@ -545,7 +547,7 @@ end
 function save_all_figures(save_dir, fname_preffix)
     figs = findall(0, 'Type', 'figure');
     for i = 1:length(figs)
-        fname = sprintf('%s %s', fname_preffix, figs(i).Name);
+        fname = sprintf('%s', figs(i).Name);
         savePlot(figs(i), 'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
     end
 end
