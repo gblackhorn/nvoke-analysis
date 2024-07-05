@@ -1,69 +1,14 @@
 function [varargout] = summarizeExOgEffect(alignedData, varargin)
     % Summarize the excitatory effect of OG 5s 
 
-    % Use the alignedData struct var
-    %
+    % Initialize settings for creating aligned data
+    adata = initializeAdata();
 
+    % Initialize settings for collecting events
+    ggSetting = initializeGgSetting();
 
-    % Settings for creating aligned data
-    adata.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
-    adata.eventTimeType = 'peak_time'; % rise_time/peak_time. Pick one for event time
-    adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
-    adata.event_data_group = 'peak_lowpass';
-    adata.event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
-    adata.event_align_point = 'rise'; % options: 'rise', 'peak'
-    adata.rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes. Exclude these events from 'spon'
-    adata.cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
-    %                   find a way to combine categories, such as 'nostim' and 'nostimfar'
-    adata.pre_event_time = 5; % unit: s. duration before stimulation in the aligned traces
-    adata.post_event_time = 10; % unit: s. duration after stimulation in the aligned traces
-    adata.stim_section = true; % true: use a specific section of stimulation to calculate the calcium level delta. For example the last 1s
-    adata.ss_range = 1; % range of stim_section (compare the cal-level in baseline and here to examine the effect of the stimulation). single number (last n second during stimulation) or a 2-element array (start and end. 0s is stimulation onset)
-    adata.stim_time_error = 0.05; % due to low temperal resolution and error in lowpassed data, start and end time point of stimuli can be extended
-    adata.mod_pcn = true; % true/false modify the peak category names with func [mod_cat_name]
-    % filter_alignedData = true; % true/false. Discard ROIs/neurons in alignedData if they don't have certain event types
-    adata.caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
-    adata.disROI = true; % true/false. If true, Keep ROIs using the setting below, and delete the rest
-    adata.disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-1s'};
-    adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
-    adata.sponfreqFilter.status = true; % true/false. If true, use the following settings to filter ROIs
-    adata.sponfreqFilter.field = 'sponfq'; % 
-    adata.sponfreqFilter.thresh = 0.05; % Hz. default 0.05
-    adata.sponfreqFilter.direction = 'high';
-    debug_mode = false; % true/false
-
-
-
-    % Settings for collecting events
-    ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
-                    % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
-                    % 'event': events are seperated (struct length = events_num). mean values were not calculated
-    ggSetting.modify_stim_name = true; % true/false. Change the stimulation name, 
-    ggSetting.sponOnly = false; % true/false. If eventType is 'roi', and ggSetting.sponOnly is true. Only keep spon entries
-    ggSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
-    ggSetting.dis_spon = false; % true/false. Discard spontaneous events
-    ggSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
-    ggSetting.groupField = {'peak_category','subNuclei'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
-    ggSetting.mark_EXog = false; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
-    ggSetting.og_tag = {'og', 'og&ap'}; % find og events with these strings. 'og' to 'Exog', 'og&ap' to 'EXog&ap'
-    ggSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', 'rebound', 'delay'
-    ggSetting.sort_order_plus = {'ap', 'EXopto'};
-    debug_mode = false; % true/false
-
-
-    % Settings for creating mean OG-trig events
-    at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'. Indicate what value should be used to normalize the traces
-    at.stimNames = ''; % If empty, do not screen recordings with stimulation, instead use all of them
-    at.eventCat = 'trig'; % options: 'trig','trig-ap','rebound','spon', 'rebound'
-    at.subNucleiTypes = {'DAO','PO'}; % Separate ROIs using the subnuclei tag.
-    at.plot_combined_data = true; % mean value and std of all traces
-    at.showRawtraces = false; % true/false. true: plot every single trace
-    at.showMedian = false; % true/false. plot raw traces having a median value of the properties specified by 'at.medianProp'
-    at.medianProp = 'FWHM'; % 
-    at.shadeType = 'std'; % plot the shade using std/ste
-    at.y_range = [-10 20]; % [-10 5],[-3 5],[-2 1]
-
-
+    % Initialize settings for creating mean OG-trig events
+    at = initializeAtSettings();
 
     % Initialize input parser
     p = inputParser;
@@ -76,8 +21,7 @@ function [varargout] = summarizeExOgEffect(alignedData, varargin)
     addParameter(p, 'save_dir', '', @ischar); 
     addParameter(p, 'stat', true, @islogical); 
     addParameter(p, 'plot_combined_data', false, @islogical); 
-    addParameter(p, 'parNames', {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd'}, @iscell); % Names of paremeters to be plotted
-    % addParameter(p, 'filters', {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}, @iscell); % Filters for different stimulations
+    addParameter(p, 'parNames', {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd'}, @iscell); % Names of parameters to be plotted
     addParameter(p, 'mmModel', 'GLMM', @ischar); % LMM/GLMM. Setup parameters for linear-mixed-model (LMM) or generalized-mixed-model (GLMM) analysis
     addParameter(p, 'mmGroup', 'subNuclei', @ischar); % 
     addParameter(p, 'mmHierarchicalVars', {'trialName', 'roiName'}, @iscell); % 
@@ -104,7 +48,8 @@ function [varargout] = summarizeExOgEffect(alignedData, varargin)
     adata = p.Results.adata;
     ggSetting = p.Results.ggSetting;
 
-
+    % Debug mode setting
+    debug_mode = false; % true/false
 
     % Screen the alignedData and only keep the 'og-5s' recordings
     alignedDataOG = alignedData(strcmp({alignedData.stim_name}, 'og-5s') | strcmp({alignedData.stim_name}, 'og-5s ap-0.1s'));
@@ -144,13 +89,21 @@ function [varargout] = summarizeExOgEffect(alignedData, varargin)
 
 
 
-    % Get the n number from the og ex groups
+    % Get the n number from the ogTrig and offStim groups  
     recNumTrigDAO = combinedTrigDAO.recNum;
     recNumTrigPO = combinedTrigPO.recNum;
     animalNumTrigDAO = combinedTrigDAO.animalNum;
     animalNumTrigPO = combinedTrigPO.animalNum;
     neuronNumTrigDAO = combinedTrigDAO.roiNum;
     neuronNumTrigPO = combinedTrigPO.roiNum;
+    recNumOffStimDAO = combinedOffStimDAO.recNum;
+    recNumOffStimPO = combinedOffStimPO.recNum;
+    animalNumOffStimDAO = combinedOffStimDAO.animalNum;
+    animalNumOffStimPO = combinedOffStimPO.animalNum;
+    neuronNumOffStimDAO = combinedOffStimDAO.roiNum;
+    neuronNumOffStimPO = combinedOffStimPO.roiNum;
+
+
 
 
     % Plot event prop for ogEX trig and spon 
@@ -235,6 +188,49 @@ function [varargout] = summarizeExOgEffect(alignedData, varargin)
 
 
 
+    % Create pie charts showing the percentage of neurons in which ogTrig and offStim are observed
+    % Separate DAO and PO
+    pieDataTrigDAO = [neuronNumTrigDAO, neuronNumAllDAO-neuronNumTrigDAO];
+    pieDataTrigPO = [neuronNumTrigPO, neuronNumAllPO-neuronNumTrigPO];
+    pieLabelsTrig = {'OG trig pos', 'OG trig neg'};
+    pieDataOffStimDAO = [neuronNumOffStimDAO, neuronNumAllDAO-neuronNumOffStimDAO];
+    pieDataOffStimPO = [neuronNumOffStimPO, neuronNumAllPO-neuronNumOffStimPO];
+    pieLabelsOffStim = {'OG stimOff pos', 'OG stimOff neg'};
+    explodeIDX = [1 0];
+
+    fName_pieTrig = 'trigPosNeuronPerc';
+    f_pieTrig = fig_canvas(2, 'fig_name', fName_pieTrig);
+    tlo_pieTrig = tiledlayout(f_pieTrig, 1, 2);
+    ax_pieTrigDAO = nexttile(tlo_pieTrig);
+    pie(ax_pieTrigDAO, pieDataTrigDAO, explodeIDX);
+    title('OG trig positive neruons in DAO')
+    ax_pieTrigPO = nexttile(tlo_pieTrig);
+    pie(ax_pieTrigPO, pieDataTrigPO, explodeIDX);
+    title('OG trig positive neruons in PO')
+    lgdTrig = legend(pieLabelsTrig);
+    lgdTrig.Layout.Tile = 'east';
+    sgtitle(fName_pieTrig)
+
+    fName_pieOffStim = 'offStimPosNeuronPerc';
+    f_pieOffStim = fig_canvas(2, 'fig_name', fName_pieOffStim);
+    tlo_pieOffStim = tiledlayout(f_pieOffStim, 1, 2);
+    ax_pieOffStimDAO = nexttile(tlo_pieOffStim);
+    pie(ax_pieOffStimDAO, pieDataOffStimDAO, explodeIDX, pieLabelsOffStim);
+    title('OG offStim positive neruons in DAO')
+    ax_pieOffStimPO = nexttile(tlo_pieOffStim);
+    pie(ax_pieOffStimPO, pieDataOffStimPO, explodeIDX, pieLabelsOffStim);
+    title('OG offStim positive neruons in PO')
+    lgdOffStim = legend(pieLabelsOffStim);
+    lgdOffStim.Layout.Tile = 'east';
+    sgtitle(fName_pieOffStim)
+
+    if save_fig
+        savePlot(f_pieTrig, 'guiSave', false, 'save_dir', save_dir, 'fname', fName_pieTrig);
+        savePlot(f_pieOffStim, 'guiSave', false, 'save_dir', save_dir, 'fname', fName_pieOffStim);
+    end
+
+
+
     % Save eventProp plotting data
     if save_fig
         % Save the fNum
@@ -255,6 +251,62 @@ function [varargout] = summarizeExOgEffect(alignedData, varargin)
         save(fullfile(save_dir, 'event propStatInfo'), 'eventPropStatInfo');
     end
 
+end
+
+
+function adata = initializeAdata()
+    % Settings for creating aligned data
+    adata.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
+    adata.eventTimeType = 'peak_time'; % options: 'rise_time', 'peak_time'
+    adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
+    adata.event_data_group = 'peak_lowpass';
+    adata.event_filter = 'none'; % options: 'none', 'timeWin', 'event_cat' (cat_keywords needed)
+    adata.event_align_point = 'rise'; % options: 'rise', 'peak'
+    adata.rebound_duration = 2; % time duration after stimulation for rebound spikes exclusion
+    adata.cat_keywords = {}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
+    adata.pre_event_time = 5; % duration before stimulation in the aligned traces (s)
+    adata.post_event_time = 10; % duration after stimulation in the aligned traces (s)
+    adata.stim_section = true; % use a specific section of stimulation to calculate the calcium level delta
+    adata.ss_range = 1; % range of stim_section
+    adata.stim_time_error = 0.05; % start and end time point of stimuli can be extended
+    adata.mod_pcn = true; % modify the peak category names with function [mod_cat_name]
+    adata.caDeclineOnly = false; % only keep the calcium decline trials (og group)
+    adata.disROI = true; % if true, keep ROIs using the setting below, and delete the rest
+    adata.disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-1s'};
+    adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
+    adata.sponfreqFilter.status = true; % if true, use the following settings to filter ROIs
+    adata.sponfreqFilter.field = 'sponfq'; 
+    adata.sponfreqFilter.thresh = 0.05; % Hz
+    adata.sponfreqFilter.direction = 'high';
+end
+
+function ggSetting = initializeGgSetting()
+    % Settings for collecting events
+    ggSetting.entry = 'event'; % options: 'roi', 'event'
+    ggSetting.modify_stim_name = true; % change the stimulation name
+    ggSetting.sponOnly = false; % only keep spon entries
+    ggSetting.seperate_spon = false; % separate spon according to stimulation
+    ggSetting.dis_spon = false; % discard spontaneous events
+    ggSetting.modify_eventType_name = true; % modify event type using function [mod_cat_name]
+    ggSetting.groupField = {'peak_category','subNuclei'}; % field of eventProp_all used to group events
+    ggSetting.mark_EXog = false; % if true, rename the og to EXog if 'stimTrig' is 1
+    ggSetting.og_tag = {'og', 'og&ap'}; % find og events with these strings
+    ggSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'};
+    ggSetting.sort_order_plus = {'ap', 'EXopto'};
+end
+
+function at = initializeAtSettings()
+    % Settings for creating mean OG-trig events
+    at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'
+    at.stimNames = ''; % if empty, do not screen recordings with stimulation
+    at.eventCat = 'trig'; % options: 'trig','trig-ap','rebound','spon'
+    at.subNucleiTypes = {'DAO','PO'}; % separate ROIs using the subnuclei tag
+    at.plot_combined_data = true; % plot mean value and std of all traces
+    at.showRawtraces = false; % plot every single trace
+    at.showMedian = false; % plot raw traces having a median value of specified properties
+    at.medianProp = 'FWHM'; % 
+    at.shadeType = 'std'; % plot the shade using std/ste
+    at.y_range = [-10 20]; % Y-axis range for plotting
 end
 
 

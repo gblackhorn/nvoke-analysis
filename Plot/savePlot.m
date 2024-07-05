@@ -12,7 +12,7 @@ function [varargout] = savePlot(fig_handle, varargin)
     figFormat = true;
     jpgFormat = true;
     svgFormat = true;
-    paperSize = 'A4'; % Default paper size
+    paperSize = 'Letter'; % Default paper size
 
     % Create input parser
     p = inputParser;

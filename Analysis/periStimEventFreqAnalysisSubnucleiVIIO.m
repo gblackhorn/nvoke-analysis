@@ -131,7 +131,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 		if strcmpi(subNucleiFilter, 'PO') 
 			violinStimNames = {'og-5s ap-0.1s','og-5s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
 			violinBinIDX = [4,4]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
-			titleStr = sprintf('%s violinPlot of a single bin from periStim freq%s',subNucleiFilter, normStr);
+			titleStr = sprintf('%s PO violinPlot of a single bin from periStim freq%s',subNucleiFilter, normStr);
 			[violinData1,statInfo1] = violinplotPeriStimFreq2(barStat.(subNucleiFilter),violinStimNames,violinBinIDX,...
 				'normToFirst',normToFirst,'titleStr',titleStr,...
 				'save_fig',save_fig,'save_dir',saveDir,'gui_save','off');
@@ -139,7 +139,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 			% event freq comparison: baseline of AP vs AP
 			violinStimNames = {'ap-0.1s','ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
 			violinBinIDX = [1,3]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
-			titleStr = sprintf('%s violinPlot of a single bin from periStim freq%s',subNucleiFilter, normStr);
+			titleStr = sprintf('%s PO violinPlot of a single bin from periStim freq%s',subNucleiFilter, normStr);
 			[violinData2,statInfo2] = violinplotPeriStimFreq2(barStat.(subNucleiFilter),violinStimNames,violinBinIDX,...
 				'normToFirst',normToFirst,'titleStr',titleStr,...
 				'save_fig',save_fig,'save_dir',saveDir,'gui_save','off');
@@ -147,7 +147,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 			% bar plot of the fold-change of event frequency in statInfo1 and statInfo2
 			% APstim/APbaseline VS OGAP/OG
 			% Require the 'statInfo1' and 'statInfo2' above
-			titleStrFold = sprintf('%s foldChange of eventFreq caused by AP with and without OG',subNucleiFilter);
+			titleStrFold = sprintf('%s PO foldChange of eventFreq caused by AP with and without OG',subNucleiFilter);
 			[f,f_rowNum,f_colNum] = fig_canvas(2,'unit_width',0.4,'unit_height',0.4,...
 				'column_lim',2,...
 			    'fig_name',[titleStrFold,' bar']); % create a figure

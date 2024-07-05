@@ -492,7 +492,7 @@ gui_save = true;
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
 filters = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
-subNucleiFilter = 'DAO';
+subNucleiFilter = 'PO';
 diffPair = {[1 3], [2 3], [1 2]}; % {[1 3], [2 3]}. binned freq will be compared between stimualtion groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
 
 propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
@@ -632,9 +632,34 @@ end
 % 3.4 Plot event properties and percentages for OG-ex neurons
 % Compare DAO and PO
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
+ggSetting.modify_stim_name = true; % true/false. Change the stimulation name, 
+ggSetting.mark_EXog = false; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
+ggSetting.dis_spon = false; % true/false. Discard spontaneous events
 ggSetting.groupField = {'peak_category','subNuclei'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
-summarizeExOgEffect(alignedData_allTrials, 'save_fig', save_fig, 'save_dir', FolderPathVA.fig,...
-	'adata', adata, 'ggSetting', ggSetting);
+summarizeExOgEffect(alignedData_allTrials, 'save_fig', save_fig, 'save_dir', FolderPathVA.fig);
+	% 'adata', adata, 'ggSetting', ggSetting
 
+
+%% ==================== 
+% 3.4 Compare the delay of offStim events to spon interval
+close all
+save_fig = true; % true/false
+subNucleiTypes = {'DAO', 'PO'};
+for sn = 1:numel(subNucleiTypes)
+	alignedDataSubN = screenSubNucleiROIs(alignedData_allTrials,subNucleiTypes{sn});
+	[stimEventJitter, f, fname] = stimEventJitterAnalysis(alignedDataSubN,{'og-5s'},'rebound',...
+		'titlePrefix', subNucleiTypes{sn});
+
+	if save_fig
+		if sn == 1 
+			guiSave = true;
+		else
+			guiSave = false;
+		end
+		FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',guiSave,'fname',fname);
+		save(fullfile(FolderPathVA.fig, [fname,' data']),'stimEventJitter');
+	end
+
+end
