@@ -156,7 +156,7 @@ end
 %% ==========
 % 2.3 Create the mean spontaneous traces in DAO and PO
 % Note: 'event_type' for alignedData must be 'detected_events'
-save_fig = true; % true/false
+save_fig = false; % true/false
 save_dir = FolderPathVA.fig;
 at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'. Indicate what value should be used to normalize the traces
 at.stimNames = ''; % If empty, do not screen recordings with stimulation, instead use all of them
@@ -166,7 +166,7 @@ at.plot_combined_data = true; % mean value and std of all traces
 at.showRawtraces = false; % true/false. true: plot every single trace
 at.showMedian = false; % true/false. plot raw traces having a median value of the properties specified by 'at.medianProp'
 at.medianProp = 'FWHM'; % 
-at.shadeType = 'std'; % plot the shade using std/ste
+at.shadeType = 'ste'; % plot the shade using std/ste
 at.y_range = [-10 20]; % [-10 5],[-3 5],[-2 1]
 % at.sponNorm = true; % true/false
 % at.normalized = false; % true/false. normalize the traces to their own peak amplitudes.
@@ -226,23 +226,11 @@ debug_mode = false; % true/false
 	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
 
-% Keep spontaneous events and discard all others
-tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
-[eventStructForPlotFiltered] = filter_entries_in_structure(eventStructForPlot,'group',...
-	'tags_keep',tags_keep);
-
-
 % b. Create grouped_event for plotting ROI properties
 ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventProp
 [roiStructForPlot] = getAndGroup_eventsProp(alignedData_allTrials,...
 	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
-
-% Keep spontaneous events and discard all others
-% tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
-[roiStructForPlotFiltered] = filter_entries_in_structure(roiStructForPlot,'group',...
-	'tags_keep',tags_keep);
-
 
 % Discard those without sync tag in the eventProp (Due to single neuron)
 mustHaveField = 'synchronicityIndex';
@@ -255,10 +243,6 @@ ggSetting.groupField = {'peak_category','subNuclei','type'}; % options: 'fovID',
 	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
 
-% Keep spontaneous events and discard all others
-tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
-[eventStructForPlotFiltered_syncTag] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
-	'tags_keep',tags_keep);
 
 %% ==========
 % 2.5 Plot event properties
@@ -279,27 +263,32 @@ mmHierarchicalVars = {'trialName', 'roiName'};
 mmDistribution = 'gamma'; % For continuous, positively skewed data
 mmLink = 'log'; % For continuous, positively skewed data
 
+% Keep spontaneous events and discard all others
+tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
+[eventStructForPlotFiltered_spon_syncTag] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
+	'tags_keep',tags_keep);
+
 % Generate and save figures
-[save_dir, plot_info] = plot_event_info(eventStructForPlotFiltered,'entryType',ggSetting.entry,...
+[save_dir, plot_info] = plot_event_info(eventStructForPlotFiltered_spon_syncTag,'entryType',ggSetting.entry,...
 	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
 	'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
 	'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-	'fname_preffix','event','save_fig', save_fig, 'save_dir', FolderPathVA.fig);
+	'fname_preffix','sponEvent','save_fig', save_fig, 'save_dir', FolderPathVA.fig);
 
 % Create a UI table displaying the n numberss
-fNum = nNumberTab(eventStructForPlotFiltered,'event');
+fNum = nNumberTab(eventStructForPlotFiltered_spon_syncTag,'event');
 
 % Save data
 if save_fig
 	% Save the fNum
-	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo');
+	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'sponEvent nNumInfo');
 	% savePlot(fMM,'guiSave', 'off', 'save_dir', save_dir, 'fname', fMM_name);
 
 	% Save the statistics info
-	eventPropStatInfo.eventStructForPlotFiltered = eventStructForPlotFiltered;
+	eventPropStatInfo.eventStructForPlotFiltered= eventStructForPlotFiltered_spon_syncTag;
 	eventPropStatInfo.plot_info = plot_info;
 	% dt = datestr(now, 'yyyymmdd');
-	save(fullfile(save_dir, 'event propStatInfo'), 'eventPropStatInfo');
+	save(fullfile(save_dir, 'sponEvent propStatInfo'), 'eventPropStatInfo');
 end
 
 % Update the folder path 
@@ -307,7 +296,38 @@ if save_dir~=0
 	FolderPathVA.fig = save_dir;
 end
 
-%%% ==========
+% Keep spontaneous events and discard all others
+tags_keep = {'opto-delay [og-5s]'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
+[eventStructForPlotFiltered] = filter_entries_in_structure(eventStructForPlot,'group',...
+	'tags_keep',tags_keep);
+
+% Generate and save figures
+[save_dir, plot_info] = plot_event_info(eventStructForPlotFiltered,'entryType',ggSetting.entry,...
+	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
+	'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
+	'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+	'fname_preffix','ogDelayEvent','save_fig', save_fig, 'save_dir', FolderPathVA.fig);
+
+% Create a UI table displaying the n numberss
+fNum = nNumberTab(eventStructForPlotFiltered,'event');
+
+% Save data
+if save_fig
+	% Save the fNum
+	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'ogDelayEvent nNumInfo');
+	% savePlot(fMM,'guiSave', 'off', 'save_dir', save_dir, 'fname', fMM_name);
+
+	% Save the statistics info
+	eventPropStatInfo.eventStructForPlotFiltered = eventStructForPlotFiltered;
+	eventPropStatInfo.plot_info = plot_info;
+	% dt = datestr(now, 'yyyymmdd');
+	save(fullfile(save_dir, 'ogDelayEvent propStatInfo'), 'eventPropStatInfo');
+end
+
+
+
+
+%% ==========
 % 2.6 Plot ROI properties. 
 % Use data organized in section 2.3
 % close all
@@ -320,6 +340,12 @@ if save_fig
 	close all
 end
 
+% Keep spontaneous events and discard all others
+tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
+[roiStructForPlotFiltered] = filter_entries_in_structure(roiStructForPlot,'group',...
+	'tags_keep',tags_keep);
+
+
 [save_dir, plot_info] = plot_event_info(roiStructForPlotFiltered,'entryType','roi',...
 	'plot_combined_data', plot_combined_data, 'parNames', parNamesROI, 'stat', stat,...
 	'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVarsROI,...
@@ -327,6 +353,10 @@ end
 	'fname_preffix','ROI','save_fig', save_fig, 'save_dir', save_dir);
 
 % Create a UI table displaying the n numberss
+% Keep spontaneous events and discard all others
+tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
+[eventStructForPlotFiltered] = filter_entries_in_structure(eventStructForPlot,'group',...
+	'tags_keep',tags_keep);
 fNumROI = nNumberTab(eventStructForPlotFiltered,'roi');
 
 
@@ -486,8 +516,9 @@ end
 %% ==========
 % 3.1 Peri-stimulus event frequency analysis
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 gui_save = true;
+groupLevel = 'roi'; % Collect event freq on 'roi'/'stimTrial' level
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
@@ -529,7 +560,7 @@ debug_mode = false; % true/false
 % plot periStim event freq, and diff among them
 [barStat,diffStat,FolderPathVA.fig] = periStimEventFreqAnalysisSubnucleiVIIO(alignedData_allTrials,'propName',propName,...
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
-	'diffPair',diffPair,'binWidth',binWidth,'stimIDX',stimIDX,'normToBase',normToBase,...
+	'diffPair',diffPair,'binWidth',binWidth,'stimIDX',stimIDX,'normToBase',normToBase,'groupLevel',groupLevel,...
 	'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 	'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim,...
 	'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...

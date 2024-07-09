@@ -33,6 +33,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
     addParameter(p, 'PropName', 'rise_time', @ischar); % Property name ('rise_time', 'peak_time')
     addParameter(p, 'stimIDX', [], @isnumeric); % Indices of stimulation repeats
     addParameter(p, 'AlignEventsToStim', true, @islogical); % Align events to stimulation onsets
+    addParameter(p, 'groupLevel', 'roi', @ischar); % Collect event freq on 'roi'/'stimTrial' level
     addParameter(p, 'preStim_duration', 5, @isnumeric); % Duration before stimulation onset (s)
     addParameter(p, 'postStim_duration', 5, @isnumeric); % Duration after stimulation end (s)
     addParameter(p, 'round_digit_sig', 2, @isnumeric); % Significant digits for duration rounding
@@ -74,6 +75,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
     PropName = p.Results.PropName;
     stimIDX = p.Results.stimIDX;
     AlignEventsToStim = p.Results.AlignEventsToStim;
+    groupLevel = p.Results.groupLevel;
     preStim_duration = p.Results.preStim_duration;
     postStim_duration = p.Results.postStim_duration;
     round_digit_sig = p.Results.round_digit_sig;
@@ -147,7 +149,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 	for stn = 1:stim_type_num
 		PeriBaseRange = [baseBinEdgestart baseBinEdgeEnd];
 		[EventFreqInBins,binEdges,stimShadeData,stimShadeName,stimEventCatName,binNames] = get_EventFreqInBins_trials(alignedData,stim_names{stn},...
-			'PropName',PropName,'binWidth',binWidth,'stimIDX',stimIDX,...
+			'PropName',PropName,'binWidth',binWidth,'stimIDX',stimIDX,'groupLevel',groupLevel,...
 			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 			'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'PeriBaseRange',PeriBaseRange,...
 			'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,'splitLongStim',splitLongStim,...
@@ -196,7 +198,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 
 		% normalized all data to baseline level
 		if normToBase
-			ef = ef/mean(ef(:,idxBaseData),'all'); 
+			% ef = ef/mean(ef(:,idxBaseData),'all'); % Normalize with the mean val of baseline
+			ef = ef./ef(:,idxBaseData); % Normalize with the baseline of each row
 			barStat(stn).baseRange = [baseStart baseEnd];
 		else
 			barStat(stn).baseRange = [];
@@ -233,6 +236,28 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		barStat(stn).data = barPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', ax, 'xtickLabel', binNames);
 		barStat(stn).dataStruct = efStruct;
 
+
+
+		% Run Repeated measures ANOVA
+		% Convert matrix to table
+		efTable = array2table(ef, 'VariableNames', binNames);
+
+		% Define the within-subjects design (time points)
+		time = table(binNames', 'VariableNames', {'Time'});
+
+		% Define repeated measures model
+		rm = fitrm(efTable, 'baseline-baseAfter ~ 1', 'WithinDesign', time);
+
+		% Perform repeated measures ANOVA
+		ranovaResults = ranova(rm);
+
+		% Perform post-hoc multiple comparisons
+		ranovaMultComp = multcompare(rm, 'Time');
+
+		barStat(stn).ranova = ranovaResults;
+		barStat(stn).ranovaMultComp = ranovaMultComp;
+
+
 		% Run GLMM to evaluate the difference of every freq in various time bins
         barStat(stn).GLMMstat = twoPartMixedModelAnalysis(efStruct, 'val', 'xdata', mmlHierarchicalVars,...
         	'groupVarType', 'categorical', 'dispStat', false);
@@ -268,7 +293,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		MultCom_stat = barStat(stn).anovaCombineBase.c(:,["g1","g2","p","h"]);
 
 		axStat = nexttile(tloStat);
-		plotUItable(fstat,axStat,MultCom_stat);
+		plotUItable(fstat,axStat,ranovaMultComp);
+		% plotUItable(fstat,axStat,MultCom_stat);
 	end
 	sgtitle(titleStr)
 	varargout{1} = barStat;
@@ -345,16 +371,19 @@ function [recNum,recDateNum,roiNum,stimRepeatNum] = calcDataNum(EventFreqInBins)
 	% get the date and time info from trial names
 	% one specific date-time (exp. 20230101-150320) represent one recording
 	% one date, in general, represent one animal
-	trialNamesAll = {EventFreqInBins.TrialNames};
-	trialNamesAllDateTime = cellfun(@(x) x(1:15),trialNamesAll,'UniformOutput',false);
-	trialNamesAllDate = cellfun(@(x) x(1:8),trialNamesAll,'UniformOutput',false);
-	trialNameUniqueDateTime = unique(trialNamesAllDateTime);
-	trialNameUniqueDate = unique(trialNamesAllDate);
+	recNamesAll = {EventFreqInBins.recNames};
+	recNamesAllDateTime = cellfun(@(x) x(1:15),recNamesAll,'UniformOutput',false);
+	recNamesAllDate = cellfun(@(x) x(1:8),recNamesAll,'UniformOutput',false);
+	roiNames = {EventFreqInBins.roiNames};
+	recNeuronNames = cellfun(@(dateTime, roi) [dateTime, ' ', roi], recNamesAllDateTime, roiNames, 'UniformOutput', false);
+	recNameUniqueDateTime = unique(recNamesAllDateTime);
+	recNameUniqueDate = unique(recNamesAllDate);
+	recNeuronNameUnique = unique(recNeuronNames);
 
 	% get all the n numbers
-	recNum = numel(trialNameUniqueDateTime);
-	recDateNum = numel(trialNameUniqueDate);
-	roiNum = numel(trialNamesAll);
+	recNum = numel(recNameUniqueDateTime);
+	recDateNum = numel(recNameUniqueDate);
+	roiNum = numel(recNeuronNameUnique);
 	stimRepeatNum = sum([EventFreqInBins.stimNum]);
 end
 
@@ -370,20 +399,20 @@ function efStruct = efArray2struct(ef, EventFreqInBins, xdata)
 	roiNum = size(ef, 1);
 	binNum = size(ef, 2);
 
-	% Validate the data
-	if roiNum ~=  length(EventFreqInBins)
-		error('The row number of ef and the length of EventFreqInBins must be the same')
-	end
-	if binNum ~= length(xdata)
-		error('The col number of ef and the length of xdata must be the same')
-	end
+	% % Validate the data
+	% if roiNum ~=  length(EventFreqInBins)
+	% 	error('The row number of ef and the length of EventFreqInBins must be the same')
+	% end
+	% if binNum ~= length(xdata)
+	% 	error('The col number of ef and the length of xdata must be the same')
+	% end
 
 	% Create an empty cell to pre-allocate RAM
 	efStructCell = cell(1, binNum);
 	% efStructFieldNames = {'val', 'xdata', 'trialNames', 'roiNames', 'subNuclei', 'stimNum'};
 
 	% Extract the fields' content from EventFreqInBins
-	trialNames = {EventFreqInBins.TrialNames};
+	trialNames = {EventFreqInBins.recNames};
 	roiNames = {EventFreqInBins.roiNames};
 	subNuclei = {EventFreqInBins.subNuclei};
 	stimNum = [EventFreqInBins.stimNum];

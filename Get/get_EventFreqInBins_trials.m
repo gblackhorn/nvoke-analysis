@@ -18,6 +18,8 @@ function [EventFreqInBinsAll,varargout] = get_EventFreqInBins_trials(alignedData
     stim_rb = nan;
     stim_exApOg = nan; % excitatory AP during OG . If is nan, filter won't be applied
 
+    groupLevel = 'roi'; % 'roi'/'stimTrial'. Collect event in bins and calculate the freq on specifiec group level
+    baseBinIDX = 1; % The position of the baseline bin
     preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
     postStim_duration = 5; % unit: second. include events happened after the end of stimulations
 
@@ -45,7 +47,7 @@ function [EventFreqInBinsAll,varargout] = get_EventFreqInBins_trials(alignedData
                         % If it is [1 1], the time during stimulation will be splitted using edges below
                         % [stimStart, stimEffectDuration, stimEffectDuration+splitLongStim, stimEnd] 
 
-    debug_mode = false;
+    debugMode = false;
 
     % Optionals for inputs
     for ii = 1:2:(nargin-2)
@@ -77,18 +79,20 @@ function [EventFreqInBinsAll,varargout] = get_EventFreqInBins_trials(alignedData
             stimIDX = varargin{ii+1}; 
         elseif strcmpi('denorm', varargin{ii}) 
             denorm = varargin{ii+1}; % denorminator used to normalize the EventFreq 
-        elseif strcmpi('TrialName', varargin{ii})
-            TrialName = varargin{ii+1}; 
-        elseif strcmpi('roiNames', varargin{ii})
-            roiNames = varargin{ii+1}; 
+        % elseif strcmpi('recName', varargin{ii})
+        %     recName = varargin{ii+1}; 
+        % elseif strcmpi('roiNames', varargin{ii})
+        %     roiNames = varargin{ii+1}; 
+        elseif strcmpi('groupLevel', varargin{ii})
+            groupLevel = varargin{ii+1}; 
         elseif strcmpi('preStim_duration', varargin{ii})
             preStim_duration = varargin{ii+1}; 
         elseif strcmpi('postStim_duration', varargin{ii})
             postStim_duration = varargin{ii+1}; 
         elseif strcmpi('round_digit_sig', varargin{ii})
             round_digit_sig = varargin{ii+1}; % round to the Nth significant digit for duration
-        elseif strcmpi('debug_mode', varargin{ii})
-            debug_mode = varargin{ii+1}; 
+        elseif strcmpi('debugMode', varargin{ii})
+            debugMode = varargin{ii+1}; 
         end
     end
 
@@ -100,20 +104,24 @@ function [EventFreqInBinsAll,varargout] = get_EventFreqInBins_trials(alignedData
 
 
     % Loop through trials/recordings
-    trialNum = numel(alignedData_filtered);
-    EventFreqInBins_cell = cell(1,trialNum);
-    for tn = 1:trialNum
-        TrialName = alignedData_filtered(tn).trialName; % get the current recording trial name
+    recNum = numel(alignedData_filtered);
+    EventFreqInBins_cell = cell(1,recNum);
+    for recN = 1:recNum
+        recName = alignedData_filtered(recN).trialName; % get the current recording trial name
+        EventsProps = {alignedData_filtered(recN).traces.eventProp}; % get the event properties of rois from current trial
+        roiNames = {alignedData_filtered(recN).traces.roi}; % get the roi names from current trial
+        subNuclei = {alignedData_filtered(recN).traces.subNuclei}; % get the roi names from current trial
 
-        if debug_mode
-            fprintf('trial %d/%d: %s\n',tn,trialNum,TrialName);
-            if tn == 1
+
+        if debugMode
+            fprintf('trial %d/%d: %s\n',recN,recNum,recName);
+            if recN == 1
                 pause
             end
         end
         
         % get the ranges of stimulations
-        stimInfo = alignedData_filtered(tn).stimInfo;
+        stimInfo = alignedData_filtered(recN).stimInfo;
         StimRanges = stimInfo.UnifiedStimDuration.range; 
 
         % Get the stimulation patch_coor, and modify it for plot shade to indicate the stimulation period
@@ -134,22 +142,17 @@ function [EventFreqInBinsAll,varargout] = get_EventFreqInBins_trials(alignedData
             StimRanges = StimRanges(stimIDX,:);
         end
 
-        % Filter ROIs using their response to the stimulation: excitatory/inhibitory/rebound
-        [alignedDataTraces_filtered] = Filter_AlignedDataTraces_withStimEffect(alignedData_filtered(tn).traces,...
-            'ex',stim_ex,'in',stim_in,'rb',stim_rb,'exApOg',stim_exApOg);
-        EventsProps = {alignedDataTraces_filtered.eventProp}; % get the event properties of rois from current trial
-        roiNames = {alignedDataTraces_filtered.roi}; % get the roi names from current trial
-        subNuclei = {alignedDataTraces_filtered.subNuclei}; % get the roi names from current trial
-
-
-        % Collect peri-stimulus events from every ROI and organized them in bins
         roi_num = numel(EventsProps); % number of ROIs
-        TrialNames = repmat({TrialName},1,roi_num); % create a 1*roi_num cell containing the 'TrialNames' in every element
-        EventFreqInBins = emptyStruct({'TrialNames','roiNames','subNuclei','EventFqInBins','stimNum'},[1, roi_num]); % create an empty structure
-        [EventFreqInBins.TrialNames] = TrialNames{:}; % add trial names in struct EventFreqInBins
-        [EventFreqInBins.roiNames] = roiNames{:}; % add roi names in struct EventFreqInBins
-        [EventFreqInBins.subNuclei] = subNuclei{:}; % add roi names in struct EventFreqInBins
-        % binNames = {};
+
+        if ~exist('PeriBaseRange','var')
+            PeriBaseRange = [-preStimDuration -2];
+        end
+
+        % set the peri-stim sections (edges)
+        [periStimSections,stimRepeatNum,binNames] = setPeriStimSectionForEventFreqCalc(alignedData_filtered(recN).fullTime,stimInfo,...
+            'preStimDuration',preStim_duration,'postStimDuration',postStim_duration,...
+            'PeriBaseRange',PeriBaseRange,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim);
+
 
         % Get the time of stimulation related events
         if stimEventsPos && ~isempty(stimEvents) && ~isempty(EventsProps)
@@ -174,65 +177,140 @@ function [EventFreqInBinsAll,varargout] = get_EventFreqInBins_trials(alignedData
             stimEventCatName = '';
         end
 
-        for rn = 1:roi_num
-            if debug_mode
-                fprintf(' - roi %g/%g: %s\n',rn,roi_num,roiNames{rn})
-                % if rn == 7
-                %     pause
-                % end
-            end
-            % Use StimEventsTime to filter the peri-stimulation ranges
-            if stimEventsPos
-                timeRanges = NaN(size(StimRanges));
-                timeRanges(:,1) = StimRanges(:,1)-preStim_duration;
-                timeRanges(:,2) = StimRanges(:,2)+postStim_duration;
-                [posTimeRanges,posRangeIDX] = getRangeIDXwithEvents(StimEventsTime{rn},timeRanges);
-                StimRangesFinal = StimRanges(posRangeIDX,:);
-            else
-                StimRangesFinal = StimRanges;
-            end
+        eventFreqStructFields = {'recNames','roiNames','subNuclei','EventFqInBins','stimNum'};
 
-            eventTimeStamps = [EventsProps{rn}.(PropName)]; % get the (rn)th ROI event time stamps from the EventsProps
+        if strcmpi(groupLevel, 'roi')
+            % Filter ROIs using their response to the stimulation: excitatory/inhibitory/rebound
+            % [alignedDataTraces_filtered] = Filter_AlignedDataTraces_withStimEffect(alignedData_filtered(recN).traces,...
+            %     'ex',stim_ex,'in',stim_in,'rb',stim_rb,'exApOg',stim_exApOg);
 
-            if ~customizeEdges
-                if ~isempty(StimRangesFinal)
-                    [EventsPeriStimulus,PeriStimulusRange] = group_EventsPeriStimulus(eventTimeStamps,StimRangesFinal,...
-                        'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
-                        'round_digit_sig',round_digit_sig); % group event time stamps around stimulations
 
-                    % construct the bin edges if specialBin is not empty
-                    if ~isempty(specialBin)
-                        binEdges = [PeriStimulusRange(1):binWidth:specialBin(1) specialBin(2):binWidth:PeriStimulusRange(2)];
-                    else
-                        binEdges = [];
+            % binNames = {};
+
+            % Collect peri-stimulus events from every ROI and organized them in bins
+            recNames = repmat({recName},1,roi_num); % create a 1*roi_num cell containing the 'recNames' in every element
+            EventFreqInBins = emptyStruct(eventFreqStructFields,[1, roi_num]); % create an empty structure
+            [EventFreqInBins.recNames] = recNames{:}; % add trial names in struct EventFreqInBins
+            [EventFreqInBins.roiNames] = roiNames{:}; % add roi names in struct EventFreqInBins
+            [EventFreqInBins.subNuclei] = subNuclei{:}; % add roi names in struct EventFreqInBins
+
+
+            for rn = 1:roi_num
+                if debugMode
+                    fprintf(' - roi %g/%g: %s\n',rn,roi_num,roiNames{rn})
+                    % if rn == 7
+                    %     pause
+                    % end
+                end
+                % Use StimEventsTime to filter the peri-stimulation ranges
+                if stimEventsPos
+                    timeRanges = NaN(size(StimRanges));
+                    timeRanges(:,1) = StimRanges(:,1)-preStim_duration;
+                    timeRanges(:,2) = StimRanges(:,2)+postStim_duration;
+                    [posTimeRanges,posRangeIDX] = getRangeIDXwithEvents(StimEventsTime{rn},timeRanges);
+                    StimRangesFinal = StimRanges(posRangeIDX,:);
+                else
+                    StimRangesFinal = StimRanges;
+                end
+
+                eventTimeStamps = [EventsProps{rn}.(PropName)]; % get the (rn)th ROI event time stamps from the EventsProps
+
+                if ~customizeEdges
+                    if ~isempty(StimRangesFinal)
+                        [EventsPeriStimulus,PeriStimulusRange] = group_EventsPeriStimulus(eventTimeStamps,StimRangesFinal,...
+                            'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
+                            'round_digit_sig',round_digit_sig); % group event time stamps around stimulations
+
+                        % construct the bin edges if specialBin is not empty
+                        if ~isempty(specialBin)
+                            binEdges = [PeriStimulusRange(1):binWidth:specialBin(1) specialBin(2):binWidth:PeriStimulusRange(2)];
+                        else
+                            binEdges = [];
+                        end
+
+                        [EventFreqInBins(rn).EventFqInBins,binEdges] = get_EventFreqInBins_roi(EventsPeriStimulus,PeriStimulusRange,...
+                            'binWidth',binWidth,'plotHisto',false,'binEdges',binEdges); % calculate the event frequencies (in bins) in a roi and assigne the array to the EventFreqInBins
+
+                        EventFreqInBins(rn).stimNum = size(StimRangesFinal,1); % number of stim repeats used for one roi
                     end
+                else
+                    % if ~exist('PeriBaseRange','var')
+                    %     PeriBaseRange = [-preStimDuration -2];
+                    % end
+                    % % set the peri-stim sections (edges)
+                    % [periStimSections,stimRepeatNum,binNames] = setPeriStimSectionForEventFreqCalc(alignedData_filtered(recN).fullTime,stimInfo,...
+                    %     'preStimDuration',preStim_duration,'postStimDuration',postStim_duration,...
+                    %     'PeriBaseRange',PeriBaseRange,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim);
 
-                    [EventFreqInBins(rn).EventFqInBins,binEdges] = get_EventFreqInBins_roi(EventsPeriStimulus,PeriStimulusRange,...
-                        'binWidth',binWidth,'plotHisto',false,'binEdges',binEdges); % calculate the event frequencies (in bins) in a roi and assigne the array to the EventFreqInBins
+                    % calculate the averaged event frequencies in the bins defined by periStimSections
+                    % Use the 3rd-column elements as default 0 for the peri-stim ranges 
+                    [sectEventFreq,modelSect] = calcPeriStimEventFreqRoi(eventTimeStamps,periStimSections);
 
-                    EventFreqInBins(rn).stimNum = size(StimRangesFinal,1); % number of stim repeats used for one roi
+                    EventFreqInBins(rn).EventFqInBins = sectEventFreq;
+                    EventFreqInBins(rn).stimNum = stimRepeatNum;
+                    binEdges = modelSect;
                 end
-            else
-                if ~exist('PeriBaseRange','var')
-                    PeriBaseRange = [-preStimDuration -2];
-                end
-                % set the peri-stim sections (edges)
-                [periStimSections,stimRepeatNum,binNames] = setPeriStimSectionForEventFreqCalc(alignedData_filtered(tn).fullTime,stimInfo,...
-                    'preStimDuration',preStim_duration,'postStimDuration',postStim_duration,...
-                    'PeriBaseRange',PeriBaseRange,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim);
-
-                % calculate the averaged event frequencies in the bins defined by periStimSections
-                % Use the 3rd-column elements as default 0 for the peri-stim ranges 
-                [sectEventFreq,modelSect] = calcPeriStimEventFreqRoi(eventTimeStamps,periStimSections);
-
-                EventFreqInBins(rn).EventFqInBins = sectEventFreq;
-                EventFreqInBins(rn).stimNum = stimRepeatNum;
-                binEdges = modelSect;
             end
-        end
-        EventFreqInBins_cell{tn} = EventFreqInBins;
-        if roi_num == 0 && ~exist('binEdges','var')
-            binEdges = [];
+            EventFreqInBins_cell{recN} = EventFreqInBins;
+            if roi_num == 0 && ~exist('binEdges','var')
+                binEdges = [];
+            % else
+            %     binEdges = modelSect;
+            end
+        elseif strcmpi(groupLevel, 'stimTrial')
+            EventFreqInBinsRoi_cell = cell(1, roi_num);
+
+            for rn = 1:roi_num
+                if debugMode
+                    fprintf(' - roi %g/%g: %s\n',rn,roi_num,roiNames{rn})
+                    % if rn == 7
+                    %     pause
+                    % end
+                end
+
+                % get the (rn)th ROI event time stamps from the EventsProps
+                eventTimeStamps = [EventsProps{rn}.(PropName)]; 
+
+                % Get the event counts from all the neurons and bin durations
+                [~,modelSect,eventHistCountsMat,sectionsDuration] = calcPeriStimEventFreqRoi(eventTimeStamps,periStimSections);
+
+                % Calculate the event freq in every stimulation trial
+                eventFreqInBinsStimTrials = eventHistCountsMat./sectionsDuration;
+
+                % Discard the stim trials if the basline freq is 0
+                baselineFreq = eventFreqInBinsStimTrials(:, baseBinIDX);
+                keepTF = baselineFreq~=0;
+                eventFreqInBinsStimTrials = eventFreqInBinsStimTrials(keepTF, :);
+
+                % Create an empty struct to store the event freq info
+                structLength = size(eventFreqInBinsStimTrials, 1);
+                EventFreqInBins = emptyStruct(eventFreqStructFields,[1, structLength]);
+
+                if structLength > 0
+                    for sl = 1:structLength
+                        EventFreqInBins(sl).recNames = recName;
+                        EventFreqInBins(sl).roiNames = roiNames{rn};
+                        EventFreqInBins(sl).subNuclei = subNuclei{rn};
+                        EventFreqInBins(sl).EventFqInBins = eventFreqInBinsStimTrials(sl, :);
+                        EventFreqInBins(sl).stimNum = 1;
+                    end
+                end
+
+                EventFreqInBinsRoi_cell{rn} = EventFreqInBins;
+                % % Assign the values to the EventFreqInBins
+                % EventFreqInBins(rn).EventFqInBins = eventFreqInBinsStimTrials;
+                % EventFreqInBins(rn).stimNum = stimRepeatNum;
+            end
+
+            if roi_num == 0 % && ~exist('binEdges','var')
+                if ~exist('binEdges','var')
+                    binEdges = [];
+                end
+                EventFreqInBins_cell{recN} = emptyStruct(eventFreqStructFields,[1, 0]);
+            else
+                binEdges = modelSect;
+                EventFreqInBins_cell{recN} = EventFreqInBinsRoi_cell{:};
+            end
         end
 
         if ~exist('binNames','var')

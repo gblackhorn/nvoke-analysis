@@ -23,6 +23,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 	addParameter(p, 'propName', 'peak_time'); % 'rise_time'/'peak_time'. Choose one to find the locations of events
 	addParameter(p, 'binWidth', 1); % the width of histogram bin. the default value is 1 s.
 	addParameter(p, 'stimIDX', []); % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
+	addParameter(p, 'groupLevel', 'roi', @ischar); % Collect event freq on 'roi'/'stimTrial' level
 	addParameter(p, 'preStim_duration', 5); % unit: second. include events happened before the onset of stimulations
 	addParameter(p, 'postStim_duration', 15); % unit: second. include events happened after the end of stimulations
 	addParameter(p, 'customizeEdges', true); % customize the bins using function 'setPeriStimSectionForEventFreqCalc'
@@ -64,6 +65,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 	propName = p.Results.propName;
 	binWidth = p.Results.binWidth;
 	stimIDX = p.Results.stimIDX;
+	groupLevel = p.Results.groupLevel;
 	preStim_duration = p.Results.preStim_duration;
 	postStim_duration = p.Results.postStim_duration;
 	customizeEdges = p.Results.customizeEdges;
@@ -105,7 +107,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 
 		[barStat.(subNucleiFilter),diffStat.(subNucleiFilter),saveDir] = periStimEventFreqAnalysis(alignedData,'propName',propName,...
 			'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'subNucleiFilter',subNucleiFilter,...
-			'diffPair',diffPair,'binWidth',binWidth,'stimIDX',stimIDX,'normToBase',normToBase,...
+			'diffPair',diffPair,'binWidth',binWidth,'stimIDX',stimIDX,'normToBase',normToBase,'groupLevel',groupLevel,...
 			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 			'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim,...
 			'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...

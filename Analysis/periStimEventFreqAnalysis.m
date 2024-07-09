@@ -23,6 +23,7 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	addParameter(p, 'propName', 'peak_time'); % 'rise_time'/'peak_time'. Choose one to find the locations of events
 	addParameter(p, 'binWidth', 1); % the width of histogram bin. the default value is 1 s.
 	addParameter(p, 'stimIDX', []); % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
+	addParameter(p, 'groupLevel', 'roi', @ischar); % Collect event freq on 'roi'/'stimTrial' level
 	addParameter(p, 'preStim_duration', 5); % unit: second. include events happened before the onset of stimulations
 	addParameter(p, 'postStim_duration', 10); % unit: second. include events happened after the end of stimulations
 	addParameter(p, 'customizeEdges', false); % customize the bins using function 'setPeriStimSectionForEventFreqCalc'
@@ -64,6 +65,7 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	propName = p.Results.propName;
 	binWidth = p.Results.binWidth;
 	stimIDX = p.Results.stimIDX;
+	groupLevel = p.Results.groupLevel;
 	preStim_duration = p.Results.preStim_duration;
 	postStim_duration = p.Results.postStim_duration;
 	customizeEdges = p.Results.customizeEdges;
@@ -103,7 +105,7 @@ function [varargout] = periStimEventFreqAnalysis(alignedData,varargin)
 	% Fig A. plot the peri-stim event frequencies in bins for all the stimulation types in alignedData
 	[barStat,stimShadeDataAll,save_dir] = plot_event_freq_alignedData_allTrials(alignedData,'propName',propName,...
 	    'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,'stimIDX',stimIDX,...
-	    'normToBase',normToBase,'apCorrection',apCorrection,...
+	    'normToBase',normToBase,'apCorrection',apCorrection,'groupLevel',groupLevel,...
 	    'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
 	    'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim,...
 	    'xlabelStr',xlabelStr,'ylabelStr',ylabelStr,'xTickAngle',xTickAngle,...

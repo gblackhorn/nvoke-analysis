@@ -113,15 +113,25 @@ function [GLMMresults, varargout] = twoPartMixedModelAnalysis(dataStruct, respon
     nonZeroDataStruct = dataStruct([dataStruct.(responseVar)] > 0);
 
     % Run the part 2 model
-    [me2,fixedEffectsStats2,chiLRT2,mmPvalue2,multiComparisonResults2]= mixed_model_analysis(nonZeroDataStruct,...
-        responseVar, groupVar, hierarchicalVars, 'groupVarType', groupVarType,...
-        'modelType',modelType,'distribution',distribution2,'link',link2);
-    GLMMresults(2).method = modelType;
-    GLMMresults(2).detail = me2;
-    GLMMresults(2).fixedEffectsStats = fixedEffectsStats2;
-    GLMMresults(2).chiLRT = chiLRT2;
-    GLMMresults(2).mmPvalue = mmPvalue2;
-    GLMMresults(2).multCompare = multiComparisonResults2;
+    if ~isempty(nonZeroDataStruct)
+        [me2,fixedEffectsStats2,chiLRT2,mmPvalue2,multiComparisonResults2]= mixed_model_analysis(nonZeroDataStruct,...
+            responseVar, groupVar, hierarchicalVars, 'groupVarType', groupVarType,...
+            'modelType',modelType,'distribution',distribution2,'link',link2);
+        GLMMresults(2).method = modelType;
+        GLMMresults(2).detail = me2;
+        GLMMresults(2).fixedEffectsStats = fixedEffectsStats2;
+        GLMMresults(2).chiLRT = chiLRT2;
+        GLMMresults(2).mmPvalue = mmPvalue2;
+        GLMMresults(2).multCompare = multiComparisonResults2;
+    else
+        GLMMresults(2).method = modelType;
+        GLMMresults(2).detail = [];
+        GLMMresults(2).fixedEffectsStats = [];
+        GLMMresults(2).chiLRT = [];
+        GLMMresults(2).mmPvalue = [];
+        GLMMresults(2).multCompare = [];
+
+    end
 
 
     % Display the summary of the binary model

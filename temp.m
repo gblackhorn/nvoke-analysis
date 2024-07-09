@@ -351,3 +351,115 @@ dataLateOG2CombCell = {[dataLateOG2DAO.val], [dataLateOG2PO.val]};
 [statLateOG1,statTabLateOG1] = ttestOrANOVA(dataLateOG1CombCell);
 [statLateOG2,statTabLateOG2] = ttestOrANOVA(dataLateOG2CombCell);
 
+
+%% =========
+% Compare the late OG bins in DAO and PO
+eventFreqData = {barInfo.groupData};
+barPlotInfo = barplot_with_errBar(eventFreqData,'barX',x,'plotWhere',plotWhere,...
+        'barNames',groupNames,...
+        'TickAngle', TickAngle, 'FontSize', FontSize, 'FontWeight', FontWeight);
+
+
+
+%% =========
+[stimEventJitter] = stimEventJitterAnalysis(alignedData_allTrials,{'og-5s'},'rebound');
+
+
+
+%% ==========
+% 2.3 Create the mean spontaneous traces of ogDelay events in DAO and PO
+% Note: 'event_type' for alignedData must be 'detected_events'
+save_fig = true; % true/false
+save_dir = FolderPathVA.fig;
+at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'. Indicate what value should be used to normalize the traces
+at.stimNames = ''; % If empty, do not screen recordings with stimulation, instead use all of them
+at.eventCat = 'opto-delay'; % options: 'trig','trig-ap','rebound','spon', 'rebound'
+at.subNucleiTypes = {'DAO','PO'}; % Separate ROIs using the subnuclei tag.
+at.plot_combined_data = true; % mean value and std of all traces
+at.showRawtraces = false; % true/false. true: plot every single trace
+at.showMedian = false; % true/false. plot raw traces having a median value of the properties specified by 'at.medianProp'
+at.medianProp = 'FWHM'; % 
+at.shadeType = 'ste'; % plot the shade using std/ste
+at.y_range = [-10 20]; % [-10 5],[-3 5],[-2 1]
+% at.sponNorm = true; % true/false
+% at.normalized = false; % true/false. normalize the traces to their own peak amplitudes.
+
+close all
+
+[OGalignedData_allTrials] = filter_entries_in_structure(alignedData_allTrials,'stim_name',...
+	'tags_keep','og-5s','tags_discard','ap-0.1s');
+
+% Create a cell to store the trace info
+traceInfo = cell(1,numel(at.subNucleiTypes));
+
+% Loop through the subNucleiTypes
+for i = 1:numel(at.subNucleiTypes)
+	[~,traceInfo{i}] = AlignedCatTracesSinglePlot(OGalignedData_allTrials,at.stimNames,at.eventCat,...
+		'normMethod',at.normMethod,'subNucleiType',at.subNucleiTypes{i},...
+		'showRawtraces',at.showRawtraces,'showMedian',at.showMedian,'medianProp',at.medianProp,...
+		'plot_combined_data',at.plot_combined_data,'shadeType',at.shadeType,'y_range',at.y_range);
+	% 'sponNorm',at.sponNorm,'normalized',at.normalized,
+
+	if i == 1
+		guiSave = 'on';
+	else
+		guiSave = 'off';
+	end
+	if save_fig
+		save_dir = savePlot(gcf,'guiSave', guiSave, 'save_dir', save_dir, 'fname', traceInfo{i}.fname);
+	end
+end
+traceInfo = [traceInfo{:}];
+
+if save_fig
+	save(fullfile(save_dir,'alignedCalTracesInfo'), 'traceInfo');
+	FolderPathVA.fig = save_dir;
+end
+
+
+%% ==========
+% 2.5 Plot event properties
+
+% Settings
+save_fig = true; % true/false
+plot_combined_data = false;
+parNames = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_mag_delta'}; 
+    % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
+stat = true; % Set it to true to run anova when plotting bars
+
+close all
+
+% Setup parameters for linear-mixed-model (LMM) or generalized-mixed-model (GLMM) analysis
+mmModel = 'GLMM'; % LMM/GLMM
+mmGroup = 'subNuclei'; % LMM/GLMM
+mmHierarchicalVars = {'trialName', 'roiName'};
+mmDistribution = 'gamma'; % For continuous, positively skewed data
+mmLink = 'log'; % For continuous, positively skewed data
+
+% Keep spontaneous events and discard all others
+tags_keep = {'opto-delay [og-5s]', 'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
+[eventStructForPlotFiltered] = filter_entries_in_structure(eventStructForPlot,'group',...
+	'tags_keep',tags_keep);
+
+% Generate and save figures
+[save_dir, plot_info] = plot_event_info(eventStructForPlotFiltered,'entryType',ggSetting.entry,...
+	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
+	'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
+	'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+	'fname_preffix','ogDelaySponEvent','save_fig', save_fig, 'save_dir', FolderPathVA.fig);
+
+% Create a UI table displaying the n numberss
+fNum = nNumberTab(eventStructForPlotFiltered,'event');
+
+% Save data
+if save_fig
+	% Save the fNum
+	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'ogDelaySponEvent nNumInfo');
+	% savePlot(fMM,'guiSave', 'off', 'save_dir', save_dir, 'fname', fMM_name);
+
+	% Save the statistics info
+	eventPropStatInfo.eventStructForPlotFiltered = eventStructForPlotFiltered;
+	eventPropStatInfo.plot_info = plot_info;
+	% dt = datestr(now, 'yyyymmdd');
+	save(fullfile(save_dir, 'ogDelaySponEvent propStatInfo'), 'eventPropStatInfo');
+end

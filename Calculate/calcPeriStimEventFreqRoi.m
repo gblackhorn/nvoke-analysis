@@ -68,5 +68,7 @@ function [sectEventFreq,varargout] = calcPeriStimEventFreqRoi(eventTimeStamps,pe
 	% round the first repeat of periStimSections to use it as representative edges
 	modelSect = round(periStimSections(1,:),round_digit_sig,'significant');
 	varargout{1} = modelSect;
+	varargout{2} = eventHistCounts;
+	varargout{3} = sectionsDuration(1,:);
 end
 

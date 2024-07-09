@@ -86,7 +86,7 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
             violinData(n).eventFreqStruct = eventFreqStructAll(binNamesTF);
             % use the first stim group to normalize other group data
             if n == 1
-                normMean = mean(violinData(n).eventFreq);
+                normMean = mean(violinData(n).eventFreq,"omitmissing");
             end 
 
             % normalize the data with the mean of first group data

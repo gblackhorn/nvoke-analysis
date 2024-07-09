@@ -110,7 +110,7 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
     % Convert the structured data to a table
     tbl = struct2table(MMdata);
 
-    if ~isempty(tbl)
+    if ~isempty(tbl) && numel(MMdata) > 1
         if iscell(tbl.(groupVar))  && isnumeric(tbl.(groupVar){1}) 
             tbl.(groupVar) = cell2mat(tbl.(groupVar));
         end
@@ -263,7 +263,6 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
         me = '';
         fixedEffectsStats = [];
         chiLRT = [];
-        mmPvalue = [];
     end
 
     % Add multi-comparison results and statInfo to the output
