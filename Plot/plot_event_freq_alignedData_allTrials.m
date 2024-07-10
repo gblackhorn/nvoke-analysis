@@ -198,8 +198,12 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 
 		% normalized all data to baseline level
 		if normToBase
-			% ef = ef/mean(ef(:,idxBaseData),'all'); % Normalize with the mean val of baseline
-			ef = ef./ef(:,idxBaseData); % Normalize with the baseline of each row
+			switch groupLevel
+				case 'roi' % All roi data are kept. To avoid the inf value due to the low baseline freq, use mean val as the denorm
+					ef = ef/mean(ef(:,idxBaseData),'all'); % Normalize with the mean val of baseline
+				case 'stimTrial' % Stim trials with 0 freq baseline are discarded 
+					ef = ef./ef(:,idxBaseData); % Normalize with the baseline of each row
+			end
 			barStat(stn).baseRange = [baseStart baseEnd];
 		else
 			barStat(stn).baseRange = [];

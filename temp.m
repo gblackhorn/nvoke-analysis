@@ -418,7 +418,7 @@ end
 
 
 %% ==========
-% 2.5 Plot event properties
+% 2.5 Plot event properties: OG-delay vs spon
 
 % Settings
 save_fig = true; % true/false

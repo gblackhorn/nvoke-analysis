@@ -518,7 +518,7 @@ end
 close all
 save_fig = false; % true/false
 gui_save = true;
-groupLevel = 'roi'; % Collect event freq on 'roi'/'stimTrial' level
+groupLevel = 'stimTrial'; % Collect event freq on 'roi'/'stimTrial' level
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use

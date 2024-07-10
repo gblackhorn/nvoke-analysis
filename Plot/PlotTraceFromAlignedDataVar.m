@@ -145,7 +145,8 @@ function [varargout] = PlotTraceFromAlignedDataVar(alignedData,varargin)
 
 		if save_fig
 			% fname = sprintf('%s_trace_%s_%s_%d',TraceType,alignedData.trialName(1:15),alignedData.stim_name,fn);
-			savePlot(f(fn),'save_dir',save_dir,'fname',figNameStr);
+			savePlot(f(fn),'save_dir',save_dir,'fname',figNameStr,'paperSize','A5',...
+				'orientation','vertical');
 		end
 	end
 

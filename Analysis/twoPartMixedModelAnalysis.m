@@ -161,16 +161,20 @@ function [GLMMresults, varargout] = twoPartMixedModelAnalysis(dataStruct, respon
         % Plot the original data and the fit data to examine the fitting
         % titleBinary = sprintf('%s %s', figNamePrefix, 'OriginalData-vs-fitData_binary');
         axBinary = nexttile;
-        axBinary = visualizeMeFitting(me1, groupVar, 'plotWhere', axBinary,...
-            'titlePrefix',[figNamePrefix ' [binary model]']);
+        if ~isempty(me1)
+            axBinary = visualizeMeFitting(me1, groupVar, 'plotWhere', axBinary,...
+                'titlePrefix',[figNamePrefix ' [binary model]']);
+        end
 
 
 
         % Plot the original data and the fit data to examine the fitting
         % figNameNonBinary = sprintf('%s %s', figNamePrefix, 'OriginalData-vs-fitData_binary');
         axNonBinary = nexttile;
-        axNonBinary = visualizeMeFitting(me2, groupVar, 'plotWhere', axNonBinary,...
-            'titlePrefix',[figNamePrefix, ' [nonBinary model]']);
+        if ~isempty(me2)
+            axNonBinary = visualizeMeFitting(me2, groupVar, 'plotWhere', axNonBinary,...
+                'titlePrefix',[figNamePrefix, ' [nonBinary model]']);
+        end
     end
 
     varargout{1} = f; % plot to visualize the me fitting
