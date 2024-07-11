@@ -15,7 +15,7 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
     params = parse_inputs(varargin{:});
 
     if params.save_fig 
-        params.save_dir = setup_save_directory(params.save_dir, params.savepath_nogui);
+        params.save_dir = setup_save_directory(params.save_dir, params.GUIsave);
         if isempty(params.save_dir)
             varargout{1} = '';
             return;
@@ -61,6 +61,7 @@ function params = parse_inputs(varargin)
         'peak_slope','peak_slope_norm_hpstd','baseDiff','baseDiff_stimWin'}; 
     defaultSaveFig = false;
     defaultSaveDir = '';
+    defaultGUIsave = true;
     defaultSavePathNoGui = '';
     defaultFnamePreffix = '';
     defaultMmModel = ''; % '': Do not use MM model for analysis. 'LMM': Linear-Mixed-Model. 'GLMM': Generalized-Mixed_Model
@@ -83,6 +84,7 @@ function params = parse_inputs(varargin)
     addParameter(p, 'parNames', defaultParNames);
     addParameter(p, 'save_fig', defaultSaveFig);
     addParameter(p, 'save_dir', defaultSaveDir);
+    addParameter(p, 'GUIsave', defaultGUIsave);
     addParameter(p, 'savepath_nogui', defaultSavePathNoGui);
     addParameter(p, 'fname_preffix', defaultFnamePreffix);
     addParameter(p, 'mmModel', defaultMmModel);
@@ -102,16 +104,22 @@ function params = parse_inputs(varargin)
     params = p.Results;
 end
 
-function save_dir = setup_save_directory(save_dir, savepath_nogui)
-    if isempty(savepath_nogui)
+function save_dir = setup_save_directory(save_dir, GUIsave)
+    if GUIsave
         save_dir = uigetdir(save_dir, 'Choose a folder to save plots');
         if save_dir == 0
-            disp('Folder for saving plots not chosen. Choose one or set "save_fig" to false');
-            save_dir = '';
+            error('Folder for saving plots not chosen. Choose one or set "save_fig" to false');
         end
-    else
-        save_dir = savepath_nogui;
     end
+    % if isempty(savepath_nogui)
+    %     save_dir = uigetdir(save_dir, 'Choose a folder to save plots');
+    %     if save_dir == 0
+    %         disp('Folder for saving plots not chosen. Choose one or set "save_fig" to false');
+    %         save_dir = '';
+    %     end
+    % else
+    %     save_dir = savepath_nogui;
+    % end
 end
 
 function event_info_struct = remove_empty_entries(event_info_struct)
@@ -158,24 +166,28 @@ function [bar_data, bar_stat] = plot_bars(event_info_struct, parNames, params)
     bar_data = struct();
     bar_stat = struct();
 
-    f_bar = create_figure([params.fname_preffix, ' bar plots']);
-    % f_stat = uifigure('Name', 'bar stat', 'Position', [0.1 0.1 0.8 0.4]);
-    f_stat = create_figure([params.fname_preffix, ' bar stat']);
-    set(f_stat, 'Position', [0.05 0.1 0.95 0.4]);
-    f_violin = create_figure([params.fname_preffix, ' violin plots']);
+    parNum = numel(parNames);
 
-    tlo_bar = tiledlayout(f_bar, ceil(numel(parNames)/params.tileColNum), params.tileColNum);
-    tlo_barstat = tiledlayout(f_stat, ceil(numel(parNames)/params.tileColNum)*2+1, params.tileColNum);
-    tlo_violin = tiledlayout(f_violin, ceil(numel(parNames)/params.tileColNum), params.tileColNum);
+    [f_bar, f_rowNum, f_colNum] = fig_canvas(parNum, 'fig_name', [params.fname_preffix, ' bar plots']);
+    f_stat = fig_canvas(parNum, 'fig_name', [params.fname_preffix, ' bar stat']);
+    f_violin = fig_canvas(parNum, 'fig_name', [params.fname_preffix, ' violin plots']);
+    % f_bar = create_figure([params.fname_preffix, ' bar plots']);
+    % f_stat = create_figure([params.fname_preffix, ' bar stat']);
+    % set(f_stat, 'Position', [0.05 0.1 0.95 0.4]);
+    % f_violin = create_figure([params.fname_preffix, ' violin plots']);
+
+    tlo_bar = tiledlayout(f_bar, ceil(numel(parNames)/f_colNum), f_colNum);
+    tlo_barstat = tiledlayout(f_stat, ceil(numel(parNames)/f_colNum)*2+1, f_colNum);
+    tlo_violin = tiledlayout(f_violin, ceil(numel(parNames)/f_colNum), f_colNum);
 
     groupNames = {event_info_struct.group};
 
-    for pn = 1:numel(parNames)
+    for pn = 1:parNum
         par = parNames{pn};
         ax_bar = nexttile(tlo_bar);
 
-        statTileLoc1 = floor(pn/params.tileColNum)*params.tileColNum+mod(pn,params.tileColNum)+params.tileColNum;
-        statTileLoc2 = floor(pn/params.tileColNum)*params.tileColNum+mod(pn,params.tileColNum)+params.tileColNum*2;
+        statTileLoc1 = floor(pn/f_colNum)*f_colNum+mod(pn,f_colNum)+f_colNum;
+        statTileLoc2 = floor(pn/f_colNum)*f_colNum+mod(pn,f_colNum)+f_colNum*2;
         % statTileLoc = floor(pn/params.tileColNum)*params.tileColNum*2+pn+params.tileColNum;
         ax_stat1 = nexttile(tlo_barstat,statTileLoc1);
         ax_stat2 = nexttile(tlo_barstat,statTileLoc2);
@@ -314,8 +326,10 @@ end
 
 function plot_cumulative_distributions(event_info_struct, parNames, params)
     figNameStr = sprintf('%s cumulative distribution plots', params.fname_preffix);
-    f_cd = create_figure(figNameStr);
-    tlo = tiledlayout(f_cd, ceil(numel(parNames)/4), 4);
+    [f_cd, f_rowNum, f_colNum] = fig_canvas(numel(parNames), 'fig_name', figNameStr);
+
+    % f_cd = create_figure(figNameStr);
+    tlo = tiledlayout(f_cd, ceil(numel(parNames)/f_colNum), f_colNum);
 
     for pn = 1:numel(parNames)
         par = parNames{pn};

@@ -246,85 +246,54 @@ ggSetting.groupField = {'peak_category','subNuclei','type'}; % options: 'fovID',
 
 %% ==========
 % 2.5 Plot event properties
-
-% Settings
-save_fig = true; % true/false
-plot_combined_data = false;
-parNames = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_mag_delta'}; 
-    % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
-stat = true; % Set it to true to run anova when plotting bars
-
 close all
-
-% Setup parameters for linear-mixed-model (LMM) or generalized-mixed-model (GLMM) analysis
+% General Settings
+saveFig = true; % true/false
+props = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd'}; 
+    % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
 mmModel = 'GLMM'; % LMM/GLMM
-mmGroup = 'subNuclei'; % LMM/GLMM
 mmHierarchicalVars = {'trialName', 'roiName'};
 mmDistribution = 'gamma'; % For continuous, positively skewed data
 mmLink = 'log'; % For continuous, positively skewed data
 
-% Keep spontaneous events and discard all others
-tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
-[eventStructForPlotFiltered_spon_syncTag] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
-	'tags_keep',tags_keep);
 
-% Generate and save figures
-[save_dir, plot_info] = plot_event_info(eventStructForPlotFiltered_spon_syncTag,'entryType',ggSetting.entry,...
-	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
-	'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
-	'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-	'fname_preffix','sponEvent','save_fig', save_fig, 'save_dir', FolderPathVA.fig);
+% Settings for sub-groups
+organizeStruct(1).title = 'sponSubN';
+organizeStruct(1).keepGroups = {'spon'};
+organizeStruct(1).mmFixCat = 'subNuclei';
 
-% Create a UI table displaying the n numberss
-fNum = nNumberTab(eventStructForPlotFiltered_spon_syncTag,'event');
+organizeStruct(2).title = 'ogDelaySubN';
+organizeStruct(2).keepGroups = {'opto-delay [og-5s]'};
+organizeStruct(2).mmFixCat = 'subNuclei';
 
-% Save data
-if save_fig
-	% Save the fNum
-	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'sponEvent nNumInfo');
-	% savePlot(fMM,'guiSave', 'off', 'save_dir', save_dir, 'fname', fMM_name);
+organizeStruct(3).title = 'apTrigSubN';
+organizeStruct(3).keepGroups = {'trig [ap-0.1s]'};
+organizeStruct(3).mmFixCat = 'subNuclei';
 
-	% Save the statistics info
-	eventPropStatInfo.eventStructForPlotFiltered= eventStructForPlotFiltered_spon_syncTag;
-	eventPropStatInfo.plot_info = plot_info;
-	% dt = datestr(now, 'yyyymmdd');
-	save(fullfile(save_dir, 'sponEvent propStatInfo'), 'eventPropStatInfo');
-end
+organizeStruct(4).title = 'ogDelay2spon DAO';
+organizeStruct(4).keepGroups = {'spon-DAO', 'opto-delay [og-5s]-DAO'};
+organizeStruct(4).mmFixCat = 'peak_category';
+
+organizeStruct(5).title = 'ogDelay2spon PO';
+organizeStruct(5).keepGroups = {'spon-PO', 'opto-delay [og-5s]-PO'};
+organizeStruct(5).mmFixCat = 'peak_category';
+
+organizeStruct(4).title = 'apTrig2spon DAO';
+organizeStruct(4).keepGroups = {'spon-DAO', 'trig [ap-0.1s]-DAO'};
+organizeStruct(4).mmFixCat = 'peak_category';
+
+organizeStruct(5).title = 'apTrig2spon PO';
+organizeStruct(5).keepGroups = {'spon-PO', 'trig [ap-0.1s]-PO'};
+organizeStruct(5).mmFixCat = 'peak_category';
+
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructForPlot,props,organizeStruct,...
+	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
 
 % Update the folder path 
-if save_dir~=0
-	FolderPathVA.fig = save_dir;
+if saveDir~=0
+	FolderPathVA.fig = saveDir;
 end
-
-% Keep spontaneous events and discard all others
-tags_keep = {'opto-delay [og-5s]'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
-[eventStructForPlotFiltered] = filter_entries_in_structure(eventStructForPlot,'group',...
-	'tags_keep',tags_keep);
-
-% Generate and save figures
-[save_dir, plot_info] = plot_event_info(eventStructForPlotFiltered,'entryType',ggSetting.entry,...
-	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
-	'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
-	'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-	'fname_preffix','ogDelayEvent','save_fig', save_fig, 'save_dir', FolderPathVA.fig);
-
-% Create a UI table displaying the n numberss
-fNum = nNumberTab(eventStructForPlotFiltered,'event');
-
-% Save data
-if save_fig
-	% Save the fNum
-	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'ogDelayEvent nNumInfo');
-	% savePlot(fMM,'guiSave', 'off', 'save_dir', save_dir, 'fname', fMM_name);
-
-	% Save the statistics info
-	eventPropStatInfo.eventStructForPlotFiltered = eventStructForPlotFiltered;
-	eventPropStatInfo.plot_info = plot_info;
-	% dt = datestr(now, 'yyyymmdd');
-	save(fullfile(save_dir, 'ogDelayEvent propStatInfo'), 'eventPropStatInfo');
-end
-
-
 
 
 %% ==========
@@ -516,7 +485,7 @@ end
 %% ==========
 % 3.1 Peri-stimulus event frequency analysis
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 gui_save = true;
 groupLevel = 'stimTrial'; % Collect event freq on 'roi'/'stimTrial' level
 
@@ -529,7 +498,7 @@ diffPair = {[1 3], [2 3], [1 2]}; % {[1 3], [2 3]}. binned freq will be compared
 propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
 binWidth = 1; % the width of histogram bin. the default value is 1 s.
 stimIDX = []; % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
-preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
+preStim_duration = 10; % unit: second. include events happened before the onset of stimulations
 postStim_duration = 15; % unit: second. include events happened after the end of stimulations
 customizeEdges = true; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
 stimEffectDuration = 1; % unit: second. Use this to set the end for the stimulation effect range

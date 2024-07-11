@@ -110,7 +110,7 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
     % Convert the structured data to a table
     tbl = struct2table(MMdata);
 
-    if ~isempty(tbl) && numel(MMdata) > 1
+    if ~isempty(tbl) && numel(MMdata.(responseVar)) > 1
         if iscell(tbl.(groupVar))  && isnumeric(tbl.(groupVar){1}) 
             tbl.(groupVar) = cell2mat(tbl.(groupVar));
         end

@@ -194,7 +194,7 @@ function [EventFreqInBinsAll,varargout] = get_EventFreqInBins_trials(alignedData
             [EventFreqInBins.roiNames] = roiNames{:}; % add roi names in struct EventFreqInBins
             [EventFreqInBins.subNuclei] = subNuclei{:}; % add roi names in struct EventFreqInBins
 
-
+            disRoiIDX = [];
             for rn = 1:roi_num
                 if debugMode
                     fprintf(' - roi %g/%g: %s\n',rn,roi_num,roiNames{rn})
@@ -249,8 +249,14 @@ function [EventFreqInBinsAll,varargout] = get_EventFreqInBins_trials(alignedData
                     EventFreqInBins(rn).EventFqInBins = sectEventFreq;
                     EventFreqInBins(rn).stimNum = stimRepeatNum;
                     binEdges = modelSect;
+
+                    % Set the ROI to be discarded if the baseline freq is 0
+                    if sectEventFreq(baseBinIDX) == 0
+                        disRoiIDX = [disRoiIDX, rn];
+                    end
                 end
             end
+            EventFreqInBins(disRoiIDX) = [];
             EventFreqInBins_cell{recN} = EventFreqInBins;
             if roi_num == 0 && ~exist('binEdges','var')
                 binEdges = [];
