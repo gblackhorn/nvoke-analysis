@@ -7,12 +7,7 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	% stimEventCat: such as 'trig', 'rebounds', etc.
 
 	% Defaults
-	% stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % compare the alignedData.stim_name with these strings and decide what filter to use
-	eventTimeType = 'peak_time'; % rise_time/peak_time
-	followEventCat = 'spon';
-	% filters = [1 nan nan nan]; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
-
-	maxDiff = 5; % the max difference between the stim-related and the following events
+	defaultReleventEventCat = 'spon'; % Use this category for relavent events when defReleventEventCat is true
 
 	% Stat model setting
 	modelType = 'GLMM';
@@ -24,22 +19,46 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	plotUnitHeight = 0.1;
 	columnLim = 2;
 
-	debugMode = false; % true/false
+	% % Optionals
+	% for ii = 1:2:(nargin-3)
+	%     % if strcmpi('filters', varargin{ii})
+	%     %     filters = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
+	%     if strcmpi('followEventCat', varargin{ii})
+	%         followEventCat = varargin{ii+1}; 
+	%     elseif strcmpi('eventTimeType', varargin{ii})
+	%         eventTimeType = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
+    %     elseif strcmpi('maxDiff', varargin{ii})
+	%         maxDiff = varargin{ii+1};
+    %     elseif strcmpi('debugMode', varargin{ii})
+	%         debugMode = varargin{ii+1};
+	%     end
+	% end
 
-	% Optionals
-	for ii = 1:2:(nargin-3)
-	    % if strcmpi('filters', varargin{ii})
-	    %     filters = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
-	    if strcmpi('followEventCat', varargin{ii})
-	        followEventCat = varargin{ii+1}; 
-	    elseif strcmpi('eventTimeType', varargin{ii})
-	        eventTimeType = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
-        elseif strcmpi('maxDiff', varargin{ii})
-	        maxDiff = varargin{ii+1};
-        elseif strcmpi('debugMode', varargin{ii})
-	        debugMode = varargin{ii+1};
-	    end
-	end
+	% Create an instance of the inputParser
+	p = inputParser;
+
+	% Required input
+	addRequired(p, 'alignedData', @isstruct);
+	addRequired(p, 'stimName', @ischar);
+	addRequired(p, 'stimEventCat', @ischar);
+
+	% Add optional parameters to the input p
+	addParameter(p, 'eventTimeType', 'peak_time', @ischar);
+	addParameter(p, 'releventEventLoc', 'post', @ischar); % 'pre'/'post'. The location of relevent event. Pre or post to the ref event
+	addParameter(p, 'defReleventEventCat', false, @islogical); 
+	addParameter(p, 'maxDiff', 5, @isnumeric);
+	addParameter(p, 'debugMode', false, @islogical);
+
+	% Parse inputs
+	parse(p, alignedData, stimName, stimEventCat, varargin{:});
+
+	% Retrieve parsed values
+	eventTimeType = p.Results.eventTimeType;
+	releventEventLoc = p.Results.releventEventLoc;
+	defReleventEventCat = p.Results.defReleventEventCat;
+	maxDiff = p.Results.maxDiff;
+	debugMode = p.Results.debugMode;
+
 
 	% filter the alignedData with stimName
 	stimNameAll = {alignedData.stim_name};
@@ -51,28 +70,32 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	% [alignedDataFiltered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedDataFiltered,...
 	% 	'stim_names',stimName,'filters',filters);
 
-
-	% Get the time diff between stim-related events and their following spon events
-	stimAndFollowingInt = getEventInterval(alignedDataFiltered,stimEventCat,'spon','maxDiff',maxDiff);
+	if defReleventEventCat % Only work if the input 'releventEventLoc' is 'post'
+		% Get the time diff between stim-related events and their following spon events
+		stimAndNeighbourInt = getEventInterval(alignedDataFiltered,stimEventCat,defaultReleventEventCat,'maxDiff',maxDiff);
+	else
+		stimAndNeighbourInt = getEventIntervalFromRef(alignedDataFiltered,stimEventCat,releventEventLoc,'maxDiff',maxDiff);
+	end
 
 	% Get the time difference between two close spon events
 	sponAndSponInt = getEventInterval(alignedDataFiltered,'spon','spon','maxDiff',maxDiff);
 
 	% Run GLMM on the data for stat
-	combinedEventInt = [stimAndFollowingInt; sponAndSponInt];
+	combinedEventInt = [stimAndNeighbourInt; sponAndSponInt];
 	[me,~,~,~,~,meStatReport] = mixed_model_analysis(combinedEventInt,'pairTimeDiff','pairCat',{'recName','roi'},...
 		'modelType',modelType,'distribution',distribution,'link',link,'groupVarType',groupVarType);
 
 
 	% Create a structure to organize the data for violin plot
-	stimAndFollowingIntName = sprintf('%s2spon',stimEventCat);
+	stimAndFollowingIntName = sprintf('%s2%s',stimEventCat,releventEventLoc);
+	stimAndFollowingIntName = strrep(stimAndFollowingIntName, '-', '');
 	sponAndSponIntName = 'spon2spon';
-	violinData.(stimAndFollowingIntName) = [stimAndFollowingInt.pairTimeDiff];
+	violinData.(stimAndFollowingIntName) = [stimAndNeighbourInt.pairTimeDiff];
 	violinData.(sponAndSponIntName) = [sponAndSponInt.pairTimeDiff];
 
 
 	% Get n number and prepare to plot it in a UI table
-	nNumberTabStimAndFollowing = getRecordingNeuronCounts(stimAndFollowingInt);
+	nNumberTabStimAndFollowing = getRecordingNeuronCounts(stimAndNeighbourInt);
 	nNumberTabSponAndSpon = getRecordingNeuronCounts(sponAndSponInt);
 	combinedNumTable = combineSummaryTables(nNumberTabStimAndFollowing, stimAndFollowingIntName,...
 	nNumberTabSponAndSpon, sponAndSponIntName); % combine the nNumber tables
@@ -80,8 +103,8 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 
 
 	% Create figure canvas
-	titleStr = sprintf('stimEvent-followEvent-diff vs sponEvent-int [%s %s maxDiff-%gs]',...
-		stimName,stimEventCat,maxDiff);
+	titleStr = sprintf('%s vs sponEvent-int [%s %s maxDiff-%gs]',...
+		stimAndFollowingIntName,stimName,stimEventCat,maxDiff);
 	[f,f_rowNum,f_colNum] = fig_canvas(10,'unit_width',plotUnitWidth,'unit_height',plotUnitHeight,...
 		'row_lim',5,'column_lim',columnLim,'fig_name',titleStr); % create a figure
 	tlo = tiledlayout(f,f_rowNum,f_colNum);
@@ -114,8 +137,8 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 
 	% Plot Kolmogorov-Smirnov Test stat: If two vectors are from the same continuous distribution
 	axKS = nexttile(10);
-	spon2spon_intervals = intData.violinData.spon2spon;
-	trig2spon_intervals = intData.violinData.trig2spon;
+	% spon2spon_intervals = intData.violinData.spon2spon;
+	% trig2spon_intervals = intData.violinData.trig2spon;
 
 	[hKS, pKS] = kstest2(violinData.(stimAndFollowingIntName), violinData.(sponAndSponIntName));
 	% disp(['K-S test p-value: ', num2str(p)]);

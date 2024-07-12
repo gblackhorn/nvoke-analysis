@@ -601,9 +601,10 @@ end
 % 3.3 Violin plot showing the difference of
 % stim-related-event_to_following_event_time and the spontaneous_event_interval
 close all
-save_fig = false; % true/false
-stimNameAll = {'og-5s','ap-0.1s'}; % 'og-5s' 'ap-0.1s'
-stimEventCatAll = {'rebound','trig'}; % 'rebound', 'trig'
+save_fig = true; % true/false
+stimNameAll = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % 'og-5s' 'ap-0.1s'
+stimEventCatAll = {'rebound','trig','trig-ap'}; % 'rebound', 'trig'
+releventEventLoc = 'pre'; % 'pre'/'post'. The location of relevent event. Pre or post to the ref event
 maxDiff = 5; % the max difference between the stim-related and the following events
 
 % loop through different stim-event pairs
@@ -615,7 +616,7 @@ for n = 1:numel(stimNameAll)
 	% 'maxDiff',maxDiff);
 
 	[intData,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
-	'maxDiff',maxDiff);
+	'releventEventLoc',releventEventLoc,'maxDiff',maxDiff);
 
 	if save_fig
 		if n == 1 
