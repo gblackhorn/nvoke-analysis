@@ -606,26 +606,32 @@ stimNameAll = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % 'og-5s' 'ap-0.1s'
 stimEventCatAll = {'rebound','trig','trig-ap'}; % 'rebound', 'trig'
 releventEventLoc = 'pre'; % 'pre'/'post'. The location of relevent event. Pre or post to the ref event
 maxDiff = 5; % the max difference between the stim-related and the following events
+subNucleiTypes = {'DAO', 'PO'};
+
 
 % loop through different stim-event pairs
+for sn = 1:numel(subNucleiTypes)
+	alignedDataSubN = screenSubNucleiROIs(alignedData_allTrials,subNucleiTypes{sn});
 
-for n = 1:numel(stimNameAll) 
-	stimName = stimNameAll{n};
-	stimEventCat = stimEventCatAll{n};
-	% [intData,eventIntMean,eventInt,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
-	% 'maxDiff',maxDiff);
 
-	[intData,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
-	'releventEventLoc',releventEventLoc,'maxDiff',maxDiff);
+	for n = 1:numel(stimNameAll) 
+		stimName = stimNameAll{n};
+		stimEventCat = stimEventCatAll{n};
+		% [intData,eventIntMean,eventInt,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
+		% 'maxDiff',maxDiff);
 
-	if save_fig
-		if n == 1 
-			guiSave = 'on';
-		else
-			guiSave = 'off';
+		[intData,f,fname] = stimEventSponEventIntAnalysis(alignedDataSubN,stimName,stimEventCat,...
+		    'releventEventLoc',releventEventLoc,'maxDiff',maxDiff,'titlePrefix',subNucleiTypes{sn});
+
+		if save_fig
+			if n == 1 
+				guiSave = 'on';
+			else
+				guiSave = 'off';
+			end
+			FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',guiSave,'fname',fname);
+			save(fullfile(FolderPathVA.fig, [fname,' data']),'intData');
 		end
-		FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',guiSave,'fname',fname);
-		save(fullfile(FolderPathVA.fig, [fname,' data']),'intData');
 	end
 end
 

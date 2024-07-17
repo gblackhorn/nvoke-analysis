@@ -8,6 +8,9 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 
 	% Defaults
 	defaultReleventEventCat = 'spon'; % Use this category for relavent events when defReleventEventCat is true
+	colorGroupCD = {'#3FF5E6', '#F55E58', '#F5A427', '#4CA9F5', '#33F577',...
+        '#408F87', '#8F4F7A', '#798F7D', '#8F7832', '#28398F', '#000000'};
+
 
 	% Stat model setting
 	modelType = 'GLMM';
@@ -17,7 +20,7 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 
 	plotUnitWidth = 0.3;
 	plotUnitHeight = 0.1;
-	columnLim = 2;
+	columnLim = 3;
 
 	% % Optionals
 	% for ii = 1:2:(nargin-3)
@@ -47,6 +50,7 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	addParameter(p, 'releventEventLoc', 'post', @ischar); % 'pre'/'post'. The location of relevent event. Pre or post to the ref event
 	addParameter(p, 'defReleventEventCat', false, @islogical); 
 	addParameter(p, 'maxDiff', 5, @isnumeric);
+	addParameter(p, 'titlePrefix', '', @ischar);
 	addParameter(p, 'debugMode', false, @islogical);
 
 	% Parse inputs
@@ -57,6 +61,7 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	releventEventLoc = p.Results.releventEventLoc;
 	defReleventEventCat = p.Results.defReleventEventCat;
 	maxDiff = p.Results.maxDiff;
+	titlePrefix = p.Results.titlePrefix;
 	debugMode = p.Results.debugMode;
 
 
@@ -103,9 +108,9 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 
 
 	% Create figure canvas
-	titleStr = sprintf('%s vs sponEvent-int [%s %s maxDiff-%gs]',...
-		stimAndFollowingIntName,stimName,stimEventCat,maxDiff);
-	[f,f_rowNum,f_colNum] = fig_canvas(10,'unit_width',plotUnitWidth,'unit_height',plotUnitHeight,...
+	titleStr = sprintf('%s %s vs sponEvent-int [%s %s maxDiff-%gs]',...
+		titlePrefix, stimAndFollowingIntName,stimName,stimEventCat,maxDiff);
+	[f,f_rowNum,f_colNum] = fig_canvas(15,'unit_width',plotUnitWidth,'unit_height',plotUnitHeight,...
 		'row_lim',5,'column_lim',columnLim,'fig_name',titleStr); % create a figure
 	tlo = tiledlayout(f,f_rowNum,f_colNum);
 
@@ -113,13 +118,18 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	axViolin = nexttile(1,[5,1]);
 	violinplot(violinData);
 
+	% Plot cumulative distribution
+	axCD = nexttile(2,[5,1]);
+	cumulative_distr_plot(struct2cell(violinData), 'groupNames', fieldnames(violinData), 'plotWhere', axCD,...
+	    'plotCombine',false,'colorGroup', colorGroupCD, 'FontSize', 12, 'FontWeight', 'bold');
+
 	% Plot nNumber
-	axNum = nexttile(2);
+	axNum = nexttile(3);
 	plotSummaryTableInUITable(axNum, combinedNumTable);
 
 
 	% Plot GLMM stat
-	axGlmmTitle = nexttile(4);
+	axGlmmTitle = nexttile(6);
 	glmmTitleStr = sprintf('(Top) %s model comparison: no-fixed-effects vs fixed-effects\n[%s]\nVS\n[%s]\n(Bottom) Group comparison',...
 		modelType, char(meStatReport.chiLRT.formula{1}), char(meStatReport.chiLRT.formula{2}));
 	set(axGlmmTitle, 'XColor', 'none', 'YColor', 'none'); % Hide X and Y axis lines, ticks, and labels
@@ -128,15 +138,15 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	     'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'FontSize', 12);
 	set(axGlmmTitle, 'Box', 'off');
 
-	axGlmmModelComp = nexttile(6);
-	axGlmmGroupComp = nexttile(8);
+	axGlmmModelComp = nexttile(9);
+	axGlmmGroupComp = nexttile(12);
 	plot_stat_table(axGlmmModelComp, axGlmmGroupComp, meStatReport);
 
 	set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 	sgtitle(titleStr);
 
 	% Plot Kolmogorov-Smirnov Test stat: If two vectors are from the same continuous distribution
-	axKS = nexttile(10);
+	axKS = nexttile(15);
 	% spon2spon_intervals = intData.violinData.spon2spon;
 	% trig2spon_intervals = intData.violinData.trig2spon;
 
