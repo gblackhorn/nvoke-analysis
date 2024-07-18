@@ -134,12 +134,6 @@ function [GLMMresults, varargout] = twoPartMixedModelAnalysis(dataStruct, respon
     end
 
 
-    % Display the summary of the binary model
-    if dispStat
-
-        % fBinary = visualizeMeFitting(me1, groupVar,...
-        %     'titlePrefix','[binary model]', 'figName', figNameBinary);
-    end
 
     % Display the summary of the models
     f = [];

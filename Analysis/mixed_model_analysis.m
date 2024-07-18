@@ -236,7 +236,7 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
             if length(groupLevels) > 2
                 % Perform multiple comparisons manually
                 [multiComparisonResults, mmPvalue] = performPostHocComparisons(me, groupLevels, dispStat, modelType);
-            else
+            elseif length(groupLevels) == 2
                 % Extract the p-value from the fixed effects for two groups
                 pValue = pValueGroup(1);
                 hValue = pValue < 0.05;
@@ -245,6 +245,8 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
                     fprintf('\nFixed Effects Results:\n%s vs. %s: p-value = %.4f, h = %d\n', ...
                         groupLevels{1}, groupLevels{2}, pValue, hValue);
                 end
+            % else
+                
             end
         % elseif strcmp(modelType, 'GLMM') && length(groupLevels) == 2
         %     % Perform post-hoc comparison for GLMM with two groups

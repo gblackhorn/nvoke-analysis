@@ -23,6 +23,8 @@ function [EventFreqInBinsAll,varargout] = get_EventFreqInBins_trials(alignedData
     preStim_duration = 5; % unit: second. include events happened before the onset of stimulations
     postStim_duration = 5; % unit: second. include events happened after the end of stimulations
 
+    disZeroBase = true; % Discard the roi/stimTrial if the baseline value is zero
+
     customizeEdges = false; % customize the bins using function 'setPeriStimSectionForEventFreqCalc'
     stimEffectDuration = 1; % unit: second. Use this to set the end for the stimulation effect range
 
@@ -89,6 +91,8 @@ function [EventFreqInBinsAll,varargout] = get_EventFreqInBins_trials(alignedData
             preStim_duration = varargin{ii+1}; 
         elseif strcmpi('postStim_duration', varargin{ii})
             postStim_duration = varargin{ii+1}; 
+        elseif strcmpi('disZeroBase', varargin{ii})
+            disZeroBase = varargin{ii+1}; 
         elseif strcmpi('round_digit_sig', varargin{ii})
             round_digit_sig = varargin{ii+1}; % round to the Nth significant digit for duration
         elseif strcmpi('debugMode', varargin{ii})
@@ -250,9 +254,11 @@ function [EventFreqInBinsAll,varargout] = get_EventFreqInBins_trials(alignedData
                     EventFreqInBins(rn).stimNum = stimRepeatNum;
                     binEdges = modelSect;
 
-                    % Set the ROI to be discarded if the baseline freq is 0
-                    if sectEventFreq(baseBinIDX) == 0
-                        disRoiIDX = [disRoiIDX, rn];
+                    if disZeroBase
+                        % Set the ROI to be discarded if the baseline freq is 0
+                        if sectEventFreq(baseBinIDX) == 0
+                            disRoiIDX = [disRoiIDX, rn];
+                        end
                     end
                 end
             end
@@ -283,10 +289,12 @@ function [EventFreqInBinsAll,varargout] = get_EventFreqInBins_trials(alignedData
                 % Calculate the event freq in every stimulation trial
                 eventFreqInBinsStimTrials = eventHistCountsMat./sectionsDuration;
 
-                % Discard the stim trials if the basline freq is 0
-                baselineFreq = eventFreqInBinsStimTrials(:, baseBinIDX);
-                keepTF = baselineFreq~=0;
-                eventFreqInBinsStimTrials = eventFreqInBinsStimTrials(keepTF, :);
+                if disZeroBase
+                    % Discard the stim trials if the basline freq is 0
+                    baselineFreq = eventFreqInBinsStimTrials(:, baseBinIDX);
+                    keepTF = baselineFreq~=0;
+                    eventFreqInBinsStimTrials = eventFreqInBinsStimTrials(keepTF, :);
+                end
 
                 % Create an empty struct to store the event freq info
                 structLength = size(eventFreqInBinsStimTrials, 1);

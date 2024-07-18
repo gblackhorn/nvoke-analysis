@@ -489,6 +489,10 @@ save_fig = true; % true/false
 gui_save = true;
 groupLevel = 'stimTrial'; % Collect event freq on 'roi'/'stimTrial' level
 
+disZeroBase = false; % true/false. Discard the roi/stimTrial if the baseline value is zero
+normToBase = false; % true/false. normalize the data to baseline (data before baseBinEdge)
+plotDiff = false; % true/false. plot the difference of comparable bins from various stimulation recording groups
+
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
 filters = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
@@ -518,7 +522,6 @@ stimEvents(3).stimName = 'og-5s ap-0.1s';
 stimEvents(3).eventCat = 'rebound';
 stimEvents(3).eventCatFollow = 'spon'; % The category of first event following the eventCat one
 
-normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
 baseBinEdgestart = -preStim_duration; % where to start to use the bin for calculating the baseline. -1
 baseBinEdgeEnd = -2; % 0
 apCorrection = false; % true/false. If true, correct baseline bin used for normalization. 
@@ -529,38 +532,39 @@ debug_mode = false; % true/false
 % plot periStim event freq, and diff among them
 [barStat,diffStat,FolderPathVA.fig] = periStimEventFreqAnalysisSubnucleiVIIO(alignedData_allTrials,'propName',propName,...
 	'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,...
-	'diffPair',diffPair,'binWidth',binWidth,'stimIDX',stimIDX,'normToBase',normToBase,'groupLevel',groupLevel,...
-	'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
+	'plotDiff',plotDiff,'diffPair',diffPair,'binWidth',binWidth,'stimIDX',stimIDX,...
+	'normToBase',normToBase,'groupLevel',groupLevel,...
+	'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,'disZeroBase',disZeroBase,...
 	'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim,...
 	'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 	'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,...
 	'save_fig',save_fig,'saveDir',FolderPathVA.fig,'gui_save',gui_save,'debug_mode',debug_mode);
 
-% Violin plot of selected bins
-subNuclei = {'PO','DAO'};
-for sn = 1:numel(subNuclei)
-	subN = subNuclei{sn};
-	fName = sprintf('violinPlot peri-stim eventFreq %s', subN);
-	[f,f_rowNum,f_colNum] = fig_canvas(3,'unit_width',0.4,'unit_height',0.3,...
-		'column_lim',1,'fig_name','fName'); % create a figure 
-	tlo = tiledlayout(f,f_rowNum,f_colNum);
-	for sn = 1:numel(barStat.(subN)) % Loop through various stimulation groups
-		stimNames = {barStat.(subN).stim};
-		switch stimNames{sn}
-			case 'og-5s'
-				binNames = {'baseline', 'lateFirstStim1', 'lateFirstStim2', 'postFirstStim'};
-			case 'ap-0.1s'
-				binNames = {'baseline', 'firstStim', 'baseAfter'};
-			case 'og-5s ap-0.1s'
-				binNames = {'baseline', 'secondStim', 'lateFirstStim', 'postFirstStim'};
-		end
-		ax = nexttile(tlo);
-		violinPlotPeriStimBins(barStat.(subN)(sn), binNames, ax);
-	end
-	if save_fig
-		savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',false,'fname',fName);
-	end
-end
+% % Violin plot of selected bins
+% subNuclei = {'PO','DAO'};
+% for sn = 1:numel(subNuclei)
+% 	subN = subNuclei{sn};
+% 	fName = sprintf('violinPlot peri-stim eventFreq %s', subN);
+% 	[f,f_rowNum,f_colNum] = fig_canvas(3,'unit_width',0.4,'unit_height',0.3,...
+% 		'column_lim',1,'fig_name','fName'); % create a figure 
+% 	tlo = tiledlayout(f,f_rowNum,f_colNum);
+% 	for sn = 1:numel(barStat.(subN)) % Loop through various stimulation groups
+% 		stimNames = {barStat.(subN).stim};
+% 		switch stimNames{sn}
+% 			case 'og-5s'
+% 				binNames = {'baseline', 'lateFirstStim1', 'lateFirstStim2', 'postFirstStim'};
+% 			case 'ap-0.1s'
+% 				binNames = {'baseline', 'firstStim', 'baseAfter'};
+% 			case 'og-5s ap-0.1s'
+% 				binNames = {'baseline', 'secondStim', 'lateFirstStim', 'postFirstStim'};
+% 		end
+% 		ax = nexttile(tlo);
+% 		violinPlotPeriStimBins(barStat.(subN)(sn), binNames, ax);
+% 	end
+% 	if save_fig
+% 		savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',false,'fname',fName);
+% 	end
+% end
 
 
 %% ====================

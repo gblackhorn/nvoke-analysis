@@ -36,6 +36,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
     addParameter(p, 'groupLevel', 'roi', @ischar); % Collect event freq on 'roi'/'stimTrial' level
     addParameter(p, 'preStim_duration', 5, @isnumeric); % Duration before stimulation onset (s)
     addParameter(p, 'postStim_duration', 5, @isnumeric); % Duration after stimulation end (s)
+    addParameter(p, 'disZeroBase', true, @islogical); % Discard the roi/stimTrial if the baseline value is zero
     addParameter(p, 'round_digit_sig', 2, @isnumeric); % Significant digits for duration rounding
     addParameter(p, 'customizeEdges', false, @islogical); % Customize histogram bins
     addParameter(p, 'stimEffectDuration', 1, @isnumeric); % Duration of stimulation effect (s)
@@ -78,6 +79,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
     groupLevel = p.Results.groupLevel;
     preStim_duration = p.Results.preStim_duration;
     postStim_duration = p.Results.postStim_duration;
+    disZeroBase = p.Results.disZeroBase;
     round_digit_sig = p.Results.round_digit_sig;
     customizeEdges = p.Results.customizeEdges;
     stimEffectDuration = p.Results.stimEffectDuration;
@@ -150,7 +152,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		PeriBaseRange = [baseBinEdgestart baseBinEdgeEnd];
 		[EventFreqInBins,binEdges,stimShadeData,stimShadeName,stimEventCatName,binNames] = get_EventFreqInBins_trials(alignedData,stim_names{stn},...
 			'PropName',PropName,'binWidth',binWidth,'stimIDX',stimIDX,'groupLevel',groupLevel,...
-			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
+			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,'disZeroBase',disZeroBase,...
 			'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'PeriBaseRange',PeriBaseRange,...
 			'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,'splitLongStim',splitLongStim,...
 			'round_digit_sig',round_digit_sig,'debug_mode',debug_mode); % get event freq in time bins 
@@ -221,7 +223,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 			stimEventsStr = 'none';
 		end
 
-		sub_titleStr = sprintf('%s %s: ex-%s in-%s rb-%s exApOg-%s stimEventsPos-%s \n[%g animals %g cells %g stims]',...
+		sub_titleStr = sprintf('%s %s \nex-%s in-%s rb-%s exApOg-%s stimEventsPos-%s \n[%g animals %g cells %g stims]',...
 		subNucleiFilter,stim_names{stn},filterStr{1},filterStr{2},filterStr{3},filterStr{4},stimEventsStr,...
 		barStat(stn).recDateNum,barStat(stn).roiNum,barStat(stn).stimRepeatNum); % string for the subtitle
 
@@ -277,7 +279,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		xtickangle(xTickAngle)
 
 		ylabel(ylabelStr)
-		title(sub_titleStr)
+		title(sub_titleStr,'FontSize',10)
 
 		barStat(stn).stim = stim_names{stn};
 		% barStat(stn).method = barInfo.stat.method;

@@ -19,6 +19,7 @@ function [stimEventJitter,varargout] = stimEventJitterAnalysis(alignedData,stimN
 	% Optional parameters with default values
 	addParameter(p, 'eventTimeType', 'peak_time', @ischar); % 'peak_time'/'rise_time'. Type of spon event time
 	addParameter(p, 'maxDiff', 2, @isnumeric); % The max difference between leading and following events
+	addParameter(p, 'thresholdStimDelay', false, @islogical); % The max difference between leading and following events
 	addParameter(p, 'modelType', 'GLMM', @ischar); % GLMM
 	addParameter(p, 'distribution', 'gamma', @ischar); % GLMM
 	addParameter(p, 'link', 'log', @ischar); % GLMM
@@ -33,6 +34,7 @@ function [stimEventJitter,varargout] = stimEventJitterAnalysis(alignedData,stimN
 	stimNames = p.Results.stimNames;
 	stimEventCat = p.Results.stimEventCat;
 	maxDiff = p.Results.maxDiff;
+	thresholdStimDelay = p.Results.thresholdStimDelay;
 	eventTimeType = p.Results.eventTimeType;
 	modelType = p.Results.modelType;
 	distribution = p.Results.distribution;
@@ -143,6 +145,7 @@ function [stimEventJitter,varargout] = stimEventJitterAnalysis(alignedData,stimN
 	% Plot Kolmogorov-Smirnov Test stat: If two vectors are from the same continuous distribution
 	axKS = nexttile(15);
 	[hKS, pKS] = kstest2(stimEventJitter.violinData.sponInt, stimEventJitter.violinData.stimEventDelay);
+	plotUItableKStest(axKS, pKS, hKS);
 	% disp(['K-S test p-value: ', num2str(p)]);
 
 
@@ -312,6 +315,7 @@ function plotSummaryTableInUITable(ax, nNumberTab)
     drawnow;
 end
 
+
 function plot_stat_table(ax_stat1, ax_stat2, meStatReport)
     % Set the current figure to the one containing ax_stat1
     figure(ax_stat1.Parent.Parent);
@@ -338,6 +342,29 @@ function plot_stat_table(ax_stat1, ax_stat2, meStatReport)
         uit = uitable('Data', fixedEffectsStatsCell, 'ColumnName', meStatReport.fixedEffectsStats.Properties.VariableNames,...
                     'Units', uit_unit2, 'Position', uit_pos2);
     end
+    
+    % Adjust table appearance
+    jScroll = findjobj(uit);
+    jTable = jScroll.getViewport.getView;
+    jTable.setAutoResizeMode(jTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+    drawnow;
+end
+
+function plotUItableKStest(ax, pVal, hVal)
+	figure(ax.Parent.Parent)
+	set(ax, 'XTickLabel', []);
+	set(ax, 'YTickLabel', []);
+    % Convert the table to a cell array
+    dataCell = {'K-S', pVal, hVal};
+    columnNames = {'method', 'p', 'h'};
+    
+    % Get the position and units of the axis
+    uit_pos = get(ax, 'Position');
+    uit_unit = get(ax, 'Units');
+    
+    % Create the uitable in the figure
+    uit = uitable('Data', dataCell, 'ColumnName', columnNames,...
+                  'Units', uit_unit, 'Position', uit_pos);
     
     % Adjust table appearance
     jScroll = findjobj(uit);

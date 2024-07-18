@@ -101,7 +101,7 @@ function [varargout] = visualizeMeFitting(me, groupVar, varargin)
 
     xlabel(groupVar);
     ylabel(responseVar);
-    titleStr = sprintf('%s %s', titlePrefix, formulaStr);
+    titleStr = sprintf('%s \n%s', titlePrefix, formulaStr);
     title(titleStr);
     grid on;
     hold off;

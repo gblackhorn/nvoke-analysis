@@ -19,6 +19,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 	addParameter(p, 'filters', {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}); % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
 	% addParameter(p, 'subNucleiFilter', '',...
 	% 				@(x) any(validatestring(x,{'','PO','DAO'}))); % [ex in rb]. ex: excitation. in: inhibition. rb: rebound
+	addParameter(p, 'plotDiff', false, @islogical); % plot the difference of comparable bins from various stimulation recording groups
 	addParameter(p, 'diffPair', {[1 3], [2 3], [1 2]}); % binned freq will be compared between stimulation groups. cell number = stimulation pairs. [1 3] mean stimulation 1 vs stimulation 2
 	addParameter(p, 'propName', 'peak_time'); % 'rise_time'/'peak_time'. Choose one to find the locations of events
 	addParameter(p, 'binWidth', 1); % the width of histogram bin. the default value is 1 s.
@@ -26,6 +27,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 	addParameter(p, 'groupLevel', 'roi', @ischar); % Collect event freq on 'roi'/'stimTrial' level
 	addParameter(p, 'preStim_duration', 5); % unit: second. include events happened before the onset of stimulations
 	addParameter(p, 'postStim_duration', 15); % unit: second. include events happened after the end of stimulations
+	addParameter(p, 'disZeroBase', true, @islogical); % Discard the roi/stimTrial if the baseline value is zero
 	addParameter(p, 'customizeEdges', true); % customize the bins using function 'setPeriStimSectionForEventFreqCalc'
 	addParameter(p, 'stimEffectDuration', 1); % unit: second. Use this to set the end for the stimulation effect range
 	addParameter(p, 'splitLongStim', [1]); % If the stimDuration is longer than stimEffectDuration, the stimDuration 
@@ -61,6 +63,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 	stim_names = p.Results.stim_names;
 	filters = p.Results.filters;
 	% subNucleiFilter = p.Results.subNucleiFilter;
+	plotDiff = p.Results.plotDiff;
 	diffPair = p.Results.diffPair;
 	propName = p.Results.propName;
 	binWidth = p.Results.binWidth;
@@ -68,6 +71,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 	groupLevel = p.Results.groupLevel;
 	preStim_duration = p.Results.preStim_duration;
 	postStim_duration = p.Results.postStim_duration;
+	disZeroBase = p.Results.disZeroBase;
 	customizeEdges = p.Results.customizeEdges;
 	stimEffectDuration = p.Results.stimEffectDuration;
 	splitLongStim = p.Results.splitLongStim;
@@ -107,8 +111,9 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 
 		[barStat.(subNucleiFilter),diffStat.(subNucleiFilter),saveDir] = periStimEventFreqAnalysis(alignedData,'propName',propName,...
 			'filter_roi_tf',filter_roi_tf,'stim_names',stim_names,'filters',filters,'subNucleiFilter',subNucleiFilter,...
-			'diffPair',diffPair,'binWidth',binWidth,'stimIDX',stimIDX,'normToBase',normToBase,'groupLevel',groupLevel,...
-			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
+			'plotDiff',plotDiff,'diffPair',diffPair,'binWidth',binWidth,'stimIDX',stimIDX,...
+			'normToBase',normToBase,'groupLevel',groupLevel,...
+			'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,'disZeroBase',disZeroBase,...
 			'customizeEdges',customizeEdges,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim,...
 			'stimEventsPos',stimEventsPos,'stimEvents',stimEvents,...
 			'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,...
@@ -133,7 +138,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 		if strcmpi(subNucleiFilter, 'PO') 
 			violinStimNames = {'og-5s ap-0.1s','og-5s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
 			violinBinIDX = [4,4]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
-			titleStr = sprintf('%s PO violinPlot of a single bin from periStim freq%s',subNucleiFilter, normStr);
+			titleStr = sprintf('%s violinPlot of a single bin from periStim freq%s',subNucleiFilter, normStr);
 			[violinData1,statInfo1] = violinplotPeriStimFreq2(barStat.(subNucleiFilter),violinStimNames,violinBinIDX,...
 				'normToFirst',normToFirst,'titleStr',titleStr,...
 				'save_fig',save_fig,'save_dir',saveDir,'gui_save','off');
@@ -141,7 +146,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 			% event freq comparison: baseline of AP vs AP
 			violinStimNames = {'ap-0.1s','ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
 			violinBinIDX = [1,3]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
-			titleStr = sprintf('%s PO violinPlot of a single bin from periStim freq%s',subNucleiFilter, normStr);
+			titleStr = sprintf('%s violinPlot of a single bin from periStim freq%s',subNucleiFilter, normStr);
 			[violinData2,statInfo2] = violinplotPeriStimFreq2(barStat.(subNucleiFilter),violinStimNames,violinBinIDX,...
 				'normToFirst',normToFirst,'titleStr',titleStr,...
 				'save_fig',save_fig,'save_dir',saveDir,'gui_save','off');
@@ -149,7 +154,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 			% bar plot of the fold-change of event frequency in statInfo1 and statInfo2
 			% APstim/APbaseline VS OGAP/OG
 			% Require the 'statInfo1' and 'statInfo2' above
-			titleStrFold = sprintf('%s PO foldChange of eventFreq caused by AP with and without OG',subNucleiFilter);
+			titleStrFold = sprintf('%s foldChange of eventFreq caused by AP with and without OG',subNucleiFilter);
 			[f,f_rowNum,f_colNum] = fig_canvas(2,'unit_width',0.4,'unit_height',0.4,...
 				'column_lim',2,...
 			    'fig_name',[titleStrFold,' bar']); % create a figure
@@ -160,7 +165,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 			foldDataAP = statInfo2.data.APfirstStim/mean(statInfo2.data.APbaseline);
 			[barInfo,~,barInfoStatTab] = barplot_with_stat({foldDataAP,foldDataOGAP},'plotWhere',axBar,...
 				'group_names',{'AP without OG','AP with OG'},'ylabelStr','eventFreq fold-change',...
-				'save_fig',false,'save_dir',saveDir,'gui_save',false); % 'title_str',title_str,
+				'title_str', [titleStrFold,' bar'],'save_fig',false,'save_dir',saveDir,'gui_save',false); % 'title_str',title_str,
 			% plot stat results next to bars
 			axStat = nexttile(tlo,[1 1]);
 			plotUItable(gcf,axStat,barInfoStatTab);

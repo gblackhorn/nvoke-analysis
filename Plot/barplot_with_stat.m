@@ -24,7 +24,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
     TickAngle = 0;
     EdgeColor = 'none';
     FaceColor = '#4D4D4D';
-    FontSize = 14;
+    FontSize = 10;
     FontWeight = 'bold';
 
 
