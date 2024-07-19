@@ -18,6 +18,8 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
     show_colorbar = true; % true/false. Show color next to the plot if true.
     xtickInt = 10; % interval between x ticks
     breakerLine = NaN; % Input a row index. below this row, a horizontal line will be draw to seperate the heatmap
+
+    markEvents = false;
     markerIDX = NaN;
     markerColors = '#332F2E';
     markerShapes = {'o','+','*','|','s','d','p','h','o','+','*','|','s','d','p','h'};
@@ -29,12 +31,12 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
             rowNames = varargin{ii+1}; % cell array containing strings used to label y_ticks
         elseif strcmpi('x_window', varargin{ii})
             x_window = varargin{ii+1}; % [a b] numerical array. Used to display time
+        elseif strcmpi('markEvents', varargin{ii})
+            markEvents = varargin{ii+1}; 
         elseif strcmpi('markerIDX', varargin{ii})
             markerIDX = varargin{ii+1}; % [a b] numerical array. Used to display time
         elseif strcmpi('xtickInt', varargin{ii})
             xtickInt = varargin{ii+1}; % a single number to set the interval between x ticks
-        % elseif strcmpi('x_rescale', varargin{ii})
-        %     x_rescale = varargin{ii+1}; % a single number to set the interval between x ticks
         elseif strcmpi('breakerLine', varargin{ii})
             breakerLine = varargin{ii+1}; % 
         elseif strcmpi('colorLUT', varargin{ii})
@@ -81,7 +83,7 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
 
 
     % draw markers
-    if iscell(markerIDX)
+    if iscell(markerIDX) && markEvents
         % loop through rows
         for n = 1:numel(markerIDX)
             rowMarker = markerIDX{n};
@@ -97,21 +99,6 @@ function [varargout] = plot_TemporalData_Color(plotWhere,TemporalData,varargin)
                 end
             end
         end
-
-
-
-        % % loop through marker groups
-        % for n = 1:numel(markerIDX) 
-        %     markerIDXsingleGroup = markerIDX{n};
-        %     if ~isempty(markerIDXsingleGroup)
-        %         % loop through sections (rows)
-        %         for sn = 1:numel(markerIDXsingleGroup)
-        %             markerIDXrow = markerIDXsingleGroup{sn};
-        %             plot(markerIDXrow,sn,...
-        %                 'Marker',markerShapes{n},'MarkerSize',markerSize,'MarkerEdgeColor',markerColors);
-        %         end
-        %     end
-        % end
     end
 
 

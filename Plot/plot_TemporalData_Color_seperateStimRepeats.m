@@ -9,6 +9,7 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 
 
 	% Defaults
+	sortMode = 'timeDelay'; % 'timeDelay'/'stimEventAmp';
 	preTime = 0; % include time before stimulation starts for plotting
 	postTime = []; % include time after stimulation ends for plotting. []: until the next stimulation starts
 
@@ -21,6 +22,7 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	eventCat = {}; % -1: do not filter stimRanges with eventsTime. Use all of them
 	stimEventCat = '';
 	followEventCat = '';
+	eventAmp = {};
 
 	markEvents = true; % true/false. Mark events in the heatmap if true
 	shadeData = {};
@@ -37,14 +39,18 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 
 	% Optionals
 	for ii = 1:2:(nargin-4)
-        if strcmpi('rowNames', varargin{ii})
-            rowNames = varargin{ii+1}; % cell array containing strings used to label y_ticks
+        if strcmpi('sortMode', varargin{ii})
+            sortMode = varargin{ii+1}; % 
+        elseif strcmpi('rowNames', varargin{ii})
+            rowNames = varargin{ii+1}; % 
         elseif strcmpi('preTime', varargin{ii})
             preTime = varargin{ii+1}; 
         elseif strcmpi('postTime', varargin{ii})
             postTime = varargin{ii+1}; 
         elseif strcmpi('eventCat', varargin{ii})
             eventCat = varargin{ii+1}; 
+        elseif strcmpi('eventAmp', varargin{ii})
+            eventAmp = varargin{ii+1}; 
         elseif strcmpi('eventsTime', varargin{ii})
             eventsTime = varargin{ii+1}; 
         elseif strcmpi('eventsTimeSort', varargin{ii})
@@ -86,15 +92,24 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	end
 
 
-	% Sort the peri-stimulation traces according to the events time
-	[sortedIDX,sortedFdSection,sortedEventMarker,sortedRowNames,timeDuration,posNum,sortedEventNumIDX] = sortPeriStimTraces(fluroData,timeData,...
-			eventsTime,stimInfo,'preTime',preTime,'postTime',postTime,...
-			'eventCat',eventCat,'stimEventCat',stimEventCat,'followEventCat',followEventCat,...
-			'stimRefType',stimRefType,'roiNames',roiNames,'debugMode',debug_mode);
+	switch sortMode
+		case 'timeDelay'
+			% Sort the peri-stimulation traces according to the events time
+			[sortedIDX,periStimMatSort,sortedEventMarker,sortedRowNames,timeDuration,posNum] = sortPeriStimTraces(fluroData,timeData,...
+					eventsTime,stimInfo,'preTime',preTime,'postTime',postTime,...
+					'eventCat',eventCat,'stimEventCat',stimEventCat,'followEventCat',followEventCat,...
+					'stimRefType',stimRefType,'roiNames',roiNames,'debugMode',debug_mode);
+		case 'stimEventAmp'
+			% Sort the peri-stimulation traces with the stim-reference events' amplitude
+			[periStimMatSort,sortedEventMarker,sortedRowNames,timeDuration,posNum] = sortPeriStimTracesWithAmp(fluroData,timeData,...
+				stimInfo,eventsTime,eventAmp,eventCat,'preTime',preTime,'postTime',postTime,...
+				'stimRefType',stimRefType,'stimRefCat',stimEventCat,'roiNames',roiNames,'debugMode',debug_mode);
+	end
+
 
     f = fig_canvas(2,'unit_width',unit_width,'unit_height',unit_height,'column_lim',1,...
 	    	'fig_name',titleStr); % create a figure
-	if ~isempty(sortedIDX)
+	if ~isempty(periStimMatSort)
 
 
 	    % plot the heatmap using function [plot_TemporalData_Color]
@@ -106,9 +121,9 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	    if ~exist('posNum','var')
 	    	posNum = NaN;
 	    end
-	    plot_TemporalData_Color(gca,sortedFdSection,...
+	    plot_TemporalData_Color(gca,periStimMatSort,...
 				'rowNames',sortedRowNames,'x_window',[-preTime -preTime+timeDuration],'xtickInt',xtickInt,...
-				'show_colorbar',show_colorbar,'breakerLine',posNum,'markerIDX',sortedEventMarker,...
+				'show_colorbar',show_colorbar,'breakerLine',posNum,'markEvents',markEvents,'markerIDX',sortedEventMarker,...
 				'colorLUT',colorLUT);
 	    % plot_TemporalData_Color(gca,fdSection,...
 		% 		'rowNames',rowNamesSection,'x_window',[-preTime -preTime+timeRange],'xtickInt',xtickInt,...
@@ -140,7 +155,7 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 
 	    sgtitle(titleStr)
 
-	    varargout{1} = sortedFdSection; % fluorescence data
+	    varargout{1} = periStimMatSort; % fluorescence data
 	    varargout{2} = sortedRowNames; % names for each row of fluorescence data
 	    varargout{3} = [0 timeDuration]; % xdata
 	else

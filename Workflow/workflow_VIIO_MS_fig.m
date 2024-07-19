@@ -31,7 +31,7 @@ adata.disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-
 adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
 adata.sponfreqFilter.status = true; % true/false. If true, use the following settings to filter ROIs
 adata.sponfreqFilter.field = 'sponfq'; % 
-adata.sponfreqFilter.thresh = 0.05; % Hz. default 0.05
+adata.sponfreqFilter.thresh = 0; % Hz. default 0.05
 adata.sponfreqFilter.direction = 'high';
 debug_mode = false; % true/false
 
@@ -608,7 +608,7 @@ close all
 save_fig = true; % true/false
 stimNameAll = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % 'og-5s' 'ap-0.1s'
 stimEventCatAll = {'rebound','trig','trig-ap'}; % 'rebound', 'trig'
-releventEventLoc = 'pre'; % 'pre'/'post'. The location of relevent event. Pre or post to the ref event
+releventEventLoc = 'post'; % 'pre'/'post'. The location of relevent event. Pre or post to the ref event
 maxDiff = 5; % the max difference between the stim-related and the following events
 subNucleiTypes = {'DAO', 'PO'};
 
@@ -674,3 +674,5 @@ for sn = 1:numel(subNucleiTypes)
 	end
 
 end
+
+

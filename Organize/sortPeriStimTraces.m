@@ -28,7 +28,7 @@ function [sortedIDX,sortedFdSection,sortedEventMarker,sortedRowNames,timeDuratio
 	% Optionals
 	for ii = 1:2:(nargin-4)
 	    if strcmpi('eventCat', varargin{ii})
-	        eventCat = varargin{ii+1}; % number array. An index of ROI traces will be collected 
+	        eventCat = varargin{ii+1}; 
 	    elseif strcmpi('stimEventCat', varargin{ii})
             stimEventCat = varargin{ii+1};
 	    elseif strcmpi('followEventCat', varargin{ii})

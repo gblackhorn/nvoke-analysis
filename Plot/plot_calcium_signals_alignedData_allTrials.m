@@ -33,7 +33,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData, v
      addParameter(p, 'save_fig', false, @islogical);
      addParameter(p, 'save_dir', '', @ischar);
      addParameter(p, 'debug_mode', false, @islogical);
-     addParameter(p, 'plot_marker', true, @islogical); % Added plot_marker
+     addParameter(p, 'plot_marker', false, @islogical); % Added plot_marker
      addParameter(p, 'colorLUT', 'turbo', @ischar); % 'turbo' ,'magentaMap', 'cyanMap'
      addParameter(p, 'pick', nan, @isnumeric); % Added pick
      addParameter(p, 'title_prefix', '', @ischar); % Added title_prefix
@@ -98,7 +98,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData, v
 
         if debug_mode
             fprintf('trial %d/%d: %s\n', tn, trial_num, alignedData_filtered(tn).trialName)
-            if tn == 17
+            if tn == 25
                 pause
             end
         end
@@ -129,6 +129,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData, v
             [event_riseTime] = get_TrialEvents_from_alignedData(alignedData_filtered(tn), 'rise_time');
             [event_peakTime] = get_TrialEvents_from_alignedData(alignedData_filtered(tn), 'peak_time');
             [event_eventCat] = get_TrialEvents_from_alignedData(alignedData_filtered(tn), 'peak_category');
+            [event_peakAmp] = get_TrialEvents_from_alignedData(alignedData_filtered(tn), 'peak_delta_norm_hpstd');
 
             % Calculate the numbers of events in each roi and sort the order of roi according to this (descending)
             if sortROI
@@ -140,6 +141,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData, v
                 event_riseTime = event_riseTime(descendIDX);
                 event_peakTime = event_peakTime(descendIDX);
                 event_eventCat = event_eventCat(descendIDX);
+                event_peakAmp = event_peakAmp(descendIDX);
             end
 
             if strcmpi(event_type, 'rise_time')
@@ -236,7 +238,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData, v
             % Figure 3: Plot a color plot. Difference between this one and the one in figure 1 is every
             % ROI trace is cut to several sections using stimulation repeat. One row contains the start
             % of stim to the start of the next stim. Each ROI contains the stim repeat number of rows
-            fig_title{3} = sprintf('%s %s periStimColorMap %s stimEventsDelaySort-%s',...
+            fig_title{3} = sprintf('%s %s periStimHeatMap %s stimEventsDelaySort-%s',...
                 title_str_stem, norm_str, sortStr, eventsTimeSort); % Create the title string
 
             f(3) = plot_TemporalData_Color_seperateStimRepeats(gca, FluroData, timeData, stimInfo,...
@@ -247,7 +249,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData, v
             sgtitle(fig_title{3})
             set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 
-            fig_title{4} = sprintf('%s %s periStimColorMap %s firstSponAfterStimDelaySort-%s',...
+            fig_title{4} = sprintf('%s %s periStimHeatMap %s firstSponAfterStimDelaySort-%s',...
                 title_str_stem, norm_str, sortStr, eventsTimeSort); % Create the title string
             f(4) = plot_TemporalData_Color_seperateStimRepeats(gca, FluroData, timeData, stimInfo,...
                 'preTime', preTime, 'postTime', postTime, 'stimRefType', stimRefType,...
@@ -257,6 +259,18 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData, v
                 'colorLUT', colorLUT, 'debug_mode', debug_mode); % ,'shadeData', patchCoor,'stimTypes', stimTypes
             sgtitle(fig_title{4})
             set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
+
+            fig_title{5} = sprintf('%s %s periStimHeatMap %s stimEventAmpSort',...
+                title_str_stem, norm_str, sortStr); % Create the title string
+            f(5) = plot_TemporalData_Color_seperateStimRepeats(gca, FluroData, timeData, stimInfo,...
+                'sortMode','stimEventAmp','preTime', preTime, 'postTime', postTime, 'stimRefType', stimRefType,...
+                'eventCat', event_eventCat, 'eventsTime', eventTime, 'eventAmp', event_peakAmp,...
+                'stimEventCat', eventCat, 'markEvents', plot_marker,...
+                'roiNames', originRowNames, 'show_colorbar', show_colorbar, 'titleStr', fig_title{5},...
+                'colorLUT', colorLUT, 'debug_mode', debug_mode); % ,'shadeData', patchCoor,'stimTypes', stimTypes
+            sgtitle(fig_title{5})
+            set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
+
 
             % Save figures
             fig_num = numel(f);
@@ -273,7 +287,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData, v
             end
         end
 
-        if save_fig
+        if save_fig || debug_mode
             pause_plot = false;
         end
         if pause_plot
