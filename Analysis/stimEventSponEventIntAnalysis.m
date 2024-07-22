@@ -114,6 +114,12 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 		'row_lim',5,'column_lim',columnLim,'fig_name',titleStr); % create a figure
 	tlo = tiledlayout(f,f_rowNum,f_colNum);
 
+	% Remove the empty field
+	isEmptyField = structfun(@isempty, violinData);
+	fNames = fieldnames(violinData);
+	emptyField = fNames(isEmptyField);
+	violinData = rmfield(violinData, emptyField);
+
 	% Plot violin
 	axViolin = nexttile(1,[5,1]);
 	violinplot(violinData);
@@ -150,7 +156,13 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	% spon2spon_intervals = intData.violinData.spon2spon;
 	% trig2spon_intervals = intData.violinData.trig2spon;
 
-	[hKS, pKS] = kstest2(violinData.(stimAndFollowingIntName), violinData.(sponAndSponIntName));
+	if isempty(emptyField)
+		[hKS, pKS] = kstest2(violinData.(stimAndFollowingIntName), violinData.(sponAndSponIntName));
+	else
+		hKS = nan;
+		pKS = nan;
+	end
+
 	% disp(['K-S test p-value: ', num2str(p)]);
 
 

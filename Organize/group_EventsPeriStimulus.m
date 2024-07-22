@@ -49,4 +49,5 @@ function [EventsPeriStimulus,PeriStimulusRange,varargout] = group_EventsPeriStim
     if AlignEventsToStim
         PeriStimulusRange = [StimDuration_aligned(1)-preStim_duration StimDuration_aligned(2)+postStim_duration]; % stimulation onset at 0, preStim_duration and postStim_duration are added to the beginning and the end of it.
     end
+
 end

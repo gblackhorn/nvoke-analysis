@@ -254,7 +254,10 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		time = table(binNames', 'VariableNames', {'Time'});
 
 		% Define repeated measures model
-		rm = fitrm(efTable, 'baseline-baseAfter ~ 1', 'WithinDesign', time);
+		validVarNames = matlab.lang.makeValidName(time{:,:});
+		efTable.Properties.VariableNames = validVarNames;
+		model_formula = sprintf('%s-%s ~ 1', efTable.Properties.VariableNames{1}, efTable.Properties.VariableNames{end});
+		rm = fitrm(efTable, model_formula, 'WithinDesign', time);
 
 		% Perform repeated measures ANOVA
 		ranovaResults = ranova(rm);

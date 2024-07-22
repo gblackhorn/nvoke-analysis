@@ -31,7 +31,7 @@ adata.disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-
 adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
 adata.sponfreqFilter.status = true; % true/false. If true, use the following settings to filter ROIs
 adata.sponfreqFilter.field = 'sponfq'; % 
-adata.sponfreqFilter.thresh = 0; % Hz. default 0.05
+adata.sponfreqFilter.thresh = 0.05; % Hz. default 0.05
 adata.sponfreqFilter.direction = 'high';
 debug_mode = false; % true/false
 
@@ -487,7 +487,7 @@ end
 close all
 save_fig = true; % true/false
 gui_save = true;
-groupLevel = 'stimTrial'; % Collect event freq on 'roi'/'stimTrial' level
+groupLevel = 'roi'; % Collect event freq on 'roi'/'stimTrial' level
 
 disZeroBase = false; % true/false. Discard the roi/stimTrial if the baseline value is zero
 normToBase = false; % true/false. normalize the data to baseline (data before baseBinEdge)
@@ -504,7 +504,7 @@ binWidth = 1; % the width of histogram bin. the default value is 1 s.
 stimIDX = []; % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
 preStim_duration = 10; % unit: second. include events happened before the onset of stimulations
 postStim_duration = 15; % unit: second. include events happened after the end of stimulations
-customizeEdges = true; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
+customizeEdges = false; % false/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
 stimEffectDuration = 1; % unit: second. Use this to set the end for the stimulation effect range
 splitLongStim = [1]; % If the stimDuration is longer than stimEffectDuration, the stimDuration 
 					%  part after the stimEffectDuration will be splitted. If it is [1 1], the
@@ -605,10 +605,11 @@ end
 % 3.3 Violin plot showing the difference of
 % stim-related-event_to_following_event_time and the spontaneous_event_interval
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 stimNameAll = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % 'og-5s' 'ap-0.1s'
 stimEventCatAll = {'rebound','trig','trig-ap'}; % 'rebound', 'trig'
 releventEventLoc = 'post'; % 'pre'/'post'. The location of relevent event. Pre or post to the ref event
+defReleventEventCat = false; % true/false. Use spon for the relevent event cat. If false, use the closest following/preceeding event
 maxDiff = 5; % the max difference between the stim-related and the following events
 subNucleiTypes = {'DAO', 'PO'};
 
@@ -625,7 +626,7 @@ for sn = 1:numel(subNucleiTypes)
 		% 'maxDiff',maxDiff);
 
 		[intData,f,fname] = stimEventSponEventIntAnalysis(alignedDataSubN,stimName,stimEventCat,...
-		    'releventEventLoc',releventEventLoc,'maxDiff',maxDiff,'titlePrefix',subNucleiTypes{sn});
+		    'releventEventLoc',releventEventLoc,'defReleventEventCat',defReleventEventCat,'maxDiff',maxDiff,'titlePrefix',subNucleiTypes{sn});
 
 		if save_fig
 			if n == 1 

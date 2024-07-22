@@ -152,10 +152,12 @@ function [EventFreqInBinsAll,varargout] = get_EventFreqInBins_trials(alignedData
             PeriBaseRange = [-preStimDuration -2];
         end
 
-        % set the peri-stim sections (edges)
-        [periStimSections,stimRepeatNum,binNames] = setPeriStimSectionForEventFreqCalc(alignedData_filtered(recN).fullTime,stimInfo,...
-            'preStimDuration',preStim_duration,'postStimDuration',postStim_duration,...
-            'PeriBaseRange',PeriBaseRange,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim);
+        if customizeEdges
+            % set the peri-stim sections (edges)
+            [periStimSections,stimRepeatNum,binNames] = setPeriStimSectionForEventFreqCalc(alignedData_filtered(recN).fullTime,stimInfo,...
+                'preStimDuration',preStim_duration,'postStimDuration',postStim_duration,...
+                'PeriBaseRange',PeriBaseRange,'stimEffectDuration',stimEffectDuration,'splitLongStim',splitLongStim);
+        end
 
 
         % Get the time of stimulation related events
@@ -225,15 +227,22 @@ function [EventFreqInBinsAll,varargout] = get_EventFreqInBins_trials(alignedData
                             'preStim_duration',preStim_duration,'postStim_duration',postStim_duration,...
                             'round_digit_sig',round_digit_sig); % group event time stamps around stimulations
 
+                        % Get the bin edges and create bin names using the generic binWidth
+                        modelSect = [PeriStimulusRange(1):binWidth:PeriStimulusRange(2)]; % PeriStim edges. Stimulation at 0
+                        binXcell = num2cell(modelSect(1:end-1)+binWidth/2);
+                        binNames = cellfun(@num2str, binXcell, 'UniformOutput', false);
+
+
                         % construct the bin edges if specialBin is not empty
-                        if ~isempty(specialBin)
-                            binEdges = [PeriStimulusRange(1):binWidth:specialBin(1) specialBin(2):binWidth:PeriStimulusRange(2)];
-                        else
-                            binEdges = [];
-                        end
+                        % if ~isempty(specialBin)
+                        %     binEdges = [PeriStimulusRange(1):binWidth:specialBin(1) specialBin(2):binWidth:PeriStimulusRange(2)];
+                        % else
+                        %     binEdges = [];
+                        % end
 
                         [EventFreqInBins(rn).EventFqInBins,binEdges] = get_EventFreqInBins_roi(EventsPeriStimulus,PeriStimulusRange,...
-                            'binWidth',binWidth,'plotHisto',false,'binEdges',binEdges); % calculate the event frequencies (in bins) in a roi and assigne the array to the EventFreqInBins
+                            'binWidth',binWidth,'plotHisto',false); % calculate the event frequencies (in bins) in a roi and assigne the array to the EventFreqInBins
+
 
                         EventFreqInBins(rn).stimNum = size(StimRangesFinal,1); % number of stim repeats used for one roi
                     end

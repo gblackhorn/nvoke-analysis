@@ -125,6 +125,8 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 
 
 		% Organize data 
+		% underscorePositions = strfind(trialData{trial_name_col}, '_');
+		% alignedData.trialName = trialData{trial_name_col}(1:underscorePositions(1)-1);;
 		alignedData.trialName = trialData{trial_name_col};
 		alignedData.event_type = event_type;
 		alignedData.cat_keywords = cat_keywords;

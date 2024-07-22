@@ -135,7 +135,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 		% event freq comparison: OG vs OGAP in AP bin
 
 		% Airpuff effect is almost only seen in the caudal PO. DAO rarely shows airpuff response
-		if strcmpi(subNucleiFilter, 'PO') 
+		if strcmpi(subNucleiFilter, 'PO') && customizeEdges
 			violinStimNames = {'og-5s ap-0.1s','og-5s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
 			violinBinIDX = [4,4]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
 			titleStr = sprintf('%s violinPlot of a single bin from periStim freq%s',subNucleiFilter, normStr);
