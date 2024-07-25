@@ -103,6 +103,47 @@ end
 %     end
 % end
 
+% function setPaperSize(figHandle, paperSize, orientation)
+%     % Set the paper size and paper position
+%     set(figHandle, 'PaperUnits', 'centimeters');
+
+%     % Set default orientation if not provided
+%     if nargin < 3
+%         orientation = 'horizontal';
+%     end
+
+%     % Initialize paper dimensions
+%     paperWidth = 0;
+%     paperHeight = 0;
+    
+%     % Set paper size based on the input paperSize
+%     switch paperSize
+%         case 'A4'
+%             paperWidth = 21.0;
+%             paperHeight = 29.7;
+%         case 'A5'
+%             paperWidth = 14.85;
+%             paperHeight = 21.0;
+%         case 'Letter'
+%             paperWidth = 21.59;
+%             paperHeight = 27.94;
+%         otherwise
+%             error('Unsupported paper size');
+%     end
+    
+%     % Adjust dimensions based on orientation
+%     if strcmpi(orientation, 'horizontal')
+%         set(figHandle, 'PaperSize', [paperHeight, paperWidth]); % Swap width and height for landscape
+%         set(figHandle, 'PaperPosition', [0, 0, paperHeight, paperWidth]); % Full page landscape
+%     elseif strcmpi(orientation, 'vertical')
+%         set(figHandle, 'PaperSize', [paperWidth, paperHeight]); % Portrait orientation
+%         set(figHandle, 'PaperPosition', [0, 0, paperWidth, paperHeight]); % Full page portrait
+%     else
+%         error('Unsupported orientation. Use ''vertical'' or ''horizontal''.');
+%     end
+% end
+
+
 function setPaperSize(figHandle, paperSize, orientation)
     % Set the paper size and paper position
     set(figHandle, 'PaperUnits', 'centimeters');
@@ -131,17 +172,33 @@ function setPaperSize(figHandle, paperSize, orientation)
             error('Unsupported paper size');
     end
     
-    % Adjust dimensions based on orientation
+    % Get the current aspect ratio of the figure
+    figPos = get(figHandle, 'Position');
+    figAspectRatio = figPos(3) / figPos(4); % Width / Height
+
+    % Calculate new width and height maintaining the aspect ratio
     if strcmpi(orientation, 'horizontal')
-        set(figHandle, 'PaperSize', [paperHeight, paperWidth]); % Swap width and height for landscape
-        set(figHandle, 'PaperPosition', [0, 0, paperHeight, paperWidth]); % Full page landscape
+        if figAspectRatio > 1 % Wider than tall
+            newWidth = paperHeight; % Full width of the paper
+            newHeight = paperHeight / figAspectRatio;
+        else % Taller than wide or square
+            newHeight = paperWidth; % Full height of the paper
+            newWidth = paperWidth * figAspectRatio;
+        end
     elseif strcmpi(orientation, 'vertical')
-        set(figHandle, 'PaperSize', [paperWidth, paperHeight]); % Portrait orientation
-        set(figHandle, 'PaperPosition', [0, 0, paperWidth, paperHeight]); % Full page portrait
+        if figAspectRatio > 1 % Wider than tall
+            newWidth = paperWidth; % Full width of the paper
+            newHeight = paperWidth / figAspectRatio;
+        else % Taller than wide or square
+            newHeight = paperHeight; % Full height of the paper
+            newWidth = paperHeight * figAspectRatio;
+        end
     else
         error('Unsupported orientation. Use ''vertical'' or ''horizontal''.');
     end
+
+    % Set the new paper size and position
+    set(figHandle, 'PaperSize', [newWidth, newHeight]);
+    set(figHandle, 'PaperPosition', [0, 0, newWidth, newHeight]);
 end
-
-
 

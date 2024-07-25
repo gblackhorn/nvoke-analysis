@@ -455,7 +455,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 			'freq_field',sponfreqFilter.field,'freq_thresh',sponfreqFilter.thresh,'filter_direction',sponfreqFilter.direction);
 	end
 
-	% Create a list showing the numbers of various events in each ROI
-	[alignedData_event_list] = eventcat_list(alignedData_allTrials);
-	varargout{1} = alignedData_event_list;
+	% % Create a list showing the numbers of various events in each ROI
+	% [alignedData_event_list] = eventcat_list(alignedData_allTrials);
+	% varargout{1} = alignedData_event_list;
 end
