@@ -4,6 +4,7 @@ function [CaLevelData,varargout] = GetCalLevelInfoFromAlignedData(alignedData_al
 
     
     % Defaults
+    norm2hpStd = true;
 
 
     % Optionals for inputs
@@ -27,7 +28,7 @@ function [CaLevelData,varargout] = GetCalLevelInfoFromAlignedData(alignedData_al
 
     n_num = empty_content_struct({'trial_list','trial_num','roi_num','stim_num'},1); 
     n_num(1).trial_list = {alignedData_filtered.trialName};
-    n_num(1).trial_list = n_num(1).trial_list(:);
+    n_num(1).trial_list = n_num(1).trial_list(:); % ensure it's vertical
     n_num(1).trial_num = alignedData_filtered_num;
     n_num.roi_num = 0;
 
@@ -40,6 +41,13 @@ function [CaLevelData,varargout] = GetCalLevelInfoFromAlignedData(alignedData_al
         psth_ca_val_trial = cell(1,roi_num);
         for rn = 1:roi_num
             psth_ca_val_trial{rn} = alignedData_filtered(an).traces(rn).CaLevelTrace;
+
+            % STD of highpass-filtered trace data
+            hpStd = alignedData_filtered(an).traces(rn).hpStd;
+
+            if norm2hpStd
+                psth_ca_val_trial{rn}/hpStd;
+            end
         end
         psth_ca_val{an} = [psth_ca_val_trial{:}];
     end

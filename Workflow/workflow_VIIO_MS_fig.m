@@ -278,13 +278,21 @@ organizeStruct(5).title = 'ogDelay2spon PO';
 organizeStruct(5).keepGroups = {'spon-PO', 'opto-delay [og-5s]-PO'};
 organizeStruct(5).mmFixCat = 'peak_category';
 
-organizeStruct(4).title = 'apTrig2spon DAO';
-organizeStruct(4).keepGroups = {'spon-DAO', 'trig [ap-0.1s]-DAO'};
-organizeStruct(4).mmFixCat = 'peak_category';
+organizeStruct(6).title = 'apTrig2spon DAO';
+organizeStruct(6).keepGroups = {'spon-DAO', 'trig [ap-0.1s]-DAO'};
+organizeStruct(6).mmFixCat = 'peak_category';
 
-organizeStruct(5).title = 'apTrig2spon PO';
-organizeStruct(5).keepGroups = {'spon-PO', 'trig [ap-0.1s]-PO'};
-organizeStruct(5).mmFixCat = 'peak_category';
+organizeStruct(7).title = 'apTrig2spon PO';
+organizeStruct(7).keepGroups = {'spon-PO', 'trig [ap-0.1s]-PO'};
+organizeStruct(7).mmFixCat = 'peak_category';
+
+organizeStruct(8).title = 'apTrig2apRebound PO';
+organizeStruct(8).keepGroups = {'trig [ap-0.1s]-PO', 'rebound [ap-0.1s]-PO'};
+organizeStruct(8).mmFixCat = 'peak_category';
+
+organizeStruct(9).title = 'apTrig2apRebound DAO';
+organizeStruct(9).keepGroups = {'trig [ap-0.1s]-DAO', 'rebound [ap-0.1s]-DAO'};
+organizeStruct(9).mmFixCat = 'peak_category';
 
 [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructForPlot,props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
@@ -606,11 +614,11 @@ end
 % stim-related-event_to_following_event_time and the spontaneous_event_interval
 close all
 save_fig = false; % true/false
-stimNameAll = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % 'og-5s' 'ap-0.1s'
-stimEventCatAll = {'rebound','trig','trig-ap'}; % 'rebound', 'trig'
+stimNameAll = {'og-5s','ap-0.1s','og-5s ap-0.1s','ap-0.1s'}; % 'og-5s' 'ap-0.1s'
+stimEventCatAll = {'rebound','trig','trig-ap','rebound'}; % 'rebound', 'trig'
 releventEventLoc = 'post'; % 'pre'/'post'. The location of relevent event. Pre or post to the ref event
 defReleventEventCat = false; % true/false. Use spon for the relevent event cat. If false, use the closest following/preceeding event
-maxDiff = 5; % the max difference between the stim-related and the following events
+maxDiff = 10; % the max difference between the stim-related and the following events
 subNucleiTypes = {'DAO', 'PO'};
 
 

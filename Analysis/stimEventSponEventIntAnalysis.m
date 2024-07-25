@@ -83,7 +83,8 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	end
 
 	% Get the time difference between two close spon events
-	sponAndSponInt = getEventInterval(alignedDataFiltered,'spon','spon','maxDiff',maxDiff);
+	sponAndSponInt = getEventInterval(alignedDataFiltered,'','','maxDiff',maxDiff);
+	% sponAndSponInt = getEventInterval(alignedDataFiltered,'spon','spon','maxDiff',maxDiff);
 
 	% Run GLMM on the data for stat
 	combinedEventInt = [stimAndNeighbourInt; sponAndSponInt];
@@ -108,7 +109,7 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 
 
 	% Create figure canvas
-	titleStr = sprintf('%s %s vs sponEvent-int [%s %s maxDiff-%gs]',...
+	titleStr = sprintf('%s %s vs AllInt [%s %s maxDiff-%gs]',...
 		titlePrefix, stimAndFollowingIntName,stimName,stimEventCat,maxDiff);
 	[f,f_rowNum,f_colNum] = fig_canvas(15,'unit_width',plotUnitWidth,'unit_height',plotUnitHeight,...
 		'row_lim',5,'column_lim',columnLim,'fig_name',titleStr); % create a figure

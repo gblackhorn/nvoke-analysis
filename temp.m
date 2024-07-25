@@ -463,3 +463,66 @@ if save_fig
 	% dt = datestr(now, 'yyyymmdd');
 	save(fullfile(save_dir, 'ogDelaySponEvent propStatInfo'), 'eventPropStatInfo');
 end
+
+
+%% ==========
+stimName = 'og-5s';
+
+alignedData = alignedData_allTrials;
+stimNameAll = {alignedData.stim_name};
+stimPosIDX = find(cellfun(@(x) strcmpi(stimName,x),stimNameAll));
+alignedDataFiltered = alignedData(stimPosIDX);
+
+[CaLevelData,CaLevelData_n_num] = GetCalLevelInfoFromAlignedData(alignedDataFiltered,stim_name);
+freq = get_frame_rate(CaLevelData.time);
+box_DataPoint = box_duration*freq; % time point number in a singla box 
+box_num = floor(max(CaLevelData.time)-min(CaLevelData.time))/box_duration;
+xData = [CaLevelData.time(1):box_duration:(CaLevelData.time(1)+box_duration*(box_num-1))]+box_duration/2; % the x-axis location of data in the plot 
+box_data_cellarray = cell(box_num,1);
+data_groupName = cell(box_num,1);
+for bn = 1:box_num
+	start_loc = (bn-1)*box_DataPoint+1;
+	end_loc = bn*box_DataPoint;
+	single_box_data = mean(CaLevelData.data(start_loc:end_loc,:));
+	box_data_cellarray{bn} = single_box_data(:);
+end
+[~,CaLevel_box_statInfo] = boxPlot_with_scatter(box_data_cellarray,'groupNames',NumArray2StringCell(xData),...
+	'stat',true,'plotScatter',false);
+title('CaLevel box')
+ylim([-4 4]);
+FolderPathVA.fig = savePlot(gcf,'guiSave','on','save_dir',FolderPathVA.fig,'fname','CaLevel box');
+save(fullfile(save_dir, ['CaLevel_data_stat']),'CaLevelData','CaLevelData_n_num','CaLevel_box_statInfo');
+
+violinData = [box_data_cellarray{:}]; % convert cell data to matrix
+violinplot(violinData,NumArray2StringCell(xData));
+
+%% ==========
+stimName = 'og-5s';
+subNucleiTypes = {'DAO', 'PO'};
+
+for sn = 1:numel(subNucleiTypes)
+	alignedDataSubN = screenSubNucleiROIs(alignedData_allTrials,subNucleiTypes{sn});
+
+	stimNameAll = {alignedDataSubN.stim_name};
+	stimPosIDX = find(cellfun(@(x) strcmpi(stimName,x),stimNameAll));
+	alignedDataSubNStim = alignedDataSubN(stimPosIDX);
+
+	[CaLevelData,CaLevelData_n_num] = GetCalLevelInfoFromAlignedData(alignedDataSubNStim,stim_name);
+	freq = get_frame_rate(CaLevelData.time);
+	box_DataPoint = box_duration*freq; % time point number in a singla box 
+	box_num = floor(max(CaLevelData.time)-min(CaLevelData.time))/box_duration;
+	xData = [CaLevelData.time(1):box_duration:(CaLevelData.time(1)+box_duration*(box_num-1))]+box_duration/2; % the x-axis location of data in the plot 
+	box_data_cellarray = cell(box_num,1);
+	data_groupName = cell(box_num,1);
+	for bn = 1:box_num
+		start_loc = (bn-1)*box_DataPoint+1;
+		end_loc = bn*box_DataPoint;
+		single_box_data = mean(CaLevelData.data(start_loc:end_loc,:));
+		box_data_cellarray{bn} = single_box_data(:);
+	end
+	[~,CaLevel_box_statInfo] = boxPlot_with_scatter(box_data_cellarray,'groupNames',NumArray2StringCell(xData),...
+		'stat',true,'plotScatter',false);
+	titleStr = sprintf('%s CaLevel box', subNucleiTypes{sn});
+	title(titleStr)
+	ylim([-4 4]);
+end
