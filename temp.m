@@ -499,6 +499,7 @@ violinplot(violinData,NumArray2StringCell(xData));
 %% ==========
 stimName = 'og-5s';
 subNucleiTypes = {'DAO', 'PO'};
+box_duration = 1; % unit: s
 
 for sn = 1:numel(subNucleiTypes)
 	alignedDataSubN = screenSubNucleiROIs(alignedData_allTrials,subNucleiTypes{sn});
@@ -507,7 +508,7 @@ for sn = 1:numel(subNucleiTypes)
 	stimPosIDX = find(cellfun(@(x) strcmpi(stimName,x),stimNameAll));
 	alignedDataSubNStim = alignedDataSubN(stimPosIDX);
 
-	[CaLevelData,CaLevelData_n_num] = GetCalLevelInfoFromAlignedData(alignedDataSubNStim,stim_name);
+	[CaLevelData,CaLevelData_n_num] = GetCalLevelInfoFromAlignedData(alignedDataSubNStim,stimName);
 	freq = get_frame_rate(CaLevelData.time);
 	box_DataPoint = box_duration*freq; % time point number in a singla box 
 	box_num = floor(max(CaLevelData.time)-min(CaLevelData.time))/box_duration;
@@ -526,3 +527,5 @@ for sn = 1:numel(subNucleiTypes)
 	title(titleStr)
 	ylim([-4 4]);
 end
+
+

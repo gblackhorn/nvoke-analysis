@@ -161,7 +161,7 @@ end
 %% ==========
 % 2.3 Create the mean spontaneous traces in DAO and PO
 % Note: 'event_type' for alignedData must be 'detected_events'
-save_fig = true; % true/false
+save_fig = false; % true/false
 save_dir = FolderPathVA.fig;
 at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'. Indicate what value should be used to normalize the traces
 at.stimNames = ''; % If empty, do not screen recordings with stimulation, instead use all of them
@@ -645,5 +645,21 @@ for sn = 1:numel(subNucleiTypes)
 	end
 
 end
+
+
+%% ==================== 
+% 3.5 Compare the calcium level during OG
+binWidth = 1;
+shadeType = 'ste';
+tickInt_time = 1;
+
+groupA.stimName = 'og-5s';
+groupA.subNucleiType = 'DAO';
+groupB.stimName = 'og-5s';
+groupB.subNucleiType = 'PO';
+
+
+compareAveragedCaLevel(alignedData_allTrials,groupA,groupB,binWidth,'shadeType',shadeType,...
+	'tickInt_time',tickInt_time);
 
 

@@ -46,7 +46,7 @@ function [CaLevelData,varargout] = GetCalLevelInfoFromAlignedData(alignedData_al
             hpStd = alignedData_filtered(an).traces(rn).hpStd;
 
             if norm2hpStd
-                psth_ca_val_trial{rn}/hpStd;
+                psth_ca_val_trial{rn}./hpStd;
             end
         end
         psth_ca_val{an} = [psth_ca_val_trial{:}];

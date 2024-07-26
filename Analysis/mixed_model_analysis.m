@@ -12,7 +12,8 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
         % - GLMM: Allows for non-normal distributions and link functions.
 
         % Input:
-        % - dataStruct: A structure containing the data to be analyzed.
+        % - dataStruct: A structure containing the data to be analyzed. Fields: responseVar, groupVar,
+        %               hierarchicalVars.
         % - responseVar: A string specifying the name of the response variable (e.g., 'FWHM').
         % - groupVar: A string specifying the name of the grouping variable (e.g., 'subNuclei').
         % - hierarchicalVars: A cell array of strings specifying the names of the hierarchical variables
