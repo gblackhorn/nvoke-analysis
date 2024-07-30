@@ -12,8 +12,8 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	mean_trace = [];
 	mean_trace_shade = []; % usually std of the mean_trace is used 
 	line_color = '#616887';
-	mean_line_color = '#2942BA'; % color of the mean-value trace
-	shade_color = '#4DBEEE';
+	default_mean_line_color = '#2942BA'; % color of the mean-value trace
+	default_shade_color = '#4DBEEE';
 	% stim_shade_color = '#ED8564';
 	stim_shade_color = {'#ED8564', '#5872ED', '#EDBF34', '#40EDC3', '#5872ED'};
 	shade_alpha = 0.3;
@@ -61,6 +61,14 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	    elseif strcmpi('tickInt_time', varargin{ii})
 	        tickInt_time = varargin{ii+1};
 	    end
+	end
+
+	if isempty(mean_line_color)
+		mean_line_color = default_mean_line_color;
+	end
+
+	if isempty(shade_color)
+		shade_color = default_shade_color;
 	end
 
 	if isempty(plotWhere)
@@ -121,13 +129,17 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 			fprintf('Warning: [stim_range] was not input, stim shade was not plotted\n')
 			return
 		end
+
+		chi=get(gca, 'Children');
+		set(gca, 'Children',flipud(chi));
+
 	end
 
 	hold off
 
 	box off
-	chi=get(gca, 'Children');
-	set(gca, 'Children',flipud(chi));
+	% chi=get(gca, 'Children');
+	% set(gca, 'Children',flipud(chi));
 	set(gca, 'box', 'off')
 	set(gca, 'FontSize', FontSize)
 	set(gca, 'FontWeight', FontWeight)

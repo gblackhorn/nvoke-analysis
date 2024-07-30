@@ -6,9 +6,17 @@ function [varargout] = compareAveragedCaLevel(alignedData,groupA,groupB,binWidth
 
 	% Defaults
 	plotUnitWidth = 0.3;
-	plotUnitHeight = 0.1;
+	plotUnitHeight = 0.3;
 	columnLim = 3;
 	yRangeMargin = 0.5;
+
+	colorGroupA = '#00FFFF';
+	colorGroupB = '#FF00FF';
+
+	% Stat model setting
+	modelType = 'LMM';
+	groupVarType = 'categorical';
+
 
 	% Create an instance of the inputParser
 	p = inputParser;
@@ -25,6 +33,12 @@ function [varargout] = compareAveragedCaLevel(alignedData,groupA,groupB,binWidth
 	addParameter(p, 'shadeType', 'ste', @ischar); 
 	addParameter(p, 'tickInt_time', 1, @isnumeric);
 	addParameter(p, 'titlePrefix', '', @ischar);
+	addParameter(p, 'titleSubfix', '', @ischar);
+	addParameter(p, 'filterROIs', false, @islogical);
+	addParameter(p, 'filterROIsStimTags', {}, @iscell);
+	addParameter(p, 'filterROIsStimEffects', {}, @iscell);
+	addParameter(p, 'saveFig', false, @islogical);
+	addParameter(p, 'saveDir', '', @ischar);
 	addParameter(p, 'debugMode', false, @islogical);
 
 	% Parse inputs
@@ -36,20 +50,34 @@ function [varargout] = compareAveragedCaLevel(alignedData,groupA,groupB,binWidth
 	shadeType = p.Results.shadeType;
 	tickInt_time = p.Results.tickInt_time;
 	titlePrefix = p.Results.titlePrefix;
+	titleSubfix = p.Results.titleSubfix;
+	filterROIs = p.Results.filterROIs;
+	filterROIsStimTags = p.Results.filterROIsStimTags;
+	filterROIsStimEffects = p.Results.filterROIsStimEffects;
+	saveFig = p.Results.saveFig;
+	saveDir = p.Results.saveDir;
 	debugMode = p.Results.debugMode;
 
 
+	% Filter the neurons by checking their response to certain stimulations
+	if filterROIs
+		[alignedData,tfIdxWithSubNucleiInfo,roiNumAll,roiNumKep,roiNumDis] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData,...
+			'stim_names',filterROIsStimTags,'filters',filterROIsStimEffects);
+	end
+
+
+
 	% Get the data using the settings in groupA and groupB
-	[CaLevelDataA,CaLevelDataNnumA,binX,binDataCellA] = getAveragedCaLevel(alignedData,...
+	[CaLevelDataA,CaLevelDataNnumA,binX,binDataCellA,binDataStructA] = getAveragedCaLevel(alignedData,...
 		groupA.stimName,groupA.subNucleiType,binWidth);
-	[CaLevelDataB,CaLevelDataNnumB,binX,binDataCellB] = getAveragedCaLevel(alignedData,...
+	[CaLevelDataB,CaLevelDataNnumB,binX,binDataCellB,binDataStructB] = getAveragedCaLevel(alignedData,...
 		groupB.stimName,groupB.subNucleiType,binWidth);
 
 
 	% Create a figure with tiles
 	groupAstr = sprintf('%s [%s]', groupA.stimName, groupA.subNucleiType);
 	groupBstr = sprintf('%s [%s]', groupB.stimName, groupB.subNucleiType);
-	titleStr = sprintf('%s %s vs %s', titlePrefix, groupAstr, groupBstr);
+	titleStr = sprintf('%s %s vs %s %s', titlePrefix, groupAstr, groupBstr, titleSubfix);
 	[f, fRowNum, fColNum] = fig_canvas(2, 'unit_width',plotUnitWidth,'unit_height',plotUnitHeight,...
 		'row_lim',2,'column_lim',1,'fig_name',titleStr);
 	tlo = tiledlayout(f,fRowNum,fColNum);
@@ -66,20 +94,30 @@ function [varargout] = compareAveragedCaLevel(alignedData,groupA,groupB,binWidth
 	axTrace = nexttile(1);
 	[~, ~] = plotAlignedTracesAverage(axTrace, CaLevelDataA.data, CaLevelDataA.time,...
 		'shadeType', shadeType, 'plot_combined_data', plotCombinedData,'plot_raw_traces', plotRawTraces,...
-		'y_range', yRange, 'tickInt_time', tickInt_time);
+		'color', colorGroupA, 'y_range', yRange, 'tickInt_time', tickInt_time);
 	hold on
 	[~, ~] = plotAlignedTracesAverage(axTrace, CaLevelDataB.data, CaLevelDataB.time,...
 		'shadeType', shadeType, 'plot_combined_data', plotCombinedData,'plot_raw_traces', plotRawTraces,...
-		'y_range', yRange, 'tickInt_time', tickInt_time);
+		'color', colorGroupB, 'y_range', yRange, 'tickInt_time', tickInt_time);
+
 	legend(groupAstr, '', groupBstr, '');
 
 	title(titleStr)
 
+
+	% GLMM stat test
+	combinedBinDataStruct = [binDataStructA, binDataStructB]; 
+	[me,~,~,~,~,meStatReport] = mixed_model_analysis(combinedBinDataStruct,'binVal','subN',{'recRoiTags'},...
+		'modelType',modelType,'groupVarType',groupVarType);
+
 	% % 
 
+	% Save the figure
+	if saveFig
+		saveDir = savePlot(f,'save_dir',saveDir,'guiSave',true,'fname',titleStr);
+	end
 
-
-
+	varargout{1} = saveDir;
 
 
 	% [~,CaLevel_box_statInfo] = boxPlot_with_scatter(binDataCell,'groupNames',NumArray2StringCell(xData),...
@@ -120,6 +158,7 @@ function [CaLevelData,CaLevelDataNnum,binX,binDataCell,varargout] = getAveragedC
 
     % Pre-allocate RAM
     binDataCell = cell(binNum,1);
+    binDataStructCell = cell(1,binNum);
     % data_groupName = cell(binNum,1);
 
     % Loop through the bins and collect calcium level data 
@@ -128,7 +167,15 @@ function [CaLevelData,CaLevelDataNnum,binX,binDataCell,varargout] = getAveragedC
     	endLoc = bn*binDataPointNum;
     	binData = mean(CaLevelData.data(startLoc:endLoc,:));
     	binDataCell{bn} = binData(:);
+
+    	binDataStructCell{bn} = struct('binVal',num2cell(ensureHorizontal(binDataCell{bn})),...
+    		'binIDX', num2cell(repmat(bn,1,numel(binDataCell{bn}))),'recTags',CaLevelData.recTags,'roiTags',CaLevelData.roiTags,...
+    		'recRoiTags',CaLevelData.recRoiTags,'subN',repmat({subNuclei},1,numel(binDataCell{bn})));
     end
 
-    varargout{1} = binNum;
+    % Create a structure var to store bin data for GLMM analysis
+    binDataStruct = [binDataStructCell{:}];
+
+    varargout{1} = binDataStruct;
+    varargout{2} = binNum;
 end

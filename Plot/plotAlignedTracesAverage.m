@@ -11,6 +11,7 @@ function [tracesAverage, tracesShade, varargout] = plotAlignedTracesAverage(plot
     addParameter(p, 'plot_median', false);
     addParameter(p, 'medianProp', 'FWHM');
     addParameter(p, 'shadeType', 'ste');
+    addParameter(p, 'color', '');
     addParameter(p, 'y_range', []);
     addParameter(p, 'tickInt_time', 1);
     addParameter(p, 'stimName', '');
@@ -28,6 +29,7 @@ function [tracesAverage, tracesShade, varargout] = plotAlignedTracesAverage(plot
     plot_median = p.Results.plot_median;
     medianProp = p.Results.medianProp;
     shadeType = p.Results.shadeType;
+    color = p.Results.color;
     y_range = p.Results.y_range;
     tickInt_time = p.Results.tickInt_time;
     stimName = p.Results.stimName;
@@ -83,13 +85,14 @@ function [tracesAverage, tracesShade, varargout] = plotAlignedTracesAverage(plot
             y_range = [yLowerLim - yDiff * yRangeMargin, yUpperLim + yDiff * yRangeMargin];
         end
 
-        plot_trace(timeInfo, tracesData, 'plotWhere', plotWhere, ...
-            'plot_combined_data', plot_combined_data, ...
-            'mean_trace', tracesAverage, 'mean_trace_shade', tracesShade, ...
+        plot_trace(timeInfo, tracesData, 'plotWhere', plotWhere,...
+            'plot_combined_data', plot_combined_data,...
+            'mean_trace', tracesAverage, 'mean_trace_shade', tracesShade,...
+            'mean_line_color', color, 'shade_color', color,...
             'plot_raw_traces', plot_raw_traces, 'y_range', y_range, 'tickInt_time', tickInt_time);
 
         if plot_median
-            plot_trace(timeInfo, medianTrace, 'plotWhere', plotWhere, ...
+            plot_trace(timeInfo, medianTrace, 'plotWhere', plotWhere,...
                 'plot_combined_data', false, 'plot_raw_traces', true, 'tickInt_time', tickInt_time);
         end
     end
@@ -97,7 +100,7 @@ function [tracesAverage, tracesShade, varargout] = plotAlignedTracesAverage(plot
     % if ~isempty(titlePrefix)
     %     titlePrefix = [titlePrefix, ' '];
     % end
-    titleName = sprintf('%s %s [%s] %g-animal %g-rec %g-roi %g-trace', ...
+    titleName = sprintf('%s %s [%s] %g-animal %g-rec %g-roi %g-trace',...
         titlePrefix, stimName, eventCat, nNum.recDateNum, nNum.recNum, nNum.roiNum, nNum.tracesNum);
     title(titleName);
 

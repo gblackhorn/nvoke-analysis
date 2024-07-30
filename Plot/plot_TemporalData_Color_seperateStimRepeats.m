@@ -116,8 +116,8 @@ function [f,varargout] = plot_TemporalData_Color_seperateStimRepeats(plotWhere,f
 	    % Creat a figure to plot raster (first ax) and histogram (second ax)
 	    % f = fig_canvas(2,'unit_width',0.4,'unit_height',0.4,'column_lim',1,...
 	    % 	'fig_name',titleStr); % create a figure
-	    tlo = tiledlayout(f, 13, 1); % setup tiles
-	    ax = nexttile(tlo,[12 1]); % activate the ax for color plot
+	    tlo = tiledlayout(f, 11, 1); % setup tiles
+	    ax = nexttile(tlo,[10 1]); % activate the ax for color plot
 	    if ~exist('posNum','var')
 	    	posNum = NaN;
 	    end

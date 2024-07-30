@@ -101,7 +101,7 @@ debug_mode = false; % true/false
 % Note: ROIs of all trials in alignedData_allTrials can be plotted. 
 %	Use 'filter' to screen ROIs based on the effect of stimulation
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
 stim_names = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
@@ -125,7 +125,7 @@ stimEvents(3).stimName = 'og-5s ap-0.1s';
 stimEvents(3).eventCat = 'trig-ap';
 stimEvents(3).eventCatFollow = 'spon'; % The category of first event following the eventCat one
 stimEvents(3).stimRefType = 'start'; % The category of first event following the eventCat one
-colorLUT = 'cyanMap'; % 'turbo' ,'magentaMap', 'cyanMap'
+colorLUT = 'magentaMap'; % 'turbo' ,'magentaMap', 'cyanMap'
 followDelayType = 'stim'; % stim/stimEvent. Calculate the delay of the following events using the stimulation start or the stim-evoked event time
 eventsTimeSort = 'all'; % 'off'/'inROI','all'. sort traces according to eventsTime
 hist_binsize = 5; % the size of the histogram bin, used to calculate the edges of the bins

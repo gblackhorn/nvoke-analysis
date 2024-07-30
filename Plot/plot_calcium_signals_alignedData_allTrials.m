@@ -269,6 +269,8 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData, v
                 'roiNames', originRowNames, 'show_colorbar', show_colorbar, 'titleStr', fig_title{5},...
                 'colorLUT', colorLUT, 'debug_mode', debug_mode); % ,'shadeData', patchCoor,'stimTypes', stimTypes
             sgtitle(fig_title{5})
+            % ax = gca;
+            % ax.Title.Position = [0.5, 1.1, 0]; % Adjust position as needed
             set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 
 
@@ -281,7 +283,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData, v
                     end
                     msg = 'Choose a folder to save calcium traces and events plots';
                     savePlot(f(fn), 'save_dir', save_dir, 'guiSave', gui_save,...
-                        'guiInfo', msg, 'fname', fig_title{fn});
+                        'guiInfo', msg, 'fname', fig_title{fn}, 'orientation','vertical');
                 end
                 close all
             end
