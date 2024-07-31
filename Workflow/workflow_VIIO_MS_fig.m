@@ -459,7 +459,7 @@ end
 %% ==========
 % 3.1 Peri-stimulus event frequency analysis
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 gui_save = true;
 groupLevel = 'roi'; % Collect event freq on 'roi'/'stimTrial' level
 
