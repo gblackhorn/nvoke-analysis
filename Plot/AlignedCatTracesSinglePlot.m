@@ -10,6 +10,9 @@ function [varargout] = AlignedCatTracesSinglePlot(alignedData, stimNames, eventC
 
     % Parse input arguments
     p = inputParser;
+    addParameter(p, 'filterROIs', false, @islogical);
+    addParameter(p, 'filterROIsStimTags', {}, @iscell);
+    addParameter(p, 'filterROIsStimEffects', {}, @iscell);
     addParameter(p, 'plot_combined_data', true);
     addParameter(p, 'subNucleiType', '');
     addParameter(p, 'shadeType', 'std');
@@ -29,6 +32,12 @@ function [varargout] = AlignedCatTracesSinglePlot(alignedData, stimNames, eventC
 
     parse(p, varargin{:});
     args = p.Results;
+
+    if args.filterROIs
+        [alignedData,tfIdxWithSubNucleiInfo,roiNumAll,roiNumKep,roiNumDis] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData,...
+            'stim_names',args.filterROIsStimTags,'filters',args.filterROIsStimEffects);
+    end
+
 
     % Filter data based on stimNames and subNucleiType
     alignedData = filterData(alignedData, stimNames, args.subNucleiType);

@@ -10,13 +10,10 @@ function [varargout] = plotRecSponEventFreq(alignedData,varargin)
 	% Required input
 	addRequired(p, 'alignedData', @isstruct);
 
-	% Add optional parameters to the input p
-	% addParameter(p, 'subNucleiTypes', '', @ischar);
-	% addParameter(p, 'plot_combined_data', 'true', @islogical);
-	% addParameter(p, 'plot_raw_traces', 'false', @islogical); % 'pre'/'post'. The location of relevent event. Pre or post to the ref event
-	% addParameter(p, 'shadeType', 'ste', @ischar); 
-	% addParameter(p, 'tickInt_time', 1, @isnumeric);
-	% addParameter(p, 'titlePrefix', '', @ischar);
+	addParameter(p, 'titleSubfix', '', @ischar);
+	addParameter(p, 'saveFig', false, @islogical);
+	addParameter(p, 'saveDir', '', @ischar);
+	addParameter(p, 'guiSave', false, @islogical);
 	addParameter(p, 'debugMode', false, @islogical);
 
 	% Parse inputs
@@ -28,7 +25,11 @@ function [varargout] = plotRecSponEventFreq(alignedData,varargin)
 	% plot_raw_traces = p.Results.plot_raw_traces;
 	% shadeType = p.Results.shadeType;
 	% tickInt_time = p.Results.tickInt_time;
-	% titlePrefix = p.Results.titlePrefix;
+	% titleSubfix = p.Results.titleSubfix;
+	titleSubfix = p.Results.titleSubfix;
+	saveFig = p.Results.saveFig;
+	saveDir = p.Results.saveDir;
+	guiSave = p.Results.guiSave;
 	debugMode = p.Results.debugMode;
 
 
@@ -80,13 +81,26 @@ function [varargout] = plotRecSponEventFreq(alignedData,varargin)
 
 	[uniqueRecNames, ~, ~] = unique({recSponFreqStruct.recName}, 'stable');
 
-	titleStr = 'Spon event freq';
+	titleStr = sprintf('Spon event freq %s', titleSubfix);
 	[f,f_rowNum,f_colNum] = fig_canvas(1,'unit_width',0.9,'unit_height',0.4, 'fig_name',titleStr); % create a figure
 	tlo = tiledlayout(f,f_rowNum,f_colNum);
 	ax = nexttile(tlo);
 
 	sponEventFreqData = barPlotOfStructData(recSponFreqStruct, 'sponfq', 'recIDX', 'plotWhere', ax,...
 		'xtickLabel', uniqueRecNames, 'TickAngle', 90);
+
+
+	if saveFig
+		if isempty(saveDir)
+			guiSave = true;
+		end
+		saveDir = savePlot(f,'save_dir',saveDir,'guiSave',guiSave,'fname',titleStr);
+		% save(fullfile(FolderPathVA.fig, [fname,' data']),'stimEventJitter');
+	end
+
+
+	varargout{1} = sponEventFreqData;
+	varargout{2} = saveDir;
 
 end
 

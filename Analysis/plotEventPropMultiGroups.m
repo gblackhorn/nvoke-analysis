@@ -31,6 +31,7 @@ function [varargout] = plotEventPropMultiGroups(groupedEventProp,props,organizeS
 	addParameter(p, 'mmHierarchicalVars', {'trialName', 'roiName'}, @iscell);
 	addParameter(p, 'saveFig', false, @islogical); 
 	addParameter(p, 'saveDir', '', @ischar); 
+	addParameter(p, 'debugMode', false, @islogical); 
 
 	% Parse inputs
 	parse(p, groupedEventProp, props, organizeStruct, varargin{:});
@@ -46,6 +47,7 @@ function [varargout] = plotEventPropMultiGroups(groupedEventProp,props,organizeS
 	mmHierarchicalVars = p.Results.mmHierarchicalVars;
 	saveFig = p.Results.saveFig;
 	saveDir = p.Results.saveDir;
+	debugMode = p.Results.debugMode;
 
 
 
@@ -54,6 +56,12 @@ function [varargout] = plotEventPropMultiGroups(groupedEventProp,props,organizeS
 
 	% Loop through 'organizeStruct'. Use the parameters in it to plot and analyze data
 	for en = 1:entryNum
+		if debugMode
+			fprintf('Group %d: %s\n', en, organizeStruct(en).title);
+			if en == 3
+				pause
+			end
+		end
 		% Filter the entries of 'groupedEventProp' using the information in 'organizeStruct(en).keepGroups'
 		[groupedEventPropFiltered] = filter_entries_in_structure(groupedEventProp,'group',...
 			'tags_keep',organizeStruct(en).keepGroups);

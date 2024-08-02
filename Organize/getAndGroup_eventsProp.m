@@ -1,48 +1,53 @@
 function [grouped_event,varargout] = getAndGroup_eventsProp(alignedData,varargin)
     % Get eventProp from every ROI and every trials in alignedData, and group them accroding to settings
 
+    % Create an instance of the inputParser
+    p = inputParser;
+
+    % Required input
+    addRequired(p, 'alignedData', @isstruct);
 
     % Defaults
-    entry = 'event'; % options: 'roi' or 'event'
-    modify_stim_name = true; % true/false. Change the stimulation name, 
-                            % such as GPIOxxx and OG-LEDxxx (output from nVoke), to simpler ones (ap, og, etc.)
-    ggSetting.sponOnly = false; % true/false. If eventType is 'roi', and ggSetting.sponOnly is true. Only keep spon entries
-    ggSetting.seperate_spon = true; % true/false. Whether to seperated spon according to stimualtion
-    ggSetting.dis_spon = false; % true/false. Discard spontaneous events
-    ggSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
-    ggSetting.groupField = {'stim_name','peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+    defaultEntry = 'event';
+    defaultModifyStimName = true;
+    defaultGgSetting = struct('sponOnly', false, ...
+                              'seperate_spon', true, ...
+                              'dis_spon', false, ...
+                              'modify_eventType_name', true, ...
+                              'groupField', {{'stim_name','peak_category'}}, ... % Note the double curly braces
+                              'mark_EXog', false, ...
+                              'og_tag', {{'og', 'og&ap'}}, ... % Note the double curly braces
+                              'sort_order', {{'spon', 'trig', 'rebound', 'delay'}}, ...
+                              'sort_order_plus', {{'ap', 'EXopto'}});    defaultAdata = [];
+    defaultDebugMode = false;
 
-    % if strcmp('stim_name',ggSetting.groupField) && strcmp('roi',eprop.entry)
-    %   keep_eventcat = 'spon'; % only keep spon events to avoid duplicated values when eprop.entry is "roi"
-    %   eventProp_all = filter_structData(eventProp_all,'peak_category','spon',1);
-    % end
+    % Add optional parameters to the input parser
+    addParameter(p, 'entry', defaultEntry, @ischar);
+    addParameter(p, 'modify_stim_name', defaultModifyStimName, @islogical);
+    addParameter(p, 'ggSetting', defaultGgSetting, @isstruct);
+    addParameter(p, 'adata', defaultAdata);
+    addParameter(p, 'filterROIs', false, @islogical);
+    addParameter(p, 'filterROIsStimTags', {}, @iscell);
+    addParameter(p, 'filterROIsStimEffects', {}, @iscell);
+    addParameter(p, 'debug_mode', defaultDebugMode, @islogical);
 
-    % rename the stimulation tag if og evokes spike at the onset of stimulation
-    ggSetting.mark_EXog = false; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
-    ggSetting.og_tag = {'og', 'og&ap'}; % find og events with these strings. 'og' to 'Exog', 'og&ap' to 'EXog&ap'
+    % Parse inputs
+    parse(p, alignedData, varargin{:});
 
-    % arrange the order of group entries using function [sort_struct_with_str] with settings below. 
-    ggSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', 'rebound', 'delay'
-    ggSetting.sort_order_plus = {'ap', 'EXopto'};
+    % Retrieve parsed values
+    entry = p.Results.entry;
+    modify_stim_name = p.Results.modify_stim_name;
+    ggSetting = p.Results.ggSetting;
+    adata = p.Results.adata;
+    filterROIs = p.Results.filterROIs;
+    filterROIsStimTags = p.Results.filterROIsStimTags;
+    filterROIsStimEffects = p.Results.filterROIsStimEffects;
+    debug_mode = p.Results.debug_mode;
 
-    adata = [];
 
-    debug_mode = false; % true/false
-
-
-    % Optionals for inputs
-    for ii = 1:2:(nargin-1)
-        if strcmpi('entry', varargin{ii}) 
-            entry = varargin{ii+1}; % excitation filter.  
-        elseif strcmpi('modify_stim_name', varargin{ii}) 
-            modify_stim_name = varargin{ii+1}; % inhibition filter.
-        elseif strcmpi('ggSetting', varargin{ii}) 
-            ggSetting = varargin{ii+1}; % rebound filter. 
-        elseif strcmpi('adata', varargin{ii}) 
-            adata = varargin{ii+1}; % rebound filter. 
-        elseif strcmpi('debug_mode', varargin{ii}) 
-            debug_mode = varargin{ii+1}; % rebound filter. 
-        end
+    if filterROIs
+        [alignedData,tfIdxWithSubNucleiInfo,roiNumAll,roiNumKep,roiNumDis] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData,...
+            'stim_names',filterROIsStimTags,'filters',filterROIsStimEffects);
     end
 
 

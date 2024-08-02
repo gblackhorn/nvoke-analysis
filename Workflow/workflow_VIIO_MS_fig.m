@@ -74,6 +74,19 @@ adata.event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
 % Replace rebound (AP) to spon
 [alignedData_stimWin] = changeEventCatInAlignedData(alignedData_stimWin,'ap-0.1s','rebound','spon');
 
+
+%% ==========
+% 0.2 (optional) Display the frequency of ROIs' spontaneous events in every recording using bar+scatter plot
+close all
+titleSubfix = 'ogInDataset'; 
+[~, saveDir] = plotRecSponEventFreq(alignedData_allTrials,...
+	'saveFig', true, 'saveDir', FolderPathVA.fig, 'guiSave', true, 'titleSubfix', titleSubfix); 
+
+% Update the folder path 
+if saveDir~=0
+	FolderPathVA.fig = saveDir;
+end
+
 %% ==========
 % Figure 1
 % Plot the recording field and draw ROIs as overlay using the data processed with CNMFe
@@ -224,17 +237,22 @@ ggSetting.mark_EXog = false; % true/false. if true, rename the og to EXog if the
 ggSetting.og_tag = {'og', 'og&ap'}; % find og events with these strings. 'og' to 'Exog', 'og&ap' to 'EXog&ap'
 ggSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', 'rebound', 'delay'
 ggSetting.sort_order_plus = {'ap', 'EXopto'};
+disOgEx = true; % true/false. If true, screen ROIs
+ogStimTags = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
+ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 debug_mode = false; % true/false
 
 % a. Create grouped_event for plotting event properties
 [eventStructForPlot] = getAndGroup_eventsProp(alignedData_allTrials,...
 	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
 
 % b. Create grouped_event for plotting ROI properties
 ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventProp
 [roiStructForPlot] = getAndGroup_eventsProp(alignedData_allTrials,...
 	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
 
 % Discard those without sync tag in the eventProp (Due to single neuron)
@@ -246,6 +264,7 @@ ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventP
 ggSetting.groupField = {'peak_category','subNuclei','type'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
 [eventStructForPlot_syncTag] = getAndGroup_eventsProp(alignedData_withSynchInfo,...
 	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
 
 
@@ -699,6 +718,10 @@ at.showMedian = false; % true/false. plot raw traces having a median value of th
 at.medianProp = 'FWHM'; % 
 at.shadeType = 'ste'; % plot the shade using std/ste
 at.y_range = [-10 20]; % [-10 5],[-3 5],[-2 1]
+disOgEx = true; % true/false. If true, screen ROIs
+ogStimTags = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
+ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+
 % at.sponNorm = true; % true/false
 % at.normalized = false; % true/false. normalize the traces to their own peak amplitudes.
 
@@ -710,6 +733,7 @@ traceInfo = cell(1,numel(at.subNucleiTypes));
 % Loop through the stimNames/eventCat
 for i = 1:numel(at.eventCat)
 	[~,traceInfo{i}] = AlignedCatTracesSinglePlot(alignedData_allTrials,at.stimNames{i},at.eventCat{i},...
+		'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
 		'normMethod',at.normMethod,'subNucleiType',at.subNucleiTypes,...
 		'showRawtraces',at.showRawtraces,'showMedian',at.showMedian,'medianProp',at.medianProp,...
 		'plot_combined_data',at.plot_combined_data,'shadeType',at.shadeType,'y_range',at.y_range);
