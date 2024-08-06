@@ -11,6 +11,7 @@ function [eventProp_all, varargout] = collect_event_prop(alignedData, varargin)
 
     % Optional parameters with default values
     addParameter(p, 'style', 'roi', @(x) ismember(x, {'roi', 'event'}));
+    addParameter(p, 'modifyStimName', true, @islogical);
     addParameter(p, 'debug_mode', false, @islogical);
 
     % Parse inputs
@@ -19,6 +20,7 @@ function [eventProp_all, varargout] = collect_event_prop(alignedData, varargin)
     % Extract values from the parsed inputs
     alignedData = p.Results.alignedData;
     style = p.Results.style;
+    modifyStimName = p.Results.modifyStimName;
     debug_mode = p.Results.debug_mode;
 
     % Main contents
@@ -70,6 +72,17 @@ function [eventProp_all, varargout] = collect_event_prop(alignedData, varargin)
     end
     % Combine event properties from all trials
     eventProp_all = [eventProp_all_cell{:}];
+
+    if modifyStimName
+        % cat_setting.cat_type = 'stim_name';
+        % cat_setting.cat_names = {'og', 'ap', 'og-ap'};
+        % cat_setting.cat_merge = {{'OG-LED-5s'}, {'GPIO-1-1s'}, {'OG-LED-5s GPIO-1-1s'}};
+
+        [cat_setting] = set_CatNames_for_mod_cat_name('stimulation'); % Get the settings to modify the stimulation names in ca_events 
+        [eventProp_all] = mod_cat_name(eventProp_all,...
+            'cat_setting',cat_setting,'dis_extra', false,'stimType',false);
+    end
+
 end
 
 function eventProp_trial_roi = process_roi_data(roiData, trialName, fovID, stim_name, combine_stim, stim_repeats, style)

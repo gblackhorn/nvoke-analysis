@@ -13,6 +13,8 @@ function [varargout] = compareAveragedCaLevel(alignedData,groupA,groupB,binWidth
 	colorGroupA = '#00FFFF';
 	colorGroupB = '#FF00FF';
 
+	stimBinRange = [3, 7]; % Run LMM on the these bins. 
+
 	% Stat model setting
 	modelType = 'LMM';
 	groupVarType = 'categorical';
@@ -105,10 +107,16 @@ function [varargout] = compareAveragedCaLevel(alignedData,groupA,groupB,binWidth
 	title(titleStr)
 
 
-	% GLMM stat test
+	% Keep the bins during the optogenetic stimulation
 	combinedBinDataStruct = [binDataStructA, binDataStructB]; 
-	[me,~,~,~,~,meStatReport] = mixed_model_analysis(combinedBinDataStruct,'binVal','subN',{'recRoiTags'},...
-		'modelType',modelType,'groupVarType',groupVarType);
+	combinedBinDataStruct = filterByBinIDX(combinedBinDataStruct, 'binIDX', stimBinRange);
+
+	% GLMM stat test
+	[me, ~, ~, ~, ~, meStatReport] = mixed_model_analysis(combinedBinDataStruct,...
+		'binVal', 'subN', {'recRoiTags'}, 'binVar', 'binIDX', 'modelType', 'LMM', 'groupVarType', 'categorical');
+
+	% [me,~,~,~,~,meStatReport] = mixed_model_analysis(combinedBinDataStruct,'binVal','subN',{'recRoiTags'},...
+	% 	'modelType',modelType,'groupVarType',groupVarType);
 
 	% % 
 
@@ -118,6 +126,7 @@ function [varargout] = compareAveragedCaLevel(alignedData,groupA,groupB,binWidth
 	end
 
 	varargout{1} = saveDir;
+	varargout{2} = meStatReport;
 
 
 	% [~,CaLevel_box_statInfo] = boxPlot_with_scatter(binDataCell,'groupNames',NumArray2StringCell(xData),...
@@ -178,4 +187,27 @@ function [CaLevelData,CaLevelDataNnum,binX,binDataCell,varargout] = getAveragedC
 
     varargout{1} = binDataStruct;
     varargout{2} = binNum;
+end
+
+
+function filteredData = filterByBinIDX(dataStruct, fieldName, binRange)
+    % Validate inputs
+    if ~isstruct(dataStruct)
+        error('dataStruct must be a structure array.');
+    end
+    if ~isfield(dataStruct, fieldName)
+        error('Field "%s" does not exist in the data structure.', fieldName);
+    end
+    if length(binRange) ~= 2
+        error('binRange must be a two-element vector [minBin, maxBin].');
+    end
+
+    % Extract binIDX values
+    binIDXValues = [dataStruct.(fieldName)];
+
+    % Create a logical mask to keep only the desired binIDX values
+    mask = binIDXValues >= binRange(1) & binIDXValues <= binRange(2);
+
+    % Apply the mask to filter the data structure
+    filteredData = dataStruct(mask);
 end

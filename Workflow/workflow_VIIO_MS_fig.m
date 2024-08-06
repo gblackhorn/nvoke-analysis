@@ -533,32 +533,6 @@ debug_mode = false; % true/false
 	'baseBinEdgestart',baseBinEdgestart,'baseBinEdgeEnd',baseBinEdgeEnd,...
 	'save_fig',save_fig,'saveDir',FolderPathVA.fig,'gui_save',gui_save,'debug_mode',debug_mode);
 
-% % Violin plot of selected bins
-% subNuclei = {'PO','DAO'};
-% for sn = 1:numel(subNuclei)
-% 	subN = subNuclei{sn};
-% 	fName = sprintf('violinPlot peri-stim eventFreq %s', subN);
-% 	[f,f_rowNum,f_colNum] = fig_canvas(3,'unit_width',0.4,'unit_height',0.3,...
-% 		'column_lim',1,'fig_name','fName'); % create a figure 
-% 	tlo = tiledlayout(f,f_rowNum,f_colNum);
-% 	for sn = 1:numel(barStat.(subN)) % Loop through various stimulation groups
-% 		stimNames = {barStat.(subN).stim};
-% 		switch stimNames{sn}
-% 			case 'og-5s'
-% 				binNames = {'baseline', 'lateFirstStim1', 'lateFirstStim2', 'postFirstStim'};
-% 			case 'ap-0.1s'
-% 				binNames = {'baseline', 'firstStim', 'baseAfter'};
-% 			case 'og-5s ap-0.1s'
-% 				binNames = {'baseline', 'secondStim', 'lateFirstStim', 'postFirstStim'};
-% 		end
-% 		ax = nexttile(tlo);
-% 		violinPlotPeriStimBins(barStat.(subN)(sn), binNames, ax);
-% 	end
-% 	if save_fig
-% 		savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',false,'fname',fName);
-% 	end
-% end
-
 
 %% ====================
 % 3.2 Plot traces and stim-aligned traces
@@ -692,7 +666,7 @@ if disOgEx
 end
 
 
-saveDir = compareAveragedCaLevel(alignedData_allTrials,groupA,groupB,binWidth,...
+[saveDir, meStatReport] = compareAveragedCaLevel(alignedData_allTrials,groupA,groupB,binWidth,...
 	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
 	'shadeType',shadeType,'tickInt_time',tickInt_time,'titleSubfix',titleSubfix,...
 	'SaveFig',SaveFig,'saveDir',FolderPathVA.fig);
@@ -713,14 +687,15 @@ at.stimNames = {'ap-0.1s','og-5s ap-0.1s'}; % If empty, do not screen recordings
 at.eventCat = {'trig','trig-ap'}; % options: 'trig','trig-ap','rebound','spon', 'rebound'
 at.subNucleiTypes = 'PO'; % Separate ROIs using the subnuclei tag.
 at.plot_combined_data = true; % mean value and std of all traces
-at.showRawtraces = false; % true/false. true: plot every single trace
+at.showRawtraces = true; % true/false. true: plot every single trace
 at.showMedian = false; % true/false. plot raw traces having a median value of the properties specified by 'at.medianProp'
 at.medianProp = 'FWHM'; % 
 at.shadeType = 'ste'; % plot the shade using std/ste
 at.y_range = [-10 20]; % [-10 5],[-3 5],[-2 1]
-disOgEx = true; % true/false. If true, screen ROIs
+disOgEx = false; % true/false. If true, screen ROIs
 ogStimTags = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
 ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+screenWithPreOrPost = true; % Further screen event traces by checking if they have a specific pre/post event
 
 % at.sponNorm = true; % true/false
 % at.normalized = false; % true/false. normalize the traces to their own peak amplitudes.
@@ -732,8 +707,19 @@ traceInfo = cell(1,numel(at.subNucleiTypes));
 
 % Loop through the stimNames/eventCat
 for i = 1:numel(at.eventCat)
+	if strcmp(at.stimNames{i}, 'og-5s ap-0.1s') && strcmp(at.eventCat{i}, 'trig-ap')
+		screenWithPreOrPost = true;
+		preOrPost = 'pre';
+		preOrPostEventCat = 'trig';
+	else
+		screenWithPreOrPost = false;
+		preOrPost = '';
+		preOrPostEventCat = '';
+	end
+
 	[~,traceInfo{i}] = AlignedCatTracesSinglePlot(alignedData_allTrials,at.stimNames{i},at.eventCat{i},...
 		'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
+		'screenWithPreOrPost',screenWithPreOrPost,'preOrPost',preOrPost,'preOrPostEventCat',preOrPostEventCat,...
 		'normMethod',at.normMethod,'subNucleiType',at.subNucleiTypes,...
 		'showRawtraces',at.showRawtraces,'showMedian',at.showMedian,'medianProp',at.medianProp,...
 		'plot_combined_data',at.plot_combined_data,'shadeType',at.shadeType,'y_range',at.y_range);

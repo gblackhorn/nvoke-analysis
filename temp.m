@@ -529,3 +529,110 @@ for sn = 1:numel(subNucleiTypes)
 end
 
 
+plot_raw_traces = false;
+[tracesAverage, tracesShade] = plotAlignedTracesAverage(gca, CaLevelData.data, CaLevelData.time,...
+	'plot_raw_traces', plot_raw_traces);
+
+
+
+formula = sprintf('%s ~ %s * %s + %s', responseVar, groupVar, timeBinVar, strjoin(randomEffects, ' + '))
+
+
+%% ==========
+% Convert binIDX to a categorical variable
+tbl.binIDX = categorical(tbl.binIDX);
+
+% Define the model formula with interaction term
+randomEffects = strcat('(1|', {'recTags', 'roiTags'}, ')');
+formula = sprintf('%s ~ %s * %s + %s', 'binVal', 'subN', 'binIDX', strjoin(randomEffects, ' + '));
+
+% Fit the Linear Mixed-Effects Model (LMM)
+lme = fitlme(tbl, formula);
+
+% Display the results
+disp(lme);
+
+% Extract the names of the fixed effects
+fixedEffectsNames = lme.CoefficientNames;
+
+% Initialize arrays to store p-values and test statistics
+pValues = [];
+testStats = [];
+
+% Specify the time bin to compare
+timeBinToCompare = '4';  % Modify as needed for the specific bin
+
+% Construct the hypothesis matrix H
+effectName = sprintf('binIDX_%s:subN_PO', timeBinToCompare);
+idx = find(strcmp(fixedEffectsNames, effectName));
+
+if ~isempty(idx)
+    H = zeros(1, length(fixedEffectsNames));
+    H(idx) = 1;
+    
+    % Perform the hypothesis test
+    [pValue, F, DF1, DF2] = coefTest(lme, H);
+    
+    % Store the p-value and test statistic
+    pValues = [pValues; pValue];
+    testStats = [testStats; F];
+    
+    % Print the results
+    fprintf('Comparison for Time Bin: %s\n', timeBinToCompare);
+    fprintf('F(%d,%d) = %.2f, p = %.4f\n', DF1, DF2, F, pValue);
+else
+    fprintf('Effect %s not found in the model.\n', effectName);
+end
+
+% Display the p-values
+disp('P-values:');
+disp(pValues);
+
+
+
+%% ==========
+eventCat = 'trig-ap';
+preOrPost = 'pre';
+preOrPostEventCat = 'trig';
+eventProps = alignedData_allTrials(9).traces(1).eventProp  ;
+[posRefEventIDX, posRefEventProp] = screenEventsWithPreOrPostEvents(eventProps, eventCat,...
+	preOrPost, preOrPostEventCat);
+
+%% ==========
+
+baseline = 0.5;
+stable_level = 0.5;
+decay_amplitude = -1.0;
+decay_rate = 1.0;
+recovery_amplitude = 0.5;
+recovery_rate = 0.5;
+
+beta0 = [baseline, stable_level, decay_amplitude, decay_rate, recovery_amplitude, recovery_rate];
+
+
+% Define a non-linear model function to handle different phases
+modelfun = @(b, x) b(1) + ...
+    (x < 0) .* (b(2)) + ...  % Before stimulation: stable
+    (x >= 0 & x <= 5) .* (b(3) * exp(-b(4) * (x - 0))) + ...  % During stimulation: exponential decay
+    (x > 5) .* (b(5) * (1 - exp(-b(6) * (x - 5))));  % After stimulation: exponential recovery
+
+% Define initial estimates
+baseline = 0.5;
+stable_level = 0.5;
+decay_amplitude = -1.0;
+decay_rate = 1.0;
+recovery_amplitude = 0.5;
+recovery_rate = 0.5;
+
+beta0 = [baseline, stable_level, decay_amplitude, decay_rate, recovery_amplitude, recovery_rate];
+
+% Assuming dataTable contains your data with columns: binVal, subN, binIDX, and neuronID
+% Convert bin labels to numerical values if necessary
+combinedBinDataStruct.numBin = str2double(cellstr(combinedBinDataStruct.binIDX));
+
+% Fit the non-linear mixed-effects model
+me = fitnlme(combinedBinDataStruct, modelfun, beta0, 'RandomEffect', 'neuronID');
+
+% Optionally, visualize or summarize the model
+disp(me);
+

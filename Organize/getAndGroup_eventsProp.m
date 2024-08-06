@@ -52,8 +52,9 @@ function [grouped_event,varargout] = getAndGroup_eventsProp(alignedData,varargin
 
 
     % Collect eventProp
-    [eventProp_all]=collect_events_from_alignedData(alignedData,...
-        'entry',entry,'modify_stim_name',modify_stim_name);
+    eventProp_all = collect_event_prop(alignedData, 'style', entry, 'modifyStimName',modify_stim_name); % only use 'event' for 'style'
+    % [eventProp_all]=collect_events_from_alignedData(alignedData,...
+    %     'entry',entry,'modify_stim_name',modify_stim_name);
 
 
     % Group eventProp according to the 'mgSetting.groupField' and add more information
