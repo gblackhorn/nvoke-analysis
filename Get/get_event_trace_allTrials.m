@@ -378,7 +378,8 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 				alignedData.traces(n).CaLevelDeltaData = CaLevel.delta_data;
 				% alignedData.traces(n).baseChangeMinNorm = baseChange.ChangeMin_norm;
 				alignedData.traces(n).CaLevelMinDelta = CaLevel.mean_delta;
-				alignedData.traces(n).CaLevelMinDeltaData = CaLevel.mean_delta_data;
+				alignedData.traces(n).CaLevelMinDeltaData = CaLevel.mean_delta_data; % minCalciumDuringStim-baseline 
+				alignedData.traces(n).CaLevelMinData = CaLevel.mean_data; % min values of calcium during each stimulation
 				alignedData.traces(n).CaLevelDecline = CaLevel.decline; % Logical val. True if CaLevelDelta is beyond the base_mean-2*base_std
 				% alignedData.traces(n).CaLevelTrace.timeInfo = CaLevelTrace.timeInfo;
 				% alignedData.traces(n).CaLevelTrace.yAlign = CaLevelTrace.yAlign;
@@ -404,6 +405,9 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 						decay_eventCat{en},combine_stimRange(:,2),tauStimIDX,tauVal);
 					alignedData.traces(n).eventProp = add_caLevelDelta_for_specificEvents(alignedData.traces(n).eventProp,...
 						decay_eventCat{en},combine_stimRange(:,2),alignedData.traces(n).CaLevelMinDeltaData);
+					alignedData.traces(n).eventProp = add_caLevelDelta_for_specificEvents(alignedData.traces(n).eventProp,...
+						decay_eventCat{en},combine_stimRange(:,2),alignedData.traces(n).CaLevelMinData,...
+						'newFieldName','caLevel');
 				end
 				% alignedData.traces(n).eventProp = add_tau_for_specificEvents(alignedData.traces(n).eventProp,...
 				% 	'rebound',combine_stimRange(:,2),tauStimIDX,tauVal);

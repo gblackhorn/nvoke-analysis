@@ -85,7 +85,7 @@ function [varargout] = get_CaLevel_delta(stimRange,timeInfo,roiTrace,varargin)
 	meanVal.baseVal = NaN(1, repeatNum);
 	meanVal.stimVal = NaN(1, repeatNum);
 	% meanVal.stimVal_norm = NaN(1, repeatNum);
-	meanVal.stimVal_delta = NaN(1, repeatNum); % delta/baseVal
+	meanVal.stimVal_delta = NaN(1, repeatNum); % stimVal-baseVal
 	meanVal.stimMinVal = NaN(1, repeatNum);
 	% meanVal.stimMinVal_norm = NaN(1, repeatNum);
 	meanVal.stimMinVal_delta = NaN(1, repeatNum);
@@ -129,6 +129,7 @@ function [varargout] = get_CaLevel_delta(stimRange,timeInfo,roiTrace,varargin)
 	% CaLevel.ChangeMin_norm = mean(meanVal.stimMinVal_norm); % 
 	CaLevel.mean_delta = mean(meanVal.stimMinVal_delta);
 	CaLevel.mean_delta_data = meanVal.stimMinVal_delta;
+	CaLevel.mean_data = meanVal.stimMinVal; % min values of calcium during each stimulation
 
 
 	CaDecline_num = numel(find(meanVal.meanVal_CaDecline==true));

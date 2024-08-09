@@ -54,7 +54,7 @@ function [CaLevelData,varargout] = GetCalLevelInfoFromAlignedData(alignedData_al
             hpStd = alignedData_filtered(an).traces(rn).hpStd;
 
             if norm2hpStd
-                psth_ca_val_trial{rn}./hpStd;
+                psth_ca_val_trial{rn} = psth_ca_val_trial{rn}./hpStd;
             end
 
             roiNamesInOneRoi{rn} = repmat({roiName},1,size(psth_ca_val_trial{rn},2));

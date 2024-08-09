@@ -1,10 +1,10 @@
-function [ROIeventProp_new,varargout] = add_caLevelDelta_for_specificEvents(ROIeventProp,eventCat,stimTime,caLevelDelta,varargin)
+function [ROIeventProp_new,varargout] = add_caLevelDelta_for_specificEvents(ROIeventProp,eventCat,stimTime,caLevelData,varargin)
 	% This function is used to get the calcium level delta (lowest point/largest value) during
 	% stimulations for a specific type of events, such as 'rebound'
 
 	% Note: ROIeventProp is a structure var. Fields 'rise_time' and 'peak_category' are used in this
 	% function. eventCat is a character var (such as 'rebound'). StimTime is a vector (the ends of stimulation for
-	% rebound events). caLevelDelta is an double vector with the same length as the stimTime.
+	% rebound events). caLevelData is an double vector with the same length as the stimTime.
 
 	% Example:
 
@@ -13,25 +13,36 @@ function [ROIeventProp_new,varargout] = add_caLevelDelta_for_specificEvents(ROIe
 
 
 	
-	% Options
-	% for ii = 1:2:(nargin-3)
-	%     if strcmpi('xlabel_str', varargin{ii})
-	%         xlabel_str = varargin{ii+1};
-	%     elseif strcmpi('ylabel_str', varargin{ii})
-	%         ylabel_str = varargin{ii+1};
-	%     % elseif strcmpi('title_str', varargin{ii})
-	%     %     title_str = varargin{ii+1};
-	%     end
-	% end
+	% Create an instance of the inputParser
+	p = inputParser;
 
+	% Required input
+	addRequired(p, 'ROIeventProp', @isstruct);
+	addRequired(p, 'eventCat', @ischar);
+	addRequired(p, 'stimTime', @isnumeric);
+	addRequired(p, 'caLevelData', @isnumeric);
+
+	% Add optional parameters to the input p
+	addParameter(p, 'newFieldName', 'caLevelDelta', @ischar);
+
+	% Parse inputs
+	parse(p, ROIeventProp, eventCat, stimTime, caLevelData, varargin{:});
+
+	% Retrieve parsed values
+	ROIeventProp = p.Results.ROIeventProp;
+	eventCat = p.Results.eventCat;
+	stimTime = p.Results.stimTime;
+	caLevelData = p.Results.caLevelData;
+	newFieldName = p.Results.newFieldName;
+	
 
 	% Create 2 NaN arrays having the same length as the events. 
 	% One for largest calcium level delta, and another one for decay constant (tau) during stimulations
 	ROIeventProp_new = ROIeventProp;
 	
-	if ~isfield(ROIeventProp_new,'caLevelDelta')
+	if ~isfield(ROIeventProp_new,newFieldName)
 		defaultValue = {[]}; % create a cell array with the default value for the new field
-		[ROIeventProp_new(:).caLevelDelta] = deal(defaultValue{:}); % use deal to assign the default value to each structure
+		[ROIeventProp_new(:).(newFieldName)] = deal(defaultValue{:}); % use deal to assign the default value to each structure
 	end
 
 
@@ -53,7 +64,7 @@ function [ROIeventProp_new,varargout] = add_caLevelDelta_for_specificEvents(ROIe
 		eventNum = numel(idx_events); % number of events with specified category
 		for n = 1:eventNum
 			idxStim_event = idxStim(n); % stimulation idx for this single event
-			ROIeventProp_new(idx_events(n)).caLevelDelta = caLevelDelta(idxStim_event);
+			ROIeventProp_new(idx_events(n)).(newFieldName) = caLevelData(idxStim_event);
 		end
 	end
 end

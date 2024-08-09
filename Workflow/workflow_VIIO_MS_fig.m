@@ -624,7 +624,7 @@ summarizeExOgEffect(alignedData_allTrials, 'save_fig', save_fig, 'save_dir', Fol
 %% ==================== 
 % 3.4 Compare the delay of offStim events to spon interval
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 subNucleiTypes = {'DAO', 'PO'};
 for sn = 1:numel(subNucleiTypes)
 	alignedDataSubN = screenSubNucleiROIs(alignedData_allTrials,subNucleiTypes{sn});
@@ -648,15 +648,41 @@ end
 % 3.5 Compare the calcium level during OG
 close all
 
-SaveFig = false; % true/false
+SaveFig = true; % true/false
 binWidth = 1;
 shadeType = 'ste';
 tickInt_time = 1;
+norm2hpStd = true; % Normalize the traces with the STD of highpass filtered data from the same ROI
 
-groupA.stimName = 'og-5s';
-groupA.subNucleiType = 'DAO';
-groupB.stimName = 'og-5s';
-groupB.subNucleiType = 'PO';
+pairStruct(1).stimNameA = 'og-5s';
+pairStruct(1).subNucleiTypeA = 'DAO';
+pairStruct(1).stimEventCatA = '';
+pairStruct(1).stimEventKeepOrDisA = '';
+pairStruct(1).stimNameB = 'og-5s';
+pairStruct(1).subNucleiTypeB = 'PO';
+pairStruct(1).stimEventCatB = '';
+pairStruct(1).stimEventKeepOrDisB = '';
+pairStruct(1).mmGroupVar = 'subN'; % Options: stimName, subN, eventFilter
+
+pairStruct(2).stimNameA = 'og-5s';
+pairStruct(2).subNucleiTypeA = 'DAO';
+pairStruct(2).stimEventCatA = 'rebound';
+pairStruct(2).stimEventKeepOrDisA = 'keep';
+pairStruct(2).stimNameB = 'og-5s';
+pairStruct(2).subNucleiTypeB = 'DAO';
+pairStruct(2).stimEventCatB = 'rebound';
+pairStruct(2).stimEventKeepOrDisB = 'discard';
+pairStruct(2).mmGroupVar = 'eventFilter';
+
+pairStruct(3).stimNameA = 'og-5s';
+pairStruct(3).subNucleiTypeA = 'PO';
+pairStruct(3).stimEventCatA = 'rebound';
+pairStruct(3).stimEventKeepOrDisA = 'keep';
+pairStruct(3).stimNameB = 'og-5s';
+pairStruct(3).subNucleiTypeB = 'PO';
+pairStruct(3).stimEventCatB = 'rebound';
+pairStruct(3).stimEventKeepOrDisB = 'discard';
+pairStruct(3).mmGroupVar = 'eventFilter';
 
 disOgEx = true; % true/false. If true, screen ROIs
 ogStimTags = {'og-5s', 'og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
@@ -665,15 +691,19 @@ if disOgEx
 	titleSubfix = '[exclude OgEx]';
 end
 
+for pn = 1:numel(pairStruct)
+	titlePrefix = sprintf('[%s %s %s-%s] [%s %s %s-%s]',...
+		pairStruct(pn).stimNameA,pairStruct(pn).subNucleiTypeA,pairStruct(pn).stimEventCatA,pairStruct(pn).stimEventKeepOrDisA,...
+		pairStruct(pn).stimNameB,pairStruct(pn).subNucleiTypeA,pairStruct(pn).stimEventCatB,pairStruct(pn).stimEventKeepOrDisB);
+	[saveDir, meStatReport] = compareAveragedCaLevel(alignedData_allTrials,pairStruct(pn),binWidth,...
+		'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
+		'shadeType',shadeType,'tickInt_time',tickInt_time,'titlePrefix',titlePrefix,'titleSubfix',titleSubfix,...
+		'norm2hpStd',norm2hpStd,'SaveFig',SaveFig,'saveDir',FolderPathVA.fig);
 
-[saveDir, meStatReport] = compareAveragedCaLevel(alignedData_allTrials,groupA,groupB,binWidth,...
-	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
-	'shadeType',shadeType,'tickInt_time',tickInt_time,'titleSubfix',titleSubfix,...
-	'SaveFig',SaveFig,'saveDir',FolderPathVA.fig);
-
-% Update the folder path 
-if saveDir~=0
-	FolderPathVA.fig = saveDir;
+	% Update the folder path 
+	if saveDir~=0
+		FolderPathVA.fig = saveDir;
+	end
 end
 
 

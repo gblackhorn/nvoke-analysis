@@ -19,7 +19,7 @@ function [varargout] = plot_trace(time_info,trace_data,varargin)
 	shade_alpha = 0.3;
 	line_width = 0.2;
 	line_mean_width = 1.5; % width of the mean-value trace
-	FontSize = 18;
+	FontSize = 8;
 	FontWeight = 'bold';
 
 	tickInt_time = 1; % interval of tick for timeInfo (x axis)

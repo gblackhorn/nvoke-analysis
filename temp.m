@@ -591,48 +591,18 @@ disp(pValues);
 
 
 %% ==========
-eventCat = 'trig-ap';
-preOrPost = 'pre';
-preOrPostEventCat = 'trig';
-eventProps = alignedData_allTrials(9).traces(1).eventProp  ;
-[posRefEventIDX, posRefEventProp] = screenEventsWithPreOrPostEvents(eventProps, eventCat,...
-	preOrPost, preOrPostEventCat);
+close all
+figure
+caMinDeltaReboundDAO = [eventStructForPlot(8).event_info.caLevelDelta]; 
+peakHpstdReboundDAO = [eventStructForPlot(8).event_info.peak_slope_norm_hpstd]; 
 
-%% ==========
+stylishScatter(caMinDeltaReboundDAO,peakHpstdReboundDAO, 'plotWhere', gca, 'MarkerEdgeColor', 'k');
 
-baseline = 0.5;
-stable_level = 0.5;
-decay_amplitude = -1.0;
-decay_rate = 1.0;
-recovery_amplitude = 0.5;
-recovery_rate = 0.5;
+hold on
 
-beta0 = [baseline, stable_level, decay_amplitude, decay_rate, recovery_amplitude, recovery_rate];
+caMinDeltaReboundPO = [eventStructForPlot(9).event_info.caLevelDelta]; 
+peakHpstdReboundPO = [eventStructForPlot(9).event_info.peak_slope_norm_hpstd]; 
 
+stylishScatter(caMinDeltaReboundPO,peakHpstdReboundPO, 'plotWhere', gca);
 
-% Define a non-linear model function to handle different phases
-modelfun = @(b, x) b(1) + ...
-    (x < 0) .* (b(2)) + ...  % Before stimulation: stable
-    (x >= 0 & x <= 5) .* (b(3) * exp(-b(4) * (x - 0))) + ...  % During stimulation: exponential decay
-    (x > 5) .* (b(5) * (1 - exp(-b(6) * (x - 5))));  % After stimulation: exponential recovery
-
-% Define initial estimates
-baseline = 0.5;
-stable_level = 0.5;
-decay_amplitude = -1.0;
-decay_rate = 1.0;
-recovery_amplitude = 0.5;
-recovery_rate = 0.5;
-
-beta0 = [baseline, stable_level, decay_amplitude, decay_rate, recovery_amplitude, recovery_rate];
-
-% Assuming dataTable contains your data with columns: binVal, subN, binIDX, and neuronID
-% Convert bin labels to numerical values if necessary
-combinedBinDataStruct.numBin = str2double(cellstr(combinedBinDataStruct.binIDX));
-
-% Fit the non-linear mixed-effects model
-me = fitnlme(combinedBinDataStruct, modelfun, beta0, 'RandomEffect', 'neuronID');
-
-% Optionally, visualize or summarize the model
-disp(me);
 
