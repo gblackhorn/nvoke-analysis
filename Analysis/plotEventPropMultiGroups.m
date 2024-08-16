@@ -14,6 +14,9 @@ function [varargout] = plotEventPropMultiGroups(groupedEventProp,props,organizeS
 	% Defaults
 	plot_combined_data = false;
 	stat = true;
+	defaultColorGroup = {'#3FF5E6', '#F55E58', '#F5A427', '#4CA9F5', '#33F577',...
+	    '#408F87', '#8F4F7A', '#798F7D', '#8F7832', '#28398F', '#000000'};
+
 
 	% Input parser
 	p = inputParser;
@@ -51,6 +54,8 @@ function [varargout] = plotEventPropMultiGroups(groupedEventProp,props,organizeS
 
 
 
+
+
 	% Get the entry number of 'organizeStruct'
 	entryNum = numel(organizeStruct);
 
@@ -62,6 +67,14 @@ function [varargout] = plotEventPropMultiGroups(groupedEventProp,props,organizeS
 				pause
 			end
 		end
+
+		%
+		if ~isfield(organizeStruct, 'colorGroup') || isempty(organizeStruct(en).colorGroup)
+			colorGroup = defaultColorGroup;
+		else
+			colorGroup = organizeStruct(en).colorGroup;
+		end
+
 		% Filter the entries of 'groupedEventProp' using the information in 'organizeStruct(en).keepGroups'
 		[groupedEventPropFiltered] = filter_entries_in_structure(groupedEventProp,'group',...
 			'tags_keep',organizeStruct(en).keepGroups);
@@ -78,17 +91,22 @@ function [varargout] = plotEventPropMultiGroups(groupedEventProp,props,organizeS
 			'plot_combined_data', plot_combined_data, 'parNames', props, 'stat', stat,...
 			'mmModel', mmModel, 'mmGroup', organizeStruct(en).mmFixCat,...
 			'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-			'fname_preffix', organizeStruct(en).title,...
+			'colorGroup', colorGroup, 'fname_preffix', organizeStruct(en).title,...
 			'save_fig', saveFig, 'save_dir', saveDir, 'GUIsave', GUIsave);
 
 		% Create a UI table displaying the n numberss
-		fNum = nNumberTab(groupedEventPropFiltered, entryType);
+		[fNum, tabNum] = nNumberTab(groupedEventPropFiltered, entryType);
 
 		% Save data
 		if saveFig
 			% Save the fNum
 			savePlot(fNum,'guiSave', 'off', 'save_dir', saveDir,...
 				'fname', [organizeStruct(en).title,' nNumInfo']);
+
+			% Save the fNum tab in latex format
+			tabNumName = sprintf('%s nNumInfo.tex', organizeStruct(en).title);
+			tableToLatex(tabNum, 'saveToFile',true,'filename',...
+			    fullfile(saveDir,tabNumName), 'caption', tabNumName);
 
 		end
 	end

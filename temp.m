@@ -606,3 +606,52 @@ peakHpstdReboundPO = [eventStructForPlot(9).event_info.peak_slope_norm_hpstd];
 stylishScatter(caMinDeltaReboundPO,peakHpstdReboundPO, 'plotWhere', gca);
 
 
+%% ==========
+% Open a file to write the LaTeX table
+fid = fopen('chiLRT_table.tex', 'w');
+
+% Write the beginning of the LaTeX table environment
+fprintf(fid, '\\begin{table}[H]\n');
+fprintf(fid, '\\centering\n');
+fprintf(fid, '\\begin{tabular}{|l|c|c|c|c|c|c|c|c|}\n');
+fprintf(fid, '\\hline\n');
+
+% Write the header row
+header = chiLRT.Properties.VariableNames;
+fprintf(fid, '%s & %s & %s & %s & %s & %s & %s & %s & %s \\\\\n', header{:});
+fprintf(fid, '\\hline\n');
+
+% Write the data rows
+for i = 1:height(chiLRT)
+    row = chiLRT(i, :);
+    
+    % Convert each element to string for concatenation
+    modelStr = char(row.Model); % Convert 'Model' to a char
+    formulaStr = char(row.Formula); % Convert 'Formula' to a char
+    
+    % Handle numerical values directly
+    DF = row.DF;
+    AIC = row.AIC;
+    BIC = row.BIC;
+    LogLik = row.LogLik;
+    LRStat = row.LRStat;
+    deltaDF = row.deltaDF;
+    pValue = row.pValue;
+    
+    % Print the row
+    fprintf(fid, '%s & %s & %d & %.0f & %.0f & %.1f & %.1f & %.1f & %.1e \\\\\n', ...
+        modelStr, formulaStr, DF, AIC, BIC, LogLik, LRStat, deltaDF, pValue);
+end
+
+% Write the end of the LaTeX table environment
+fprintf(fid, '\\hline\n');
+fprintf(fid, '\\end{tabular}\n');
+fprintf(fid, '\\caption{Your caption here}\n');
+fprintf(fid, '\\label{tab:chiLRT}\n');
+fprintf(fid, '\\end{table}\n');
+
+% Close the file
+fclose(fid);
+
+% Display the content of the generated LaTeX file (optional)
+type('chiLRT_table.tex');

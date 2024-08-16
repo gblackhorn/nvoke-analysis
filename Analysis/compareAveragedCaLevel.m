@@ -135,7 +135,7 @@ function [varargout] = compareAveragedCaLevel(alignedData,pairStruct,binWidth,va
 	% Plot LMM results
 	axGlmmTitle = nexttile(2,[1,2]);
 	glmmTitleStr = sprintf('(Top) %s model comparison: no-fixed-effects vs fixed-effects\n[%s]\nVS\n[%s]\n(Bottom) Group comparison',...
-		modelType, char(meStatReport.chiLRT.formula{1}), char(meStatReport.chiLRT.formula{2}));
+		modelType, char(meStatReport.chiLRT.Formula{1}), char(meStatReport.chiLRT.Formula{2}));
 	set(axGlmmTitle, 'XColor', 'none', 'YColor', 'none'); % Hide X and Y axis lines, ticks, and labels
 	% title(axGlmmTitle, glmmTitleStr); % Add a title to the axis
 	text(axGlmmTitle, 'Units', 'normalized', 'Position', [0.5, 0.5], 'String', glmmTitleStr, ...
@@ -149,9 +149,15 @@ function [varargout] = compareAveragedCaLevel(alignedData,pairStruct,binWidth,va
 	plot_stat_table(axStat1, axStat2, meStatReport)
 
 
-	% Save the figure
+	% Save 
 	if saveFig
+		% Save the plot
 		saveDir = savePlot(f,'save_dir',saveDir,'guiSave',true,'fname',titleStr);
+
+		% Save the model comparison table in latex format
+		texFilename = sprintf('%s modelCompTab.tex',titleStr);
+		tableToLatex(meStatReport.chiLRT, 'saveToFile',true,'filename',fullfile(saveDir,texFilename),...
+			'caption',titleStr);
 	end
 
 	varargout{1} = saveDir;

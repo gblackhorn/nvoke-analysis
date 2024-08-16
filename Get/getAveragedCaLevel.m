@@ -231,7 +231,7 @@ function    psthCaLevelRec = screenCaTraceWithEvent(roiCaLevelTrace, stimRanges,
         end
 
         % Locate non-empty cells
-        nonEmptyCellsTF = cellfun(@isempty, results);
+        nonEmptyCellsTF = ~cellfun(@isempty, results);
 
         switch stimEventKeepOrDis
             case 'keep'

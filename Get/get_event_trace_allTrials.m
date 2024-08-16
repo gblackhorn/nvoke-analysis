@@ -44,6 +44,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 
 	% Defaults for filtering out data
 	caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
+	caLevlelPostStimTime = 5; % Time duration after the stimulation
 	disROI = true; % true/false. If true, Keep ROIs using the setting below, and delete the rest
 	disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-1s'};
 	disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
@@ -355,7 +356,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 
 				% Get the baseline change 
 				[CaLevel,CaLevelTrace,CaLevel_cal_range] = get_CaLevel_delta(combine_stimRange,fullTime,roiTraceData,...
-					'base_timeRange',base_timeRange,'postStim_timeRange',base_timeRange,...
+					'base_timeRange',base_timeRange,'postStim_timeRange',caLevlelPostStimTime,...
 					'stim_section',stim_section,'ss_range',ss_range,'stim_time_error',stim_time_error);
 
 				alignedData.traces(n).(newFieldName) = NFNtag;

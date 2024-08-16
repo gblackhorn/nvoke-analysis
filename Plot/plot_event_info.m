@@ -50,6 +50,15 @@ function [varargout] = plot_event_info(event_info_struct,varargin)
     % Optionally save figures
     if params.save_fig
         save_all_figures(params.save_dir, params.fname_preffix);
+
+        % Save the model comparison table in latex format
+        save_all_LLM_modelCompTab(bar_stat, params.fname_preffix, params.save_dir);
+
+        % % Save the fixEffects' values
+        % save_all_fixEffectsTab(bar_stat, params.fname_preffix, params.save_dir);
+
+        % Save the mean and sem in latex format
+        save_all_mean_sem(bar_data, params.fname_preffix, params.save_dir);
     end
 end
 
@@ -225,7 +234,7 @@ function [bar_data, bar_stat] = plot_bars(event_info_struct, parNames, params)
             ParNamesCombined = strjoin(ParNamesCombined, ' | ');
 
             statTitleStr = sprintf('%s\n\n1. %s: Model comparison. no-fixed-effect vs fixed-effects\n[%s]\nVS\n[%s]\n\n2. %s analysis',...
-                ParNamesCombined,params.mmModel,char(bar_stat.(statParNames{1}).chiLRT.formula{1}),char(bar_stat.(statParNames{1}).chiLRT.formula{2}),params.mmModel);
+                ParNamesCombined,params.mmModel,char(bar_stat.(statParNames{1}).chiLRT.Formula{1}),char(bar_stat.(statParNames{1}).chiLRT.Formula{2}),params.mmModel);
             statTitleStr = strrep(statTitleStr, '_', ' ');
             sgtitle(f_stat, statTitleStr);
             % sgtitle(f_stat, [params.mmModel, ' ', char(bar_stat.(statParNames{1}).method.Formula)]);
@@ -565,3 +574,45 @@ function save_all_figures(save_dir, fname_preffix)
         savePlot(figs(i), 'guiSave', 'off', 'save_dir', save_dir, 'fname', fname);
     end
 end
+
+function save_all_LLM_modelCompTab(bar_stat, namePrefix, saveDir)
+    paramNames = fieldnames(bar_stat);
+
+    for n = 1:numel(paramNames)
+        texFilename = sprintf('%s %s modelCompTab.tex', namePrefix, paramNames{n});
+        tableToLatex(bar_stat.(paramNames{n}).chiLRT, 'saveToFile',true,'filename',...
+            fullfile(saveDir,texFilename), 'caption', texFilename);
+    end
+end
+
+function save_all_fixEffectsTab(bar_stat, namePrefix, saveDir)
+    paramNames = fieldnames(bar_stat);
+
+    for n = 1:numel(paramNames)
+        texFilename = sprintf('%s %s fullModelFixEffectsTab.tex', namePrefix, paramNames{n});
+        tableToLatex(bar_stat.(paramNames{n}).fixedEffectsStats, 'saveToFile',true,'filename',...
+            fullfile(saveDir,texFilename), 'caption', texFilename);
+    end
+end
+
+function save_all_mean_sem(bar_data, namePrefix, saveDir);
+    paramNames = fieldnames(bar_data);
+
+    for n = 1:numel(paramNames)
+        dataStruct = bar_data.(paramNames{n});
+
+        % Extract the fields from the structure
+        groupData = {dataStruct.group}';  % Transpose to make it a column vector
+        meanData = [dataStruct.mean_value]';
+        steData = [dataStruct.ste]';
+
+        % Create a table
+        T = table(groupData, meanData, steData, ...
+                  'VariableNames', {'Group', 'Mean', 'SEM'});
+
+        texFilename = sprintf('%s %s meanSemTab.tex', namePrefix, paramNames{n});
+        tableToLatex(T, 'saveToFile',true,'filename',...
+            fullfile(saveDir,texFilename), 'caption', texFilename);
+    end
+end
+

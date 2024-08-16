@@ -1,4 +1,4 @@
-function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVar, hierarchicalVars, varargin)
+function [fullModel, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVar, hierarchicalVars, varargin)
     % This function is designed to analyze data with a hierarchical or nested structure, where
     % observations are not independent. It can be used to analyze data using either Linear Mixed Models (LMM)
     % or Generalized Linear Mixed Models (GLMM).
@@ -134,23 +134,23 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
         
         % Fit the model
         if strcmp(modelType, 'LMM')
-            me = fitlme(tbl, formula);
-            me_noFix = fitlme(tbl, formula_noFix);
+            fullModel = fitlme(tbl, formula);
+            reducedModel = fitlme(tbl, formula_noFix);
         elseif strcmp(modelType, 'GLMM')
-            me = fitglme(tbl, formula, 'Distribution', distribution, 'Link', link);
-            me_noFix = fitglme(tbl, formula_noFix, 'Distribution', distribution, 'Link', link);
+            fullModel = fitglme(tbl, formula, 'Distribution', distribution, 'Link', link);
+            reducedModel = fitglme(tbl, formula_noFix, 'Distribution', distribution, 'Link', link);
         else
             error('Unsupported model type');
         end
 
         % Optionally display the model summary
         if dispStat
-            disp(me);
+            disp(fullModel);
             visualizeFitting();
         end
 
         % Extract fixed effects
-        [fixedEffectsEstimates, ~, fixedEffectsStats] = fixedEffects(me);
+        [fixedEffectsEstimates, ~, fixedEffectsStats] = fixedEffects(fullModel);
         
         % Optionally display fixed effects
         if dispStat
@@ -159,7 +159,7 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
         end
         
         % Extract random effects
-        randomEffectsTable = randomEffects(me);
+        randomEffectsTable = randomEffects(fullModel);
         
         % Optionally display random effects
         if dispStat
@@ -168,15 +168,15 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
         end
 
         % Extract the coefficients and p-values
-        intercept = me.Coefficients.Estimate(1);
-        groupEffect = me.Coefficients.Estimate(2:end);
-        pValueGroup = me.Coefficients.pValue(2:end);
+        intercept = fullModel.Coefficients.Estimate(1);
+        groupEffect = fullModel.Coefficients.Estimate(2:end);
+        pValueGroup = fullModel.Coefficients.pValue(2:end);
 
         % Optionally display the results in a readable format
         if dispStat
             fprintf('Intercept (Baseline): %.4f\n', intercept);
             for i = 1:length(groupEffect)
-                fprintf('Effect of %s (compared to baseline): %.4f (p-value: %.4f)\n', me.Coefficients.Name{i+1}, groupEffect(i), pValueGroup(i));
+                fprintf('Effect of %s (compared to baseline): %.4f (p-value: %.4f)\n', fullModel.Coefficients.Name{i+1}, groupEffect(i), pValueGroup(i));
             end
         end
 
@@ -194,7 +194,7 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
         fixedEffectsStats.Name = groupLevels; 
 
         % Convert the values on log scale to linear scale
-        if strcmpi(modelType,'GLMM') && strcmpi(me.Link.Name,'log')
+        if strcmpi(modelType,'GLMM') && strcmpi(fullModel.Link.Name,'log')
             fixedEffectsStats = log2linear(fixedEffectsStats);
         end
         fixedEffectsStats = dataset2table(fixedEffectsStats); % Convert the dataset to a table
@@ -202,21 +202,31 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
         
         % ANOVA is performed on the fitted model using the anova function to test the significance of
         % the fixed effects.
-        anovaResults = anova(me);
+        anovaResults = anova(fullModel);
         
         if dispStat && strcmp(modelType, 'LMM')
             disp('ANOVA Results:');
             disp(anovaResults);
         end
         
+
         % Prepare output variables
-        if me.LogLikelihood > me_noFix.LogLikelihood
-            chiLRT = compare(me_noFix, me);
-            chiLRT.formula = {formula_noFix; formula}; % add formulas to the dataset
+        if fullModel.LogLikelihood > reducedModel.LogLikelihood
+            chiLRT = compare(reducedModel, fullModel);
+            chiLRT.Formula = {formula_noFix; formula}; % add formulas to the dataset
             chiLRT = dataset2table(chiLRT); % Convert the dataset to a table
             chiLRT{:,1} = categorical(chiLRT{:,1}); % Change the Model names to categorical for easier display
+
+            % Get the current column order
+            columnOrder = chiLRT.Properties.VariableNames;
+
+            % Rearrange the column order to move 'formula' after 'Model'
+            newColumnOrder = ['Model', 'Formula', columnOrder(~ismember(columnOrder, {'Model', 'Formula'}))];
+
+            % Reorder the table columns
+            chiLRT = chiLRT(:, newColumnOrder);
         else
-            chiLRT = createDummyChiLRTtab(me_noFix, me);
+            chiLRT = createDummyChiLRTtab(reducedModel, fullModel);
         end
         varargout{2} = chiLRT;
 
@@ -226,25 +236,25 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
         
         % Perform multiple comparisons for groups if there are more than 2 groups
         if length(groupLevels) > 2 && any(fixedEffectsStats.pValue < 0.05)
-            [multiComparisonResults, mmPvalue] = performPostHocGroupComparisons(me, groupLevels, dispStat, modelType);
+            [multiComparisonResults, mmPvalue] = performPostHocGroupComparisons(fullModel, groupLevels, dispStat, modelType);
         end
 
         % Perform bin comparisons if binVar is provided
         if ~isempty(binVar) && any(fixedEffectsStats.pValue < 0.05)
-            [multiComparisonResults, mmPvalue] = performPostHocBinComparisons(me, groupVar, groupLevels, binLevels, dispStat, modelType);
+            [multiComparisonResults, mmPvalue] = performPostHocBinComparisons(fullModel, groupVar, groupLevels, binLevels, dispStat, modelType);
         end
 
     else
         mmPvalue = [];
         multiComparisonResults = [];
-        me = '';
+        fullModel = '';
         fixedEffectsStats = [];
         chiLRT = [];
     end
 
     varargout{3} = mmPvalue;
     varargout{4} = multiComparisonResults;
-    statInfo.method = me;
+    statInfo.method = fullModel;
     statInfo.fixedEffectsStats = fixedEffectsStats;
     statInfo.chiLRT = chiLRT;
     statInfo.mmPvalue = mmPvalue;
@@ -252,10 +262,10 @@ function [me, varargout] = mixed_model_analysis(dataStruct, responseVar, groupVa
     varargout{5} = statInfo;
 end
 
-function [results, mmPvalue] = performPostHocGroupComparisons(me, groupLevels, dispStat, modelType)
+function [results, mmPvalue] = performPostHocGroupComparisons(fullModel, groupLevels, dispStat, modelType)
     % Extract the fixed effects and their covariance matrix
-    [fixedEffectsEstimates, ~, fixedEffectsSE] = fixedEffects(me);
-    covarianceMatrix = me.CoefficientCovariance;
+    [fixedEffectsEstimates, ~, fixedEffectsSE] = fixedEffects(fullModel);
+    covarianceMatrix = fullModel.CoefficientCovariance;
     SEs = fixedEffectsSE.SE;
 
     % Number of groups
@@ -299,9 +309,9 @@ function [results, mmPvalue] = performPostHocGroupComparisons(me, groupLevels, d
     end
 end
 
-function [results, mmPvalue] = performPostHocBinComparisons(me, groupVar, groupLevels, binLevels, dispStat, modelType)
+function [results, mmPvalue] = performPostHocBinComparisons(fullModel, groupVar, groupLevels, binLevels, dispStat, modelType)
     % Extract the fixed effects and their standard errors
-    [fixedEffectsEstimates, ~, fixedEffectsSE] = fixedEffects(me);
+    [fixedEffectsEstimates, ~, fixedEffectsSE] = fixedEffects(fullModel);
     SEs = fixedEffectsSE.SE;
 
     % Initialize results storage
@@ -321,9 +331,9 @@ function [results, mmPvalue] = performPostHocBinComparisons(me, groupVar, groupL
             estimateGroup2 = fixedEffectsEstimates(1) + fixedEffectsEstimates(2); % Intercept + group effect
             SE_Group2 = sqrt(SEs(1)^2 + SEs(2)^2);
         else
-            indexBinEffect = find(contains(me.Coefficients.Name, sprintf('binIDX_%s', binVal)) & ...
-                                  ~contains(me.Coefficients.Name, groupVar));
-            indexInteractionEffect = find(contains(me.Coefficients.Name, sprintf('%s_%s:binIDX_%s', groupVar, groupLevels{2}, binVal)));
+            indexBinEffect = find(contains(fullModel.Coefficients.Name, sprintf('binIDX_%s', binVal)) & ...
+                                  ~contains(fullModel.Coefficients.Name, groupVar));
+            indexInteractionEffect = find(contains(fullModel.Coefficients.Name, sprintf('%s_%s:binIDX_%s', groupVar, groupLevels{2}, binVal)));
             
             estimateGroup1 = fixedEffectsEstimates(1) + fixedEffectsEstimates(indexBinEffect);
             SE_Group1 = sqrt(SEs(1)^2 + SEs(indexBinEffect)^2);
@@ -337,7 +347,7 @@ function [results, mmPvalue] = performPostHocBinComparisons(me, groupVar, groupL
         seDiff = sqrt(SE_Group1^2 + SE_Group2^2);
 
         tValue = estimateDiff / seDiff;
-        df = me.DFE;
+        df = fullModel.DFE;
         pValue = 2 * (1 - tcdf(abs(tValue), df));
         pValues = [pValues; pValue]; %#ok<AGROW>
 
@@ -412,8 +422,21 @@ end
 
 function dummyChiLRTtab = createDummyChiLRTtab(mmResult1, mmResult2)
     dummyChiLRTtab = [mmResult1.ModelCriterion; mmResult2.ModelCriterion];
-    dummyChiLRTtab.formula = {char(mmResult1.Formula); char(mmResult2.Formula)};
+    dummyChiLRTtab.Model = {'reducedModel';'fullModel'};
+    dummyChiLRTtab.Formula = {char(mmResult1.Formula); char(mmResult2.Formula)};
     dummyChiLRTtab = dataset2table(dummyChiLRTtab); % Convert the dataset to a table
+
+    % Delete the Deviance
+    dummyChiLRTtab.Deviance = [];
+
+    % Get the current column order
+    columnOrder = dummyChiLRTtab.Properties.VariableNames;
+
+    % Rearrange the column order to move 'formula' after 'Model'
+    newColumnOrder = ['Model', 'Formula', columnOrder(~ismember(columnOrder, {'Model', 'Formula'}))];
+
+    % Reorder the table columns
+    dummyChiLRTtab = dummyChiLRTtab(:, newColumnOrder);
 end
 
 
