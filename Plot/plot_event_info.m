@@ -580,9 +580,12 @@ function save_all_LLM_modelCompTab(bar_stat, namePrefix, saveDir)
 
     for n = 1:numel(paramNames)
         texFilename = sprintf('%s %s modelCompTab.tex', namePrefix, paramNames{n});
+        labelStr = sprintf('Distribution: %s. Link: %s',...
+            bar_stat.(paramNames{n}).method.Distribution,...
+            bar_stat.(paramNames{n}).method.method.Link.Name);
         tableToLatex(bar_stat.(paramNames{n}).chiLRT, 'saveToFile',true,'filename',...
             fullfile(saveDir,texFilename), 'caption', texFilename,...
-            'columnAdjust', 'cXccccccc');
+            'columnAdjust', 'cXccccccc', 'label', labelStr);
     end
 end
 
