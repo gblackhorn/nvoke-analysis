@@ -3,7 +3,6 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 %   Utilize the func 'get_event_trace_trial' if the event_spec_table is used to pick detected events
 
 	% Defaults
-	event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
 	traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 	event_data_group = 'peak_lowpass'; % options: 'peak_lowpass', 'peak_smooth', 'peak_decon'.
 										% keep this consistent with 'traceData_type'
@@ -319,8 +318,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 				if contains(alignedData.stim_name, 'GPIO-1', 'IgnoreCase',true)
 					exclude_duration = 0; % exclude the duration after stimulation window from "spontaneuous window"
 					exepWinDur = 0; % exclude a time window with the specified duration after stimulation window in case the stimulation has a prolonged effect 
-				else
-					exclude_duration = 1; % exclude the duration after stimulation window from "spontaneuous window"
+				else					exclude_duration = 1; % exclude the duration after stimulation window from "spontaneuous window"
 					exepWinDur = rebound_duration;
 					if exclude_duration < exepWinDur % the exclude duration should be at least as long as the window for the "rebound events"
 						exclude_duration = exepWinDur;

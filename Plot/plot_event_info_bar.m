@@ -17,6 +17,7 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 	stat = false; % true if want to run stat analysis
 	mmModel = ''; % '': Do not use MM model for analysis. 'LMM': Linear-Mixed-Model. 'GLMM': Generalized-Mixed_Model
 	mmGrouop = 'subNuclei'; % group data using this field in the event_info_struct.event_info
+	mmGroupVarType = 'categorical';
 	mmHierarchicalVars = {'trialName', 'roiName'};
 	mmType = 'GLMM';
 	mmDistribution = 'gamma';
@@ -43,6 +44,8 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 	        mmModel = varargin{ii+1};
 	    elseif strcmpi('mmGrouop', varargin{ii})
 	        mmGrouop = varargin{ii+1};
+	    elseif strcmpi('mmGroupVarType', varargin{ii})
+	        mmGroupVarType = varargin{ii+1};
 	    elseif strcmpi('mmHierarchicalVars', varargin{ii})
 	        mmHierarchicalVars = varargin{ii+1};
 	    elseif strcmpi('mmDistribution', varargin{ii})
@@ -87,6 +90,7 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 	data_struct(1).mean_value = mean(data_all, 'omitnan');
 	data_struct(1).std = std(data_all, 'omitnan');
 	data_struct(1).ste = data_struct(1).std/sqrt(numel(data_all));
+	data_struct(1).medianVal = median(data_all, "omitmissing");
 	data_struct(1).data.val = data_all;
 	data_struct(1).data.group = data_all_group;
 	data_struct(1).n_num = numel(data_all);
@@ -99,6 +103,7 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 		data_struct(n+1).mean_value = mean(group_data, 'omitnan');
 		data_struct(n+1).std = std(group_data, 'omitnan');
 		data_struct(n+1).ste = data_struct(n+1).std/sqrt(numel(group_data));
+		data_struct(n+1).medianVal = median(group_data, "omitmissing");
 		data_struct(n+1).n_num = numel(group_data);
 
 		% data_struct(n+1).data = group_data(:);
@@ -152,7 +157,8 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 		if ~isempty(mmModel)
 			structData = [event_info_struct(:).event_info];
 			[me,fixedEffectsStats,chiLRT,mmPvalue,multiComparisonResults]= mixed_model_analysis(structData,...
-				par_name, mmGrouop, mmHierarchicalVars,'modelType',mmType,'distribution',mmDistribution,'link',mmLink);
+				par_name, mmGrouop, mmHierarchicalVars, 'groupVarType', mmGroupVarType,...
+				'modelType',mmType,'distribution',mmDistribution,'link',mmLink);
 			statInfo.method = me;
 			statInfo.fixedEffectsStats = fixedEffectsStats;
 			statInfo.chiLRT = chiLRT;

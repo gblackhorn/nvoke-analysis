@@ -106,7 +106,8 @@ function [varargout] = plotEventPropMultiGroups(groupedEventProp,props,organizeS
 			% Save the fNum tab in latex format
 			tabNumName = sprintf('%s nNumInfo.tex', organizeStruct(en).title);
 			tableToLatex(tabNum, 'saveToFile',true,'filename',...
-			    fullfile(saveDir,tabNumName), 'caption', tabNumName);
+			    fullfile(saveDir,tabNumName), 'caption', tabNumName,...
+			    'columnAdjust', 'XXXXX');
 
 		end
 	end

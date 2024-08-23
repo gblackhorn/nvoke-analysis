@@ -581,7 +581,8 @@ function save_all_LLM_modelCompTab(bar_stat, namePrefix, saveDir)
     for n = 1:numel(paramNames)
         texFilename = sprintf('%s %s modelCompTab.tex', namePrefix, paramNames{n});
         tableToLatex(bar_stat.(paramNames{n}).chiLRT, 'saveToFile',true,'filename',...
-            fullfile(saveDir,texFilename), 'caption', texFilename);
+            fullfile(saveDir,texFilename), 'caption', texFilename,...
+            'columnAdjust', 'cXccccccc');
     end
 end
 
@@ -604,15 +605,18 @@ function save_all_mean_sem(bar_data, namePrefix, saveDir);
         % Extract the fields from the structure
         groupData = {dataStruct.group}';  % Transpose to make it a column vector
         meanData = [dataStruct.mean_value]';
+        medianData = [dataStruct.medianVal]';
+        stdData = [dataStruct.std]';
         steData = [dataStruct.ste]';
 
         % Create a table
-        T = table(groupData, meanData, steData, ...
-                  'VariableNames', {'Group', 'Mean', 'SEM'});
+        T = table(groupData, meanData, medianData, stdData, steData, ...
+                  'VariableNames', {'Group', 'Mean', 'Median', 'STD', 'SEM'});
 
         texFilename = sprintf('%s %s meanSemTab.tex', namePrefix, paramNames{n});
         tableToLatex(T, 'saveToFile',true,'filename',...
-            fullfile(saveDir,texFilename), 'caption', texFilename);
+            fullfile(saveDir,texFilename), 'caption', texFilename,...
+            'columnAdjust', 'XXXXX');
     end
 end
 

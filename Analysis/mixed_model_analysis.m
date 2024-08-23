@@ -54,6 +54,17 @@ function [fullModel, varargout] = mixed_model_analysis(dataStruct, responseVar, 
             % Distribution: 'negative binomial'
             % Link Function: 'log'
             % Example: Analyzing count data with overdispersion, like the number of customer complaints per day.
+        % Normal Distribution (for continuous, normally distributed data)
+            % Use When: Your response variable is continuous and approximately normally distributed.
+            % This is commonly used when analyzing data with a linear relationship between variables.
+            % Distribution: 'normal' (Note: In MATLAB, this is the default for linear mixed models (LMM), not GLMM)
+            % Link Function: 'identity' (linear relationship)
+            % Example: Analyzing normally distributed data such as height, weight, or other continuous measurements.
+            
+        % Note on Normal Distribution:
+        % If your data is normally distributed, consider using Linear Mixed Models (LMM) instead of GLMM.
+        % LMM is appropriate for normally distributed data where the relationship between predictors and 
+        % the response variable is linear.
     
     % Parse optional parameters
     p = inputParser;
@@ -95,7 +106,7 @@ function [fullModel, varargout] = mixed_model_analysis(dataStruct, responseVar, 
         case 'double'
             MMdata.(groupVar) = double(MMdata.(groupVar));
         case 'categorical'
-            if isnumeric(dataStruct(1).(groupVar))
+            if isnumeric(dataStruct(1).(groupVar)) || islogical(dataStruct(1).(groupVar))
                 MMdata.(groupVar) = cellfun(@num2str, MMdata.(groupVar), 'UniformOutput', false);
             end
             MMdata.(groupVar) = categorical(MMdata.(groupVar));
@@ -143,11 +154,11 @@ function [fullModel, varargout] = mixed_model_analysis(dataStruct, responseVar, 
             error('Unsupported model type');
         end
 
-        % Optionally display the model summary
-        if dispStat
-            disp(fullModel);
-            visualizeFitting();
-        end
+        % % Optionally display the model summary
+        % if dispStat
+        %     disp(fullModel);
+        %     visualizeFitting(fullModel, );
+        % end
 
         % Extract fixed effects
         [fixedEffectsEstimates, ~, fixedEffectsStats] = fixedEffects(fullModel);
@@ -324,7 +335,7 @@ function [results, mmPvalue] = performPostHocBinComparisons(fullModel, groupVar,
     for b = 1:numel(binLevels)
         binVal = binLevels{b};  % Extract the bin value from the cell array
         
-        if strcmp(binVal, '1')
+        if b == 1 % strcmp(binVal, '1')
             estimateGroup1 = fixedEffectsEstimates(1); % Intercept
             SE_Group1 = SEs(1);
             

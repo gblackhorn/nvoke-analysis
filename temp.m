@@ -611,7 +611,7 @@ stylishScatter(caMinDeltaReboundPO,peakHpstdReboundPO, 'plotWhere', gca);
 fid = fopen('chiLRT_table.tex', 'w');
 
 % Write the beginning of the LaTeX table environment
-fprintf(fid, '\\begin{table}[H]\n');
+fprintf(fid, '\\begin{table}[bt]\n');
 fprintf(fid, '\\centering\n');
 fprintf(fid, '\\begin{tabular}{|l|c|c|c|c|c|c|c|c|}\n');
 fprintf(fid, '\\hline\n');
@@ -655,3 +655,183 @@ fclose(fid);
 
 % Display the content of the generated LaTeX file (optional)
 type('chiLRT_table.tex');
+
+
+
+
+%% ==========
+% 2.7 Plot event properties. Compare the sync and async spon events in PO and DAO
+
+% Settings
+saveFig = true; % true/false
+plot_combined_data = false;
+parNames = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_mag_delta'}; 
+    % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
+stat = true; % Set it to true to run anova when plotting bars
+
+close all
+
+% Setup parameters for linear-mixed-model (LMM) or generalized-mixed-model (GLMM) analysis
+mmModel = 'GLMM'; % LMM/GLMM
+mmHierarchicalVars = {'trialName', 'roiName'};
+mmDistribution = 'gamma'; % For continuous, positively skewed data
+mmLink = 'log'; % For continuous, positively skewed data
+colorGroupCell = {{'#8C0383', '#FF00CC'},{'#003264', '#00AAD4'}};
+
+% Keep events from PO or DAO neurons and generate plots
+subNucleiStr = {'spon-PO','spon-DAO'};
+for sn = 1:numel(subNucleiStr)
+	tags_keep = subNucleiStr{sn}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
+	[eventStructForPlot_syncTagSubGroup] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
+		'tags_keep',tags_keep);
+
+	% Generate and save figures
+	mmGroup = 'type'; % LMM/GLMM
+	[save_dir, plot_info] = plot_event_info(eventStructForPlot_syncTagSubGroup,'entryType',ggSetting.entry,...
+		'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
+		'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
+		'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+		'colorGroup',colorGroupCell{sn},'fname_preffix',[tags_keep,'-event'],'save_fig', saveFig, 'save_dir', FolderPathVA.fig);
+
+	% Create a UI table displaying the n numberss
+	fNum = nNumberTab(eventStructForPlot_syncTagSubGroup,'event');
+
+	% Save data
+	if saveFig
+		% Save the fNum
+		savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo');
+
+		% Save the statistics info
+		eventPropStatInfo.eventStructForPlot_syncTagSubGroup = eventStructForPlot_syncTagSubGroup;
+		eventPropStatInfo.plot_info = plot_info;
+		% dt = datestr(now, 'yyyymmdd');
+		save(fullfile(save_dir, [tags_keep,'-event propStatInfo']), 'eventPropStatInfo');
+	end
+
+	% Update the folder path 
+	if save_dir~=0
+		FolderPathVA.fig = save_dir;
+	end
+end
+
+% Keep events from PO or DAO neurons and generate plots
+[eventStructForPlot_syncTag_spon] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
+	'tags_keep','spon');
+colorGroupCell = {{'#00AAD4', '#FF00CC'},{'#003264', '#8C0383'}};
+syncTagsStr = {'-synch','-asynch'};
+for st = 1:numel(syncTagsStr)
+	tags_keep = syncTagsStr{st}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
+	[eventStructForPlot_syncTagSubGroup] = filter_entries_in_structure(eventStructForPlot_syncTag_spon,'group',...
+		'tags_keep',tags_keep);
+
+	% Generate and save figures
+	tags_keep = replace(tags_keep,'-','');
+	mmGroup = 'subNuclei'; % LMM/GLMM
+	[save_dir, plot_info] = plot_event_info(eventStructForPlot_syncTagSubGroup,'entryType',ggSetting.entry,...
+		'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
+		'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
+		'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+		'colorGroup',colorGroupCell{st},'fname_preffix',[tags_keep,'-event'],'save_fig', saveFig, 'save_dir', FolderPathVA.fig);
+
+	% Create a UI table displaying the n numberss
+	fNum = nNumberTab(eventStructForPlot_syncTagSubGroup,'event');
+
+	% Save data
+	if saveFig
+		% Save the fNum
+		savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo');
+
+		% Save the statistics info
+		eventPropStatInfo.eventStructForPlot_syncTagSubGroup = eventStructForPlot_syncTagSubGroup;
+		eventPropStatInfo.plot_info = plot_info;
+		% dt = datestr(now, 'yyyymmdd');
+		save(fullfile(save_dir, [tags_keep,'-event propStatInfo']), 'eventPropStatInfo');
+	end
+
+	% Update the folder path 
+	if save_dir~=0
+		FolderPathVA.fig = save_dir;
+	end
+end
+
+
+
+
+%% ==========
+% 2.5 Plot event properties
+close all
+% General Settings
+saveFig = true; % true/false
+props = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_delay'}; 
+    % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
+mmModel = 'GLMM'; % LMM/GLMM
+mmHierarchicalVars = {'trialName', 'roiName'};
+mmDistribution = 'gamma'; % For continuous, positively skewed data
+mmLink = 'log'; % For continuous, positively skewed data
+
+
+% Settings for sub-groups
+organizeStruct(1).title = 'sponSubN';
+organizeStruct(1).keepGroups = {'spon'};
+organizeStruct(1).mmFixCat = 'subNuclei';
+
+organizeStruct(2).title = 'ogDelaySubN';
+organizeStruct(2).keepGroups = {'opto-delay [og-5s]'};
+organizeStruct(2).mmFixCat = 'subNuclei';
+
+organizeStruct(3).title = 'apTrigSubN';
+organizeStruct(3).keepGroups = {'trig [ap-0.1s]'};
+organizeStruct(3).mmFixCat = 'subNuclei';
+
+organizeStruct(4).title = 'ogDelay2spon DAO';
+organizeStruct(4).keepGroups = {'spon-DAO', 'opto-delay [og-5s]-DAO'};
+organizeStruct(4).mmFixCat = 'peak_category';
+
+organizeStruct(5).title = 'ogDelay2spon PO';
+organizeStruct(5).keepGroups = {'spon-PO', 'opto-delay [og-5s]-PO'};
+organizeStruct(5).mmFixCat = 'peak_category';
+
+organizeStruct(6).title = 'apTrig2spon DAO';
+organizeStruct(6).keepGroups = {'spon-DAO', 'trig [ap-0.1s]-DAO'};
+organizeStruct(6).mmFixCat = 'peak_category';
+
+organizeStruct(7).title = 'apTrig2spon PO';
+organizeStruct(7).keepGroups = {'spon-PO', 'trig [ap-0.1s]-PO'};
+organizeStruct(7).mmFixCat = 'peak_category';
+
+% organizeStruct(8).title = 'apTrig2apRebound PO';
+% organizeStruct(8).keepGroups = {'trig [ap-0.1s]-PO', 'rebound [ap-0.1s]-PO'};
+% organizeStruct(8).mmFixCat = 'peak_category';
+
+% organizeStruct(9).title = 'apTrig2apRebound DAO';
+% organizeStruct(9).keepGroups = {'trig [ap-0.1s]-DAO', 'rebound [ap-0.1s]-DAO'};
+% organizeStruct(9).mmFixCat = 'peak_category';
+
+organizeStruct(8).title = 'apTrig2apTrigInOG PO';
+organizeStruct(8).keepGroups = {'trig [ap-0.1s]-PO', 'trig-ap [og&ap-5s]-PO'};
+organizeStruct(8).mmFixCat = 'peak_category';
+
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructForPlot,props,organizeStruct,...
+	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
+
+% Update the folder path 
+if saveDir~=0
+	FolderPathVA.fig = saveDir;
+end
+
+
+
+%% ==========
+% Add sync info to the alignedData
+[alignedData_allTrials(:).synchFoldValue] = deal([]);
+synchWindow = 1;
+minROIspikes = 2;
+for n = 1:numel(alignedData_allTrials)
+	fprintf('Recording %d/%d: %s\n', n, numel(alignedData_allTrials), alignedData_allTrials(n).trialName)
+	if n == 21
+		% pause
+	end
+	alignedData_allTrials(n) = setSynchValuesTrialAllEvents(alignedData_allTrials(n),...
+		'minROIspikes', minROIspikes, 'synchWindow', synchWindow);
+end

@@ -33,7 +33,7 @@ adata.sponfreqFilter.status = true; % true/false. If true, use the following set
 adata.sponfreqFilter.field = 'sponfq'; % 
 adata.sponfreqFilter.thresh = 0.05; % Hz. default 0.05
 adata.sponfreqFilter.direction = 'high';
-debug_mode = false; % true/false
+debug_mode = true; % true/false
 
 % Create structure data for further analysis (event traces are aligned to event rises)
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
@@ -50,10 +50,16 @@ debug_mode = false; % true/false
 [alignedData_allTrials] = changeEventCatInAlignedData(alignedData_allTrials,'ap-0.1s','rebound','spon');
 
 % Add sync info to the alignedData
-synchTimeWindow = 1;
-minROIsCluster = 2;
-[alignedData_allTrials, cohensDPO, cohensDDAO] = clusterSpikeAmplitudeAnalysis(alignedData_allTrials,...
-	'synchTimeWindow', 1, 'minROIsCluster', 2);
+[alignedData_allTrials(:).synchFoldValue] = deal([]);
+synchWindow = 1;
+minROIspikes = 2;
+for n = 1:numel(alignedData_allTrials)
+	fprintf('Recording %d/%d: %s\n', n, numel(alignedData_allTrials), alignedData_allTrials(n).trialName)
+	alignedData_allTrials(n) = setSynchValuesTrialAllEvents(alignedData_allTrials(n),...
+		'minROIspikes', minROIspikes, 'synchWindow', synchWindow);
+end
+% [alignedData_allTrials, cohensDPO, cohensDDAO] = clusterSpikeAmplitudeAnalysis(alignedData_allTrials,...
+% 	'synchTimeWindow', synchTimeWindow, 'minROIsCluster', minROIsCluster);
 
 % Show the subnuclei information of the recordings
 dispRecSubnucleiLoc(alignedData_allTrials)
@@ -256,7 +262,7 @@ ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventPro
 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
 
 % Discard those without sync tag in the eventProp (Due to single neuron)
-mustHaveField = 'synchronicityIndex';
+mustHaveField = 'type';
 [alignedData_withSynchInfo] = validateAlignedDataStructForEventAnalysis(alignedData_allTrials, mustHaveField);
 
 % Create grouped_event for plotting event properties with syncTag
@@ -272,13 +278,17 @@ ggSetting.groupField = {'peak_category','subNuclei','type'}; % options: 'fovID',
 % 2.5 Plot event properties
 close all
 % General Settings
-saveFig = true; % true/false
+saveFig = false; % true/false
 props = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_delay'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
 mmModel = 'GLMM'; % LMM/GLMM
 mmHierarchicalVars = {'trialName', 'roiName'};
 mmDistribution = 'gamma'; % For continuous, positively skewed data
 mmLink = 'log'; % For continuous, positively skewed data
+
+% Merge the OG-rebound events from og-5s and og&ap-5s recordings
+eventStructMerge = mergeGroupedEventData(eventStructForPlot, 'rebound [og-5s]-DAO', 'rebound [og&ap-5s]-DAO');
+eventStructMerge = mergeGroupedEventData(eventStructMerge, 'rebound [og-5s]-PO', 'rebound [og&ap-5s]-PO');
 
 
 % Settings for sub-groups
@@ -290,39 +300,43 @@ organizeStruct(2).title = 'ogDelaySubN';
 organizeStruct(2).keepGroups = {'opto-delay [og-5s]'};
 organizeStruct(2).mmFixCat = 'subNuclei';
 
-organizeStruct(3).title = 'apTrigSubN';
-organizeStruct(3).keepGroups = {'trig [ap-0.1s]'};
-organizeStruct(3).mmFixCat = 'subNuclei';
+organizeStruct(3).title = 'ogDelay2spon DAO';
+organizeStruct(3).keepGroups = {'spon-DAO', 'opto-delay [og-5s]-DAO'};
+organizeStruct(3).mmFixCat = 'peak_category';
 
-organizeStruct(4).title = 'ogDelay2spon DAO';
-organizeStruct(4).keepGroups = {'spon-DAO', 'opto-delay [og-5s]-DAO'};
+organizeStruct(4).title = 'ogDelay2spon PO';
+organizeStruct(4).keepGroups = {'spon-PO', 'opto-delay [og-5s]-PO'};
 organizeStruct(4).mmFixCat = 'peak_category';
 
-organizeStruct(5).title = 'ogDelay2spon PO';
-organizeStruct(5).keepGroups = {'spon-PO', 'opto-delay [og-5s]-PO'};
-organizeStruct(5).mmFixCat = 'peak_category';
+organizeStruct(5).title = 'ogPostStimSubN';
+organizeStruct(5).keepGroups = {'rebound [og-5s]'};
+organizeStruct(5).mmFixCat = 'subNuclei';
 
-organizeStruct(6).title = 'apTrig2spon DAO';
-organizeStruct(6).keepGroups = {'spon-DAO', 'trig [ap-0.1s]-DAO'};
+organizeStruct(6).title = 'ogPostStim2spon DAO';
+organizeStruct(6).keepGroups = {'spon-DAO', 'rebound [og-5s]-DAO'};
 organizeStruct(6).mmFixCat = 'peak_category';
 
-organizeStruct(7).title = 'apTrig2spon PO';
-organizeStruct(7).keepGroups = {'spon-PO', 'trig [ap-0.1s]-PO'};
+organizeStruct(7).title = 'ogPostStim2spon PO';
+organizeStruct(7).keepGroups = {'spon-PO', 'rebound [og-5s]-PO'};
 organizeStruct(7).mmFixCat = 'peak_category';
 
-% organizeStruct(8).title = 'apTrig2apRebound PO';
-% organizeStruct(8).keepGroups = {'trig [ap-0.1s]-PO', 'rebound [ap-0.1s]-PO'};
-% organizeStruct(8).mmFixCat = 'peak_category';
+organizeStruct(8).title = 'apTrigSubN';
+organizeStruct(8).keepGroups = {'trig [ap-0.1s]'};
+organizeStruct(8).mmFixCat = 'subNuclei';
 
-% organizeStruct(9).title = 'apTrig2apRebound DAO';
-% organizeStruct(9).keepGroups = {'trig [ap-0.1s]-DAO', 'rebound [ap-0.1s]-DAO'};
-% organizeStruct(9).mmFixCat = 'peak_category';
+organizeStruct(9).title = 'apTrig2spon DAO';
+organizeStruct(9).keepGroups = {'spon-DAO', 'trig [ap-0.1s]-DAO'};
+organizeStruct(9).mmFixCat = 'peak_category';
 
-organizeStruct(8).title = 'apTrig2apTrigInOG PO';
-organizeStruct(8).keepGroups = {'trig [ap-0.1s]-PO', 'trig-ap [og&ap-5s]-PO'};
-organizeStruct(8).mmFixCat = 'peak_category';
+organizeStruct(10).title = 'apTrig2spon PO';
+organizeStruct(10).keepGroups = {'spon-PO', 'trig [ap-0.1s]-PO'};
+organizeStruct(10).mmFixCat = 'peak_category';
 
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructForPlot,props,organizeStruct,...
+organizeStruct(11).title = 'apTrig2apTrigInOG PO';
+organizeStruct(11).keepGroups = {'trig [ap-0.1s]-PO', 'trig-ap [og&ap-5s]-PO'};
+organizeStruct(11).mmFixCat = 'peak_category';
+
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructMerge,props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
 
@@ -357,13 +371,6 @@ tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','r
 	'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'fname_preffix','ROI','save_fig', saveFig, 'save_dir', FolderPathVA.fig);
 
-% % Create a UI table displaying the n numberss
-% % Keep spontaneous events and discard all others
-% tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
-% [eventStructForPlotFiltered] = filter_entries_in_structure(eventStructForPlot,'group',...
-% 	'tags_keep',tags_keep);
-% fNumROI = nNumberTab(eventStructForPlotFiltered,'roi');
-
 
 % Save the statistics info
 if saveFig
@@ -378,44 +385,43 @@ end
 
 
 %% ==========
-% 2.7 Plot event properties. Compare the sync and async spon events in PO and DAO
-
+% 2.7 Plot event properties. Compare the sync and async events in PO and DAO
 close all
 % General Settings
-saveFig = true; % true/false
-props = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_delay'}; 
-    % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
-mmModel = 'GLMM'; % LMM/GLMM
+saveFig = false; % true/false
+props = {'FWHM','peak_delta_norm_hpstd'}; 
+    % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta','sponNorm_peak_mag_delta','peak_delay'
+mmModel = 'LMM'; % LMM/GLMM
 mmHierarchicalVars = {'trialName', 'roiName'};
-mmDistribution = 'gamma'; % For continuous, positively skewed data
-mmLink = 'log'; % For continuous, positively skewed data
-colorGroupCell = {{'#8C0383', '#FF00CC'},{'#003264', '#00AAD4'}};
+mmDistribution = 'gamma'; % Only valid for GLMM. For continuous, positively skewed data
+mmLink = 'log'; % Only valid for GLMM. For continuous, positively skewed data
 
-[eventStructForPlot_syncTag_spon] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
+% Work on spon events
+[eventStructSyncTagSpon] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
 	'tags_keep','spon');
 
 % Settings for sub-groups
-organizeStruct(1).title = 'syncVSasync sponPO';
-organizeStruct(1).keepGroups = {'spon-PO'};
-organizeStruct(1).mmFixCat = 'type';
-organizeStruct(1).colorGroup = {'#8C0383', '#FF00CC'};
+organizeStructSyncSpon(1).title = 'syncVSasync sponPO';
+organizeStructSyncSpon(1).keepGroups = {'spon-PO'};
+organizeStructSyncSpon(1).mmFixCat = 'type'; % For sync vs async
+organizeStructSyncSpon(1).colorGroup = {'#8C0383', '#FF00CC'};
 
-organizeStruct(2).title = 'syncVSasync sponDAO';
-organizeStruct(2).keepGroups = {'spon-DAO'};
-organizeStruct(2).mmFixCat = 'type';
-organizeStruct(2).colorGroup = {'#003264', '#00AAD4'};
+organizeStructSyncSpon(2).title = 'syncVSasync sponDAO';
+organizeStructSyncSpon(2).keepGroups = {'spon-DAO'};
+organizeStructSyncSpon(2).mmFixCat = 'type';
+organizeStructSyncSpon(2).colorGroup = {'#003264', '#00AAD4'};
 
-organizeStruct(3).title = 'sponSubN sync';
-organizeStruct(3).keepGroups = {'-synch'};
-organizeStruct(3).mmFixCat = 'subNuclei';
-organizeStruct(3).colorGroup = {'#00AAD4', '#FF00CC'};
+organizeStructSyncSpon(3).title = 'sponSubN sync';
+organizeStructSyncSpon(3).keepGroups = {'-synch'};
+organizeStructSyncSpon(3).mmFixCat = 'subNuclei';
+organizeStructSyncSpon(3).colorGroup = {'#00AAD4', '#FF00CC'};
 
-organizeStruct(4).title = 'sponSubN async';
-organizeStruct(4).keepGroups = {'-asynch'};
-organizeStruct(4).mmFixCat = 'subNuclei';
-organizeStruct(4).colorGroup = {'#003264', '#8C0383'};
+organizeStructSyncSpon(4).title = 'sponSubN async';
+organizeStructSyncSpon(4).keepGroups = {'-asynch'};
+organizeStructSyncSpon(4).mmFixCat = 'subNuclei';
+organizeStructSyncSpon(4).colorGroup = {'#003264', '#8C0383'};
 
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructForPlot_syncTag_spon,props,organizeStruct,...
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagSpon,props,organizeStructSyncSpon,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
 
@@ -423,6 +429,66 @@ organizeStruct(4).colorGroup = {'#003264', '#8C0383'};
 if saveDir~=0
 	FolderPathVA.fig = saveDir;
 end
+
+
+% Work on OG delay (spon during NO) events
+[eventStructSyncTagOGdelay] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
+	'tags_keep','opto-delay [og-5s]');
+
+% Settings for sub-groups
+organizeStructSyncOGdelay(1).title = 'sponInNO syncVSasync PO';
+organizeStructSyncOGdelay(1).keepGroups = {'opto-delay [og-5s]-PO'};
+organizeStructSyncOGdelay(1).mmFixCat = 'type';
+organizeStructSyncOGdelay(1).colorGroup = {'#8C0383', '#FF00CC'};
+
+% organizeStructSyncOGdelay(2).title = 'sponInNO syncVSasync DAO';
+% organizeStructSyncOGdelay(2).keepGroups = {'opto-delay [og-5s]-DAO'};
+% organizeStructSyncOGdelay(2).mmFixCat = 'type';
+% organizeStructSyncOGdelay(2).colorGroup = {'#003264', '#00AAD4'};
+
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGdelay,props,organizeStructSyncOGdelay,...
+	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
+
+
+% Work on postOG (postNOstim) events
+[eventStructSyncTagPostOG] = filter_entries_in_structure(eventStructMerge,'group',...
+	'tags_keep','rebound [og-5s]');
+
+% Settings for sub-groups
+organizeStructSyncPostOG(1).title = 'postNOstim syncVSasync PO';
+organizeStructSyncPostOG(1).keepGroups = {'rebound [og-5s]-PO'};
+organizeStructSyncPostOG(1).mmFixCat = 'type';
+organizeStructSyncPostOG(1).colorGroup = {'#8C0383', '#FF00CC'};
+
+organizeStructSyncPostOG(2).title = 'postNOstim syncVSasync DAO';
+organizeStructSyncPostOG(2).keepGroups = {'rebound [og-5s]-DAO'};
+organizeStructSyncPostOG(2).mmFixCat = 'type';
+organizeStructSyncPostOG(2).colorGroup = {'#003264', '#00AAD4'};
+
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagPostOG,props,organizeStructSyncPostOG,...
+	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
+
+
+% Work on AP (airpuff-evoked) events
+[eventStructSyncTagAP] = filter_entries_in_structure(eventStructMerge,'group',...
+	'tags_keep','trig [ap-0.1s]');
+
+% Settings for sub-groups
+organizeStructSyncPostOG(1).title = 'AP syncVSasync PO';
+organizeStructSyncPostOG(1).keepGroups = {'trig [ap-0.1s]-PO'};
+organizeStructSyncPostOG(1).mmFixCat = 'type';
+organizeStructSyncPostOG(1).colorGroup = {'#8C0383', '#FF00CC'};
+
+organizeStructSyncPostOG(2).title = 'AP syncVSasync DAO';
+organizeStructSyncPostOG(2).keepGroups = {'trig [ap-0.1s]-DAO'};
+organizeStructSyncPostOG(2).mmFixCat = 'type';
+organizeStructSyncPostOG(2).colorGroup = {'#003264', '#00AAD4'};
+
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagAP,props,organizeStructSyncPostOG,...
+	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
 
 
 %% ==========
@@ -598,7 +664,7 @@ end
 % 3.5 Compare the calcium level during OG
 close all
 
-SaveFig = true; % true/false
+SaveFig = false; % true/false
 binWidth = 1;
 shadeType = 'ste';
 tickInt_time = 1;
@@ -654,6 +720,69 @@ for pn = 1:numel(pairStruct)
 	if saveDir~=0
 		FolderPathVA.fig = saveDir;
 	end
+end
+
+
+%% ==========
+% 3.6 Extract properties of spontaneous events and group them according to ROIs' subnuclous location
+close all
+save_fig = false;
+% Get and group (gg) Settings
+ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventProp
+                % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
+                % 'event': events are seperated (struct length = events_num). mean values were not calculated
+ggSetting.modify_stim_name = true; % true/false. Change the stimulation name, 
+ggSetting.sponOnly = false; % true/false. If eventType is 'roi', and ggSetting.sponOnly is true. Only keep spon entries
+ggSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
+ggSetting.dis_spon = false; % true/false. Discard spontaneous events
+ggSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
+ggSetting.groupField = {'peak_category', 'stim_name'}; % options: 'fovID', 'stim_name', 'peak_category','subNuclei'; Field of eventProp_all used to group events 
+ggSetting.mark_EXog = false; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
+ggSetting.og_tag = {'og', 'og&ap'}; % find og events with these strings. 'og' to 'Exog', 'og&ap' to 'EXog&ap'
+ggSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', 'rebound', 'delay'
+ggSetting.sort_order_plus = {'ap', 'EXopto'};
+disOgEx = false; % true/false. If true, screen ROIs
+ogStimTags = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
+ogStimEffects = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+debug_mode = false; % true/false
+
+% b. Create grouped_event for plotting ROI properties
+[roiStructForFOV] = getAndGroup_eventsProp(alignedData_allTrials,...
+	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
+	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
+
+% temproal solution: plot fov percentage and save
+% fov_bar = figure('Name','FOV percentage');
+fov_bar = fig_canvas(1,'fig_name','FOV percentage','unit_width',0.6,'unit_height',0.3);
+% eventPb_bar = figure('Name','event probability','Position',[0.1 0.1 0.4 0.2],'Units','Normalized');
+
+fovID_plot_info = empty_content_struct({'group','fovCount'},numel(roiStructForFOV));
+[fovID_plot_info.group] = roiStructForFOV.group;
+[fovID_plot_info.fovCount] = roiStructForFOV.fovCount;
+tlo_fov_bar = tiledlayout(fov_bar,ceil(numel(roiStructForFOV)/4),4);
+for gn = 1:numel(roiStructForFOV)
+	group_name = roiStructForFOV(gn).group;
+	fovInfo = roiStructForFOV(gn).fovCount;
+	fovIDs = {fovInfo.fovID};
+	fovPerc = [fovInfo.perc];
+	ax_fov_bar = nexttile(tlo_fov_bar);
+	bar(categorical(fovIDs),fovPerc);
+	set(gca, 'box', 'off')
+	title(group_name);
+	if save_fig
+		savePlot(fov_bar,'save_dir',save_dir,'fname','fovID_perc');
+	end
+	% [eventPb_plot_info(gn).plotinfo] = barplot_with_stat(fovPerc,'group_names',fovIDs,...
+	% 	'plotWhere',ax_fov_bar,'title_str',group_name,'save_fig',save_fig,'save_dir',save_dir);
+end
+
+if save_fig
+	% plot_stat_info.grouped_event_info_option = grouped_event_info_option;
+	plot_stat_info.roiStructForFOV = roiStructForFOV;
+	plot_stat_info.plot_info = plot_info;
+	dt = datestr(now, 'yyyymmdd');
+	save(fullfile(save_dir, [dt, '_plot_stat_info']), 'plot_stat_info','fovID_plot_info');
 end
 
 

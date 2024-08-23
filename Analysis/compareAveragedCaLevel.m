@@ -13,7 +13,7 @@ function [varargout] = compareAveragedCaLevel(alignedData,pairStruct,binWidth,va
 	colorGroupA = '#00FFFF';
 	colorGroupB = '#FF00FF';
 
-	stimBinRange = [1, 7]; % Run LMM on the these bins. 
+	stimBinRange = [3, 7]; % Run LMM on the these bins. 
 
 	% Stat model setting
 	modelType = 'LMM';

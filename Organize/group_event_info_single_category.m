@@ -28,28 +28,65 @@ function [grouped_event_info,varargout] = group_event_info_single_category(event
     	[event_info] = filter_struct(event_info, filter_field, filter_par);
     end
 
-    category_content = {event_info.(category_name)};
-    category_content_unique = unique(category_content);
-    category_content_unique_num = numel(category_content_unique);
+    [catContent, catContentUnique, catContentUniqueNum, catContentUniqueTag] = extractCatContentInfo(event_info, category_name);
 
-    idx = cell(category_content_unique_num, 1);
+    % catContent = {event_info.(category_name)};
 
-    for n = category_content_unique_num:-1:1
-    	keyword = category_content_unique{n};
+    % % Convert the catContent from cell to numeric array if possible
+    % isNumOrLogical = isCellArrayNumericOrLogical(catContent);
+    % if isNumOrLogical
+    %     catContent = cellfun(@(x) num2str(x), catContent, 'UniformOutput', false);
+    % end
+
+    % catContentUnique = unique(catContent);
+    % catContentUniqueNum = numel(catContentUnique);
+
+    idx = cell(catContentUniqueNum, 1);
+
+    for n = catContentUniqueNum:-1:1
+    	groupChar = catContentUnique{n};
+        tagName = catContentUniqueTag{n};
         if isempty(groupname_prefix)
-           groupname = keyword;
+           groupname = tagName;
         else 
-    	   groupname = [groupname_prefix, '-', keyword];
+    	   groupname = [groupname_prefix, '-', tagName];
         end
         % groupname = replace(groupname, '-', '_');
 
-    	idx_logic = [cellfun(@(x) strcmpi(x, keyword), category_content,  'UniformOutput',false)];
+    	idx_logic = [cellfun(@(x) strcmpi(x, groupChar), catContent,  'UniformOutput',false)];
     	idx{n} = find([idx_logic{:}]);
         grouped_event_info(n).(f_groupname) = groupname;
     	grouped_event_info(n).(f_event_info) = event_info(idx{n});
-        grouped_event_info(n).tag = keyword;
+        grouped_event_info(n).tag = tagName;
     end
 
     varargout{1} = idx;
-    varargout{2} = category_content_unique;
+    varargout{2} = catContentUnique;
+end
+
+
+function [catContent, catContentUnique, catContentUniqueNum, catContentUniqueTag] = extractCatContentInfo(event_info, category_name)
+
+    % Get the values in the filed of 'category_name'
+    catContent = {event_info.(category_name)};
+
+    % Convert the catContent from cell to numeric array if possible
+    isNumOrLogical = isCellArrayNumericOrLogical(catContent);
+    if isNumOrLogical
+        catContent = cellfun(@(x) num2str(x), catContent, 'UniformOutput', false);
+    end
+
+    catContentUnique = unique(catContent);
+    catContentUniqueTag = catContentUnique;
+    catContentUniqueNum = numel(catContentUnique);
+
+
+    % Treat 'type' (0 for asyn, 1 for sync) differently
+    switch category_name
+        case 'type'
+            % Replace '0' with 'async' and '1' with 'sync'
+            catContentUniqueTag = strrep(catContentUniqueTag, '0', 'asynch');
+            catContentUniqueTag = strrep(catContentUniqueTag, '1', 'synch');
+        otherwise
+    end
 end

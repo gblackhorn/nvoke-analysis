@@ -1,24 +1,30 @@
-function [grouped_event_info, varargout] = group_event_info_multi_category(event_info,varargin)
-	% Group event info with given category_names.
-	% For example: fovID, mouseID, stim, etc.
-	% Note: when multiple category_names were given, event_info will be sorted in a nested way according to
-	%	the order of category_names.
+function [grouped_event_info, varargout] = group_event_info_multi_category(event_info, varargin)
+    % Group event info with given category_names.
+    % For example: fovID, mouseID, stim, etc.
+    % Note: when multiple category_names are given, event_info will be sorted in a nested way according to
+    % the order of category_names.
 
-	% Defaults
-	category_names = {};
-	filter_field = {}; % some values, such as "freq", can be used as threshold to filter data
-    filter_par = {};
+    % Create an input parser object
+    p = inputParser;
 
-	% Optionals
-    for ii = 1:2:(nargin-1)
-        if strcmpi('category_names', varargin{ii})
-            category_names = varargin{ii+1};
-        elseif strcmpi('filter_field', varargin{ii})
-            filter_field = varargin{ii+1}; % {thresh1, thresh2,...}
-        elseif strcmpi('filter_par', varargin{ii})
-            filter_par = varargin{ii+1}; % {[min1, max1], [min2, max2],...} use NaN for inf value
-        end
-    end
+    % Required input validation
+    addRequired(p, 'event_info', @(x) isstruct(x));
+
+    % Add optional parameters with default values and validation
+    addParameter(p, 'category_names', {}, @iscell);  % Default: empty cell array
+    addParameter(p, 'filter_field', {}, @iscell);    % Default: empty cell array
+    addParameter(p, 'filter_par', {}, @iscell);                   % Default: empty cell array
+    addParameter(p, 'debugMode', false, @(x) islogical(x) || isnumeric(x)); % Default: false
+
+    % Parse the inputs
+    parse(p, event_info, varargin{:});
+
+    % Assign the parsed inputs to variables
+    event_info = p.Results.event_info;
+    category_names = p.Results.category_names;
+    filter_field = p.Results.filter_field;
+    filter_par = p.Results.filter_par;
+    debugMode = p.Results.debugMode;
 
 
 
@@ -35,6 +41,12 @@ function [grouped_event_info, varargout] = group_event_info_multi_category(event
         grouped_event_info_temp = cell(category_num, 1); % each cell contains grouped info using "cn" categories  
         group_tags = cell(category_num, 1);
     	for cn = 1:category_num 
+            if debugMode
+                fprintf('Category %d/%d\n', cn, category_num)
+                if cn == 3
+                    pause
+                end
+            end
     		if cn == 1 % first level group
     			[grouped_event_info_temp{cn},~,group_tags{cn}] = group_event_info_single_category(event_info, category_names{cn},...
     				'filter_field', filter_field, 'filter_par', filter_par);

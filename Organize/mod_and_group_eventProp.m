@@ -74,7 +74,7 @@ function [grouped_event,grouped_event_setting,varargout] = mod_and_group_eventPr
     % [grouped_event_info, grouped_event_setting] = group_event_info_multi_category(eventProp_all,...
     %   'category_names', category_names);
     [grouped_event, grouped_event_setting] = group_event_info_multi_category(eventProp_all_norm,...
-        'category_names', mgSetting.groupField);
+        'category_names', mgSetting.groupField, 'debugMode', debug_mode);
     if numel(mgSetting.groupField)==1 && strcmpi(mgSetting.groupField, 'peak_category')
         [grouped_event] = merge_event_info(grouped_event); % merge some groups
     end
