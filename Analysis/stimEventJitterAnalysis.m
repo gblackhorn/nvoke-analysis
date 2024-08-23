@@ -92,6 +92,18 @@ function [stimEventJitter,varargout] = stimEventJitterAnalysis(alignedData,stimN
 	stimEventJitter.violinData.sponInt = [sponAndSponIntClean.pairTimeDiff];
 	stimEventJitter.violinData.stimEventDelay = [stimEventDelay.pairTimeDiff];
 
+	% Calculate the mean, median, std and sem values
+	meanSponInt = mean(stimEventJitter.violinData.sponInt,'omitnan');
+	meanStimEventDelay = mean(stimEventJitter.violinData.stimEventDelay, 'omitnan');
+	medianSponInt = median(stimEventJitter.violinData.sponInt, "omitmissing");
+	medianStimEventDelay = median(stimEventJitter.violinData.stimEventDelay, "omitmissing");
+	stdSponInt = std(stimEventJitter.violinData.sponInt, 'omitnan');
+	stdStimEventDelay = std(stimEventJitter.violinData.stimEventDelay, 'omitnan');
+	semSponInt = stdSponInt/sqrt(numel(stimEventJitter.violinData.sponInt));
+	semStimEventDelay = stdStimEventDelay/sqrt(numel(stimEventJitter.violinData.stimEventDelay));
+
+
+
 	% Get n number and prepare to plot it in a UI table
 	nNumberTabSponInt = getRecordingNeuronCounts(sponAndSponIntClean);
 	nNumberTabStimEventDelay = getRecordingNeuronCounts(stimEventDelay);
@@ -128,7 +140,7 @@ function [stimEventJitter,varargout] = stimEventJitterAnalysis(alignedData,stimN
 	% Plot GLMM stat
 	axGlmmTitle = nexttile(6);
 	glmmTitleStr = sprintf('(Top) %s model comparison: no-fixed-effects vs fixed-effects\n[%s]\nVS\n[%s]\n(Bottom) Group comparison',...
-		modelType, char(meStatReport.chiLRT.formula{1}), char(meStatReport.chiLRT.formula{2}));
+		modelType, char(meStatReport.chiLRT.Formula{1}), char(meStatReport.chiLRT.Formula{2}));
 	set(axGlmmTitle, 'XColor', 'none', 'YColor', 'none'); % Hide X and Y axis lines, ticks, and labels
 	% title(axGlmmTitle, glmmTitleStr); % Add a title to the axis
 	text(axGlmmTitle, 'Units', 'normalized', 'Position', [0.5, 0.5], 'String', glmmTitleStr, ...
@@ -145,15 +157,17 @@ function [stimEventJitter,varargout] = stimEventJitterAnalysis(alignedData,stimN
 	% Plot Kolmogorov-Smirnov Test stat: If two vectors are from the same continuous distribution
 	axKS = nexttile(15);
 	[hKS, pKS] = kstest2(stimEventJitter.violinData.sponInt, stimEventJitter.violinData.stimEventDelay);
-	plotUItableKStest(axKS, pKS, hKS);
+	KStestTab = plotUItableKStest(axKS, pKS, hKS);
 	% disp(['K-S test p-value: ', num2str(p)]);
 
 
 	stimEventJitter.CVsponInt = CVsponAndSpon;
 	stimEventJitter.CVstimDelay = CVstimEventDelay;
+	stimEventJitter.numTab = combinedNumTable;
 	stimEventJitter.GlmmReport = meStatReport;
 	stimEventJitter.KStest.h = hKS;
 	stimEventJitter.KStest.p = pKS;
+	stimEventJitter.KStest.tab = KStestTab;
 
 	varargout{1} = f;
 	varargout{2} = titleStr;
@@ -350,7 +364,7 @@ function plot_stat_table(ax_stat1, ax_stat2, meStatReport)
     drawnow;
 end
 
-function plotUItableKStest(ax, pVal, hVal)
+function [varargout] = plotUItableKStest(ax, pVal, hVal)
 	figure(ax.Parent.Parent)
 	set(ax, 'XTickLabel', []);
 	set(ax, 'YTickLabel', []);
@@ -371,6 +385,10 @@ function plotUItableKStest(ax, pVal, hVal)
     jTable = jScroll.getViewport.getView;
     jTable.setAutoResizeMode(jTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
     drawnow;
+
+    KStestTab = cell2table(dataCell);
+    KStestTab.Properties.VariableNames = columnNames;
+    varargout{1} = KStestTab;
 end
 
 function convertedCellArray = convertCategoricalToChar(cellArray)
@@ -385,4 +403,22 @@ function convertedCellArray = convertCategoricalToChar(cellArray)
             convertedCellArray{i} = char(cellArray{i});
         end
     end
+end
+
+function sumaryTab = summaryCalc(dataCell, rowLabelCell)
+
+	cellNum = numel(dataCell);
+	meanVal = nan(cellNum, 1);
+	medianVal = nan(cellNum, 1);
+	stdVal = nan(cellNum, 1);
+	semVal = nan(cellNum, 1);
+	for cn = 1:cellNum
+		% Calculate the mean, median, std, and sem
+		meanVal(cn) = mean(dataCell{cn},'omitnan');
+		medianVal(cn) = median(dataCell{cn}, "omitmissing");
+		stdVal(cn) = std(dataCell{cn}, 'omitnan');
+		semVal(cn) = stdVal/sqrt(numel(dataCell{cn}));
+	end
+
+	sumaryTab = table(rowLabelCell(:), meanVal, medianVal, stdVal, semVal);
 end

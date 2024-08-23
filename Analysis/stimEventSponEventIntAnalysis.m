@@ -138,7 +138,7 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	% Plot GLMM stat
 	axGlmmTitle = nexttile(6);
 	glmmTitleStr = sprintf('(Top) %s model comparison: no-fixed-effects vs fixed-effects\n[%s]\nVS\n[%s]\n(Bottom) Group comparison',...
-		modelType, char(meStatReport.chiLRT.formula{1}), char(meStatReport.chiLRT.formula{2}));
+		modelType, char(meStatReport.chiLRT.Formula{1}), char(meStatReport.chiLRT.Formula{2}));
 	set(axGlmmTitle, 'XColor', 'none', 'YColor', 'none'); % Hide X and Y axis lines, ticks, and labels
 	% title(axGlmmTitle, glmmTitleStr); % Add a title to the axis
 	text(axGlmmTitle, 'Units', 'normalized', 'Position', [0.5, 0.5], 'String', glmmTitleStr, ...

@@ -278,8 +278,8 @@ ggSetting.groupField = {'peak_category','subNuclei','type'}; % options: 'fovID',
 % 2.5 Plot event properties
 close all
 % General Settings
-saveFig = false; % true/false
-props = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_delay'}; 
+saveFig = true; % true/false
+props = {'FWHM','peak_delta_norm_hpstd','peak_delay'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
 mmModel = 'GLMM'; % LMM/GLMM
 mmHierarchicalVars = {'trialName', 'roiName'};
@@ -388,7 +388,7 @@ end
 % 2.7 Plot event properties. Compare the sync and async events in PO and DAO
 close all
 % General Settings
-saveFig = false; % true/false
+saveFig = true; % true/false
 props = {'FWHM','peak_delta_norm_hpstd'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta','sponNorm_peak_mag_delta','peak_delay'
 mmModel = 'LMM'; % LMM/GLMM
@@ -441,10 +441,10 @@ organizeStructSyncOGdelay(1).keepGroups = {'opto-delay [og-5s]-PO'};
 organizeStructSyncOGdelay(1).mmFixCat = 'type';
 organizeStructSyncOGdelay(1).colorGroup = {'#8C0383', '#FF00CC'};
 
-% organizeStructSyncOGdelay(2).title = 'sponInNO syncVSasync DAO';
-% organizeStructSyncOGdelay(2).keepGroups = {'opto-delay [og-5s]-DAO'};
-% organizeStructSyncOGdelay(2).mmFixCat = 'type';
-% organizeStructSyncOGdelay(2).colorGroup = {'#003264', '#00AAD4'};
+organizeStructSyncOGdelay(2).title = 'sponInNO syncVSasync DAO';
+organizeStructSyncOGdelay(2).keepGroups = {'opto-delay [og-5s]-DAO'};
+organizeStructSyncOGdelay(2).mmFixCat = 'type';
+organizeStructSyncOGdelay(2).colorGroup = {'#003264', '#00AAD4'};
 
 [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGdelay,props,organizeStructSyncOGdelay,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
@@ -452,7 +452,7 @@ organizeStructSyncOGdelay(1).colorGroup = {'#8C0383', '#FF00CC'};
 
 
 % Work on postOG (postNOstim) events
-[eventStructSyncTagPostOG] = filter_entries_in_structure(eventStructMerge,'group',...
+[eventStructSyncTagPostOG] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
 	'tags_keep','rebound [og-5s]');
 
 % Settings for sub-groups
@@ -472,7 +472,7 @@ organizeStructSyncPostOG(2).colorGroup = {'#003264', '#00AAD4'};
 
 
 % Work on AP (airpuff-evoked) events
-[eventStructSyncTagAP] = filter_entries_in_structure(eventStructMerge,'group',...
+[eventStructSyncTagAP] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
 	'tags_keep','trig [ap-0.1s]');
 
 % Settings for sub-groups
@@ -588,7 +588,7 @@ end
 % 3.3 Violin plot showing the difference of
 % stim-related-event_to_following_event_time and the spontaneous_event_interval
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 stimNameAll = {'og-5s','ap-0.1s','og-5s ap-0.1s','ap-0.1s'}; % 'og-5s' 'ap-0.1s'
 stimEventCatAll = {'rebound','trig','trig-ap','rebound'}; % 'rebound', 'trig'
 releventEventLoc = 'post'; % 'pre'/'post'. The location of relevent event. Pre or post to the ref event
