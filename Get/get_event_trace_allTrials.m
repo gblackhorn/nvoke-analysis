@@ -318,7 +318,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 				if contains(alignedData.stim_name, 'GPIO-1', 'IgnoreCase',true)
 					exclude_duration = 0; % exclude the duration after stimulation window from "spontaneuous window"
 					exepWinDur = 0; % exclude a time window with the specified duration after stimulation window in case the stimulation has a prolonged effect 
-				else					exclude_duration = 1; % exclude the duration after stimulation window from "spontaneuous window"
+				else exclude_duration = 1; % exclude the duration after stimulation window from "spontaneuous window"
 					exepWinDur = rebound_duration;
 					if exclude_duration < exepWinDur % the exclude duration should be at least as long as the window for the "rebound events"
 						exclude_duration = exepWinDur;

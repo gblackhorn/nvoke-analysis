@@ -13,7 +13,7 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 
 
 	% Stat model setting
-	modelType = 'GLMM';
+	modelType = 'LMM';
 	distribution = 'gamma';
 	link = 'log';
 	groupVarType = 'categorical';
@@ -135,10 +135,10 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	plotSummaryTableInUITable(axNum, combinedNumTable);
 
 
-	% Plot GLMM stat
+	% Plot LMM/GLMM stat
 	axGlmmTitle = nexttile(6);
 	glmmTitleStr = sprintf('(Top) %s model comparison: no-fixed-effects vs fixed-effects\n[%s]\nVS\n[%s]\n(Bottom) Group comparison',...
-		modelType, char(meStatReport.chiLRT.Formula{1}), char(meStatReport.chiLRT.Formula{2}));
+		meStatReport.modelInfoStr, char(meStatReport.chiLRT.Formula{1}), char(meStatReport.chiLRT.Formula{2}));
 	set(axGlmmTitle, 'XColor', 'none', 'YColor', 'none'); % Hide X and Y axis lines, ticks, and labels
 	% title(axGlmmTitle, glmmTitleStr); % Add a title to the axis
 	text(axGlmmTitle, 'Units', 'normalized', 'Position', [0.5, 0.5], 'String', glmmTitleStr, ...
@@ -154,15 +154,13 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 
 	% Plot Kolmogorov-Smirnov Test stat: If two vectors are from the same continuous distribution
 	axKS = nexttile(15);
-	% spon2spon_intervals = intData.violinData.spon2spon;
-	% trig2spon_intervals = intData.violinData.trig2spon;
-
 	if isempty(emptyField)
 		[hKS, pKS] = kstest2(violinData.(stimAndFollowingIntName), violinData.(sponAndSponIntName));
 	else
 		hKS = nan;
 		pKS = nan;
 	end
+	KStestTab = plotUItableKStest(axKS, pKS, hKS);
 
 	% disp(['K-S test p-value: ', num2str(p)]);
 
@@ -177,6 +175,8 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	varargout{1} = intData;
 	varargout{2} = f;
 	varargout{3} = titleStr;
+	varargout{4} = combinedNumTable; % table of n numbers
+	varargout{5} = KStestTab; % table of K-S test
 
 
 end
@@ -291,4 +291,30 @@ function convertedCellArray = convertCategoricalToChar(cellArray)
     end
 end
 
+function [varargout] = plotUItableKStest(ax, pVal, hVal)
+	figure(ax.Parent.Parent)
+	set(ax, 'XTickLabel', []);
+	set(ax, 'YTickLabel', []);
+    % Convert the table to a cell array
+    dataCell = {'K-S', pVal, hVal};
+    columnNames = {'method', 'p', 'h'};
+    
+    % Get the position and units of the axis
+    uit_pos = get(ax, 'Position');
+    uit_unit = get(ax, 'Units');
+    
+    % Create the uitable in the figure
+    uit = uitable('Data', dataCell, 'ColumnName', columnNames,...
+                  'Units', uit_unit, 'Position', uit_pos);
+    
+    % Adjust table appearance
+    jScroll = findjobj(uit);
+    jTable = jScroll.getViewport.getView;
+    jTable.setAutoResizeMode(jTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+    drawnow;
+
+    KStestTab = cell2table(dataCell);
+    KStestTab.Properties.VariableNames = columnNames;
+    varargout{1} = KStestTab;
+end
 

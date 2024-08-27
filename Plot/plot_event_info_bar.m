@@ -156,14 +156,15 @@ function [data_struct,varargout] = plot_event_info_bar(event_info_struct,par_nam
 	if stat && group_num>1% run one-way anova or not
 		if ~isempty(mmModel)
 			structData = [event_info_struct(:).event_info];
-			[me,fixedEffectsStats,chiLRT,mmPvalue,multiComparisonResults]= mixed_model_analysis(structData,...
+			[me,fixedEffectsStats,chiLRT,mmPvalue,multiComparisonResults,statInfo]= mixed_model_analysis(structData,...
 				par_name, mmGrouop, mmHierarchicalVars, 'groupVarType', mmGroupVarType,...
 				'modelType',mmType,'distribution',mmDistribution,'link',mmLink);
-			statInfo.method = me;
-			statInfo.fixedEffectsStats = fixedEffectsStats;
-			statInfo.chiLRT = chiLRT;
-			statInfo.mmPvalue = mmPvalue;
-			statInfo.multCompare = multiComparisonResults;
+			% statInfo.method = me;
+			% statInfo.modelInfoStr = me;
+			% statInfo.fixedEffectsStats = fixedEffectsStats;
+			% statInfo.chiLRT = chiLRT;
+			% statInfo.mmPvalue = mmPvalue;
+			% statInfo.multCompare = multiComparisonResults;
 		else
 			% discard groups which sample size is equal or smaller than 3
 			lowSizeGroupIDX = find(cellfun(@(x) numel(x)<=3,data_cell));

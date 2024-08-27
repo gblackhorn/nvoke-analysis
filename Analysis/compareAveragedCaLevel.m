@@ -121,7 +121,7 @@ function [varargout] = compareAveragedCaLevel(alignedData,pairStruct,binWidth,va
 	nNumA = orderfields(nNumA, [4 1 2 3]);
 	nNumB.group = groupBstr;
 	nNumB = orderfields(nNumB, [4 1 2 3]);
-	nNumberUItable(axNum,nNumA,nNumB);
+	nNumTab = nNumberUItable(axNum,nNumA,nNumB);
 
 
 	% Keep the bins during the optogenetic stimulation
@@ -149,19 +149,30 @@ function [varargout] = compareAveragedCaLevel(alignedData,pairStruct,binWidth,va
 	plot_stat_table(axStat1, axStat2, meStatReport)
 
 
+	% Add nNum table to the meStatReport
+	meStatReport.nNumTab = nNumTab;
+
 	% Save 
 	if saveFig
 		% Save the plot
 		saveDir = savePlot(f,'save_dir',saveDir,'guiSave',true,'fname',titleStr);
 
+		% Save the n number
+		nNumTabName = sprintf('%s nNumTab.tex',titleStr);
+		tableToLatex(meStatReport.nNumTab, 'saveToFile',true,'filename',fullfile(saveDir,nNumTabName),...
+			'caption', [titleStr, ' nNum']);
+
+
 		% Save the model comparison table in latex format
-		texFilename = sprintf('%s modelCompTab.tex',titleStr);
-		tableToLatex(meStatReport.chiLRT, 'saveToFile',true,'filename',fullfile(saveDir,texFilename),...
-			'caption',titleStr);
+		modelCompTabName = sprintf('%s modelCompTab.tex',titleStr);
+		tableToLatex(meStatReport.chiLRT, 'saveToFile',true,'filename',fullfile(saveDir,modelCompTabName),...
+			'caption', sprintf('%s %s modelComp', titleStr, meStatReport.modelInfoStr));
 	end
 
 	varargout{1} = saveDir;
 	varargout{2} = meStatReport;
+	varargout{3} = combinedBinDataStruct;
+	varargout{3} = combinedBinDataStruct;
 
 
 	% [~,CaLevel_box_statInfo] = boxPlot_with_scatter(binDataCell,'groupNames',NumArray2StringCell(xData),...
@@ -199,10 +210,12 @@ function filteredData = filterByBinIDX(dataStruct, fieldName, binRange)
 end
 
 
-function nNumberUItable(ax,nNumA,nNumB)
+function nNumTab = nNumberUItable(ax,nNumA,nNumB)
 	nNumAcell = ensureHorizontal(struct2cell(nNumA));
 	nNumBcell = ensureHorizontal(struct2cell(nNumB));
 	nNumCell = [nNumAcell; nNumBcell];
+
+	nNumTab = cell2table(nNumCell, 'VariableNames', fieldnames(nNumA));
 
 	figure(ax.Parent.Parent)
 
@@ -223,6 +236,7 @@ function nNumberUItable(ax,nNumA,nNumB)
 	jTable.setAutoResizeMode(jTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
 	drawnow;
 end
+
 
 
 function plot_stat_table(ax_stat1, ax_stat2, meStatReport)

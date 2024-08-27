@@ -93,14 +93,16 @@ function [stimEventJitter,varargout] = stimEventJitterAnalysis(alignedData,stimN
 	stimEventJitter.violinData.stimEventDelay = [stimEventDelay.pairTimeDiff];
 
 	% Calculate the mean, median, std and sem values
-	meanSponInt = mean(stimEventJitter.violinData.sponInt,'omitnan');
-	meanStimEventDelay = mean(stimEventJitter.violinData.stimEventDelay, 'omitnan');
-	medianSponInt = median(stimEventJitter.violinData.sponInt, "omitmissing");
-	medianStimEventDelay = median(stimEventJitter.violinData.stimEventDelay, "omitmissing");
-	stdSponInt = std(stimEventJitter.violinData.sponInt, 'omitnan');
-	stdStimEventDelay = std(stimEventJitter.violinData.stimEventDelay, 'omitnan');
-	semSponInt = stdSponInt/sqrt(numel(stimEventJitter.violinData.sponInt));
-	semStimEventDelay = stdStimEventDelay/sqrt(numel(stimEventJitter.violinData.stimEventDelay));
+	sumaryTab = summaryCalc({stimEventJitter.violinData.stimEventDelay, stimEventJitter.violinData.sponInt},...
+		{'stimEventDelay', 'sponInt'});
+	% meanSponInt = mean(stimEventJitter.violinData.sponInt,'omitnan');
+	% meanStimEventDelay = mean(stimEventJitter.violinData.stimEventDelay, 'omitnan');
+	% medianSponInt = median(stimEventJitter.violinData.sponInt, "omitmissing");
+	% medianStimEventDelay = median(stimEventJitter.violinData.stimEventDelay, "omitmissing");
+	% stdSponInt = std(stimEventJitter.violinData.sponInt, 'omitnan');
+	% stdStimEventDelay = std(stimEventJitter.violinData.stimEventDelay, 'omitnan');
+	% semSponInt = stdSponInt/sqrt(numel(stimEventJitter.violinData.sponInt));
+	% semStimEventDelay = stdStimEventDelay/sqrt(numel(stimEventJitter.violinData.stimEventDelay));
 
 
 
@@ -171,6 +173,7 @@ function [stimEventJitter,varargout] = stimEventJitterAnalysis(alignedData,stimN
 
 	varargout{1} = f;
 	varargout{2} = titleStr;
+	varargout{3} = sumaryTab;
 
 end
 
@@ -417,7 +420,7 @@ function sumaryTab = summaryCalc(dataCell, rowLabelCell)
 		meanVal(cn) = mean(dataCell{cn},'omitnan');
 		medianVal(cn) = median(dataCell{cn}, "omitmissing");
 		stdVal(cn) = std(dataCell{cn}, 'omitnan');
-		semVal(cn) = stdVal/sqrt(numel(dataCell{cn}));
+		semVal(cn) = stdVal(cn)/sqrt(numel(dataCell{cn}));
 	end
 
 	sumaryTab = table(rowLabelCell(:), meanVal, medianVal, stdVal, semVal);

@@ -90,7 +90,7 @@ function [caLevelData,nNum,binX,binDataStruct,varargout] = getAveragedCaLevel(al
         stimRanges(:, 1) =stimRanges(:, 1) - stimRangeExt;
         stimRanges(:, 2) =stimRanges(:, 2) + stimRangeExt;
 
-        % Get the trace data including event properties and  calcium level traces for every ROI
+        % Get the trace data including event properties and calcium level traces for every ROI
         recTraceData = alignedData(rn).traces;
 
         % Get the roi number
@@ -113,8 +113,12 @@ function [caLevelData,nNum,binX,binDataStruct,varargout] = getAveragedCaLevel(al
             hpStd = recTraceData(nn).hpStd;
 
             % Use the stimulation-related events to screen calcium level traces
-            psthCaLevelRec{nn} = screenCaTraceWithEvent(recTraceData(nn).CaLevelTrace,...
-                stimRanges, recTraceData(nn).eventProp, stimEventCat, stimEventKeepOrDis);
+            if ~isempty(stimEventCat)
+                psthCaLevelRec{nn} = screenCaTraceWithEvent(recTraceData(nn).CaLevelTrace,...
+                    stimRanges, recTraceData(nn).eventProp, stimEventCat, stimEventKeepOrDis);
+            else
+                psthCaLevelRec{nn} = recTraceData(nn).CaLevelTrace;
+            end
 
             if ~isempty(psthCaLevelRec{nn})
                 % Add up roiNum and traceNum
@@ -246,6 +250,6 @@ function    psthCaLevelRec = screenCaTraceWithEvent(roiCaLevelTrace, stimRanges,
         end
     else
         % Do not filter the calcium traces
-        psthCaLevelRec = roiCaLevelTrace;
+        psthCaLevelRec = [];
     end
 end

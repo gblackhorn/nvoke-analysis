@@ -141,7 +141,16 @@ function [fullModel, varargout] = mixed_model_analysis(dataStruct, responseVar, 
             formula = sprintf('%s ~ 1 + %s + %s', responseVar, groupVar, hierachiRandom);
             formula_noFix = sprintf('%s ~ 1 + %s', responseVar, hierachiRandom);
         end
-        
+
+
+        % Generate a string for the model
+        switch modelType
+            case 'LMM'
+                modelInfoStr = sprintf('LMM');
+            case 'GLMM'
+                modelInfoStr = sprintf('GLMM [Distribution: %s. Link: %s]', distribution, link);
+        end
+
         
         % Fit the model
         if strcmp(modelType, 'LMM')
@@ -265,6 +274,7 @@ function [fullModel, varargout] = mixed_model_analysis(dataStruct, responseVar, 
 
     varargout{3} = mmPvalue;
     varargout{4} = multiComparisonResults;
+    statInfo.modelInfoStr = modelInfoStr;
     statInfo.method = fullModel;
     statInfo.fixedEffectsStats = fixedEffectsStats;
     statInfo.chiLRT = chiLRT;

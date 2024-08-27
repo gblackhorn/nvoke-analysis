@@ -287,8 +287,8 @@ mmDistribution = 'gamma'; % For continuous, positively skewed data
 mmLink = 'log'; % For continuous, positively skewed data
 
 % Merge the OG-rebound events from og-5s and og&ap-5s recordings
-eventStructMerge = mergeGroupedEventData(eventStructForPlot, 'rebound [og-5s]-DAO', 'rebound [og&ap-5s]-DAO');
-eventStructMerge = mergeGroupedEventData(eventStructMerge, 'rebound [og-5s]-PO', 'rebound [og&ap-5s]-PO');
+% eventStructMerge = mergeGroupedEventData(eventStructForPlot, 'rebound [og-5s]-DAO', 'rebound [og&ap-5s]-DAO');
+% eventStructMerge = mergeGroupedEventData(eventStructMerge, 'rebound [og-5s]-PO', 'rebound [og&ap-5s]-PO');
 
 
 % Settings for sub-groups
@@ -336,7 +336,7 @@ organizeStruct(11).title = 'apTrig2apTrigInOG PO';
 organizeStruct(11).keepGroups = {'trig [ap-0.1s]-PO', 'trig-ap [og&ap-5s]-PO'};
 organizeStruct(11).mmFixCat = 'peak_category';
 
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructMerge,props,organizeStruct,...
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructForPlot,props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
 
@@ -608,7 +608,7 @@ for sn = 1:numel(subNucleiTypes)
 		% [intData,eventIntMean,eventInt,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
 		% 'maxDiff',maxDiff);
 
-		[intData,f,fname] = stimEventSponEventIntAnalysis(alignedDataSubN,stimName,stimEventCat,...
+		[intData,f,fname,nNumTab,KStestTab] = stimEventSponEventIntAnalysis(alignedDataSubN,stimName,stimEventCat,...
 		    'releventEventLoc',releventEventLoc,'defReleventEventCat',defReleventEventCat,'maxDiff',maxDiff,'titlePrefix',subNucleiTypes{sn});
 
 		if save_fig
@@ -619,6 +619,21 @@ for sn = 1:numel(subNucleiTypes)
 			end
 			FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',guiSave,'fname',fname);
 			save(fullfile(FolderPathVA.fig, [fname,' data']),'intData');
+
+			% Save nNum table in latex format
+			tabNumName = sprintf('%s nNumInfo.tex', fname);
+			tableToLatex(nNumTab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig,tabNumName),...
+			    'caption', tabNumName, 'columnAdjust', 'XXXXX');
+
+			% Save GLMM Model comparison in latex format
+			MMtabName = sprintf('%s modelComp.tex', fname);
+			tableToLatex(intData.GlmmReport.chiLRT, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, MMtabName),...
+			    'caption', [intData.GlmmReport.modelInfoStr, ' ', fname], 'columnAdjust', 'cXccccccc');
+
+			% Save K-S tab in latex format
+			KStabName = sprintf('%s KStestTab.tex', fname);
+			tableToLatex(KStestTab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, KStabName),...
+			    'caption', [KStabName,' ', fname], 'columnAdjust', 'ccc');
 		end
 	end
 end
@@ -640,7 +655,7 @@ summarizeExOgEffect(alignedData_allTrials, 'save_fig', save_fig, 'save_dir', Fol
 %% ==================== 
 % 3.4 Compare the delay of offStim events to spon interval
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 subNucleiTypes = {'DAO', 'PO'};
 for sn = 1:numel(subNucleiTypes)
 	alignedDataSubN = screenSubNucleiROIs(alignedData_allTrials,subNucleiTypes{sn});
@@ -655,6 +670,21 @@ for sn = 1:numel(subNucleiTypes)
 		end
 		FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',guiSave,'fname',fname);
 		save(fullfile(FolderPathVA.fig, [fname,' data']),'stimEventJitter');
+
+		% Save nNum table in latex format
+		tabNumName = sprintf('%s nNumInfo.tex', fname);
+		tableToLatex(stimEventJitter.numTab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig,tabNumName),...
+		    'caption', tabNumName, 'columnAdjust', 'XXXXX');
+
+		% Save GLMM Model comparison in latex format
+		MMtabName = sprintf('%s modelComp.tex', fname);
+		tableToLatex(stimEventJitter.GlmmReport.chiLRT, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, MMtabName),...
+		    'caption', [stimEventJitter.GlmmReport.modelInfoStr, ' ', fname], 'columnAdjust', 'cXccccccc');
+
+		% Save K-S tab in latex format
+		KStabName = sprintf('%s KStestTab.tex', fname);
+		tableToLatex(stimEventJitter.KStest.tab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, KStabName),...
+		    'caption', [KStabName,' ', fname], 'columnAdjust', 'ccc');
 	end
 
 end
@@ -664,7 +694,7 @@ end
 % 3.5 Compare the calcium level during OG
 close all
 
-SaveFig = false; % true/false
+SaveFig = true; % true/false
 binWidth = 1;
 shadeType = 'ste';
 tickInt_time = 1;
@@ -711,7 +741,7 @@ for pn = 1:numel(pairStruct)
 	titlePrefix = sprintf('[%s %s %s-%s] [%s %s %s-%s]',...
 		pairStruct(pn).stimNameA,pairStruct(pn).subNucleiTypeA,pairStruct(pn).stimEventCatA,pairStruct(pn).stimEventKeepOrDisA,...
 		pairStruct(pn).stimNameB,pairStruct(pn).subNucleiTypeA,pairStruct(pn).stimEventCatB,pairStruct(pn).stimEventKeepOrDisB);
-	[saveDir, meStatReport] = compareAveragedCaLevel(alignedData_allTrials,pairStruct(pn),binWidth,...
+	[saveDir, meStatReport, caLevelData] = compareAveragedCaLevel(alignedData_allTrials,pairStruct(pn),binWidth,...
 		'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
 		'shadeType',shadeType,'tickInt_time',tickInt_time,'titlePrefix',titlePrefix,'titleSubfix',titleSubfix,...
 		'norm2hpStd',norm2hpStd,'SaveFig',SaveFig,'saveDir',FolderPathVA.fig);
