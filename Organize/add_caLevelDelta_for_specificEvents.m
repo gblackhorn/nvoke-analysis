@@ -24,6 +24,7 @@ function [ROIeventProp_new,varargout] = add_caLevelDelta_for_specificEvents(ROIe
 
 	% Add optional parameters to the input p
 	addParameter(p, 'newFieldName', 'caLevelDelta', @ischar);
+	addParameter(p, 'denomVal', [], @isnumeric); % highpassSTD of the ROI trace, or spon event amplitude
 
 	% Parse inputs
 	parse(p, ROIeventProp, eventCat, stimTime, caLevelData, varargin{:});
@@ -34,6 +35,9 @@ function [ROIeventProp_new,varargout] = add_caLevelDelta_for_specificEvents(ROIe
 	stimTime = p.Results.stimTime;
 	caLevelData = p.Results.caLevelData;
 	newFieldName = p.Results.newFieldName;
+	denomVal = p.Results.denomVal;
+
+
 	
 
 	% Create 2 NaN arrays having the same length as the events. 
@@ -43,6 +47,17 @@ function [ROIeventProp_new,varargout] = add_caLevelDelta_for_specificEvents(ROIe
 	if ~isfield(ROIeventProp_new,newFieldName)
 		defaultValue = {[]}; % create a cell array with the default value for the new field
 		[ROIeventProp_new(:).(newFieldName)] = deal(defaultValue{:}); % use deal to assign the default value to each structure
+	end
+
+	if ~isempty(denomVal) 
+		% Calculate the denomVal normalized caLevelData
+		caLevelDataHpStdNorm = caLevelData./denomVal;
+
+		normValFieldName = sprintf('%sNorm', newFieldName);
+		if ~isfield(ROIeventProp_new, normValFieldName)
+			defaultValue = {[]}; % create a cell array with the default value for the new field
+			[ROIeventProp_new(:).(normValFieldName)] = deal(defaultValue{:}); % use deal to assign the default value to each structure
+		end
 	end
 
 
@@ -65,6 +80,10 @@ function [ROIeventProp_new,varargout] = add_caLevelDelta_for_specificEvents(ROIe
 		for n = 1:eventNum
 			idxStim_event = idxStim(n); % stimulation idx for this single event
 			ROIeventProp_new(idx_events(n)).(newFieldName) = caLevelData(idxStim_event);
+
+			if ~isempty(denomVal) 
+				ROIeventProp_new(idx_events(n)).(normValFieldName) = caLevelDataHpStdNorm(idxStim_event);
+			end
 		end
 	end
 end

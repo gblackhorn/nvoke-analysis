@@ -95,13 +95,14 @@ function [varargout] = plotEventPropMultiGroups(groupedEventProp,props,organizeS
 			'save_fig', saveFig, 'save_dir', saveDir, 'GUIsave', GUIsave);
 
 		% Create a UI table displaying the n numberss
-		[fNum, tabNum] = nNumberTab(groupedEventPropFiltered, entryType);
+		fNumName = [organizeStruct(en).title,' nNumInfo'];
+		[fNum, tabNum] = nNumberTab(groupedEventPropFiltered, entryType, 'figName', fNumName);
 
 		% Save data
 		if saveFig
 			% Save the fNum
 			savePlot(fNum,'guiSave', 'off', 'save_dir', saveDir,...
-				'fname', [organizeStruct(en).title,' nNumInfo']);
+				'fname', fNumName);
 
 			% Save the fNum tab in latex format
 			tabNumName = sprintf('%s nNumInfo.tex', organizeStruct(en).title);

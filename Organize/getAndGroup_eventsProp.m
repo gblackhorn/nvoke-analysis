@@ -19,7 +19,6 @@ function [grouped_event,varargout] = getAndGroup_eventsProp(alignedData,varargin
                               'og_tag', {{'og', 'og&ap'}}, ... % Note the double curly braces
                               'sort_order', {{'spon', 'trig', 'rebound', 'delay'}}, ...
                               'sort_order_plus', {{'ap', 'EXopto'}});    defaultAdata = [];
-    defaultDebugMode = false;
 
     % Add optional parameters to the input parser
     addParameter(p, 'entry', defaultEntry, @ischar);
@@ -29,7 +28,7 @@ function [grouped_event,varargout] = getAndGroup_eventsProp(alignedData,varargin
     addParameter(p, 'filterROIs', false, @islogical);
     addParameter(p, 'filterROIsStimTags', {}, @iscell);
     addParameter(p, 'filterROIsStimEffects', {}, @iscell);
-    addParameter(p, 'debug_mode', defaultDebugMode, @islogical);
+    addParameter(p, 'debug_mode', false, @islogical);
 
     % Parse inputs
     parse(p, alignedData, varargin{:});

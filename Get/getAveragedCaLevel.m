@@ -249,7 +249,16 @@ function    psthCaLevelRec = screenCaTraceWithEvent(roiCaLevelTrace, stimRanges,
                 psthCaLevelRec = roiCaLevelTrace;
         end
     else
-        % Do not filter the calcium traces
-        psthCaLevelRec = [];
+        switch stimEventKeepOrDis
+            case 'keep'
+                % Get the calcium traces with stim-related events
+                psthCaLevelRec = [];
+            case 'discard'
+                % Get the calcium traces without stim-related events
+                psthCaLevelRec = roiCaLevelTrace;
+            case ''
+                % Do not filter the calcium traces
+                psthCaLevelRec = roiCaLevelTrace;
+        end
     end
 end

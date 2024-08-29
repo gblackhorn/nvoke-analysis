@@ -593,17 +593,21 @@ disp(pValues);
 %% ==========
 close all
 figure
-caMinDeltaReboundDAO = [eventStructForPlot(8).event_info.caLevelDelta]; 
-peakHpstdReboundDAO = [eventStructForPlot(8).event_info.peak_slope_norm_hpstd]; 
+caMinDeltaReboundDAO = [eventStructForPlot(7).event_info.caLevelDeltaNorm]; 
+peakHpstdReboundDAO = [eventStructForPlot(7).event_info.peak_delta_norm_hpstd]; 
 
 stylishScatter(caMinDeltaReboundDAO,peakHpstdReboundDAO, 'plotWhere', gca, 'MarkerEdgeColor', 'k');
 
 hold on
 
-caMinDeltaReboundPO = [eventStructForPlot(9).event_info.caLevelDelta]; 
-peakHpstdReboundPO = [eventStructForPlot(9).event_info.peak_slope_norm_hpstd]; 
+caMinDeltaReboundPO = [eventStructForPlot(8).event_info.caLevelDeltaNorm]; 
+peakHpstdReboundPO = [eventStructForPlot(8).event_info.peak_delta_norm_hpstd]; 
 
 stylishScatter(caMinDeltaReboundPO,peakHpstdReboundPO, 'plotWhere', gca);
+
+xlabel('caLevelDelta hpStdNorm')
+ylabel('peakAmp hpStdNorm')
+legend('rebound DAO', 'rebound PO', 'FontSize', 10)
 
 
 %% ==========
@@ -835,3 +839,32 @@ for n = 1:numel(alignedData_allTrials)
 	alignedData_allTrials(n) = setSynchValuesTrialAllEvents(alignedData_allTrials(n),...
 		'minROIspikes', minROIspikes, 'synchWindow', synchWindow);
 end
+
+
+%% ==========
+findFunctionCalls('D:\guoda\Documents\MATLAB\Codes', 'tableToLatex');
+
+
+numel(find(strcmpi({eventProp_all_norm.peak_category}), 'rebound [og-5s]'))
+
+%% ==========
+fig1 = 'D:\guoda\Documents\Workspace\manuscript\Paper\VIIO\FIGURES\Figures_In_Progress\EventProp_1sReboundWin\sponSubN cumulative distribution plots.jpg';
+fig2 = 'D:\guoda\Documents\Workspace\manuscript\Paper\VIIO\FIGURES\Figures_In_Progress\EventProp_1sReboundWin_OgExKept\sponSubN cumulative distribution plots.jpg';
+
+combinedImage = combineImages(fig1, fig2, 'label1', '1', 'label2', '2');
+
+
+%% ==========
+
+figFolder = 'D:\guoda\Documents\Workspace\manuscript\Paper\VIIO\FIGURES\Figures_In_Progress';
+saveFolder = 'D:\guoda\Documents\Workspace\manuscript\Paper\VIIO\FIGURES\Figures_In_Progress';
+label1 = "exclude-ogEx-neurons"; % String array
+label2 = "Keep-ogEx-neurons";    % String array
+figExt = 'jpg';
+ignoreKeyword = 'bar stat';
+
+% Call the function
+comparePlotsUsingdiffSetting(figFolder, saveFolder,...
+	'label1', label1, 'label2', label2, 'figExt', figExt, 'ignoreKeyword', ignoreKeyword);
+
+

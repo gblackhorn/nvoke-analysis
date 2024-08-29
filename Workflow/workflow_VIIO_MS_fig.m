@@ -15,7 +15,7 @@ adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 adata.event_data_group = 'peak_lowpass';
 adata.event_filter = 'none'; % options are: 'none', 'timeWin', 'event_cat'(cat_keywords is needed)
 adata.event_align_point = 'rise'; % options: 'rise', 'peak'
-adata.rebound_duration = 2; % time duration after stimulation to form a window for rebound spikes. Exclude these events from 'spon'
+adata.rebound_duration = 1; % time duration after stimulation to form a window for rebound spikes. Exclude these events from 'spon'
 adata.cat_keywords ={}; % options: {}, {'noStim', 'beforeStim', 'interval', 'trigger', 'delay', 'rebound'}
 %					find a way to combine categories, such as 'nostim' and 'nostimfar'
 adata.pre_event_time = 10; % unit: s. duration before stimulation in the aligned traces
@@ -33,7 +33,7 @@ adata.sponfreqFilter.status = true; % true/false. If true, use the following set
 adata.sponfreqFilter.field = 'sponfq'; % 
 adata.sponfreqFilter.thresh = 0.05; % Hz. default 0.05
 adata.sponfreqFilter.direction = 'high';
-debug_mode = true; % true/false
+debug_mode = false; % true/false
 
 % Create structure data for further analysis (event traces are aligned to event rises)
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
@@ -245,7 +245,7 @@ ggSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', '
 ggSetting.sort_order_plus = {'ap', 'EXopto'};
 disOgEx = true; % true/false. If true, screen ROIs
 ogStimTags = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
-ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+ogStimEffects = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 debug_mode = false; % true/false
 
 % a. Create grouped_event for plotting event properties
@@ -279,7 +279,7 @@ ggSetting.groupField = {'peak_category','subNuclei','type'}; % options: 'fovID',
 close all
 % General Settings
 saveFig = true; % true/false
-props = {'FWHM','peak_delta_norm_hpstd','peak_delay'}; 
+props = {'FWHM','peak_delta_norm_hpstd'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
 mmModel = 'GLMM'; % LMM/GLMM
 mmHierarchicalVars = {'trialName', 'roiName'};
@@ -436,12 +436,12 @@ end
 	'tags_keep','opto-delay [og-5s]');
 
 % Settings for sub-groups
-organizeStructSyncOGdelay(1).title = 'sponInNO syncVSasync PO';
+organizeStructSyncOGdelay(1).title = 'ogDelay syncVSasync PO';
 organizeStructSyncOGdelay(1).keepGroups = {'opto-delay [og-5s]-PO'};
 organizeStructSyncOGdelay(1).mmFixCat = 'type';
 organizeStructSyncOGdelay(1).colorGroup = {'#8C0383', '#FF00CC'};
 
-organizeStructSyncOGdelay(2).title = 'sponInNO syncVSasync DAO';
+organizeStructSyncOGdelay(2).title = 'ogDelay syncVSasync DAO';
 organizeStructSyncOGdelay(2).keepGroups = {'opto-delay [og-5s]-DAO'};
 organizeStructSyncOGdelay(2).mmFixCat = 'type';
 organizeStructSyncOGdelay(2).colorGroup = {'#003264', '#00AAD4'};
@@ -752,6 +752,26 @@ for pn = 1:numel(pairStruct)
 	end
 end
 
+%% ==================== 
+% Check the correlation between caLevelDelta and peak amplitude
+% close all
+% figure
+% caMinDeltaReboundDAO = [eventStructForPlot(7).event_info.caLevelDeltaNorm]; 
+% peakHpstdReboundDAO = [eventStructForPlot(7).event_info.peak_delta_norm_hpstd]; 
+
+% stylishScatter(caMinDeltaReboundDAO,peakHpstdReboundDAO, 'plotWhere', gca, 'MarkerEdgeColor', 'k');
+
+% hold on
+
+% caMinDeltaReboundPO = [eventStructForPlot(8).event_info.caLevelDeltaNorm]; 
+% peakHpstdReboundPO = [eventStructForPlot(8).event_info.peak_delta_norm_hpstd]; 
+
+% stylishScatter(caMinDeltaReboundPO,peakHpstdReboundPO, 'plotWhere', gca);
+
+% xlabel('caLevelDelta hpStdNorm')
+% ylabel('peakAmp hpStdNorm')
+% legend('rebound DAO', 'rebound PO', 'FontSize', 10)
+
 
 %% ==========
 % 3.6 Extract properties of spontaneous events and group them according to ROIs' subnuclous location
@@ -819,7 +839,7 @@ end
 %% ==========
 % 4.1 Create the mean spontaneous traces of AP events caused by AP and OG-AP in PO
 % Note: 'event_type' for alignedData must be 'detected_events'
-save_fig = true; % true/false
+save_fig = false; % true/false
 save_dir = FolderPathVA.fig;
 at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'. Indicate what value should be used to normalize the traces
 at.stimNames = {'ap-0.1s','og-5s ap-0.1s'}; % If empty, do not screen recordings with stimulation, instead use all of them
