@@ -83,7 +83,7 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
     dataStruct = empty_content_struct(groupNames(rn,:),1);
 
     % create a struct var to store the data info
-    dataInfoFields = {'groupNames','meanVal','medianVal','stdVal','steVal'};
+    dataInfoFields = {'Group','Mean','Median','STD','SEM'};
     dataInfoStruct = empty_content_struct(dataInfoFields,dataColNum);
 
 
@@ -111,11 +111,11 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
             violinInfo(rn).data.(groupNames{rn,cn}) = violinData{rn,cn};
 
             % calculate the info (mean, median, ste, etc.) and store it
-            violinInfo(rn).dataInfo(cn).groupNames = groupNames{rn,cn};
-            violinInfo(rn).dataInfo(cn).meanVal = mean(violinData{rn,cn});
-            violinInfo(rn).dataInfo(cn).medianVal = median(violinData{rn,cn});
-            violinInfo(rn).dataInfo(cn).stdVal = std(violinData{rn,cn});
-            violinInfo(rn).dataInfo(cn).steVal = ste(violinData{rn,cn});
+            violinInfo(rn).dataInfo(cn).(dataInfoFields{1}) = groupNames{rn,cn};
+            violinInfo(rn).dataInfo(cn).(dataInfoFields{2}) = mean(violinData{rn,cn});
+            violinInfo(rn).dataInfo(cn).(dataInfoFields{3}) = median(violinData{rn,cn});
+            violinInfo(rn).dataInfo(cn).(dataInfoFields{4}) = std(violinData{rn,cn});
+            violinInfo(rn).dataInfo(cn).(dataInfoFields{5}) = ste(violinData{rn,cn});
         end
 
         % statistics

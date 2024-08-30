@@ -868,3 +868,29 @@ comparePlotsUsingdiffSetting(figFolder, saveFolder,...
 	'label1', label1, 'label2', label2, 'figExt', figExt, 'ignoreKeyword', ignoreKeyword);
 
 
+tableExt = 'tex';
+
+% Call the function
+compareLatexTablesUsingDiffSetting(figFolder, saveFolder,...
+	'label1', label1, 'label2', label2, 'tableExt', tableExt);
+
+
+
+figFolder = 'D:\guoda\Documents\Workspace\manuscript\Paper\VIIO\FIGURES\Figures_In_Progress';
+saveFolder = 'D:\guoda\Documents\Workspace\manuscript\Paper\VIIO\FIGURES\Figures_In_Progress';
+label1 = "exclude-ogEx-neurons"; % String array
+label2 = "Keep-ogEx-neurons";    % String array
+figExt = 'jpg';
+textExt = 'tex';
+keywordFig = '';
+ignoreKeywordFig = 'bar stat';
+keywordText = '';
+ignoreKeywordText = '';
+
+compareAnalysisUsingdiffSetting(figFolder, saveFolder,...
+	'label1', label1, 'label2', label2, 'figExt', figExt, 'textExt', tableExt,...
+	'keywordFig', keywordFig, 'ignoreKeywordFig', ignoreKeywordFig,...
+	'keywordText', keywordText, 'ignoreKeywordText', ignoreKeywordText);
+
+
+

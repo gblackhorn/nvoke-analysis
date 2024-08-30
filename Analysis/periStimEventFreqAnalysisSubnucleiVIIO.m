@@ -172,6 +172,8 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 			title(barInfo.stat.method)
 			if save_fig
 				savePlot(f,'save_dir',saveDir,'guiSave','off','fname',titleStr);
+
+				
 			end
 			violinplotWithStat({foldDataAP,foldDataOGAP},'groupNames',{'AP without OG','AP with OG'},...
 			    'titleStr',[titleStrFold,' violin'],'save_fig',save_fig,'save_dir',saveDir);

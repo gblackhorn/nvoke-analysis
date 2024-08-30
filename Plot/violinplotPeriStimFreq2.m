@@ -147,12 +147,12 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
 
     % Collect extra info about the data, which will be used to plot extra UI table
     violinDataTable = struct2table(violinData);
-    figInfoTable = violinDataTable(:,["stim","binNum","binName","recNum","recDateNum","roiNum","stimRepeatNum"]);
+    nNumTab = violinDataTable(:,["stimMod","binNum","binName","recNum","recDateNum","roiNum","stimRepeatNum"]);
 
 
     % Violin plot + statistics analysis
     [statInfo,save_dir] = violinplotWithStat(violinDataCell,...
-        'groupNames',groupNames,'extraUItable',figInfoTable,...
+        'groupNames',groupNames,'extraUItable',nNumTab,...
         'titleStr',titleStr,'save_fig',save_fig,'save_dir',save_dir,'gui_save',gui_save);
 
     % Add GLMM stat info to the statInfo struct var
@@ -165,6 +165,7 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
     end
 
     varargout{1} = save_dir;
+    varargout{2} = nNumTab;
 
 
 end

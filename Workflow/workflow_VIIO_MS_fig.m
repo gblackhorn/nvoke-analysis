@@ -490,6 +490,24 @@ organizeStructSyncPostOG(2).colorGroup = {'#003264', '#00AAD4'};
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
 
+%% ==========
+% 2.8 (Temp) Compare EventProp using different settings
+figFolder = 'D:\guoda\Documents\Workspace\manuscript\Paper\VIIO\FIGURES\Figures_In_Progress';
+saveFolder = 'D:\guoda\Documents\Workspace\manuscript\Paper\VIIO\FIGURES\Figures_In_Progress';
+label1 = "exclude-ogEx-neurons"; % String array
+label2 = "Keep-ogEx-neurons";    % String array
+figExt = 'jpg';
+textExt = 'tex';
+keywordFig = '';
+ignoreKeywordFig = 'bar stat';
+keywordText = '';
+ignoreKeywordText = '';
+
+compareAnalysisUsingdiffSetting(figFolder, saveFolder,...
+	'label1', label1, 'label2', label2, 'figExt', figExt, 'textExt', tableExt,...
+	'keywordFig', keywordFig, 'ignoreKeywordFig', ignoreKeywordFig,...
+	'keywordText', keywordText, 'ignoreKeywordText', ignoreKeywordText);
+
 
 %% ==========
 % 3.1 Peri-stimulus event frequency analysis
@@ -497,9 +515,11 @@ close all
 save_fig = false; % true/false
 gui_save = true;
 groupLevel = 'roi'; % Collect event freq on 'roi'/'stimTrial' level
+customizeEdges = true; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
+						% Set the 'disZeroBase' to true for 'customizeEdges'
 
-disZeroBase = false; % true/false. Discard the roi/stimTrial if the baseline value is zero
-normToBase = false; % true/false. normalize the data to baseline (data before baseBinEdge)
+disZeroBase = true; % true/false. Discard the roi/stimTrial if the baseline value is zero
+normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
 plotDiff = false; % true/false. plot the difference of comparable bins from various stimulation recording groups
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
@@ -513,7 +533,6 @@ binWidth = 1; % the width of histogram bin. the default value is 1 s.
 stimIDX = []; % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
 preStim_duration = 10; % unit: second. include events happened before the onset of stimulations
 postStim_duration = 15; % unit: second. include events happened after the end of stimulations
-customizeEdges = false; % false/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
 stimEffectDuration = 1; % unit: second. Use this to set the end for the stimulation effect range
 splitLongStim = [1]; % If the stimDuration is longer than stimEffectDuration, the stimDuration 
 					%  part after the stimEffectDuration will be splitted. If it is [1 1], the
@@ -589,54 +608,57 @@ end
 % stim-related-event_to_following_event_time and the spontaneous_event_interval
 close all
 save_fig = true; % true/false
-stimNameAll = {'og-5s','ap-0.1s','og-5s ap-0.1s','ap-0.1s'}; % 'og-5s' 'ap-0.1s'
+stimNameAll = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % 'og-5s' 'ap-0.1s'
 stimEventCatAll = {'rebound','trig','trig-ap','rebound'}; % 'rebound', 'trig'
 releventEventLoc = 'post'; % 'pre'/'post'. The location of relevent event. Pre or post to the ref event
 defReleventEventCat = false; % true/false. Use spon for the relevent event cat. If false, use the closest following/preceeding event
 maxDiff = 10; % the max difference between the stim-related and the following events
-subNucleiTypes = {'DAO', 'PO'};
+% subNucleiTypes = {'DAO', 'PO'};
+ogStimEffects = {[0 nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+[alignedDataStimEffectFiltered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
+	'stim_names',ogStimTags,'filters',ogStimEffects);
 
+for n = 1:numel(stimNameAll) 
+	stimName = stimNameAll{n};
+	stimEventCat = stimEventCatAll{n};
+	% [intData,eventIntMean,eventInt,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
+	% 'maxDiff',maxDiff);
 
-% loop through different stim-event pairs
-for sn = 1:numel(subNucleiTypes)
-	alignedDataSubN = screenSubNucleiROIs(alignedData_allTrials,subNucleiTypes{sn});
+	[intData,f,fname,nNumTab,KStestTab] = stimEventSponEventIntAnalysis(alignedDataStimEffectFiltered,stimName,stimEventCat,...
+	    'releventEventLoc',releventEventLoc,'defReleventEventCat',defReleventEventCat,'maxDiff',maxDiff); % ,'titlePrefix',subNucleiTypes{sn}
 
-
-	for n = 1:numel(stimNameAll) 
-		stimName = stimNameAll{n};
-		stimEventCat = stimEventCatAll{n};
-		% [intData,eventIntMean,eventInt,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
-		% 'maxDiff',maxDiff);
-
-		[intData,f,fname,nNumTab,KStestTab] = stimEventSponEventIntAnalysis(alignedDataSubN,stimName,stimEventCat,...
-		    'releventEventLoc',releventEventLoc,'defReleventEventCat',defReleventEventCat,'maxDiff',maxDiff,'titlePrefix',subNucleiTypes{sn});
-
-		if save_fig
-			if n == 1 
-				guiSave = 'on';
-			else
-				guiSave = 'off';
-			end
-			FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',guiSave,'fname',fname);
-			save(fullfile(FolderPathVA.fig, [fname,' data']),'intData');
-
-			% Save nNum table in latex format
-			tabNumName = sprintf('%s nNumInfo.tex', fname);
-			tableToLatex(nNumTab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig,tabNumName),...
-			    'caption', tabNumName, 'columnAdjust', 'XXXXX');
-
-			% Save GLMM Model comparison in latex format
-			MMtabName = sprintf('%s modelComp.tex', fname);
-			tableToLatex(intData.GlmmReport.chiLRT, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, MMtabName),...
-			    'caption', [intData.GlmmReport.modelInfoStr, ' ', fname], 'columnAdjust', 'cXccccccc');
-
-			% Save K-S tab in latex format
-			KStabName = sprintf('%s KStestTab.tex', fname);
-			tableToLatex(KStestTab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, KStabName),...
-			    'caption', [KStabName,' ', fname], 'columnAdjust', 'ccc');
+	if save_fig
+		if n == 1 
+			guiSave = 'on';
+		else
+			guiSave = 'off';
 		end
+		FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',guiSave,'fname',fname);
+		save(fullfile(FolderPathVA.fig, [fname,' data']),'intData');
+
+		% Save nNum table in latex format
+		tabNumName = sprintf('%s nNumInfo.tex', fname);
+		tableToLatex(nNumTab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig,tabNumName),...
+		    'caption', tabNumName, 'columnAdjust', 'XXXXX');
+
+		% Save GLMM Model comparison in latex format
+		MMtabName = sprintf('%s modelComp.tex', fname);
+		tableToLatex(intData.GlmmReport.chiLRT, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, MMtabName),...
+		    'caption', [intData.GlmmReport.modelInfoStr, ' ', fname], 'columnAdjust', 'cXccccccc');
+
+		% Save K-S tab in latex format
+		KStabName = sprintf('%s KStestTab.tex', fname);
+		tableToLatex(KStestTab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, KStabName),...
+		    'caption', [KStabName,' ', fname], 'columnAdjust', 'ccc');
 	end
 end
+
+% % loop through different stim-event pairs
+% for sn = 1:numel(subNucleiTypes)
+% 	alignedDataSubN = screenSubNucleiROIs(alignedDataStimEffectFiltered,subNucleiTypes{sn});
+
+
+% end
 
 %% ==================== 
 % 3.4 Plot event properties and percentages for OG-ex neurons
@@ -656,38 +678,43 @@ summarizeExOgEffect(alignedData_allTrials, 'save_fig', save_fig, 'save_dir', Fol
 % 3.4 Compare the delay of offStim events to spon interval
 close all
 save_fig = true; % true/false
-subNucleiTypes = {'DAO', 'PO'};
-for sn = 1:numel(subNucleiTypes)
-	alignedDataSubN = screenSubNucleiROIs(alignedData_allTrials,subNucleiTypes{sn});
-	[stimEventJitter, f, fname] = stimEventJitterAnalysis(alignedDataSubN,{'og-5s'},'rebound',...
-		'titlePrefix', subNucleiTypes{sn});
+ogStimTags = {'og-5s', 'og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
+ogStimEffects = {[0 nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+[alignedDataStimEffectFiltered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
+	'stim_names',ogStimTags,'filters',ogStimEffects);
+[stimEventJitter, f, fname] = stimEventJitterAnalysis(alignedDataStimEffectFiltered,{'og-5s'},'rebound');
+% 'titlePrefix', subNucleiTypes{sn}
 
-	if save_fig
-		if sn == 1 
-			guiSave = true;
-		else
-			guiSave = false;
-		end
-		FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',guiSave,'fname',fname);
-		save(fullfile(FolderPathVA.fig, [fname,' data']),'stimEventJitter');
-
-		% Save nNum table in latex format
-		tabNumName = sprintf('%s nNumInfo.tex', fname);
-		tableToLatex(stimEventJitter.numTab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig,tabNumName),...
-		    'caption', tabNumName, 'columnAdjust', 'XXXXX');
-
-		% Save GLMM Model comparison in latex format
-		MMtabName = sprintf('%s modelComp.tex', fname);
-		tableToLatex(stimEventJitter.GlmmReport.chiLRT, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, MMtabName),...
-		    'caption', [stimEventJitter.GlmmReport.modelInfoStr, ' ', fname], 'columnAdjust', 'cXccccccc');
-
-		% Save K-S tab in latex format
-		KStabName = sprintf('%s KStestTab.tex', fname);
-		tableToLatex(stimEventJitter.KStest.tab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, KStabName),...
-		    'caption', [KStabName,' ', fname], 'columnAdjust', 'ccc');
+if save_fig
+	if sn == 1 
+		guiSave = true;
+	else
+		guiSave = false;
 	end
+	FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',guiSave,'fname',fname);
+	save(fullfile(FolderPathVA.fig, [fname,' data']),'stimEventJitter');
 
+	% Save nNum table in latex format
+	tabNumName = sprintf('%s nNumInfo.tex', fname);
+	tableToLatex(stimEventJitter.numTab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig,tabNumName),...
+	    'caption', tabNumName, 'columnAdjust', 'XXXXX');
+
+	% Save GLMM Model comparison in latex format
+	MMtabName = sprintf('%s modelComp.tex', fname);
+	tableToLatex(stimEventJitter.GlmmReport.chiLRT, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, MMtabName),...
+	    'caption', [stimEventJitter.GlmmReport.modelInfoStr, ' ', fname], 'columnAdjust', 'cXccccccc');
+
+	% Save K-S tab in latex format
+	KStabName = sprintf('%s KStestTab.tex', fname);
+	tableToLatex(stimEventJitter.KStest.tab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, KStabName),...
+	    'caption', [KStabName,' ', fname], 'columnAdjust', 'ccc');
 end
+
+% subNucleiTypes = {'DAO', 'PO'};
+% for sn = 1:numel(subNucleiTypes)
+% 	alignedDataSubN = screenSubNucleiROIs(alignedDataStimEffectFiltered,subNucleiTypes{sn});
+
+% end
 
 
 %% ==================== 

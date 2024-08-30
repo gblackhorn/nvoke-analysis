@@ -308,7 +308,7 @@ function [results, mmPvalue] = performPostHocGroupComparisons(fullModel, groupLe
         
         % Calculate confidence intervals and p-values
         tValue = estimateDiff / seDiff;
-        df = me.DFE;
+        df = fullModel.DFE;
         pValue = 2 * (1 - tcdf(abs(tValue), df));
         hValue = pValue < 0.05;
 
