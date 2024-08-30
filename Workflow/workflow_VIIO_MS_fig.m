@@ -614,7 +614,8 @@ releventEventLoc = 'post'; % 'pre'/'post'. The location of relevent event. Pre o
 defReleventEventCat = false; % true/false. Use spon for the relevent event cat. If false, use the closest following/preceeding event
 maxDiff = 10; % the max difference between the stim-related and the following events
 % subNucleiTypes = {'DAO', 'PO'};
-ogStimEffects = {[0 nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+ogStimTags = {'og-5s', 'ap-0.1s', 'og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
+ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 [alignedDataStimEffectFiltered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
 	'stim_names',ogStimTags,'filters',ogStimEffects);
 
@@ -678,8 +679,8 @@ summarizeExOgEffect(alignedData_allTrials, 'save_fig', save_fig, 'save_dir', Fol
 % 3.4 Compare the delay of offStim events to spon interval
 close all
 save_fig = true; % true/false
-ogStimTags = {'og-5s', 'og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
-ogStimEffects = {[0 nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+ogStimTags = {'og-5s', 'ap-0.1s', 'og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
+ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 [alignedDataStimEffectFiltered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
 	'stim_names',ogStimTags,'filters',ogStimEffects);
 [stimEventJitter, f, fname] = stimEventJitterAnalysis(alignedDataStimEffectFiltered,{'og-5s'},'rebound');
