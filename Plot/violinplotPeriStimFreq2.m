@@ -128,16 +128,6 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
         'val', 'xdata', mmlHierarchicalVars,'groupVarType', 'categorical',...
         'dispStat', save_fig, 'figNamePrefix', titleStr);
 
-
-    % % form a struct var for violin plot
-    % violinDataStruct = empty_content_struct({violinData.stimMod},1);
-
-    % for n = 1:numel(violinData)
-    %     violinDataStruct.(violinData(n).stimMod) = violinData(n).(dataField);
-    %     % violinDataStruct.(violinData(n).stimMod) = eventFreqData;
-    % end
-
-
     
     % Collect data for violin plot and statistics. Store data from different groups in cells
     violinDataCell = {violinData.(dataField)};
@@ -166,8 +156,6 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
 
     varargout{1} = save_dir;
     varargout{2} = nNumTab;
-
-
 end
 
 
@@ -192,17 +180,3 @@ function [violinDataNew,varargout] = addFieldCompatibleStimName(violinData)
     % output a cell containing the modified stim names compatible with field name
     varargout{1} = {violinDataNew.stimMod};
 end
-
-% function [dataVector,dataGroupCell] = prepareStructDataforAnova(violinDataStruct)
-%     fields = fieldnames(violinDataStruct);
-%     groupNum = numel(fields);
-%     dataVector = cell(groupNum,1);
-%     dataGroupCell = cell(groupNum,1);
-%     for n = 1:groupNum
-%         dataVector{n} = violinDataStruct.(fields{n});
-%         dataVector{n} = reshape(dataVector{n},[],1);
-%         dataGroupCell{n} = repmat({fields{n}},numel(dataVector{n}),1);
-%     end
-%     dataVector = vertcat(dataVector{:});
-%     dataGroupCell = vertcat(dataGroupCell{:});
-% end
