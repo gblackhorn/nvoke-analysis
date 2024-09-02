@@ -76,7 +76,7 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
 
 
     % create a struct var to store data, descriptive info (mean, median, ste, etc.), and stat info
-    violinInfoFields = {'group','data','dataInfo','stat','statTab'};
+    violinInfoFields = {'allGroups','data','dataInfo','stat','statTab'};
     violinInfo = empty_content_struct(violinInfoFields,dataRowNum);
 
     % create a struct var for violin plot and store the data here
@@ -100,11 +100,11 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
     % fill violinInfo and plot
     for rn = 1:dataRowNum
         % use groupNames to create a string for field 'group'
-        violinInfo(rn).group = strjoin(groupNames(rn,:),' vs ');
+        violinInfo(rn).(violinInfoFields{1}) = strjoin(groupNames(rn,:),' vs ');
 
-        violinInfo(rn).data = dataStruct;
+        violinInfo(rn).(violinInfoFields{2}) = dataStruct;
 
-        violinInfo(rn).dataInfo = dataInfoStruct;
+        violinInfo(rn).(violinInfoFields{3}) = dataInfoStruct;
 
         for cn = 1:dataColNum
             % store the data
@@ -119,23 +119,23 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
         end
 
         % statistics
-        [violinInfo(rn).stat,violinInfo(rn).statTab] = ttestOrANOVA(violinData(rn,:),'groupNames',groupNames(rn,:));
+        [violinInfo(rn).(violinInfoFields{4}),violinInfo(rn).(violinInfoFields{5})] = ttestOrANOVA(violinData(rn,:),'groupNames',groupNames(rn,:));
 
 
         % plot violin
         axViolin = nexttile(tlo,[3 1]); 
-        violinplot(violinInfo(rn).data,groupNames(rn,:));
+        violinplot(violinInfo(rn).(violinInfoFields{2}),groupNames(rn,:));
 
         % plot dataInfo 
         axDataInfo = nexttile(tlo,[1 1]);
-        dataInfoTab = struct2table(violinInfo(rn).dataInfo);
+        dataInfoTab = struct2table(violinInfo(rn).(violinInfoFields{3}));
         plotUItable(gcf,axDataInfo,dataInfoTab);
 
 
         % plot stat results
         axStat = nexttile(tlo,[1 1]);
         plotUItable(gcf,axStat,violinInfo(rn).statTab);
-        title(violinInfo(rn).stat.method)
+        title(violinInfo(rn).(violinInfoFields{4}).Method)
 
 
         % plot an extra UI table if input is not empty

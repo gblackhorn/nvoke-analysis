@@ -66,7 +66,7 @@ function [statInfo,varargout] = anova1_with_multiComp(data,dataGroup,varargin)
         c = num2cell(c);
         c(:, 1:2) = cellfun(@(x) gnames{x}, c(:, 1:2), 'UniformOutput',false);
         c = cell2table(c,...
-            'variableNames', {'g1', 'g2', 'lower-confi-int', 'estimate', 'upper-confi-int', 'p'});
+            'variableNames', {'g1', 'g2', 'Lower-confi-int', 'Estimate', 'Upper-confi-int', 'p'});
         h = NaN(size(c, 1), 1);
         idx_sig = find(c.p < 0.05);
         idx_nonsig = find(c.p >= 0.05);

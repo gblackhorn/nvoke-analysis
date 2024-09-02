@@ -555,15 +555,9 @@ function plot_info = collect_plot_info(bar_data, bar_stat)
     %     plot_info.histFit_info = histFit_info;
     % end
     if exist('bar_data', 'var')
-        plot_info.bar_data = bar_data;
-        plot_info.bar_stat= bar_stat;
+        plot_info.dataStruct = bar_data;
+        plot_info.statStruct= bar_stat;
     end
-    if exist('box_stat', 'var')
-        plot_info.box_stat= box_stat;
-    end
-    % if exist('scatter_data', 'var')
-    %     plot_info.scatter_data = scatter_data;
-    % end
 end
 
 

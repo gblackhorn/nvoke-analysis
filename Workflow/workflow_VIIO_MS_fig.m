@@ -380,7 +380,7 @@ if saveFig
 	roiPropStatInfo.roiStructForPlotFiltered = roiStructForPlotFiltered;
 	roiPropStatInfo.plot_info = plot_info;
 	% dt = datestr(now, 'yyyymmdd');
-	save(fullfile(saveDir, 'ROI propStatInfo'), 'roiPropStatInfo');
+	save(fullfile(saveDir, 'ROI propDataAndStat'), 'roiPropStatInfo');
 end
 
 
@@ -512,7 +512,7 @@ compareAnalysisUsingdiffSetting(figFolder, saveFolder,...
 %% ==========
 % 3.1 Peri-stimulus event frequency analysis
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 gui_save = true;
 groupLevel = 'roi'; % Collect event freq on 'roi'/'stimTrial' level
 customizeEdges = true; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'

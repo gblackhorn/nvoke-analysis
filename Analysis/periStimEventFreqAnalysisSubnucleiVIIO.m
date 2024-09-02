@@ -136,28 +136,31 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 
 		% Airpuff effect is almost only seen in the caudal PO. DAO rarely shows airpuff response
 		if strcmpi(subNucleiFilter, 'PO') && customizeEdges
-			violinStimNames = {'og-5s ap-0.1s','og-5s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
-			violinBinIDX = [4,4]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
-			titleStr = sprintf('%s violinPlot of a single bin from periStim freq%s',subNucleiFilter, normStr);
-			[violinData1,statInfo1] = violinplotPeriStimFreq2(barStat.(subNucleiFilter),violinStimNames,violinBinIDX,...
-				'normToFirst',normToFirst,'titleStr',titleStr,...
+			violinStimNames1 = {'og-5s ap-0.1s','og-5s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
+			violinBinIDX1 = [4,4]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
+			violinTitleStr1 = sprintf('%s periStimFreq [%s] violin %s',subNucleiFilter, strjoin(violinStimNames1(:), ' vs '), normStr);
+			% violinTitleStr1 = sprintf('%s violinPlot of a single bin from periStim freq%s',subNucleiFilter, normStr);
+			[violinData1,statInfo1,nNumTab1] = violinplotPeriStimFreq2(barStat.(subNucleiFilter),violinStimNames1,violinBinIDX1,...
+				'normToFirst',normToFirst,'titleStr',violinTitleStr1,...
 				'save_fig',save_fig,'save_dir',saveDir,'gui_save','off');
 
 			% event freq comparison: baseline of AP vs AP
-			violinStimNames = {'ap-0.1s','ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
-			violinBinIDX = [1,3]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
-			titleStr = sprintf('%s violinPlot of a single bin from periStim freq%s',subNucleiFilter, normStr);
-			[violinData2,statInfo2] = violinplotPeriStimFreq2(barStat.(subNucleiFilter),violinStimNames,violinBinIDX,...
-				'normToFirst',normToFirst,'titleStr',titleStr,...
+			violinStimNames2 = {'ap-0.1s','ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
+			violinBinIDX2 = [1,3]; % [4,3,4]. violinPlot: the nth bin from the data listed in stimNames
+			violinTitleStr2 = sprintf('%s periStimFreq [%s] violin %s',subNucleiFilter, strjoin(violinStimNames2(:), ' vs '), normStr);
+			% violinTitleStr2 = sprintf('%s violinPlot of a single bin from periStim freq%s',subNucleiFilter, normStr);
+			[violinData2,statInfo2,nNumTab2] = violinplotPeriStimFreq2(barStat.(subNucleiFilter),violinStimNames2,violinBinIDX2,...
+				'normToFirst',normToFirst,'titleStr',violinTitleStr2,...
 				'save_fig',save_fig,'save_dir',saveDir,'gui_save','off');
 
 			% bar plot of the fold-change of event frequency in statInfo1 and statInfo2
 			% APstim/APbaseline VS OGAP/OG
 			% Require the 'statInfo1' and 'statInfo2' above
-			titleStrFold = sprintf('%s foldChange of eventFreq caused by AP with and without OG',subNucleiFilter);
+			foldChangeTitleStr = sprintf('%s periStimFreq foldChange [AP with and without OG]',subNucleiFilter);
+			% foldChangeTitleStr = sprintf('%s foldChange of eventFreq caused by AP with and without OG',subNucleiFilter);
 			[f,f_rowNum,f_colNum] = fig_canvas(2,'unit_width',0.4,'unit_height',0.4,...
 				'column_lim',2,...
-			    'fig_name',[titleStrFold,' bar']); % create a figure
+			    'fig_name',[foldChangeTitleStr,' bar']); % create a figure
 			tlo = tiledlayout(f, 1, 2); % setup tiles
 			% Bar plot
 			axBar = nexttile(tlo,[1 1]); 
@@ -165,18 +168,38 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 			foldDataAP = statInfo2.data.APfirstStim/mean(statInfo2.data.APbaseline);
 			[barInfo,~,barInfoStatTab] = barplot_with_stat({foldDataAP,foldDataOGAP},'plotWhere',axBar,...
 				'group_names',{'AP without OG','AP with OG'},'ylabelStr','eventFreq fold-change',...
-				'title_str', [titleStrFold,' bar'],'save_fig',false,'save_dir',saveDir,'gui_save',false); % 'title_str',title_str,
+				'title_str', [foldChangeTitleStr,' bar'],'save_fig',false,'save_dir',saveDir,'gui_save',false); % 'title_str',title_str,
 			% plot stat results next to bars
 			axStat = nexttile(tlo,[1 1]);
 			plotUItable(gcf,axStat,barInfoStatTab);
-			title(barInfo.stat.method)
-			if save_fig
-				savePlot(f,'save_dir',saveDir,'guiSave','off','fname',titleStr);
+			title(barInfo.stat.Method)
 
-				
+
+			statInfoFoldChange = violinplotWithStat({foldDataAP,foldDataOGAP},'groupNames',{'AP without OG','AP with OG'},...
+			    'titleStr',[foldChangeTitleStr,' violin'],'save_fig',save_fig,'save_dir',saveDir);
+
+
+			if save_fig
+				savePlot(f,'save_dir',saveDir,'guiSave','off','fname',foldChangeTitleStr);
+
+				% Combine the nNum and stat tabs of violin plots
+				nNumTabCombine = [nNumTab1; nNumTab2];
+				statTabCombine = [statInfo1.statTab; statInfo2.statTab; statInfoFoldChange.statTab];
+
+				% Save the tables (nNum and stat) for violinData plots
+				nNumTabCombineName = sprintf('%s periStimFreq nNum', subNucleiFilter);
+				% violin1nNumTabCap = sprintf('%s %s', nNumTabCombineName, statInfo1.stat.Method);
+				% statInfo = sprintf('%s nNumInfo.tex', organizeStruct(en).title);
+				tableToLatex(nNumTabCombine, 'saveToFile',true,'filename',...
+				    fullfile(saveDir,nNumTabCombineName), 'caption', nNumTabCombineName,...
+				    'columnAdjust', 'XXXXXXX');
+
+				statTabCombineName = sprintf('%s periStimFreq stat', subNucleiFilter);
+				statTabCombineCap = sprintf('%s periStimFreq stat %s', subNucleiFilter, statInfoFoldChange.stat.Method);
+				tableToLatex(statTabCombine, 'saveToFile',true,'filename',...
+				    fullfile(saveDir,statTabCombineName), 'caption', statTabCombineCap,...
+				    'columnAdjust', 'XXXX');
 			end
-			violinplotWithStat({foldDataAP,foldDataOGAP},'groupNames',{'AP without OG','AP with OG'},...
-			    'titleStr',[titleStrFold,' violin'],'save_fig',save_fig,'save_dir',saveDir);
 		end
 	end
 
@@ -186,4 +209,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 	end
 
 	varargout{1} = saveDir;
+end
+
+function saveViolinDataStat2TexTable(violinData, statInfo)
 end

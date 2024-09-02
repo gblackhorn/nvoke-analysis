@@ -87,12 +87,14 @@ function [varargout] = plotEventPropMultiGroups(groupedEventProp,props,organizeS
 			GUIsave = false; % Use the locations chosen before to save figures
 		end
 
-		[saveDir, organizeStruct(en).plotInfo] = plot_event_info(groupedEventPropFiltered,'entryType',entryType,...
+		[saveDir, propDataAndStat] = plot_event_info(groupedEventPropFiltered,'entryType',entryType,...
 			'plot_combined_data', plot_combined_data, 'parNames', props, 'stat', stat,...
 			'mmModel', mmModel, 'mmGroup', organizeStruct(en).mmFixCat,...
 			'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 			'colorGroup', colorGroup, 'fname_preffix', organizeStruct(en).title,...
 			'save_fig', saveFig, 'save_dir', saveDir, 'GUIsave', GUIsave);
+
+		organizeStruct(en).plotInfo = propDataAndStat;
 
 		% Create a UI table displaying the n numberss
 		fNumName = [organizeStruct(en).title,' nNumInfo'];
@@ -110,13 +112,10 @@ function [varargout] = plotEventPropMultiGroups(groupedEventProp,props,organizeS
 			    fullfile(saveDir,tabNumName), 'caption', tabNumName,...
 			    'columnAdjust', 'XXXXX');
 
+			% Save the data and statistic info
+			propDataName = sprintf('%s propDataAndStat', organizeStruct(en).title);
+			save(fullfile(saveDir, propDataName), 'propDataAndStat');
 		end
-	end
-
-	% Save the 'organizeStruct' including the data and stat stored in the new fields
-	if saveFig
-		% Save the statistics info
-		save(fullfile(saveDir, 'propDataAndStat'), 'organizeStruct');
 	end
 
 	varargout{1} = saveDir;

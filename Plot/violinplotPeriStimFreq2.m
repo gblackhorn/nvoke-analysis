@@ -154,8 +154,8 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
             'fname',GLMMfittingFigName);
     end
 
-    varargout{1} = save_dir;
-    varargout{2} = nNumTab;
+    varargout{1} = nNumTab;
+    varargout{2} = save_dir;
 end
 
 
