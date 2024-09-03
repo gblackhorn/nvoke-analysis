@@ -53,9 +53,6 @@ function [varargout] = plotEventPropMultiGroups(groupedEventProp,props,organizeS
 	debugMode = p.Results.debugMode;
 
 
-
-
-
 	% Get the entry number of 'organizeStruct'
 	entryNum = numel(organizeStruct);
 
