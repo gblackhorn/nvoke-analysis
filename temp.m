@@ -218,635 +218,6 @@ FolderPathVA.fig = plot_calcium_signals_alignedData_allTrials(alignedData_OgInEx
 	'save_fig',save_fig,'save_dir',FolderPathVA.fig,'debug_mode',debug_mode);
 
 
-
-
-
-%% ==========
-% 2.3 Create the mean spontaneous traces in DAO and PO
-% Note: 'event_type' for alignedData must be 'detected_events'
-save_fig = true; % true/false
-save_dir = FolderPathVA.fig;
-at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'. Indicate what value should be used to normalize the traces
-at.stimNames = ''; % If empty, do not screen recordings with stimulation, instead use all of them
-at.eventCat = 'spon'; % options: 'trig','trig-ap','rebound','spon', 'rebound'
-at.subNucleiTypes = {'DAO','PO'}; % Separate ROIs using the subnuclei tag.
-at.plot_combined_data = true; % mean value and std of all traces
-at.showRawtraces = false; % true/false. true: plot every single trace
-at.showMedian = false; % true/false. plot raw traces having a median value of the properties specified by 'at.medianProp'
-at.medianProp = 'FWHM'; % 
-at.shadeType = 'std'; % plot the shade using std/ste
-at.y_range = [-10 20]; % [-10 5],[-3 5],[-2 1]
-% at.sponNorm = true; % true/false
-% at.normalized = false; % true/false. normalize the traces to their own peak amplitudes.
-
-close all
-
-% Create a cell to store the trace info
-traceInfo = cell(1,numel(at.subNucleiTypes));
-
-% Loop through the subNucleiTypes
-for i = 1:numel(at.subNucleiTypes)
-	[~,traceInfo{i}] = AlignedCatTracesSinglePlot(alignedData_allTrials,at.stimNames,at.eventCat,...
-		'normMethod',at.normMethod,'subNucleiType',at.subNucleiTypes{i},...
-		'showRawtraces',at.showRawtraces,'showMedian',at.showMedian,'medianProp',at.medianProp,...
-		'plot_combined_data',at.plot_combined_data,'shadeType',at.shadeType,'y_range',at.y_range);
-	% 'sponNorm',at.sponNorm,'normalized',at.normalized,
-
-	if i == 1
-		guiSave = 'on';
-	else
-		guiSave = 'off';
-	end
-	if save_fig
-		save_dir = savePlot(gcf,'guiSave', guiSave, 'save_dir', save_dir, 'fname', traceInfo{i}.fname);
-	end
-end
-traceInfo = [traceInfo{:}];
-
-if save_fig
-	save(fullfile(save_dir,'alignedCalTracesInfo'), 'traceInfo');
-	FolderPathVA.fig = save_dir;
-end
-
-
-%% ==========
-spon2spon_intervals = intData.violinData.spon2spon;
-trig2spon_intervals = intData.violinData.trig2spon;
-
-[h, p] = kstest2(spon2spon_intervals, trig2spon_intervals);
-disp(['K-S test p-value: ', num2str(p)]);
-
-
-
-
-
-
-
-%% ==========
-alignedDataDAO = screenSubNucleiROIs(alignedData_allTrials,'DAO');
-alignedDataPO = screenSubNucleiROIs(alignedData_allTrials,'PO');
-
-% 3.3 Violin plot showing the difference of
-% stim-related-event_to_following_event_time and the spontaneous_event_interval
-close all
-save_fig = false; % true/false
-stimNameAll = {'og-5s'}; % 'og-5s' 'ap-0.1s'
-stimEventCatAll = {'rebound'}; % 'rebound', 'trig'
-maxDiff = 5; % the max difference between the stim-related and the following events
-
-% loop through different stim-event pairs
-
-for n = 1:numel(stimNameAll) 
-	stimName = stimNameAll{n};
-	stimEventCat = stimEventCatAll{n};
-	% [intData,eventIntMean,eventInt,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
-	% 'maxDiff',maxDiff);
-
-	[intData,f,fname] = stimEventSponEventIntAnalysis(alignedDataPO,stimName,stimEventCat,...
-	'maxDiff',maxDiff);
-
-	if save_fig
-		if n == 1 
-			guiSave = 'on';
-		else
-			guiSave = 'off';
-		end
-		FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',guiSave,'fname',fname);
-		save(fullfile(FolderPathVA.fig, [fname,' data']),'intData');
-	end
-end
-
-
-%% =========
-% Compare the late OG bins in DAO and PO
-dataDAO = barStat.DAO(1).dataStruct;
-dataPO = barStat.PO(1).dataStruct;
-
-lateOGxdata1 = 1.5;
-lateOGxdata2 = 3.5;
-
-IDXlateOG1DAO = find([dataDAO.xdata] == lateOGxdata1);
-IDXlateOG2DAO = find([dataDAO.xdata] == lateOGxdata2);
-dataLateOG1DAO = dataDAO(IDXlateOG1DAO);
-dataLateOG2DAO = dataDAO(IDXlateOG2DAO);
-
-IDXlateOG1PO = find([dataPO.xdata] == lateOGxdata1);
-IDXlateOG2PO = find([dataPO.xdata] == lateOGxdata2);
-dataLateOG1PO = dataPO(IDXlateOG1PO);
-dataLateOG2PO = dataPO(IDXlateOG2PO);
-
-dataLateOG1Comb = [dataLateOG1DAO, dataLateOG1PO];
-dataLateOG2Comb = [dataLateOG2DAO, dataLateOG2PO];
-
-
-[GLMMresultsLateOG1] = twoPartMixedModelAnalysis(dataLateOG1Comb, 'val',...
-	'subNuclei', {'trialNames', 'roiNames'});
-[GLMMresultsLateOG2] = twoPartMixedModelAnalysis(dataLateOG2Comb, 'val',...
-	'subNuclei', {'trialNames', 'roiNames'});
-
-
-dataLateOG1CombCell = {[dataLateOG1DAO.val], [dataLateOG1PO.val]};
-dataLateOG2CombCell = {[dataLateOG2DAO.val], [dataLateOG2PO.val]};
-
-[statLateOG1,statTabLateOG1] = ttestOrANOVA(dataLateOG1CombCell);
-[statLateOG2,statTabLateOG2] = ttestOrANOVA(dataLateOG2CombCell);
-
-
-%% =========
-% Compare the late OG bins in DAO and PO
-eventFreqData = {barInfo.groupData};
-barPlotInfo = barplot_with_errBar(eventFreqData,'barX',x,'plotWhere',plotWhere,...
-        'barNames',groupNames,...
-        'TickAngle', TickAngle, 'FontSize', FontSize, 'FontWeight', FontWeight);
-
-
-
-%% =========
-[stimEventJitter] = stimEventJitterAnalysis(alignedData_allTrials,{'og-5s'},'rebound');
-
-
-
-%% ==========
-% 2.3 Create the mean spontaneous traces of ogDelay events in DAO and PO
-% Note: 'event_type' for alignedData must be 'detected_events'
-save_fig = true; % true/false
-save_dir = FolderPathVA.fig;
-at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'. Indicate what value should be used to normalize the traces
-at.stimNames = ''; % If empty, do not screen recordings with stimulation, instead use all of them
-at.eventCat = 'opto-delay'; % options: 'trig','trig-ap','rebound','spon', 'rebound'
-at.subNucleiTypes = {'DAO','PO'}; % Separate ROIs using the subnuclei tag.
-at.plot_combined_data = true; % mean value and std of all traces
-at.showRawtraces = false; % true/false. true: plot every single trace
-at.showMedian = false; % true/false. plot raw traces having a median value of the properties specified by 'at.medianProp'
-at.medianProp = 'FWHM'; % 
-at.shadeType = 'ste'; % plot the shade using std/ste
-at.y_range = [-10 20]; % [-10 5],[-3 5],[-2 1]
-% at.sponNorm = true; % true/false
-% at.normalized = false; % true/false. normalize the traces to their own peak amplitudes.
-
-close all
-
-[OGalignedData_allTrials] = filter_entries_in_structure(alignedData_allTrials,'stim_name',...
-	'tags_keep','og-5s','tags_discard','ap-0.1s');
-
-% Create a cell to store the trace info
-traceInfo = cell(1,numel(at.subNucleiTypes));
-
-% Loop through the subNucleiTypes
-for i = 1:numel(at.subNucleiTypes)
-	[~,traceInfo{i}] = AlignedCatTracesSinglePlot(OGalignedData_allTrials,at.stimNames,at.eventCat,...
-		'normMethod',at.normMethod,'subNucleiType',at.subNucleiTypes{i},...
-		'showRawtraces',at.showRawtraces,'showMedian',at.showMedian,'medianProp',at.medianProp,...
-		'plot_combined_data',at.plot_combined_data,'shadeType',at.shadeType,'y_range',at.y_range);
-	% 'sponNorm',at.sponNorm,'normalized',at.normalized,
-
-	if i == 1
-		guiSave = 'on';
-	else
-		guiSave = 'off';
-	end
-	if save_fig
-		save_dir = savePlot(gcf,'guiSave', guiSave, 'save_dir', save_dir, 'fname', traceInfo{i}.fname);
-	end
-end
-traceInfo = [traceInfo{:}];
-
-if save_fig
-	save(fullfile(save_dir,'alignedCalTracesInfo'), 'traceInfo');
-	FolderPathVA.fig = save_dir;
-end
-
-
-%% ==========
-% 2.5 Plot event properties: OG-delay vs spon
-
-% Settings
-save_fig = true; % true/false
-plot_combined_data = false;
-parNames = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_mag_delta'}; 
-    % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
-stat = true; % Set it to true to run anova when plotting bars
-
-close all
-
-% Setup parameters for linear-mixed-model (LMM) or generalized-mixed-model (GLMM) analysis
-mmModel = 'GLMM'; % LMM/GLMM
-mmGroup = 'subNuclei'; % LMM/GLMM
-mmHierarchicalVars = {'trialName', 'roiName'};
-mmDistribution = 'gamma'; % For continuous, positively skewed data
-mmLink = 'log'; % For continuous, positively skewed data
-
-% Keep spontaneous events and discard all others
-tags_keep = {'opto-delay [og-5s]', 'spon'}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
-[eventStructForPlotFiltered] = filter_entries_in_structure(eventStructForPlot,'group',...
-	'tags_keep',tags_keep);
-
-% Generate and save figures
-[save_dir, plot_info] = plot_event_info(eventStructForPlotFiltered,'entryType',ggSetting.entry,...
-	'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
-	'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
-	'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-	'fname_preffix','ogDelaySponEvent','save_fig', save_fig, 'save_dir', FolderPathVA.fig);
-
-% Create a UI table displaying the n numberss
-fNum = nNumberTab(eventStructForPlotFiltered,'event');
-
-% Save data
-if save_fig
-	% Save the fNum
-	savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'ogDelaySponEvent nNumInfo');
-	% savePlot(fMM,'guiSave', 'off', 'save_dir', save_dir, 'fname', fMM_name);
-
-	% Save the statistics info
-	eventPropStatInfo.eventStructForPlotFiltered = eventStructForPlotFiltered;
-	eventPropStatInfo.plot_info = plot_info;
-	% dt = datestr(now, 'yyyymmdd');
-	save(fullfile(save_dir, 'ogDelaySponEvent propStatInfo'), 'eventPropStatInfo');
-end
-
-
-%% ==========
-stimName = 'og-5s';
-
-alignedData = alignedData_allTrials;
-stimNameAll = {alignedData.stim_name};
-stimPosIDX = find(cellfun(@(x) strcmpi(stimName,x),stimNameAll));
-alignedDataFiltered = alignedData(stimPosIDX);
-
-[CaLevelData,CaLevelData_n_num] = GetCalLevelInfoFromAlignedData(alignedDataFiltered,stim_name);
-freq = get_frame_rate(CaLevelData.time);
-box_DataPoint = box_duration*freq; % time point number in a singla box 
-box_num = floor(max(CaLevelData.time)-min(CaLevelData.time))/box_duration;
-xData = [CaLevelData.time(1):box_duration:(CaLevelData.time(1)+box_duration*(box_num-1))]+box_duration/2; % the x-axis location of data in the plot 
-box_data_cellarray = cell(box_num,1);
-data_groupName = cell(box_num,1);
-for bn = 1:box_num
-	start_loc = (bn-1)*box_DataPoint+1;
-	end_loc = bn*box_DataPoint;
-	single_box_data = mean(CaLevelData.data(start_loc:end_loc,:));
-	box_data_cellarray{bn} = single_box_data(:);
-end
-[~,CaLevel_box_statInfo] = boxPlot_with_scatter(box_data_cellarray,'groupNames',NumArray2StringCell(xData),...
-	'stat',true,'plotScatter',false);
-title('CaLevel box')
-ylim([-4 4]);
-FolderPathVA.fig = savePlot(gcf,'guiSave','on','save_dir',FolderPathVA.fig,'fname','CaLevel box');
-save(fullfile(save_dir, ['CaLevel_data_stat']),'CaLevelData','CaLevelData_n_num','CaLevel_box_statInfo');
-
-violinData = [box_data_cellarray{:}]; % convert cell data to matrix
-violinplot(violinData,NumArray2StringCell(xData));
-
-%% ==========
-stimName = 'og-5s';
-subNucleiTypes = {'DAO', 'PO'};
-box_duration = 1; % unit: s
-
-for sn = 1:numel(subNucleiTypes)
-	alignedDataSubN = screenSubNucleiROIs(alignedData_allTrials,subNucleiTypes{sn});
-
-	stimNameAll = {alignedDataSubN.stim_name};
-	stimPosIDX = find(cellfun(@(x) strcmpi(stimName,x),stimNameAll));
-	alignedDataSubNStim = alignedDataSubN(stimPosIDX);
-
-	[CaLevelData,CaLevelData_n_num] = GetCalLevelInfoFromAlignedData(alignedDataSubNStim,stimName);
-	freq = get_frame_rate(CaLevelData.time);
-	box_DataPoint = box_duration*freq; % time point number in a singla box 
-	box_num = floor(max(CaLevelData.time)-min(CaLevelData.time))/box_duration;
-	xData = [CaLevelData.time(1):box_duration:(CaLevelData.time(1)+box_duration*(box_num-1))]+box_duration/2; % the x-axis location of data in the plot 
-	box_data_cellarray = cell(box_num,1);
-	data_groupName = cell(box_num,1);
-	for bn = 1:box_num
-		start_loc = (bn-1)*box_DataPoint+1;
-		end_loc = bn*box_DataPoint;
-		single_box_data = mean(CaLevelData.data(start_loc:end_loc,:));
-		box_data_cellarray{bn} = single_box_data(:);
-	end
-	[~,CaLevel_box_statInfo] = boxPlot_with_scatter(box_data_cellarray,'groupNames',NumArray2StringCell(xData),...
-		'stat',true,'plotScatter',false);
-	titleStr = sprintf('%s CaLevel box', subNucleiTypes{sn});
-	title(titleStr)
-	ylim([-4 4]);
-end
-
-
-plot_raw_traces = false;
-[tracesAverage, tracesShade] = plotAlignedTracesAverage(gca, CaLevelData.data, CaLevelData.time,...
-	'plot_raw_traces', plot_raw_traces);
-
-
-
-formula = sprintf('%s ~ %s * %s + %s', responseVar, groupVar, timeBinVar, strjoin(randomEffects, ' + '))
-
-
-%% ==========
-% Convert binIDX to a categorical variable
-tbl.binIDX = categorical(tbl.binIDX);
-
-% Define the model formula with interaction term
-randomEffects = strcat('(1|', {'recTags', 'roiTags'}, ')');
-formula = sprintf('%s ~ %s * %s + %s', 'binVal', 'subN', 'binIDX', strjoin(randomEffects, ' + '));
-
-% Fit the Linear Mixed-Effects Model (LMM)
-lme = fitlme(tbl, formula);
-
-% Display the results
-disp(lme);
-
-% Extract the names of the fixed effects
-fixedEffectsNames = lme.CoefficientNames;
-
-% Initialize arrays to store p-values and test statistics
-pValues = [];
-testStats = [];
-
-% Specify the time bin to compare
-timeBinToCompare = '4';  % Modify as needed for the specific bin
-
-% Construct the hypothesis matrix H
-effectName = sprintf('binIDX_%s:subN_PO', timeBinToCompare);
-idx = find(strcmp(fixedEffectsNames, effectName));
-
-if ~isempty(idx)
-    H = zeros(1, length(fixedEffectsNames));
-    H(idx) = 1;
-    
-    % Perform the hypothesis test
-    [pValue, F, DF1, DF2] = coefTest(lme, H);
-    
-    % Store the p-value and test statistic
-    pValues = [pValues; pValue];
-    testStats = [testStats; F];
-    
-    % Print the results
-    fprintf('Comparison for Time Bin: %s\n', timeBinToCompare);
-    fprintf('F(%d,%d) = %.2f, p = %.4f\n', DF1, DF2, F, pValue);
-else
-    fprintf('Effect %s not found in the model.\n', effectName);
-end
-
-% Display the p-values
-disp('P-values:');
-disp(pValues);
-
-
-
-%% ==========
-close all
-figure
-caMinDeltaReboundDAO = [eventStructForPlot(7).event_info.caLevelDeltaNorm]; 
-peakHpstdReboundDAO = [eventStructForPlot(7).event_info.peak_delta_norm_hpstd]; 
-
-stylishScatter(caMinDeltaReboundDAO,peakHpstdReboundDAO, 'plotWhere', gca, 'MarkerEdgeColor', 'k');
-
-hold on
-
-caMinDeltaReboundPO = [eventStructForPlot(8).event_info.caLevelDeltaNorm]; 
-peakHpstdReboundPO = [eventStructForPlot(8).event_info.peak_delta_norm_hpstd]; 
-
-stylishScatter(caMinDeltaReboundPO,peakHpstdReboundPO, 'plotWhere', gca);
-
-xlabel('caLevelDelta hpStdNorm')
-ylabel('peakAmp hpStdNorm')
-legend('rebound DAO', 'rebound PO', 'FontSize', 10)
-
-
-%% ==========
-% Open a file to write the LaTeX table
-fid = fopen('chiLRT_table.tex', 'w');
-
-% Write the beginning of the LaTeX table environment
-fprintf(fid, '\\begin{table}[bt]\n');
-fprintf(fid, '\\centering\n');
-fprintf(fid, '\\begin{tabular}{|l|c|c|c|c|c|c|c|c|}\n');
-fprintf(fid, '\\hline\n');
-
-% Write the header row
-header = chiLRT.Properties.VariableNames;
-fprintf(fid, '%s & %s & %s & %s & %s & %s & %s & %s & %s \\\\\n', header{:});
-fprintf(fid, '\\hline\n');
-
-% Write the data rows
-for i = 1:height(chiLRT)
-    row = chiLRT(i, :);
-    
-    % Convert each element to string for concatenation
-    modelStr = char(row.Model); % Convert 'Model' to a char
-    formulaStr = char(row.Formula); % Convert 'Formula' to a char
-    
-    % Handle numerical values directly
-    DF = row.DF;
-    AIC = row.AIC;
-    BIC = row.BIC;
-    LogLik = row.LogLik;
-    LRStat = row.LRStat;
-    deltaDF = row.deltaDF;
-    pValue = row.pValue;
-    
-    % Print the row
-    fprintf(fid, '%s & %s & %d & %.0f & %.0f & %.1f & %.1f & %.1f & %.1e \\\\\n', ...
-        modelStr, formulaStr, DF, AIC, BIC, LogLik, LRStat, deltaDF, pValue);
-end
-
-% Write the end of the LaTeX table environment
-fprintf(fid, '\\hline\n');
-fprintf(fid, '\\end{tabular}\n');
-fprintf(fid, '\\caption{Your caption here}\n');
-fprintf(fid, '\\label{tab:chiLRT}\n');
-fprintf(fid, '\\end{table}\n');
-
-% Close the file
-fclose(fid);
-
-% Display the content of the generated LaTeX file (optional)
-type('chiLRT_table.tex');
-
-
-
-
-%% ==========
-% 2.7 Plot event properties. Compare the sync and async spon events in PO and DAO
-
-% Settings
-saveFig = true; % true/false
-plot_combined_data = false;
-parNames = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_mag_delta'}; 
-    % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
-stat = true; % Set it to true to run anova when plotting bars
-
-close all
-
-% Setup parameters for linear-mixed-model (LMM) or generalized-mixed-model (GLMM) analysis
-mmModel = 'GLMM'; % LMM/GLMM
-mmHierarchicalVars = {'trialName', 'roiName'};
-mmDistribution = 'gamma'; % For continuous, positively skewed data
-mmLink = 'log'; % For continuous, positively skewed data
-colorGroupCell = {{'#8C0383', '#FF00CC'},{'#003264', '#00AAD4'}};
-
-% Keep events from PO or DAO neurons and generate plots
-subNucleiStr = {'spon-PO','spon-DAO'};
-for sn = 1:numel(subNucleiStr)
-	tags_keep = subNucleiStr{sn}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
-	[eventStructForPlot_syncTagSubGroup] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
-		'tags_keep',tags_keep);
-
-	% Generate and save figures
-	mmGroup = 'type'; % LMM/GLMM
-	[save_dir, plot_info] = plot_event_info(eventStructForPlot_syncTagSubGroup,'entryType',ggSetting.entry,...
-		'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
-		'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
-		'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-		'colorGroup',colorGroupCell{sn},'fname_preffix',[tags_keep,'-event'],'save_fig', saveFig, 'save_dir', FolderPathVA.fig);
-
-	% Create a UI table displaying the n numberss
-	fNum = nNumberTab(eventStructForPlot_syncTagSubGroup,'event');
-
-	% Save data
-	if saveFig
-		% Save the fNum
-		savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo');
-
-		% Save the statistics info
-		eventPropStatInfo.eventStructForPlot_syncTagSubGroup = eventStructForPlot_syncTagSubGroup;
-		eventPropStatInfo.plot_info = plot_info;
-		% dt = datestr(now, 'yyyymmdd');
-		save(fullfile(save_dir, [tags_keep,'-event propStatInfo']), 'eventPropStatInfo');
-	end
-
-	% Update the folder path 
-	if save_dir~=0
-		FolderPathVA.fig = save_dir;
-	end
-end
-
-% Keep events from PO or DAO neurons and generate plots
-[eventStructForPlot_syncTag_spon] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
-	'tags_keep','spon');
-colorGroupCell = {{'#00AAD4', '#FF00CC'},{'#003264', '#8C0383'}};
-syncTagsStr = {'-synch','-asynch'};
-for st = 1:numel(syncTagsStr)
-	tags_keep = syncTagsStr{st}; % Keep groups containing these words. {'trig','trig-ap','rebound [og-5s]','spon'}
-	[eventStructForPlot_syncTagSubGroup] = filter_entries_in_structure(eventStructForPlot_syncTag_spon,'group',...
-		'tags_keep',tags_keep);
-
-	% Generate and save figures
-	tags_keep = replace(tags_keep,'-','');
-	mmGroup = 'subNuclei'; % LMM/GLMM
-	[save_dir, plot_info] = plot_event_info(eventStructForPlot_syncTagSubGroup,'entryType',ggSetting.entry,...
-		'plot_combined_data', plot_combined_data, 'parNames', parNames, 'stat', stat,...
-		'mmModel', mmModel, 'mmGroup', mmGroup, 'mmHierarchicalVars', mmHierarchicalVars,...
-		'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-		'colorGroup',colorGroupCell{st},'fname_preffix',[tags_keep,'-event'],'save_fig', saveFig, 'save_dir', FolderPathVA.fig);
-
-	% Create a UI table displaying the n numberss
-	fNum = nNumberTab(eventStructForPlot_syncTagSubGroup,'event');
-
-	% Save data
-	if saveFig
-		% Save the fNum
-		savePlot(fNum,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'event nNumInfo');
-
-		% Save the statistics info
-		eventPropStatInfo.eventStructForPlot_syncTagSubGroup = eventStructForPlot_syncTagSubGroup;
-		eventPropStatInfo.plot_info = plot_info;
-		% dt = datestr(now, 'yyyymmdd');
-		save(fullfile(save_dir, [tags_keep,'-event propStatInfo']), 'eventPropStatInfo');
-	end
-
-	% Update the folder path 
-	if save_dir~=0
-		FolderPathVA.fig = save_dir;
-	end
-end
-
-
-
-
-%% ==========
-% 2.5 Plot event properties
-close all
-% General Settings
-saveFig = true; % true/false
-props = {'FWHM','sponNorm_peak_mag_delta','peak_delta_norm_hpstd','peak_delay'}; 
-    % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
-mmModel = 'GLMM'; % LMM/GLMM
-mmHierarchicalVars = {'trialName', 'roiName'};
-mmDistribution = 'gamma'; % For continuous, positively skewed data
-mmLink = 'log'; % For continuous, positively skewed data
-
-
-% Settings for sub-groups
-organizeStruct(1).title = 'sponSubN';
-organizeStruct(1).keepGroups = {'spon'};
-organizeStruct(1).mmFixCat = 'subNuclei';
-
-organizeStruct(2).title = 'ogDelaySubN';
-organizeStruct(2).keepGroups = {'opto-delay [og-5s]'};
-organizeStruct(2).mmFixCat = 'subNuclei';
-
-organizeStruct(3).title = 'apTrigSubN';
-organizeStruct(3).keepGroups = {'trig [ap-0.1s]'};
-organizeStruct(3).mmFixCat = 'subNuclei';
-
-organizeStruct(4).title = 'ogDelay2spon DAO';
-organizeStruct(4).keepGroups = {'spon-DAO', 'opto-delay [og-5s]-DAO'};
-organizeStruct(4).mmFixCat = 'peak_category';
-
-organizeStruct(5).title = 'ogDelay2spon PO';
-organizeStruct(5).keepGroups = {'spon-PO', 'opto-delay [og-5s]-PO'};
-organizeStruct(5).mmFixCat = 'peak_category';
-
-organizeStruct(6).title = 'apTrig2spon DAO';
-organizeStruct(6).keepGroups = {'spon-DAO', 'trig [ap-0.1s]-DAO'};
-organizeStruct(6).mmFixCat = 'peak_category';
-
-organizeStruct(7).title = 'apTrig2spon PO';
-organizeStruct(7).keepGroups = {'spon-PO', 'trig [ap-0.1s]-PO'};
-organizeStruct(7).mmFixCat = 'peak_category';
-
-% organizeStruct(8).title = 'apTrig2apRebound PO';
-% organizeStruct(8).keepGroups = {'trig [ap-0.1s]-PO', 'rebound [ap-0.1s]-PO'};
-% organizeStruct(8).mmFixCat = 'peak_category';
-
-% organizeStruct(9).title = 'apTrig2apRebound DAO';
-% organizeStruct(9).keepGroups = {'trig [ap-0.1s]-DAO', 'rebound [ap-0.1s]-DAO'};
-% organizeStruct(9).mmFixCat = 'peak_category';
-
-organizeStruct(8).title = 'apTrig2apTrigInOG PO';
-organizeStruct(8).keepGroups = {'trig [ap-0.1s]-PO', 'trig-ap [og&ap-5s]-PO'};
-organizeStruct(8).mmFixCat = 'peak_category';
-
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructForPlot,props,organizeStruct,...
-	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
-
-% Update the folder path 
-if saveDir~=0
-	FolderPathVA.fig = saveDir;
-end
-
-
-
-%% ==========
-% Add sync info to the alignedData
-[alignedData_allTrials(:).synchFoldValue] = deal([]);
-synchWindow = 1;
-minROIspikes = 2;
-for n = 1:numel(alignedData_allTrials)
-	fprintf('Recording %d/%d: %s\n', n, numel(alignedData_allTrials), alignedData_allTrials(n).trialName)
-	if n == 21
-		% pause
-	end
-	alignedData_allTrials(n) = setSynchValuesTrialAllEvents(alignedData_allTrials(n),...
-		'minROIspikes', minROIspikes, 'synchWindow', synchWindow);
-end
-
-
-%% ==========
-findFunctionCalls('D:\guoda\Documents\MATLAB\Codes', 'tableToLatex');
-
-
-numel(find(strcmpi({eventProp_all_norm.peak_category}), 'rebound [og-5s]'))
-
 %% ==========
 fig1 = 'D:\guoda\Documents\Workspace\manuscript\Paper\VIIO\FIGURES\Figures_In_Progress\EventProp_1sReboundWin\sponSubN cumulative distribution plots.jpg';
 fig2 = 'D:\guoda\Documents\Workspace\manuscript\Paper\VIIO\FIGURES\Figures_In_Progress\EventProp_1sReboundWin_OgExKept\sponSubN cumulative distribution plots.jpg';
@@ -894,3 +265,64 @@ compareAnalysisUsingdiffSetting(figFolder, saveFolder,...
 
 
 
+%% ==========
+
+findFunctionCalls('D:\guoda\Documents\MATLAB\Codes', 'CaImg_char_pat');
+
+
+
+%% ==========
+% 9.5.4.1 Plot the event probability
+% Create grouped_event_info with the following settings and filter it
+% [9.3] eventProp_all: entry is 'roi'. mgSetting.groupField = {'stim_name'};
+% If save, save to the existing save_dir
+close all
+save_fig = false; % true/false
+eventPb_bar = fig_canvas(1,'fig_name','event probability','unit_width',0.6,'unit_height',0.3);
+eventPb_plot_info = empty_content_struct({'group','plotinfo'},numel(roiStructForPlot));
+[eventPb_plot_info.group] = roiStructForPlot.group;
+tlo_eventPb_bar = tiledlayout(eventPb_bar,ceil(numel(roiStructForPlot)/4),4);
+for gn = 1:numel(roiStructForPlot)
+	group_name = roiStructForPlot(gn).group;
+	eventPbInfo = roiStructForPlot(gn).eventPb;
+	eventCats = (eventPbInfo.eventCat);
+	eventPbCell = eventPbInfo{:,'eventPb_val'};
+	ax_eventPb_bar = nexttile(tlo_eventPb_bar);
+	[eventPb_plot_info(gn).plotinfo] = barplot_with_stat(eventPbCell,'group_names',eventCats,...
+		'plotWhere',ax_eventPb_bar,'title_str',group_name,'save_fig',save_fig,'save_dir',save_dir);
+end
+
+
+%% ====================
+% 6.6 Add the location tag (subnuclei information) to ROIs
+overwrite = true; %options: true/false
+recIDX = 6;
+recdata_organized(recIDX,:) = addRoiLocTag2recdata(recdata_organized(recIDX,:),'overwrite',overwrite);
+
+
+
+%% ==========
+% temproal solution: plot fov percentage and save
+% fov_bar = figure('Name','FOV percentage');
+fov_bar = fig_canvas(1,'fig_name','FOV percentage','unit_width',0.6,'unit_height',0.3);
+% eventPb_bar = figure('Name','event probability','Position',[0.1 0.1 0.4 0.2],'Units','Normalized');
+
+fovID_plot_info = empty_content_struct({'group','fovCount'},numel(roiStructForPlot));
+[fovID_plot_info.group] = roiStructForPlot.group;
+[fovID_plot_info.fovCount] = roiStructForPlot.fovCount;
+tlo_fov_bar = tiledlayout(fov_bar,ceil(numel(roiStructForPlot)/4),4);
+for gn = 1:numel(roiStructForPlot)
+	group_name = roiStructForPlot(gn).group;
+	fovInfo = roiStructForPlot(gn).fovCount;
+	fovIDs = {fovInfo.fovID};
+	fovPerc = [fovInfo.perc];
+	ax_fov_bar = nexttile(tlo_fov_bar);
+	bar(categorical(fovIDs),fovPerc);
+	set(gca, 'box', 'off')
+	title(group_name);
+	if save_dir
+		savePlot(fov_bar,'save_dir',save_dir,'fname','fovID_perc');
+	end
+	% [eventPb_plot_info(gn).plotinfo] = barplot_with_stat(fovPerc,'group_names',fovIDs,...
+	% 	'plotWhere',ax_fov_bar,'title_str',group_name,'save_fig',save_fig,'save_dir',save_dir);
+end

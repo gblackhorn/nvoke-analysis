@@ -227,7 +227,7 @@ end
 
 
 %% ==========
-% 2.4 Extract properties of spontaneous events and group them according to ROIs' subnuclous location
+% 2.4 Extract properties of  events and group them according to ROIs' subnuclous location
 
 % Get and group (gg) Settings
 ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
@@ -548,10 +548,10 @@ organizeStructMergeSubNSyncOGOFF.mmFixCat = 'type';
 
 %% ==========
 % 2.8 (Temp) Compare EventProp using different settings
-figFolder = 'D:\guoda\Documents\Workspace\manuscript\Paper\VIIO\FIGURES\Figures_In_Progress';
-saveFolder = 'D:\guoda\Documents\Workspace\manuscript\Paper\VIIO\FIGURES\Figures_In_Progress';
-label1 = "exclude-ogEx-neurons"; % String array
-label2 = "Keep-ogEx-neurons";    % String array
+figFolder = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure';
+saveFolder = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure';
+label1 = "Before-correcting-the-location"; % String array
+label2 = "After-correcting-the-location";    % String array
 figExt = 'jpg';
 textExt = 'tex';
 keywordFig = '';
@@ -571,11 +571,12 @@ close all
 save_fig = true; % true/false
 gui_save = true;
 groupLevel = 'roi'; % Collect event freq on 'roi'/'stimTrial' level
-customizeEdges = true; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
-						% Set the 'disZeroBase' to true for 'customizeEdges'
+customizeEdges = false; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
+						% If true: Set the 'disZeroBase' to true 
+						% If false: Set the 'normToBase' to false
 
 disZeroBase = true; % true/false. Discard the roi/stimTrial if the baseline value is zero
-normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
+normToBase = false; % true/false. normalize the data to baseline (data before baseBinEdge)
 plotDiff = false; % true/false. plot the difference of comparable bins from various stimulation recording groups
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
@@ -721,7 +722,7 @@ end
 % 3.4 Plot event properties and percentages for OG-ex neurons
 % Compare DAO and PO
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
 ggSetting.modify_stim_name = true; % true/false. Change the stimulation name, 
 ggSetting.mark_EXog = false; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
@@ -860,7 +861,7 @@ end
 %% ==========
 % 3.6 Extract properties of spontaneous events and group them according to ROIs' subnuclous location
 close all
-save_fig = false;
+save_fig = true; % true/false
 % Get and group (gg) Settings
 ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventProp
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
@@ -904,14 +905,15 @@ for gn = 1:numel(roiStructForFOV)
 	bar(categorical(fovIDs),fovPerc);
 	set(gca, 'box', 'off')
 	title(group_name);
-	if save_fig
-		savePlot(fov_bar,'save_dir',save_dir,'fname','fovID_perc');
-	end
+	% if save_fig
+	% end
 	% [eventPb_plot_info(gn).plotinfo] = barplot_with_stat(fovPerc,'group_names',fovIDs,...
 	% 	'plotWhere',ax_fov_bar,'title_str',group_name,'save_fig',save_fig,'save_dir',save_dir);
 end
 
 if save_fig
+	save_dir = savePlot(fov_bar,'save_dir',FolderPathVA.fig,'fname','fovID_perc','guiSave',true);
+
 	% plot_stat_info.grouped_event_info_option = grouped_event_info_option;
 	plot_stat_info.roiStructForFOV = roiStructForFOV;
 	plot_stat_info.plot_info = plot_info;

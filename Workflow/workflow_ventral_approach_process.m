@@ -343,7 +343,7 @@ recdata_organized = recordings;
 % Add FOV category code to FOV_loc
 % [recdata_organized] = add_fov_category(recdata_organized,...
 % 	'hemi_sort', hemi_sort, 'fov_contents', fov_contents);
-overwrite = false; %options: true/false
+overwrite = true; %options: true/false
 [recdata_organized] = auto_gen_mouseID_fovID(recdata_organized,'overwrite',overwrite);
 % [recdata_organized,mouseIDs,fovIDs] = auto_gen_mouseID_fovID(recdata_organized,'overwrite',overwrite);
 

@@ -82,9 +82,9 @@ function nameAndTagStruct = createLocTagStruct(neuronNames,useSameTags,varargin)
        % Create a cell array and fill it with tags 
        userTagCell = cell(1,roiNum);
        for n = 1:roiNum
-         if ~isempty(find(idxGroup1,n))
+         if ~isempty(find(idxGroup1==n))
             userTagCell{n} = userTag1;
-         elseif ~isempty(find(idxGroup2,n))
+         elseif ~isempty(find(idxGroup2==n))
             userTagCell{n} = userTag2;
          end
        end
