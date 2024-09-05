@@ -180,7 +180,7 @@ end
 %% ==========
 % 2.3 Create the mean spontaneous traces in DAO and PO
 % Note: 'event_type' for alignedData must be 'detected_events'
-save_fig = false; % true/false
+save_fig = true; % true/false
 save_dir = FolderPathVA.fig;
 at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'. Indicate what value should be used to normalize the traces
 at.stimNames = ''; % If empty, do not screen recordings with stimulation, instead use all of them
@@ -245,7 +245,7 @@ ggSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', '
 ggSetting.sort_order_plus = {'ap', 'EXopto'};
 disOgEx = true; % true/false. If true, screen ROIs
 ogStimTags = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
-ogStimEffects = {[nan nan nan nan], [nan nan nan nan], [nan nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 debug_mode = false; % true/false
 
 % a. Create grouped_event for plotting event properties
@@ -294,7 +294,7 @@ ggSetting.groupField = {'peak_category','type'}; % options: 'fovID', 'stim_name'
 close all
 % General Settings
 saveFig = true; % true/false
-props = {'FWHM','peak_delta_norm_hpstd'}; 
+props = {'FWHM','peak_delta_norm_hpstd','rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
 mmModel = 'GLMM'; % LMM/GLMM
 mmHierarchicalVars = {'trialName', 'roiName'};
@@ -315,7 +315,7 @@ organizeStruct(2).title = 'OG-SPONT subN';
 organizeStruct(2).keepGroups = {'opto-delay [og-5s]'};
 organizeStruct(2).mmFixCat = 'subNuclei';
 
-organizeStruct(3).title = 'OG-SPONTSPONT DAO';
+organizeStruct(3).title = 'OG-SPONT2SPONT DAO';
 organizeStruct(3).keepGroups = {'spon-DAO', 'opto-delay [og-5s]-DAO'};
 organizeStruct(3).mmFixCat = 'peak_category';
 
@@ -419,7 +419,7 @@ end
 close all
 % General Settings
 saveFig = true; % true/false
-props = {'FWHM','peak_delta_norm_hpstd'}; 
+props = {'FWHM','peak_delta_norm_hpstd', 'rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta','sponNorm_peak_mag_delta','peak_delay'
 mmModel = 'LMM'; % LMM/GLMM
 mmHierarchicalVars = {'trialName', 'roiName'};
@@ -572,7 +572,7 @@ save_fig = true; % true/false
 gui_save = true;
 groupLevel = 'roi'; % Collect event freq on 'roi'/'stimTrial' level
 customizeEdges = false; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
-						% If true: Set the 'disZeroBase' to true 
+						% If true: Set the 'disZeroBase' to true, 'normToBase' to true
 						% If false: Set the 'normToBase' to false
 
 disZeroBase = true; % true/false. Discard the roi/stimTrial if the baseline value is zero
@@ -630,7 +630,7 @@ debug_mode = false; % true/false
 % 3.2 Plot traces and stim-aligned traces
 % Note: set adata.event_type to 'stimWin' when creating alignedData_allTrials
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 pause_after_trial = false;
 
 TraceType = 'aligned'; % 'full'/'aligned'. Plot the full trace or stimulation aligned trace
@@ -859,7 +859,7 @@ end
 
 
 %% ==========
-% 3.6 Extract properties of spontaneous events and group them according to ROIs' subnuclous location
+% 3.6 Show the distribution of various categories of events in the FOVs
 close all
 save_fig = true; % true/false
 % Get and group (gg) Settings

@@ -187,14 +187,14 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 				statTabCombine = [statInfo1.statTab; statInfo2.statTab; statInfoFoldChange.statTab];
 
 				% Save the tables (nNum and stat) for violinData plots
-				nNumTabCombineName = sprintf('%s periStimFreq nNum', subNucleiFilter);
+				nNumTabCombineName = sprintf('%s periStimFreq nNum.tex', subNucleiFilter);
 				% violin1nNumTabCap = sprintf('%s %s', nNumTabCombineName, statInfo1.stat.Method);
 				% statInfo = sprintf('%s nNumInfo.tex', organizeStruct(en).title);
 				tableToLatex(nNumTabCombine, 'saveToFile',true,'filename',...
 				    fullfile(saveDir,nNumTabCombineName), 'caption', nNumTabCombineName,...
 				    'columnAdjust', 'XXXXXXX');
 
-				statTabCombineName = sprintf('%s periStimFreq stat', subNucleiFilter);
+				statTabCombineName = sprintf('%s periStimFreq stat.tex', subNucleiFilter);
 				statTabCombineCap = sprintf('%s periStimFreq stat %s', subNucleiFilter, statInfoFoldChange.stat.Method);
 				tableToLatex(statTabCombine, 'saveToFile',true,'filename',...
 				    fullfile(saveDir,statTabCombineName), 'caption', statTabCombineCap,...
