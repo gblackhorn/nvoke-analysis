@@ -112,9 +112,9 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 	for tn = 1:trial_num
 		if debug_mode
 			fprintf('trial %d: %s\n', tn, allTrialsData{tn, 1})
-			% if n == 44
-			% 	pause
-			% end
+			if tn == 9
+				pause
+			end
 		end
 
 		% Get data from a single trial

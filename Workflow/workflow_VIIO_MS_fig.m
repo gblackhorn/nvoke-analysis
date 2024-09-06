@@ -33,7 +33,7 @@ adata.sponfreqFilter.status = true; % true/false. If true, use the following set
 adata.sponfreqFilter.field = 'sponfq'; % 
 adata.sponfreqFilter.thresh = 0.05; % Hz. default 0.05
 adata.sponfreqFilter.direction = 'high';
-debug_mode = false; % true/false
+debug_mode = true; % true/false
 
 % Create structure data for further analysis (event traces are aligned to event rises)
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
@@ -235,7 +235,7 @@ ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventP
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 ggSetting.modify_stim_name = false; % true/false. Change the stimulation name, 
 ggSetting.sponOnly = false; % true/false. If eventType is 'roi', and ggSetting.sponOnly is true. Only keep spon entries
-ggSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
+ggSetting.seperate_spon = true; % true/false. Whether to seperated spon according to stimualtion
 ggSetting.dis_spon = false; % true/false. Discard spontaneous events
 ggSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
 ggSetting.groupField = {'peak_category','subNuclei'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
@@ -293,68 +293,14 @@ ggSetting.groupField = {'peak_category','type'}; % options: 'fovID', 'stim_name'
 % 2.5 Plot event properties
 close all
 % General Settings
-saveFig = true; % true/false
+saveFig = false; % true/false
 props = {'FWHM','peak_delta_norm_hpstd','rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
-mmModel = 'GLMM'; % LMM/GLMM
-mmHierarchicalVars = {'trialName', 'roiName'};
-mmDistribution = 'gamma'; % For continuous, positively skewed data
-mmLink = 'log'; % For continuous, positively skewed data
+dataDist = 'posSkewed';
 
-% Merge the OG-rebound events from og-5s and og&ap-5s recordings
-% eventStructMerge = mergeGroupedEventData(eventStructForPlot, 'rebound [og-5s]-DAO', 'rebound [og&ap-5s]-DAO');
-% eventStructMerge = mergeGroupedEventData(eventStructMerge, 'rebound [og-5s]-PO', 'rebound [og&ap-5s]-PO');
-
-
-% Settings for sub-groups
-organizeStruct(1).title = 'SPONT SubN';
-organizeStruct(1).keepGroups = {'spon'};
-organizeStruct(1).mmFixCat = 'subNuclei';
-
-organizeStruct(2).title = 'OG-SPONT subN';
-organizeStruct(2).keepGroups = {'opto-delay [og-5s]'};
-organizeStruct(2).mmFixCat = 'subNuclei';
-
-organizeStruct(3).title = 'OG-SPONT2SPONT DAO';
-organizeStruct(3).keepGroups = {'spon-DAO', 'opto-delay [og-5s]-DAO'};
-organizeStruct(3).mmFixCat = 'peak_category';
-
-organizeStruct(4).title = 'OG-SPONT2SPONT PO';
-organizeStruct(4).keepGroups = {'spon-PO', 'opto-delay [og-5s]-PO'};
-organizeStruct(4).mmFixCat = 'peak_category';
-
-organizeStruct(5).title = 'OGOFF subN';
-organizeStruct(5).keepGroups = {'rebound [og-5s]'};
-organizeStruct(5).mmFixCat = 'subNuclei';
-
-organizeStruct(6).title = 'OGOFF2SPONT DAO';
-organizeStruct(6).keepGroups = {'spon-DAO', 'rebound [og-5s]-DAO'};
-organizeStruct(6).mmFixCat = 'peak_category';
-
-organizeStruct(7).title = 'OGOFF2SPONT PO';
-organizeStruct(7).keepGroups = {'spon-PO', 'rebound [og-5s]-PO'};
-organizeStruct(7).mmFixCat = 'peak_category';
-
-organizeStruct(8).title = 'AP-TRIG subN';
-organizeStruct(8).keepGroups = {'trig [ap-0.1s]'};
-organizeStruct(8).mmFixCat = 'subNuclei';
-
-organizeStruct(9).title = 'AP-TRIG2SPONT DAO';
-organizeStruct(9).keepGroups = {'spon-DAO', 'trig [ap-0.1s]-DAO'};
-organizeStruct(9).mmFixCat = 'peak_category';
-
-organizeStruct(10).title = 'AP-TRIG2SPONT PO';
-organizeStruct(10).keepGroups = {'spon-PO', 'trig [ap-0.1s]-PO'};
-organizeStruct(10).mmFixCat = 'peak_category';
-
-organizeStruct(11).title = 'AP-TRIG2OGAP-TRIG PO';
-organizeStruct(11).keepGroups = {'trig [ap-0.1s]-PO', 'trig-ap [og&ap-5s]-PO'};
-organizeStruct(11).mmFixCat = 'peak_category';
-
-organizeStruct(12).title = 'OGAP-TRIG2SPONT PO';
-organizeStruct(12).keepGroups = {'trig-ap [og&ap-5s]-PO', 'spon-PO'};
-organizeStruct(12).mmFixCat = 'peak_category';
-
+groupSettingsType = 'subN';
+[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+	'dataDist', dataDist, 'seperateSPONT', ggSetting.seperate_spon);
 [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructForPlot,props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
@@ -364,15 +310,10 @@ if saveDir~=0
 	FolderPathVA.fig = saveDir;
 end
 
-organizeStructMergeSubN(1).title = 'OG-SPONT2SPONT ALL';
-organizeStructMergeSubN(1).keepGroups = {'opto-delay [og-5s]', 'spon'};
-organizeStructMergeSubN(1).mmFixCat = 'peak_category';
-
-organizeStructMergeSubN(2).title = 'OGOFF2SPONT ALL';
-organizeStructMergeSubN(2).keepGroups = {'rebound [og-5s]', 'spon'};
-organizeStructMergeSubN(2).mmFixCat = 'peak_category';
-
-[~, ~] = plotEventPropMultiGroups(eventStructForPlot_mergeSubN,props,organizeStructMergeSubN,...
+groupSettingsType = 'subN OG subNall';
+[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+	'dataDist', dataDist, 'seperateSPONT', ggSetting.seperate_spon);
+[~, ~] = plotEventPropMultiGroups(eventStructForPlot_mergeSubN,props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
 
@@ -421,37 +362,19 @@ close all
 saveFig = true; % true/false
 props = {'FWHM','peak_delta_norm_hpstd', 'rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta','sponNorm_peak_mag_delta','peak_delay'
-mmModel = 'LMM'; % LMM/GLMM
-mmHierarchicalVars = {'trialName', 'roiName'};
-mmDistribution = 'gamma'; % Only valid for GLMM. For continuous, positively skewed data
-mmLink = 'log'; % Only valid for GLMM. For continuous, positively skewed data
+
+dataDist = 'posSkewed';
+
+
 
 % Work on spon events
 [eventStructSyncTagSpon] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
 	'tags_keep','spon');
 
-% Settings for sub-groups
-organizeStructSyncSpon(1).title = 'syncVSasync SPONT PO';
-organizeStructSyncSpon(1).keepGroups = {'spon-PO'};
-organizeStructSyncSpon(1).mmFixCat = 'type'; % For sync vs async
-organizeStructSyncSpon(1).colorGroup = {'#8C0383', '#FF00CC'};
-
-organizeStructSyncSpon(2).title = 'syncVSasync SPONT DAO';
-organizeStructSyncSpon(2).keepGroups = {'spon-DAO'};
-organizeStructSyncSpon(2).mmFixCat = 'type';
-organizeStructSyncSpon(2).colorGroup = {'#003264', '#00AAD4'};
-
-organizeStructSyncSpon(3).title = 'SPONT subN sync';
-organizeStructSyncSpon(3).keepGroups = {'-synch'};
-organizeStructSyncSpon(3).mmFixCat = 'subNuclei';
-organizeStructSyncSpon(3).colorGroup = {'#00AAD4', '#FF00CC'};
-
-organizeStructSyncSpon(4).title = 'SPONT subN async';
-organizeStructSyncSpon(4).keepGroups = {'-asynch'};
-organizeStructSyncSpon(4).mmFixCat = 'subNuclei';
-organizeStructSyncSpon(4).colorGroup = {'#003264', '#8C0383'};
-
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagSpon,props,organizeStructSyncSpon,...
+groupSettingsType = 'syncTag SPONT';
+[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+	'dataDist', dataDist, 'seperateSPONT', false);
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagSpon,props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
 
@@ -461,22 +384,14 @@ if saveDir~=0
 end
 
 
-% Work on OG delay (OG-SPONT) events
+% Work on OG-SPONT (OG delay) events
 [eventStructSyncTagOGdelay] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
 	'tags_keep','opto-delay [og-5s]');
 
-% Settings for sub-groups
-organizeStructSyncOGdelay(1).title = 'OG-SPONT syncVSasync PO';
-organizeStructSyncOGdelay(1).keepGroups = {'opto-delay [og-5s]-PO'};
-organizeStructSyncOGdelay(1).mmFixCat = 'type';
-organizeStructSyncOGdelay(1).colorGroup = {'#8C0383', '#FF00CC'};
-
-organizeStructSyncOGdelay(2).title = 'OG-SPONT syncVSasync DAO';
-organizeStructSyncOGdelay(2).keepGroups = {'opto-delay [og-5s]-DAO'};
-organizeStructSyncOGdelay(2).mmFixCat = 'type';
-organizeStructSyncOGdelay(2).colorGroup = {'#003264', '#00AAD4'};
-
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGdelay,props,organizeStructSyncOGdelay,...
+groupSettingsType = 'syncTag OG-SPONT';
+[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+	'dataDist', dataDist, 'seperateSPONT', false);
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGdelay,props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
 
@@ -485,18 +400,10 @@ organizeStructSyncOGdelay(2).colorGroup = {'#003264', '#00AAD4'};
 [eventStructSyncTagPostOG] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
 	'tags_keep','rebound [og-5s]');
 
-% Settings for sub-groups
-organizeStructSyncPostOG(1).title = 'OGOFF-TRIG syncVSasync PO';
-organizeStructSyncPostOG(1).keepGroups = {'rebound [og-5s]-PO'};
-organizeStructSyncPostOG(1).mmFixCat = 'type';
-organizeStructSyncPostOG(1).colorGroup = {'#8C0383', '#FF00CC'};
-
-organizeStructSyncPostOG(2).title = 'OGOFF-TRIG syncVSasync DAO';
-organizeStructSyncPostOG(2).keepGroups = {'rebound [og-5s]-DAO'};
-organizeStructSyncPostOG(2).mmFixCat = 'type';
-organizeStructSyncPostOG(2).colorGroup = {'#003264', '#00AAD4'};
-
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagPostOG,props,organizeStructSyncPostOG,...
+groupSettingsType = 'synctag OGOFF-TRIG';
+[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+	'dataDist', dataDist, 'seperateSPONT', false);
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagPostOG,props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
 
@@ -505,18 +412,10 @@ organizeStructSyncPostOG(2).colorGroup = {'#003264', '#00AAD4'};
 [eventStructSyncTagAP] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
 	'tags_keep','trig [ap-0.1s]');
 
-% Settings for sub-groups
-organizeStructSyncPostOG(1).title = 'AP-TRIG syncVSasync PO';
-organizeStructSyncPostOG(1).keepGroups = {'trig [ap-0.1s]-PO'};
-organizeStructSyncPostOG(1).mmFixCat = 'type';
-organizeStructSyncPostOG(1).colorGroup = {'#8C0383', '#FF00CC'};
-
-organizeStructSyncPostOG(2).title = 'AP-TRIG syncVSasync DAO';
-organizeStructSyncPostOG(2).keepGroups = {'trig [ap-0.1s]-DAO'};
-organizeStructSyncPostOG(2).mmFixCat = 'type';
-organizeStructSyncPostOG(2).colorGroup = {'#003264', '#00AAD4'};
-
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagAP,props,organizeStructSyncPostOG,...
+groupSettingsType = 'synctag AP-TRIG';
+[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+	'dataDist', dataDist, 'seperateSPONT', false);
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagAP,props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
 
@@ -525,23 +424,22 @@ organizeStructSyncPostOG(2).colorGroup = {'#003264', '#00AAD4'};
 [eventStructSyncTagOGSPONTsubNMerge] = filter_entries_in_structure(eventStructForPlot_mergeSubN_syncTag,'group',...
 	'tags_keep','opto-delay [og-5s]');
 
-organizeStructMergeSubNSyncOGSPONT.title = 'OG-SPONT syncVSasync ALL';
-organizeStructMergeSubNSyncOGSPONT.keepGroups = {'opto-delay [og-5s]'};
-organizeStructMergeSubNSyncOGSPONT.mmFixCat = 'type';
-
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGSPONTsubNMerge,props,organizeStructMergeSubNSyncOGSPONT,...
+groupSettingsType = 'syncTag OG-SPONT subNall';
+[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+	'dataDist', dataDist, 'seperateSPONT', false);
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGSPONTsubNMerge,props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
+
 
 % Work on rebound (OGOFF-TRIG) events. Merge PO and DAO
 [eventStructSyncTagOGOFFTRIGsubNMerge] = filter_entries_in_structure(eventStructForPlot_mergeSubN_syncTag,'group',...
 	'tags_keep','rebound [og-5s]');
 
-organizeStructMergeSubNSyncOGOFF.title = 'OGOFF-TRIG syncVSasync ALL';
-organizeStructMergeSubNSyncOGOFF.keepGroups = {'rebound [og-5s]'};
-organizeStructMergeSubNSyncOGOFF.mmFixCat = 'type';
-
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGOFFTRIGsubNMerge,props,organizeStructMergeSubNSyncOGOFF,...
+groupSettingsType = 'syncTag OGOFF-TRIG subNall';
+[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+	'dataDist', dataDist, 'seperateSPONT', false);
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGOFFTRIGsubNMerge,props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
 

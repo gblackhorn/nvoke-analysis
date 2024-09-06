@@ -9,27 +9,27 @@ function [event_info,varargout] = mod_cat_name(event_info,varargin)
 	% Defaults
 	stimType = true; % true/false. Whether consider stimulation type when modifying the categories
 	seperate_spon = false; % if stimType is true, whether add stim info to spon group
-	dis_extra = true; % true/false. If old category name is not found in any cat_merge groups
+	dis_extra = true; % true/false. If old category name is not found in any catNameOld groups
 
 	% Settings for modifying the category. This can be input with varargin
-	% each cell in cat_merge should pair with one cat_names element sharing the same index
+	% each cell in catNameOld should pair with one cat_names element sharing the same index
 	cat_type = 'peak_category'; % 'fovID', 'peak_category'
 
 	EventCat_OldNew = CaImg_char_pat('event_group');
-	cat_names = EventCat_OldNew.new;
-	cat_merge = EventCat_OldNew.old;
-	cat_num = numel(cat_names);
-	% cat_names = {'spon', 'trig', 'trig-AP', 'opto-delay', 'rebound'}; % new category names
-	% cat_num = numel(cat_names);
-	% cat_merge = cell(cat_num, 1); % each cell contains old categories which will be grouped together
-	% cat_merge{1} = {'noStim', 'beforeStim', 'interval',...
+	catNameNew = EventCat_OldNew.new;
+	catNameOld = EventCat_OldNew.old;
+	cat_num = numel(catNameNew);
+	% catNameNew = {'spon', 'trig', 'trig-AP', 'opto-delay', 'rebound'}; % new category names
+	% cat_num = numel(catNameNew);
+	% catNameOld = cell(cat_num, 1); % each cell contains old categories which will be grouped together
+	% catNameOld{1} = {'noStim', 'beforeStim', 'interval',...
 	% 	'beforeStim-beforeStim', 'interval-interval'}; % spon
-	% cat_merge{2} = {'trigger', 'trigger-beforeStim', 'trigger-interval'}; % trig
-	% cat_merge{3} = {'delay-trigger'}; % trig-AP
-	% cat_merge{4} = {'delay', 'delay-rebound', 'delay-interval', 'delay-beforeStim'}; % delay. 'delay-delay', 
-	% cat_merge{5} = {'rebound', 'rebound-interval'}; % rebound
+	% catNameOld{2} = {'trigger', 'trigger-beforeStim', 'trigger-interval'}; % trig
+	% catNameOld{3} = {'delay-trigger'}; % trig-AP
+	% catNameOld{4} = {'delay', 'delay-rebound', 'delay-interval', 'delay-beforeStim'}; % delay. 'delay-delay', 
+	% catNameOld{5} = {'rebound', 'rebound-interval'}; % rebound
 
-	add_extra = 'stim_tags'; % add info in event_info.(add_extra) to the category name;
+	add_extra = 'stim_name'; % add info in event_info.(add_extra) to the category name;
 
 	cat_setting = '';
 
@@ -38,7 +38,7 @@ function [event_info,varargout] = mod_cat_name(event_info,varargin)
 	% Optionals
 	for ii = 1:2:(nargin-1)
 	    if strcmpi('cat_setting', varargin{ii})
-	        cat_setting = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
+	        cat_setting = varargin{ii+1}; % struct var including fields 'cat_type', 'catNameNew' and 'catNameOld'
         elseif strcmpi('dis_extra', varargin{ii})
 	        dis_extra = varargin{ii+1};
         elseif strcmpi('stimType', varargin{ii})
@@ -50,9 +50,9 @@ function [event_info,varargout] = mod_cat_name(event_info,varargin)
 
 	if ~isempty(cat_setting)
 		cat_type = cat_setting.cat_type;
-		cat_names = cat_setting.cat_names;
-		cat_num = numel(cat_names);
-		cat_merge = cat_setting.cat_merge;
+		catNameNew = cat_setting.catNameNew;
+		cat_num = numel(catNameNew);
+		catNameOld = cat_setting.catNameOld;
 	end
 
 	%% ====================
@@ -68,12 +68,12 @@ function [event_info,varargout] = mod_cat_name(event_info,varargin)
 
 		mod_name = false; % mark if the cat name has been modified
 		old_name = event_info(n).(cat_type);
-		tf_newName = strcmpi(old_name, cat_names); % check if the category name is already modified
+		tf_newName = strcmpi(old_name, catNameNew); % check if the category name is already modified
 		if isempty(find(tf_newName, 1))
 			for cn = 1:cat_num
-				tf = strcmpi(old_name, cat_merge{cn});
+				tf = strcmpi(old_name, catNameOld{cn});
 				if ~isempty(find(tf, 1))
-					new_name = cat_names{cn};
+					new_name = catNameNew{cn};
 					tf_newName = true;
 
 					mod_name = true;

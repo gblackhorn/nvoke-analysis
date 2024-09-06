@@ -257,7 +257,7 @@ opt.smooth_span = 0.1;
 opt.prominence_factor = 4; % default: 4. prominence_factor doesn't influence peak finding in decon data
 opt.existing_peak_duration_extension_time_pre  = 1; % duration in second, before existing peak rise 
 opt.existing_peak_duration_extension_time_post = 1; % duration in second, after decay
-opt.criteria_rise_time = [0 1]; % unit: second. filter to keep peaks with rise time in the range of [min max]
+opt.criteria_rise_time = [0 2]; % unit: second. filter to keep peaks with rise time in the range of [min max]
 opt.criteria_slope = [3 2000]; % default: slice-[50 2000]
 							% calcium(a.u.)/rise_time(s). filter to keep peaks with rise time in the range of [min max]
 							% ventral approach default: [3 80]
