@@ -212,9 +212,9 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData, v
             else
                 sortStr = '';
             end
-            fig_title{1} = sprintf('%s %s fluorTrace %s', title_str_stem, norm_str, sortStr); % Create the title string
+            figName{1} = sprintf('%s %s fluorTrace %s', title_str_stem, norm_str, sortStr); % Create the title string
             f(1) = fig_canvas(2, 'unit_width', plot_unit_width, 'unit_height', plot_unit_height,...
-                'column_lim', 1, 'fig_name', fig_title{1}); % create a figure
+                'column_lim', 1, 'fig_name', figName{1}); % create a figure
             tlo = tiledlayout(f(1), 3, 1); % setup tiles
             ax = nexttile(tlo, [2, 1]); % activate the ax for trace plot
             plot_TemporalData_Trace(gca, timeData, FluroData, 'yData2', FluroDataDecon,...
@@ -223,52 +223,59 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData, v
             trace_xlim = xlim;
             nexttile(tlo); % activate the ax for color plot
             plot_TemporalData_Color(gca, FluroData', 'rowNames', originRowNames, 'x_window', trace_xlim, 'show_colorbar', show_colorbar);
-            sgtitle(fig_title{1})
+            sgtitle(figName{1})
             set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 
             % Figure 2: Plot the calcium events as scatter and show the events number in a histogram (2 plots)
-            fig_title{2} = sprintf('%s event [%s] rasterAndHist %s', title_str_stem, event_type, sortStr);
-            fig_title{2} = strrep(fig_title{2}, '_', '');
+            figName{2} = sprintf('%s event [%s] rasterAndHist %s', title_str_stem, event_type, sortStr);
+            figName{2} = strrep(figName{2}, '_', '');
             f(2) = plot_raster_with_hist(eventTime, trace_xlim, 'shadeData', patchCoor,...
                 'rowNames', originRowNames, 'hist_binsize', hist_binsize, 'xtickInt_scale', xtickInt_scale,...
-                'titleStr', fig_title{2});
-            sgtitle(fig_title{2})
+                'titleStr', figName{2});
+            sgtitle(figName{2})
             set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 
             % Figure 3: Plot a color plot. Difference between this one and the one in figure 1 is every
             % ROI trace is cut to several sections using stimulation repeat. One row contains the start
             % of stim to the start of the next stim. Each ROI contains the stim repeat number of rows
-            fig_title{3} = sprintf('%s %s periStimHeatMap %s stimEventsDelaySort-%s',...
+            roiStimNumStr = sprintf('roi = %d stimRepeat = %d', roiNum, stimInfo.UnifiedStimDuration.repeats);
+
+            figName{3} = sprintf('%s %s periStimHeatMap %s stimEventsDelaySort-%s',...
                 title_str_stem, norm_str, sortStr, eventsTimeSort); % Create the title string
+            figTitle = sprintf('%s\n%s', figName{3}, roiStimNumStr); % Create the title string
 
             f(3) = plot_TemporalData_Color_seperateStimRepeats(gca, FluroData, timeData, stimInfo,...
                 'preTime', preTime, 'postTime', postTime, 'stimRefType', stimRefType,...
                 'eventsTime', eventTime, 'eventsTimeSort', eventsTimeSort, 'markEvents', plot_marker,...
-                'roiNames', originRowNames, 'show_colorbar', show_colorbar, 'titleStr', fig_title{3},...
+                'roiNames', originRowNames, 'show_colorbar', show_colorbar, 'titleStr', figName{3},...
                 'colorLUT', colorLUT, 'debug_mode', debug_mode); % ,'shadeData', patchCoor,'stimTypes', stimTypes
-            sgtitle(fig_title{3})
+            sgtitle(figTitle)
             set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 
-            fig_title{4} = sprintf('%s %s periStimHeatMap %s firstSponAfterStimDelaySort-%s',...
+            figName{4} = sprintf('%s %s periStimHeatMap %s firstSponAfterStimDelaySort-%s',...
                 title_str_stem, norm_str, sortStr, eventsTimeSort); % Create the title string
+            figTitle = sprintf('%s\n%s', figName{4}, roiStimNumStr); % Create the title string
+
             f(4) = plot_TemporalData_Color_seperateStimRepeats(gca, FluroData, timeData, stimInfo,...
                 'preTime', preTime, 'postTime', postTime, 'stimRefType', stimRefType,...
                 'eventCat', event_eventCat, 'eventsTime', eventTime, 'eventsTimeSort', eventsTimeSort,...
                 'stimEventCat', eventCat, 'followEventCat', eventCatFollow, 'markEvents', plot_marker,...
-                'roiNames', originRowNames, 'show_colorbar', show_colorbar, 'titleStr', fig_title{4},...
+                'roiNames', originRowNames, 'show_colorbar', show_colorbar, 'titleStr', figName{4},...
                 'colorLUT', colorLUT, 'debug_mode', debug_mode); % ,'shadeData', patchCoor,'stimTypes', stimTypes
-            sgtitle(fig_title{4})
+            sgtitle(figTitle)
             set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
 
-            fig_title{5} = sprintf('%s %s periStimHeatMap %s stimEventAmpSort',...
+            figName{5} = sprintf('%s %s periStimHeatMap %s stimEventAmpSort',...
                 title_str_stem, norm_str, sortStr); % Create the title string
+            figTitle = sprintf('%s\n%s', figName{5}, roiStimNumStr); % Create the title string
+
             f(5) = plot_TemporalData_Color_seperateStimRepeats(gca, FluroData, timeData, stimInfo,...
                 'sortMode','stimEventAmp','preTime', preTime, 'postTime', postTime, 'stimRefType', stimRefType,...
                 'eventCat', event_eventCat, 'eventsTime', eventTime, 'eventAmp', event_peakAmp,...
                 'stimEventCat', eventCat, 'markEvents', plot_marker,...
-                'roiNames', originRowNames, 'show_colorbar', show_colorbar, 'titleStr', fig_title{5},...
+                'roiNames', originRowNames, 'show_colorbar', show_colorbar, 'titleStr', figName{5},...
                 'colorLUT', colorLUT, 'debug_mode', debug_mode); % ,'shadeData', patchCoor,'stimTypes', stimTypes
-            sgtitle(fig_title{5})
+            sgtitle(figTitle)
             % ax = gca;
             % ax.Title.Position = [0.5, 1.1, 0]; % Adjust position as needed
             set(gcf, 'Renderer', 'painters'); % Use painters renderer for better vector output
@@ -283,7 +290,7 @@ function [varargout] = plot_calcium_signals_alignedData_allTrials(alignedData, v
                     end
                     msg = 'Choose a folder to save calcium traces and events plots';
                     savePlot(f(fn), 'save_dir', save_dir, 'guiSave', gui_save,...
-                        'guiInfo', msg, 'fname', fig_title{fn}, 'orientation','vertical');
+                        'guiInfo', msg, 'fname', figName{fn}, 'orientation','vertical');
                 end
                 close all
             end

@@ -34,7 +34,7 @@ function [varargout] = plotEventPropMultiGroups(groupedEventProp,props,organizeS
 	addParameter(p, 'mmHierarchicalVars', {'trialName', 'roiName'}, @iscell);
 	addParameter(p, 'saveFig', false, @islogical); 
 	addParameter(p, 'saveDir', '', @ischar); 
-	addParameter(p, 'debugMode', false, @islogical); 
+	addParameter(p, 'debugMode', true, @islogical); 
 
 	% Parse inputs
 	parse(p, groupedEventProp, props, organizeStruct, varargin{:});
@@ -60,7 +60,7 @@ function [varargout] = plotEventPropMultiGroups(groupedEventProp,props,organizeS
 	for en = 1:entryNum
 		if debugMode
 			fprintf('Group %d: %s\n', en, organizeStruct(en).title);
-			if en == 3
+			if en == 12
 				pause
 			end
 		end

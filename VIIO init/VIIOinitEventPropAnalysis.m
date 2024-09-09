@@ -80,11 +80,11 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
                 organizeStruct(10).mmFixCat = 'peak_category';
 
                 organizeStruct(11).title = 'AP-TRIG2OGAP-TRIG PO';
-                organizeStruct(11).keepGroups = {'trig [ap-0.1s]-PO', 'trig-ap [og&ap-5s]-PO'};
+                organizeStruct(11).keepGroups = {'trig [ap-0.1s]-PO', 'trig-ap [og-5s ap-0.1s]-PO'};
                 organizeStruct(11).mmFixCat = 'peak_category';
 
                 organizeStruct(12).title = 'OGAP-TRIG2SPONT PO';
-                organizeStruct(12).keepGroups = {'trig-ap [og&ap-5s]-PO', 'spon-PO'};
+                organizeStruct(12).keepGroups = {'trig-ap [og-5s ap-0.1s]-PO', 'spon-PO'};
                 organizeStruct(12).mmFixCat = 'peak_category';
 
             case 'subN OG subNall'
@@ -132,9 +132,9 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
 
             case 'syncTag OG-SPONT subNall'
                 % Compare sync vs async OG-SPONT (Combine subN for bigger nNum)
-                organizeStructMergeSubNSyncOGSPONT.title = 'OG-SPONT syncVSasync ALL';
-                organizeStructMergeSubNSyncOGSPONT.keepGroups = {'opto-delay [og-5s]'};
-                organizeStructMergeSubNSyncOGSPONT.mmFixCat = 'type';
+                organizeStruct.title = 'OG-SPONT syncVSasync ALL';
+                organizeStruct.keepGroups = {'opto-delay [og-5s]'};
+                organizeStruct.mmFixCat = 'type';
 
             case 'synctag OGOFF-TRIG'
                 % Compare sync vs async OGOFF-TRIG in various subN
@@ -150,9 +150,9 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
 
             case 'syncTag OGOFF-TRIG subNall'
                 % Compare sync vs async OGOFF-TRIG (Combine subN for bigger nNum)
-                organizeStructMergeSubNSyncOGOFF.title = 'OGOFF-TRIG syncVSasync ALL';
-                organizeStructMergeSubNSyncOGOFF.keepGroups = {'rebound [og-5s]'};
-                organizeStructMergeSubNSyncOGOFF.mmFixCat = 'type';
+                organizeStruct.title = 'OGOFF-TRIG syncVSasync ALL';
+                organizeStruct.keepGroups = {'rebound [og-5s]'};
+                organizeStruct.mmFixCat = 'type';
 
             case 'synctag AP-TRIG'
                 % Compare sync vs async AP-TRIG in various subN

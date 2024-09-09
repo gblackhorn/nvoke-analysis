@@ -33,7 +33,7 @@ adata.sponfreqFilter.status = true; % true/false. If true, use the following set
 adata.sponfreqFilter.field = 'sponfq'; % 
 adata.sponfreqFilter.thresh = 0.05; % Hz. default 0.05
 adata.sponfreqFilter.direction = 'high';
-debug_mode = true; % true/false
+debug_mode = false; % true/false
 
 % Create structure data for further analysis (event traces are aligned to event rises)
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
@@ -289,11 +289,31 @@ ggSetting.groupField = {'peak_category','type'}; % options: 'fovID', 'stim_name'
 	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
 
+% Create grouped_event (Separate the spon using stimulation) for plotting event properties with syncTag
+ggSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
+ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
+ggSetting.groupField = {'peak_category','subNuclei','type'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+[eventStructForPlot_syncTag_combineSync] = getAndGroup_eventsProp(alignedData_withSynchInfo,...
+	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
+	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
+
+% Create grouped_event (Separate the spon using stimulation) for plotting OG-SPONT and OGOFF-TRIG from both PO and DAO
+ggSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
+ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
+ggSetting.groupField = {'peak_category','type'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+[eventStructForPlot_mergeSubN_syncTag_combineSync] = getAndGroup_eventsProp(alignedData_allTrials,...
+	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
+	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
+
+
+
 %% ==========
 % 2.5 Plot event properties
 close all
 % General Settings
-saveFig = false; % true/false
+saveFig = true; % true/false
 props = {'FWHM','peak_delta_norm_hpstd','rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
 dataDist = 'posSkewed';
@@ -359,16 +379,14 @@ end
 % 2.7 Plot event properties. Compare the sync and async events in PO and DAO
 close all
 % General Settings
-saveFig = true; % true/false
+saveFig = false; % true/false
 props = {'FWHM','peak_delta_norm_hpstd', 'rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta','sponNorm_peak_mag_delta','peak_delay'
 
 dataDist = 'posSkewed';
 
-
-
 % Work on spon events
-[eventStructSyncTagSpon] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
+[eventStructSyncTagSpon] = filter_entries_in_structure(eventStructForPlot_syncTag_combineSync,'group',...
 	'tags_keep','spon');
 
 groupSettingsType = 'syncTag SPONT';
@@ -385,7 +403,7 @@ end
 
 
 % Work on OG-SPONT (OG delay) events
-[eventStructSyncTagOGdelay] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
+[eventStructSyncTagOGdelay] = filter_entries_in_structure(eventStructForPlot_syncTag_combineSync,'group',...
 	'tags_keep','opto-delay [og-5s]');
 
 groupSettingsType = 'syncTag OG-SPONT';
@@ -397,7 +415,7 @@ groupSettingsType = 'syncTag OG-SPONT';
 
 
 % Work on postOG (OGOFF-TRIG) events
-[eventStructSyncTagPostOG] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
+[eventStructSyncTagPostOG] = filter_entries_in_structure(eventStructForPlot_syncTag_combineSync,'group',...
 	'tags_keep','rebound [og-5s]');
 
 groupSettingsType = 'synctag OGOFF-TRIG';
@@ -409,7 +427,7 @@ groupSettingsType = 'synctag OGOFF-TRIG';
 
 
 % Work on AP (airpuff-evoked) events
-[eventStructSyncTagAP] = filter_entries_in_structure(eventStructForPlot_syncTag,'group',...
+[eventStructSyncTagAP] = filter_entries_in_structure(eventStructForPlot_syncTag_combineSync,'group',...
 	'tags_keep','trig [ap-0.1s]');
 
 groupSettingsType = 'synctag AP-TRIG';
@@ -421,7 +439,7 @@ groupSettingsType = 'synctag AP-TRIG';
 
 
 % Work on OG delay (OG-SPONT) events. Merge PO and DAO
-[eventStructSyncTagOGSPONTsubNMerge] = filter_entries_in_structure(eventStructForPlot_mergeSubN_syncTag,'group',...
+[eventStructSyncTagOGSPONTsubNMerge] = filter_entries_in_structure(eventStructForPlot_mergeSubN_syncTag_combineSync,'group',...
 	'tags_keep','opto-delay [og-5s]');
 
 groupSettingsType = 'syncTag OG-SPONT subNall';
@@ -433,7 +451,7 @@ groupSettingsType = 'syncTag OG-SPONT subNall';
 
 
 % Work on rebound (OGOFF-TRIG) events. Merge PO and DAO
-[eventStructSyncTagOGOFFTRIGsubNMerge] = filter_entries_in_structure(eventStructForPlot_mergeSubN_syncTag,'group',...
+[eventStructSyncTagOGOFFTRIGsubNMerge] = filter_entries_in_structure(eventStructForPlot_mergeSubN_syncTag_combineSync,'group',...
 	'tags_keep','rebound [og-5s]');
 
 groupSettingsType = 'syncTag OGOFF-TRIG subNall';

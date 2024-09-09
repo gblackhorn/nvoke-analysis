@@ -5,7 +5,7 @@
 %% ====================
 % Run this section only once
 addpath(genpath('/flash/UusisaariU/GD')); % add this folder to matlab path to use function in it and its subfolders
-opt.Fs = 20;
+opt.Fs = 40;
 opt.video = false;
 folder = pwd; 
 
@@ -21,8 +21,15 @@ for i = 1:subfolders_num % Ignore "." and ".."
 	subfolder = fullfile(folder, subfolders(i).name);
 	cnmfe_result_file = dir(fullfile(subfolder, '*results.mat'));
 	if isempty(cnmfe_result_file)
-		tiff_file = dir(fullfile(subfolder, '*-MC*.tif*')); % list .tif and .tiff files
-		tiff_file = tiff_file(~contains({tiff_file.name}, '-dff', 'IgnoreCase', true)); % discard deltaF/F file
+        % List both .tif and .tiff files
+        tiff_file_tif = dir(fullfile(subfolder, '*MC*.tif'));
+        tiff_file_tiff = dir(fullfile(subfolder, '*MC*.tiff'));
+
+        % Concatenate the results
+        tiff_file = [tiff_file_tif; tiff_file_tiff];
+
+        % discard deltaF/F file
+		tiff_file = tiff_file(~contains({tiff_file.name}, '-dff', 'IgnoreCase', true)); 
 		if length(tiff_file) > 1
 			[~, idx] = sort([tiff_file.bytes], 'descend'); % sort files according to date
 			[~, latest_file_idx] = max(idx);
