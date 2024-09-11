@@ -33,7 +33,7 @@ adata.sponfreqFilter.status = true; % true/false. If true, use the following set
 adata.sponfreqFilter.field = 'sponfq'; % 
 adata.sponfreqFilter.thresh = 0.05; % Hz. default 0.05
 adata.sponfreqFilter.direction = 'high';
-debug_mode = false; % true/false
+debug_mode = true; % true/false
 
 % Create structure data for further analysis (event traces are aligned to event rises)
 [alignedData_allTrials] = get_event_trace_allTrials(recdata_organized,'event_type', adata.event_type,...
@@ -180,7 +180,7 @@ end
 %% ==========
 % 2.3 Create the mean spontaneous traces in DAO and PO
 % Note: 'event_type' for alignedData must be 'detected_events'
-save_fig = true; % true/false
+save_fig = false; % true/false
 save_dir = FolderPathVA.fig;
 at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'. Indicate what value should be used to normalize the traces
 at.stimNames = ''; % If empty, do not screen recordings with stimulation, instead use all of them
@@ -316,11 +316,13 @@ close all
 saveFig = true; % true/false
 props = {'FWHM','peak_delta_norm_hpstd','rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
+seperate_spon = true; % true/false. Whether to seperated spon according to stimualtion
+                        % Make sure this is consistent with the previous session
 dataDist = 'posSkewed';
 
 groupSettingsType = 'subN';
 [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-	'dataDist', dataDist, 'seperateSPONT', ggSetting.seperate_spon);
+	'dataDist', dataDist, 'seperateSPONT', seperate_spon);
 [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructForPlot,props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
@@ -332,7 +334,7 @@ end
 
 groupSettingsType = 'subN OG subNall';
 [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-	'dataDist', dataDist, 'seperateSPONT', ggSetting.seperate_spon);
+	'dataDist', dataDist, 'seperateSPONT', seperate_spon);
 [~, ~] = plotEventPropMultiGroups(eventStructForPlot_mergeSubN,props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
@@ -466,8 +468,8 @@ groupSettingsType = 'syncTag OGOFF-TRIG subNall';
 % 2.8 (Temp) Compare EventProp using different settings
 figFolder = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure';
 saveFolder = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure';
-label1 = "Before-correcting-the-location"; % String array
-label2 = "After-correcting-the-location";    % String array
+label1 = "Combine SPONT From Same SubN"; % String array
+label2 = "Separate SPONT using stimulation";    % String array
 figExt = 'jpg';
 textExt = 'tex';
 keywordFig = '';
@@ -476,7 +478,7 @@ keywordText = '';
 ignoreKeywordText = '';
 
 compareAnalysisUsingdiffSetting(figFolder, saveFolder,...
-	'label1', label1, 'label2', label2, 'figExt', figExt, 'textExt', tableExt,...
+	'label1', label1, 'label2', label2, 'figExt', figExt, 'textExt', textExt,...
 	'keywordFig', keywordFig, 'ignoreKeywordFig', ignoreKeywordFig,...
 	'keywordText', keywordText, 'ignoreKeywordText', ignoreKeywordText);
 
@@ -659,30 +661,24 @@ ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in 
 [stimEventJitter, f, fname] = stimEventJitterAnalysis(alignedDataStimEffectFiltered,{'og-5s'},'rebound');
 % 'titlePrefix', subNucleiTypes{sn}
 
-if save_fig
-	if sn == 1 
-		guiSave = true;
-	else
-		guiSave = false;
-	end
-	FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',guiSave,'fname',fname);
-	save(fullfile(FolderPathVA.fig, [fname,' data']),'stimEventJitter');
+FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',true,'fname',fname);
+save(fullfile(FolderPathVA.fig, [fname,' data']),'stimEventJitter');
 
-	% Save nNum table in latex format
-	tabNumName = sprintf('%s nNumInfo.tex', fname);
-	tableToLatex(stimEventJitter.numTab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig,tabNumName),...
-	    'caption', tabNumName, 'columnAdjust', 'XXXXX');
+% Save nNum table in latex format
+tabNumName = sprintf('%s nNumInfo.tex', fname);
+tableToLatex(stimEventJitter.numTab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig,tabNumName),...
+    'caption', tabNumName, 'columnAdjust', 'XXXXX');
 
-	% Save GLMM Model comparison in latex format
-	MMtabName = sprintf('%s modelComp.tex', fname);
-	tableToLatex(stimEventJitter.GlmmReport.chiLRT, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, MMtabName),...
-	    'caption', [stimEventJitter.GlmmReport.modelInfoStr, ' ', fname], 'columnAdjust', 'cXccccccc');
+% Save GLMM Model comparison in latex format
+MMtabName = sprintf('%s modelComp.tex', fname);
+tableToLatex(stimEventJitter.GlmmReport.chiLRT, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, MMtabName),...
+    'caption', [stimEventJitter.GlmmReport.modelInfoStr, ' ', fname], 'columnAdjust', 'cXccccccc');
 
-	% Save K-S tab in latex format
-	KStabName = sprintf('%s KStestTab.tex', fname);
-	tableToLatex(stimEventJitter.KStest.tab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, KStabName),...
-	    'caption', [KStabName,' ', fname], 'columnAdjust', 'ccc');
-end
+% Save K-S tab in latex format
+KStabName = sprintf('%s KStestTab.tex', fname);
+tableToLatex(stimEventJitter.KStest.tab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, KStabName),...
+    'caption', [KStabName,' ', fname], 'columnAdjust', 'ccc');
+
 
 % subNucleiTypes = {'DAO', 'PO'};
 % for sn = 1:numel(subNucleiTypes)
@@ -841,14 +837,14 @@ end
 %% ==========
 % 4.1 Create the mean spontaneous traces of AP events caused by AP and OG-AP in PO
 % Note: 'event_type' for alignedData must be 'detected_events'
-save_fig = false; % true/false
+save_fig = true; % true/false
 save_dir = FolderPathVA.fig;
 at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'. Indicate what value should be used to normalize the traces
 at.stimNames = {'ap-0.1s','og-5s ap-0.1s'}; % If empty, do not screen recordings with stimulation, instead use all of them
 at.eventCat = {'trig','trig-ap'}; % options: 'trig','trig-ap','rebound','spon', 'rebound'
 at.subNucleiTypes = 'PO'; % Separate ROIs using the subnuclei tag.
 at.plot_combined_data = true; % mean value and std of all traces
-at.showRawtraces = true; % true/false. true: plot every single trace
+at.showRawtraces = false; % true/false. true: plot every single trace
 at.showMedian = false; % true/false. plot raw traces having a median value of the properties specified by 'at.medianProp'
 at.medianProp = 'FWHM'; % 
 at.shadeType = 'ste'; % plot the shade using std/ste
@@ -856,7 +852,7 @@ at.y_range = [-10 20]; % [-10 5],[-3 5],[-2 1]
 disOgEx = false; % true/false. If true, screen ROIs
 ogStimTags = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
 ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
-screenWithPreOrPost = true; % Further screen event traces by checking if they have a specific pre/post event
+% screenWithPreOrPost = true; % Further screen event traces by checking if they have a specific pre/post event
 
 % at.sponNorm = true; % true/false
 % at.normalized = false; % true/false. normalize the traces to their own peak amplitudes.
@@ -869,7 +865,7 @@ traceInfo = cell(1,numel(at.subNucleiTypes));
 % Loop through the stimNames/eventCat
 for i = 1:numel(at.eventCat)
 	if strcmp(at.stimNames{i}, 'og-5s ap-0.1s') && strcmp(at.eventCat{i}, 'trig-ap')
-		screenWithPreOrPost = true;
+		screenWithPreOrPost = false;
 		preOrPost = 'pre';
 		preOrPostEventCat = 'trig';
 	else

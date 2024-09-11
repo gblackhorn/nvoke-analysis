@@ -167,7 +167,7 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
                 organizeStruct(2).colorGroup = {'#003264', '#00AAD4'};
         end
 
-    else
+    elseif seperateSPONT
         % SPONT are spearated according to the stimulation applied
         switch groupSettingsType
             case 'subN'
