@@ -165,6 +165,14 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
                 organizeStruct(2).keepGroups = {'trig [ap-0.1s]-DAO'};
                 organizeStruct(2).mmFixCat = 'type';
                 organizeStruct(2).colorGroup = {'#003264', '#00AAD4'};
+
+            case 'synctag OGAP-TRIG'
+                % Compare sync vs async AP-TRIG in various subN
+                organizeStruct.title = 'OGAP-TRIG syncVSasync PO';
+                organizeStruct.keepGroups = {'trig-ap [og-5s ap-0.1s]-PO'};
+                organizeStruct.mmFixCat = 'type';
+                organizeStruct.colorGroup = {'#8C0383', '#FF00CC'};
+
         end
 
     elseif seperateSPONT

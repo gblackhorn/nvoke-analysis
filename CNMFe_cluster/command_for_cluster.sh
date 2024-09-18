@@ -46,7 +46,7 @@ rsync -av --include '*/' --include '*.sh' --exclude '*' $flashHomeDir/ deigo:$bu
 
 # Set folder path on Bucket to Copy data from bucket to flash
 bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2024-06_reprocess/'
-bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/2024-01_20Hz/'
+bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/nRIM_MEMBERS/guoda/Inscopix/Projects/Exported_tiff/IO_ventral_approach/DevianaDavid/VCI040_exportedtiff_MC/'
 # bucketdatadir='/bucket/UusisaariU/PROCESSED_DATA_BACKUPS/Moscope/INSCOPIX_tiff/M8/'
 
 # Create a folder, if it doesn't exist, to store data
@@ -58,7 +58,7 @@ mkdir /flash/UusisaariU/GD/data_2021-04-05/2021-04-05-13-45-02 # make a folder w
 # Assign the new dir to 'flashdatadir'
 flashdatadir='/flash/UusisaariU/GD/data_2024-06_reprocess/'
 flashdatadir='/flash/UusisaariU/GD/data_2024-01_30Hz/'
-flashdatadir='/flash/UusisaariU/GD/data_2024-01_20Hz/'
+flashdatadir='/flash/UusisaariU/GD/data_Ana/'
 
 # Copy the content in bucketdatadir to flashdatadir using rsync
 rsync -av --no-group --no-perms deigo:$bucketdatadir/ $flashdatadir/ 

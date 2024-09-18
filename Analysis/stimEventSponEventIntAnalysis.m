@@ -11,7 +11,6 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	colorGroupCD = {'#3FF5E6', '#F55E58', '#F5A427', '#4CA9F5', '#33F577',...
         '#408F87', '#8F4F7A', '#798F7D', '#8F7832', '#28398F', '#000000'};
 
-
 	% Stat model setting
 	modelType = 'LMM';
 	distribution = 'gamma';
@@ -21,21 +20,6 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	plotUnitWidth = 0.3;
 	plotUnitHeight = 0.1;
 	columnLim = 3;
-
-	% % Optionals
-	% for ii = 1:2:(nargin-3)
-	%     % if strcmpi('filters', varargin{ii})
-	%     %     filters = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
-	%     if strcmpi('followEventCat', varargin{ii})
-	%         followEventCat = varargin{ii+1}; 
-	%     elseif strcmpi('eventTimeType', varargin{ii})
-	%         eventTimeType = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
-    %     elseif strcmpi('maxDiff', varargin{ii})
-	%         maxDiff = varargin{ii+1};
-    %     elseif strcmpi('debugMode', varargin{ii})
-	%         debugMode = varargin{ii+1};
-	%     end
-	% end
 
 	% Create an instance of the inputParser
 	p = inputParser;
@@ -125,14 +109,18 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	axViolin = nexttile(1,[5,1]);
 	violinplot(violinData);
 
+	% Summarize the violinData stats and combine it to nNum table
+	summerizedStats = summarizeStructStats(violinData);
+	summerizedStatsAndNnumTab = combineTabsWithSameRowTitle(summerizedStats, combinedNumTable);
+
 	% Plot cumulative distribution
 	axCD = nexttile(2,[5,1]);
 	cumulative_distr_plot(struct2cell(violinData), 'groupNames', fieldnames(violinData), 'plotWhere', axCD,...
 	    'plotCombine',false,'colorGroup', colorGroupCD, 'FontSize', 12, 'FontWeight', 'bold');
 
-	% Plot nNumber
-	axNum = nexttile(3);
-	plotSummaryTableInUITable(axNum, combinedNumTable);
+	% Plot summarized stats and nNumber
+	axStatsNum = nexttile(3);
+	plotSummaryTableInUITable(axStatsNum, summerizedStatsAndNnumTab);
 
 
 	% Plot LMM/GLMM stat
@@ -175,7 +163,7 @@ function [varargout] = stimEventSponEventIntAnalysis(alignedData,stimName,stimEv
 	varargout{1} = intData;
 	varargout{2} = f;
 	varargout{3} = titleStr;
-	varargout{4} = combinedNumTable; % table of n numbers
+	varargout{4} = summerizedStatsAndNnumTab; % table of n numbers
 	varargout{5} = KStestTab; % table of K-S test
 
 

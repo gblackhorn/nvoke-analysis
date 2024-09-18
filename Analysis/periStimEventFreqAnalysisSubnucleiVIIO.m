@@ -143,6 +143,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 			[violinData1,statInfo1,nNumTab1] = violinplotPeriStimFreq2(barStat.(subNucleiFilter),violinStimNames1,violinBinIDX1,...
 				'normToFirst',normToFirst,'titleStr',violinTitleStr1,...
 				'save_fig',save_fig,'save_dir',saveDir,'gui_save','off');
+			summaryStatsTab1 = struct2table(statInfo1.dataInfo);
 
 			% event freq comparison: baseline of AP vs AP
 			violinStimNames2 = {'ap-0.1s','ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. these groups will be used for the violin plot
@@ -152,6 +153,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 			[violinData2,statInfo2,nNumTab2] = violinplotPeriStimFreq2(barStat.(subNucleiFilter),violinStimNames2,violinBinIDX2,...
 				'normToFirst',normToFirst,'titleStr',violinTitleStr2,...
 				'save_fig',save_fig,'save_dir',saveDir,'gui_save','off');
+			summaryStatsTab2 = struct2table(statInfo2.dataInfo);
 
 			% bar plot of the fold-change of event frequency in statInfo1 and statInfo2
 			% APstim/APbaseline VS OGAP/OG
@@ -177,6 +179,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 
 			statInfoFoldChange = violinplotWithStat({foldDataAP,foldDataOGAP},'groupNames',{'AP without OG','AP with OG'},...
 			    'titleStr',[foldChangeTitleStr,' violin'],'save_fig',save_fig,'save_dir',saveDir);
+			summaryStatsTabFoldChange = struct2table(statInfoFoldChange.dataInfo);
 
 
 			if save_fig
@@ -184,15 +187,21 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 
 				% Combine the nNum and stat tabs of violin plots
 				nNumTabCombine = [nNumTab1; nNumTab2];
+				summaryStatsTabCombine = [summaryStatsTab1; summaryStatsTab2];
+				summaryStatsANDnNumcombinedTable = combineTabsWithSameRowTitle(summaryStatsTabCombine, nNumTabCombine)
 				statTabCombine = [statInfo1.statTab; statInfo2.statTab; statInfoFoldChange.statTab];
 
-				% Save the tables (nNum and stat) for violinData plots
-				nNumTabCombineName = sprintf('%s periStimFreq nNum.tex', subNucleiFilter);
-				% violin1nNumTabCap = sprintf('%s %s', nNumTabCombineName, statInfo1.stat.Method);
-				% statInfo = sprintf('%s nNumInfo.tex', organizeStruct(en).title);
-				tableToLatex(nNumTabCombine, 'saveToFile',true,'filename',...
-				    fullfile(saveDir,nNumTabCombineName), 'caption', nNumTabCombineName,...
-				    'columnAdjust', 'XXXXXXX');
+				% Save the table: Combined summary stats and nNum from two within group comparisons
+				NameSummaryStatsANDnNumTab = sprintf('%s periStimFreq summaryStats nNum.tex', subNucleiFilter);
+				tableToLatex(summaryStatsANDnNumcombinedTable, 'saveToFile',true,'filename',...
+				    fullfile(saveDir,NameSummaryStatsANDnNumTab), 'caption', NameSummaryStatsANDnNumTab,...
+				    'columnAdjust', 'XXXXXXXXXXX');
+
+				% Save the tables: Summary stats of the fold-change between AP-alone and AP-OG
+				NameSummaryStatsFoldChange = sprintf('%s periStimFreq foldChange summaryStats.tex', subNucleiFilter);
+				tableToLatex(summaryStatsTabFoldChange, 'saveToFile',true,'filename',...
+				    fullfile(saveDir,NameSummaryStatsFoldChange), 'caption', NameSummaryStatsFoldChange,...
+				    'columnAdjust', 'XXXXX');
 
 				statTabCombineName = sprintf('%s periStimFreq stat.tex', subNucleiFilter);
 				statTabCombineCap = sprintf('%s periStimFreq stat %s', subNucleiFilter, statInfoFoldChange.stat.Method);
@@ -211,5 +220,26 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 	varargout{1} = saveDir;
 end
 
-function saveViolinDataStat2TexTable(violinData, statInfo)
-end
+% function combinedTable = combineSummaryStatsAndNumTab(summaryStatsTab, nNumTab)
+% 	% Assume your tables are named summaryStatsTabCombine and nNumTabCombine
+
+% 	% Step 1: Extract the first columns (matching key) from both tables
+% 	keySummaryStats = summaryStatsTab{:, 1};  % First column from summaryStatsTab
+% 	keyNNumTab = nNumTab{:, 1};  % First column from nNumTab
+
+% 	% Step 2: Find the common keys and their corresponding indices in both tables
+% 	[commonKeys, idxSummary, idxNNum] = intersect(keySummaryStats, keyNNumTab, 'stable');
+
+% 	% Step 3: Extract the matched rows from both tables
+% 	matchedSummaryStatsTab = summaryStatsTab(idxSummary, :);
+% 	matchedNNumTab = nNumTab(idxNNum, :);
+
+% 	% Step 4: Remove the first column from nNumTab (since it's the matching key)
+% 	matchedNNumTab(:, 1) = [];  % Remove the first column
+
+% 	% Step 5: Concatenate the tables horizontally
+% 	combinedTable = [matchedSummaryStatsTab, matchedNNumTab];
+
+% 	% % Display the combined table
+% 	% disp(combinedTable);
+% end

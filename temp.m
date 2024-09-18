@@ -267,7 +267,7 @@ compareAnalysisUsingdiffSetting(figFolder, saveFolder,...
 
 %% ==========
 
-findFunctionCalls('D:\guoda\Documents\MATLAB\Codes', 'CaImg_char_pat');
+findFunctionCalls('D:\guoda\Documents\MATLAB\Codes', 'plotNeuronEdgesAndTraces');
 
 
 
@@ -278,8 +278,8 @@ findFunctionCalls('D:\guoda\Documents\MATLAB\Codes', 'CaImg_char_pat');
 % If save, save to the existing save_dir
 close all
 save_fig = false; % true/false
-eventPb_bar = fig_canvas(1,'fig_name','event probability','unit_width',0.6,'unit_height',0.3);
-eventPb_plot_info = empty_content_struct({'group','plotinfo'},numel(roiStructForPlot));
+eventPb_bar = fig_canvas(1,'fig_name','event probability','unit_width',0.6,'unit_height',0.3)
+;eventPb_plot_info = empty_content_struct({'group','plotinfo'},numel(roiStructForPlot));
 [eventPb_plot_info.group] = roiStructForPlot.group;
 tlo_eventPb_bar = tiledlayout(eventPb_bar,ceil(numel(roiStructForPlot)/4),4);
 for gn = 1:numel(roiStructForPlot)
@@ -296,7 +296,7 @@ end
 %% ====================
 % 6.6 Add the location tag (subnuclei information) to ROIs
 overwrite = true; %options: true/false
-recIDX = 6;
+recIDX = 23;
 recdata_organized(recIDX,:) = addRoiLocTag2recdata(recdata_organized(recIDX,:),'overwrite',overwrite);
 
 
@@ -326,3 +326,47 @@ for gn = 1:numel(roiStructForPlot)
 	% [eventPb_plot_info(gn).plotinfo] = barplot_with_stat(fovPerc,'group_names',fovIDs,...
 	% 	'plotWhere',ax_fov_bar,'title_str',group_name,'save_fig',save_fig,'save_dir',save_dir);
 end
+
+
+%% ====================
+stimName = recdataAP(:,3);
+apTF = strcmpi(stimName, 'ap-0.1s');
+recdataAP = recdataAP(find(apTF), :);
+
+props = {'FWHM','peak_delta_norm_hpstd','rise_duration','peak_delay'}; 
+mmModel = 'GLMM'; 
+mmDistribution = 'gamma'; % For continuous, positively skewed data
+mmLink = 'log'; % For continuous, positively skewed data
+
+organizeStruct(1).title = 'AP-TRIG subN';
+organizeStruct(1).keepGroups = {'trig [ap-0.1s]'};
+organizeStruct(1).mmFixCat = 'subNuclei';
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructForPlot,props,organizeStruct,...
+	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
+
+
+%% ====================
+% Discard the OGex neurons
+ogStimTags = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
+ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+
+[alignedDataOGexExcluded,tfIdxWithSubNucleiInfo,roiNumAll,roiNumKep,roiNumDis] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
+    'stim_names',ogStimTags,'filters',ogStimEffects);
+
+%% ====================
+% Plot the FOV with ROIs and traces for all the recordings
+saveFig = true;
+saveDir = FolderPathVA.fig;
+plotNeuronEdgesAndTraces(alignedData_allTrials, 'saveFig', saveFig, 'saveDir', saveDir);
+
+
+%% ====================
+saveToFile = true;
+combinedFileName = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure\VIIO_eventProp\combineLatexTab.tex';
+
+file1 = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure\VIIO_eventProp\VIIO_eventProp_variousCat\AP-TRIG subN peak_delta_norm_hpstd meanSemTab.tex';
+file2 = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure\VIIO_eventProp\VIIO_eventProp_variousCat\AP-TRIG subN nNumInfo.tex';
+
+[combinedTable, combinedCaption] = combineLatexTables(file1, file2, 'saveToFile', saveToFile,...
+	'combinedFileName', combinedFileName);

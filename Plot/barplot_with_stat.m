@@ -106,6 +106,7 @@ function [barInfo,varargout] = barplot_with_stat(data,varargin)
         barInfo.data(gn).group_data = group_data{gn};
         barInfo.data(gn).n = numel(group_data{gn});
         barInfo.data(gn).mean_val = mean(group_data{gn});
+        barInfo.data(gn).Median = median(group_data{gn});
         barInfo.data(gn).std_val = std(group_data{gn});
         barInfo.data(gn).ste_val = barInfo.data(gn).std_val/sqrt(barInfo.data(gn).n);
 

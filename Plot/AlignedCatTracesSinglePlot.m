@@ -75,7 +75,8 @@ end
 function alignedData = filterData(alignedData, stimNames, subNucleiType)
     % Filter aligned data based on stimNames and subNucleiType
     if ~isempty(stimNames)
-        alignedData = filter_entries_in_structure(alignedData, 'stim_name', 'tags_keep', stimNames);
+        alignedData = filter_entries_in_structure(alignedData, 'stim_name', 'tags_keep', stimNames,'ExactMatch',true);
+
     end
     if ~isempty(subNucleiType)
         alignedData = screenSubNucleiROIs(alignedData, subNucleiType);

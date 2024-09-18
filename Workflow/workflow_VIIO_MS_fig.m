@@ -235,7 +235,7 @@ ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventP
                 % 'event': events are seperated (struct length = events_num). mean values were not calculated
 ggSetting.modify_stim_name = false; % true/false. Change the stimulation name, 
 ggSetting.sponOnly = false; % true/false. If eventType is 'roi', and ggSetting.sponOnly is true. Only keep spon entries
-ggSetting.seperate_spon = true; % true/false. Whether to seperated spon according to stimualtion
+ggSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
 ggSetting.dis_spon = false; % true/false. Discard spontaneous events
 ggSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
 ggSetting.groupField = {'peak_category','subNuclei'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
@@ -316,16 +316,17 @@ close all
 saveFig = true; % true/false
 props = {'FWHM','peak_delta_norm_hpstd','rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
-seperate_spon = true; % true/false. Whether to seperated spon according to stimualtion
+seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
                         % Make sure this is consistent with the previous session
 dataDist = 'posSkewed';
+debugMode = true;
 
 groupSettingsType = 'subN';
 [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
 	'dataDist', dataDist, 'seperateSPONT', seperate_spon);
 [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructForPlot,props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
+	'saveFig', saveFig, 'saveDir', FolderPathVA.fig, 'debugMode', debugMode);
 
 % Update the folder path 
 if saveDir~=0
@@ -337,8 +338,20 @@ groupSettingsType = 'subN OG subNall';
 	'dataDist', dataDist, 'seperateSPONT', seperate_spon);
 [~, ~] = plotEventPropMultiGroups(eventStructForPlot_mergeSubN,props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
+	'saveFig', saveFig, 'saveDir', FolderPathVA.fig, 'debugMode', debugMode);
 
+% Choose a folder and combine the meanSemTab and nNumInfo Latex tables
+if saveFig
+	tab1Key = 'meanSemTab';
+	tab2Key = 'nNumInfo';
+	filePairs = findAllTexFilePairs(FolderPathVA.fig, tab1Key, tab2Key);
+	for n = 1:numel(filePairs)
+		if ~isempty(filePairs(n).outputFile)
+			combineLatexTables(filePairs(n).inputFile, filePairs(n).outputFile, 'saveToFile', true,...
+				'combinedFileName', filePairs(n).combinedFilename);
+		end
+	end
+end
 %% ==========
 % 2.6 Plot ROI properties. 
 % Use data organized in section 2.3
@@ -381,7 +394,7 @@ end
 % 2.7 Plot event properties. Compare the sync and async events in PO and DAO
 close all
 % General Settings
-saveFig = false; % true/false
+saveFig = true; % true/false
 props = {'FWHM','peak_delta_norm_hpstd', 'rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta','sponNorm_peak_mag_delta','peak_delay'
 
@@ -464,6 +477,30 @@ groupSettingsType = 'syncTag OGOFF-TRIG subNall';
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
 
 
+% Work on rebound (OGOFF-TRIG) events. Merge PO and DAO
+[eventStructSyncTagOGAP] = filter_entries_in_structure(eventStructForPlot_syncTag_combineSync,'group',...
+	'tags_keep','trig-ap [og-5s ap-0.1s]-PO');
+
+groupSettingsType = 'synctag OGAP-TRIG';
+[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+	'dataDist', dataDist, 'seperateSPONT', false);
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGAP,props,organizeStruct,...
+	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
+
+% Choose a folder and combine the meanSemTab and nNumInfo Latex tables
+if saveFig
+	tab1Key = 'meanSemTab';
+	tab2Key = 'nNumInfo';
+	filePairs = findAllTexFilePairs(FolderPathVA.fig, tab1Key, tab2Key);
+	for n = 1:numel(filePairs)
+		if ~isempty(filePairs(n).outputFile)
+			combineLatexTables(filePairs(n).inputFile, filePairs(n).outputFile, 'saveToFile', true,...
+				'combinedFileName', filePairs(n).combinedFilename);
+		end
+	end
+end
+
 %% ==========
 % 2.8 (Temp) Compare EventProp using different settings
 figFolder = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure';
@@ -489,12 +526,12 @@ close all
 save_fig = true; % true/false
 gui_save = true;
 groupLevel = 'roi'; % Collect event freq on 'roi'/'stimTrial' level
-customizeEdges = false; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
+customizeEdges = true; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
 						% If true: Set the 'disZeroBase' to true, 'normToBase' to true
 						% If false: Set the 'normToBase' to false
 
 disZeroBase = true; % true/false. Discard the roi/stimTrial if the baseline value is zero
-normToBase = false; % true/false. normalize the data to baseline (data before baseBinEdge)
+normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
 plotDiff = false; % true/false. plot the difference of comparable bins from various stimulation recording groups
 
 filter_roi_tf = true; % true/false. If true, screen ROIs
@@ -587,7 +624,7 @@ stimNameAll = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % 'og-5s' 'ap-0.1s'
 stimEventCatAll = {'rebound','trig','trig-ap','rebound'}; % 'rebound', 'trig'
 releventEventLoc = 'post'; % 'pre'/'post'. The location of relevent event. Pre or post to the ref event
 defReleventEventCat = false; % true/false. Use spon for the relevent event cat. If false, use the closest following/preceeding event
-maxDiff = 10; % the max difference between the stim-related and the following events
+maxDiff = 20; % the max difference between the stim-related and the following events
 % subNucleiTypes = {'DAO', 'PO'};
 ogStimTags = {'og-5s', 'ap-0.1s', 'og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
 ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
@@ -600,7 +637,7 @@ for n = 1:numel(stimNameAll)
 	% [intData,eventIntMean,eventInt,f,fname] = stimEventSponEventIntAnalysis(alignedData_allTrials,stimName,stimEventCat,...
 	% 'maxDiff',maxDiff);
 
-	[intData,f,fname,nNumTab,KStestTab] = stimEventSponEventIntAnalysis(alignedDataStimEffectFiltered,stimName,stimEventCat,...
+	[intData,f,fname,statsAndNnumTab,KStestTab] = stimEventSponEventIntAnalysis(alignedDataStimEffectFiltered,stimName,stimEventCat,...
 	    'releventEventLoc',releventEventLoc,'defReleventEventCat',defReleventEventCat,'maxDiff',maxDiff); % ,'titlePrefix',subNucleiTypes{sn}
 
 	if save_fig
@@ -613,9 +650,9 @@ for n = 1:numel(stimNameAll)
 		save(fullfile(FolderPathVA.fig, [fname,' data']),'intData');
 
 		% Save nNum table in latex format
-		tabNumName = sprintf('%s nNumInfo.tex', fname);
-		tableToLatex(nNumTab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig,tabNumName),...
-		    'caption', tabNumName, 'columnAdjust', 'XXXXX');
+		statsAndNnumTabName = sprintf('%s summaryStats and nNumInfo.tex', fname);
+		tableToLatex(statsAndNnumTab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig,statsAndNnumTabName),...
+		    'caption', statsAndNnumTabName, 'columnAdjust', 'XXXXX');
 
 		% Save GLMM Model comparison in latex format
 		MMtabName = sprintf('%s modelComp.tex', fname);
@@ -835,7 +872,66 @@ end
 
 
 %% ==========
-% 4.1 Create the mean spontaneous traces of AP events caused by AP and OG-AP in PO
+% 3.7 Create the mean traces of OGOGG-TRIG events after the end of OG activation of NO
+% Note: 'event_type' for alignedData must be 'detected_events'
+save_fig = true; % true/false
+save_dir = FolderPathVA.fig;
+at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'. Indicate what value should be used to normalize the traces
+at.stimNames = {'og-5s'}; % If empty, do not screen recordings with stimulation, instead use all of them
+at.eventCat = {'rebound'}; % options: 'trig','trig-ap','rebound','spon', 'rebound', 'opto-delay'
+at.subNucleiTypes = 'PO'; % Separate ROIs using the subnuclei tag.
+at.plot_combined_data = true; % mean value and std of all traces
+at.showRawtraces = false; % true/false. true: plot every single trace
+at.showMedian = false; % true/false. plot raw traces having a median value of the properties specified by 'at.medianProp'
+at.medianProp = 'FWHM'; % 
+at.shadeType = 'ste'; % plot the shade using std/ste
+at.y_range = [-10 20]; % [-10 5],[-3 5],[-2 1]
+disOgEx = true; % true/false. If true, screen ROIs
+ogStimTags = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
+ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+screenWithPreOrPost = false; % Further screen event traces by checking if they have a specific pre/post event
+preOrPost = '';
+preOrPostEventCat = '';
+
+
+% at.sponNorm = true; % true/false
+% at.normalized = false; % true/false. normalize the traces to their own peak amplitudes.
+
+close all
+
+% Create a cell to store the trace info
+traceInfo = cell(1,numel(at.eventCat));
+
+% Loop through the stimNames/eventCat
+for i = 1:numel(at.eventCat)
+
+	[~,traceInfo{i}] = AlignedCatTracesSinglePlot(alignedData_allTrials,at.stimNames{i},at.eventCat{i},...
+		'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
+		'screenWithPreOrPost',screenWithPreOrPost,'preOrPost',preOrPost,'preOrPostEventCat',preOrPostEventCat,...
+		'normMethod',at.normMethod,'subNucleiType',at.subNucleiTypes,...
+		'showRawtraces',at.showRawtraces,'showMedian',at.showMedian,'medianProp',at.medianProp,...
+		'plot_combined_data',at.plot_combined_data,'shadeType',at.shadeType,'y_range',at.y_range);
+	% 'sponNorm',at.sponNorm,'normalized',at.normalized,
+
+	if i == 1
+		guiSave = 'on';
+	else
+		guiSave = 'off';
+	end
+	if save_fig
+		save_dir = savePlot(gcf,'guiSave', guiSave, 'save_dir', save_dir, 'fname', traceInfo{i}.fname);
+	end
+end
+traceInfo = [traceInfo{:}];
+
+if save_fig
+	save(fullfile(save_dir,'alignedCalTracesInfo'), 'traceInfo');
+	FolderPathVA.fig = save_dir;
+end
+
+
+%% ==========
+% 4.1 Create the mean traces of AP events caused by AP and OG-AP in PO
 % Note: 'event_type' for alignedData must be 'detected_events'
 save_fig = true; % true/false
 save_dir = FolderPathVA.fig;
@@ -897,3 +993,5 @@ if save_fig
 	save(fullfile(save_dir,'alignedCalTracesInfo'), 'traceInfo');
 	FolderPathVA.fig = save_dir;
 end
+
+

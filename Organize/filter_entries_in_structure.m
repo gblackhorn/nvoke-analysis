@@ -13,6 +13,7 @@ function [filtered_struct_var,varargout] = filter_entries_in_structure(struct_va
     % filter_par = {};
     clean_ap_entry = false; % true: discard delay and rebound categories from airpuff experiments
     IgnoreCase = true; % ignore case if arrayVar and tag contain strings
+    ExactMatch = false;
     airpuff_tag = {'[ap]'}; % tag used to find airpuff entries
     apDis_tag = {'delay', 'rebound'}; % airpuff group entries containing these tags will be discarded if 'clean_ap_entry' is true
 
@@ -29,6 +30,8 @@ function [filtered_struct_var,varargout] = filter_entries_in_structure(struct_va
             clean_ap_entry = varargin{ii+1}; % true: discard delay and rebound categories from airpuff experiments
         elseif strcmpi('IgnoreCase', varargin{ii})
             IgnoreCase = varargin{ii+1}; 
+        elseif strcmpi('ExactMatch', varargin{ii})
+            ExactMatch = varargin{ii+1}; 
         end
     end
 
@@ -61,14 +64,14 @@ function [filtered_struct_var,varargout] = filter_entries_in_structure(struct_va
 
     % discard tags containing tags_discard
     if ~isempty([tags_discard{:}])
-        [disIDX_td] = judge_array_content(fieldContent,tags_discard,'IgnoreCase',IgnoreCase);
+        [disIDX_td] = judge_array_content(fieldContent,tags_discard,'IgnoreCase',IgnoreCase,'ExactMatch',ExactMatch);
     else
         disIDX_td = [];
     end
 
     % discard tags without tags_keep
     if ~isempty([tags_keep{:}])
-        [keepIDX_tk] = judge_array_content(fieldContent,tags_keep,'IgnoreCase',IgnoreCase);
+        [keepIDX_tk] = judge_array_content(fieldContent,tags_keep,'IgnoreCase',IgnoreCase,'ExactMatch',ExactMatch);
     else
         keepIDX_tk = [];
     end

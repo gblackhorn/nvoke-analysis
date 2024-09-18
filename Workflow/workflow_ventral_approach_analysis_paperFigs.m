@@ -58,7 +58,7 @@ uisave({'recdata_organized','alignedData_allTrials','opt','adata'},...
 
 %% ====================
 % 8 Align traces from all trials. Also collect the properties of events
-adata.event_type = 'detected_events'; % options: 'detected_events', 'stimWin'
+adata.event_type = 'stimWin'; % options: 'detected_events', 'stimWin'
 adata.eventTimeType = 'peak_time'; % rise_time/peak_time. Pick one for event time
 adata.traceData_type = 'lowpass'; % options: 'lowpass', 'raw', 'smoothed'
 adata.event_data_group = 'peak_lowpass';
@@ -316,7 +316,7 @@ filters = {[nan nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb e
 % 9.1.4 Plot traces and stim-aligned traces
 % Note: set adata.event_type to 'stimWin' when creating alignedData_allTrials
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 pause_after_trial = false;
 
 filter_roi_tf = false; % true/false. If true, screen ROIs
