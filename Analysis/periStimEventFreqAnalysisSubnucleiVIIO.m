@@ -220,26 +220,3 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 	varargout{1} = saveDir;
 end
 
-% function combinedTable = combineSummaryStatsAndNumTab(summaryStatsTab, nNumTab)
-% 	% Assume your tables are named summaryStatsTabCombine and nNumTabCombine
-
-% 	% Step 1: Extract the first columns (matching key) from both tables
-% 	keySummaryStats = summaryStatsTab{:, 1};  % First column from summaryStatsTab
-% 	keyNNumTab = nNumTab{:, 1};  % First column from nNumTab
-
-% 	% Step 2: Find the common keys and their corresponding indices in both tables
-% 	[commonKeys, idxSummary, idxNNum] = intersect(keySummaryStats, keyNNumTab, 'stable');
-
-% 	% Step 3: Extract the matched rows from both tables
-% 	matchedSummaryStatsTab = summaryStatsTab(idxSummary, :);
-% 	matchedNNumTab = nNumTab(idxNNum, :);
-
-% 	% Step 4: Remove the first column from nNumTab (since it's the matching key)
-% 	matchedNNumTab(:, 1) = [];  % Remove the first column
-
-% 	% Step 5: Concatenate the tables horizontally
-% 	combinedTable = [matchedSummaryStatsTab, matchedNNumTab];
-
-% 	% % Display the combined table
-% 	% disp(combinedTable);
-% end

@@ -363,10 +363,31 @@ plotNeuronEdgesAndTraces(alignedData_allTrials, 'saveFig', saveFig, 'saveDir', s
 
 %% ====================
 saveToFile = true;
+
+folderPath = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure\VIIO_eventProp\VIIO_eventProp_variousCat';
+filePairs = findAllTexFilePairs(folderPath);
+
 combinedFileName = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure\VIIO_eventProp\combineLatexTab.tex';
 
 file1 = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure\VIIO_eventProp\VIIO_eventProp_variousCat\AP-TRIG subN peak_delta_norm_hpstd meanSemTab.tex';
 file2 = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure\VIIO_eventProp\VIIO_eventProp_variousCat\AP-TRIG subN nNumInfo.tex';
 
-[combinedTable, combinedCaption] = combineLatexTables(file1, file2, 'saveToFile', saveToFile,...
-	'combinedFileName', combinedFileName);
+[combinedTable, combinedCaption] = combineLatexTables(file1, file2, 'saveToFile', saveToFile,'combinedFileName', combinedFileName);
+
+
+%% ====================
+stimNames = {alignedData.stim_name};
+stimTF = strcmpi(stimNames, 'og-5s');
+
+%% ====================
+baselineDataCell = {barStat.PO(1).data(1:8).groupData}';
+baselineData = vertcat(baselineDataCell{:});
+baselineDataCombine = mean(baselineData);
+
+OGearlyDataCell = {barStat.PO(1).data(12).groupData}';
+OGearlyData = vertcat(OGearlyDataCell{:});
+OGearlyDataCombine = mean(OGearlyData);
+
+barplot_with_errBar({baselineDataCombine, OGearlyDataCombine}, 'barNames', {'baseline', 'OGearly'});
+
+

@@ -394,7 +394,7 @@ end
 % 2.7 Plot event properties. Compare the sync and async events in PO and DAO
 close all
 % General Settings
-saveFig = true; % true/false
+saveFig = false; % true/false
 props = {'FWHM','peak_delta_norm_hpstd', 'rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta','sponNorm_peak_mag_delta','peak_delay'
 
@@ -523,15 +523,19 @@ compareAnalysisUsingdiffSetting(figFolder, saveFolder,...
 %% ==========
 % 3.1 Peri-stimulus event frequency analysis
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 gui_save = true;
 groupLevel = 'roi'; % Collect event freq on 'roi'/'stimTrial' level
-customizeEdges = true; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
+customizeEdges = false; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
 						% If true: Set the 'disZeroBase' to true, 'normToBase' to true
 						% If false: Set the 'normToBase' to false
-
-disZeroBase = true; % true/false. Discard the roi/stimTrial if the baseline value is zero
-normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge)
+if customizeEdges
+	disZeroBase = true; % true/false. Discard the roi/stimTrial if the baseline value is zero
+	normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge). Set the disZeroBase to true
+else	
+	disZeroBase = false; % true/false. Discard the roi/stimTrial if the baseline value is zero
+	normToBase = false; % true/false. normalize the data to baseline (data before baseBinEdge). Set the disZeroBase to true
+end
 plotDiff = false; % true/false. plot the difference of comparable bins from various stimulation recording groups
 
 filter_roi_tf = true; % true/false. If true, screen ROIs

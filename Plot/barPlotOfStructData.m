@@ -83,11 +83,6 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     	groups = {structData.(groupField)};
     end
 
-    % % Check the type of elements in gorupData. If numeric, convert them to char
-    % if isnumeric(groups{1})
-    % 	groups = cellfun(@num2str, groups, 'UniformOutput', false);
-    % end
-
     % Get unique groups and their indices
     [uniqueGroups, ~, groupIdx] = unique(groups, 'stable');
     nGroups = numel(uniqueGroups);
@@ -96,12 +91,7 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     barInfoDataFields = {'group', 'groupData', 'meanVal', 'stdVal', 'seVal', 'nNum'};
     barInfo = empty_content_struct(barInfoDataFields,nGroups);
 
-    % % Calculate means and standard deviations for each group
-    % nGroups = numel(uniqueGroups);
-    % means = zeros(1, nGroups);
-    % stds = zeros(1, nGroups);
-    % ses = zeros(1, nGroups);
-
+    % Calculate means and standard deviations for each group
     for i = 1:nGroups
     	barInfo(i).group = uniqueGroups(i); 
     	barInfo(i).groupData = valData(groupIdx == i); 
@@ -109,11 +99,6 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     	barInfo(i).stdVal = std(barInfo(i).groupData, "omitnan");
     	barInfo(i).seVal = ste(barInfo(i).groupData, 'omitnan', true);
     	barInfo(i).nNum = sum(~isnan(barInfo(i).groupData));
-    	% barInfo(i).nNum = numel(barInfo(i).groupData);
-        % groupVals = valData(groupIdx == i);
-        % means(i) = mean(groupVals, "omitnan");
-        % stds(i) = std(groupVals, "omitnan");
-        % ses(i) = ste(groupVals, 'omitnan', true);
     end
 
     % Create bar plot
