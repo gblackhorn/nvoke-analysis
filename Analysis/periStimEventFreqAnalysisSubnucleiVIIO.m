@@ -214,7 +214,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 
 	% Save stat data
 	if save_fig
-		save(fullfile(saveDir, ['periStimStatInfo_subNuclei']), 'barStat', 'diffStat');
+		save(fullfile(saveDir, 'periStimStatInfo_subNuclei'), 'barStat', 'diffStat');
 	end
 
 	varargout{1} = saveDir;

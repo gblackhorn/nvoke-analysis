@@ -523,10 +523,10 @@ compareAnalysisUsingdiffSetting(figFolder, saveFolder,...
 %% ==========
 % 3.1 Peri-stimulus event frequency analysis
 close all
-save_fig = false; % true/false
+save_fig = true; % true/false
 gui_save = true;
 groupLevel = 'roi'; % Collect event freq on 'roi'/'stimTrial' level
-customizeEdges = false; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
+customizeEdges = true; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
 						% If true: Set the 'disZeroBase' to true, 'normToBase' to true
 						% If false: Set the 'normToBase' to false
 if customizeEdges
@@ -547,8 +547,8 @@ diffPair = {[1 3], [2 3], [1 2]}; % {[1 3], [2 3]}. binned freq will be compared
 propName = 'peak_time'; % 'rise_time'/'peak_time'. Choose one to find the loactions of events
 binWidth = 1; % the width of histogram bin. the default value is 1 s.
 stimIDX = []; % []/vector. specify stimulation repeats around which the events will be gathered. If [], use all repeats 
-preStim_duration = 10; % unit: second. include events happened before the onset of stimulations
-postStim_duration = 15; % unit: second. include events happened after the end of stimulations
+preStim_duration = 6; % unit: second. include events happened before the onset of stimulations
+postStim_duration = 7; % unit: second. include events happened after the end of stimulations
 stimEffectDuration = 1; % unit: second. Use this to set the end for the stimulation effect range
 splitLongStim = [1]; % If the stimDuration is longer than stimEffectDuration, the stimDuration 
 					%  part after the stimEffectDuration will be splitted. If it is [1 1], the
@@ -566,8 +566,8 @@ stimEvents(3).stimName = 'og-5s ap-0.1s';
 stimEvents(3).eventCat = 'rebound';
 stimEvents(3).eventCatFollow = 'spon'; % The category of first event following the eventCat one
 
-baseBinEdgestart = -preStim_duration; % where to start to use the bin for calculating the baseline. -1
-baseBinEdgeEnd = -2; % 0
+baseBinEdgestart = -preStim_duration; % preStim_duration. Where to start to use the bin for calculating the baseline.
+baseBinEdgeEnd = 0; % 0
 apCorrection = false; % true/false. If true, correct baseline bin used for normalization. 
 
 

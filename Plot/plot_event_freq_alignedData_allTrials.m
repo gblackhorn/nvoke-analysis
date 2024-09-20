@@ -30,6 +30,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
     addParameter(p, 'apCorrection', true, @islogical); % Apply AP correction
     addParameter(p, 'splitLongStim', [1], @isnumeric); % Split long stimulations
     addParameter(p, 'binWidth', 1, @isnumeric); % Width of histogram bins (s)
+    addParameter(p, 'baseBinIDX', 1, @isnumeric); % Width of histogram bins (s)
+    addParameter(p, 'effectBinIDX', 4, @isnumeric); % Width of histogram bins (s)
     addParameter(p, 'PropName', 'rise_time', @ischar); % Property name ('rise_time', 'peak_time')
     addParameter(p, 'stimIDX', [], @isnumeric); % Indices of stimulation repeats
     addParameter(p, 'AlignEventsToStim', true, @islogical); % Align events to stimulation onsets
@@ -73,6 +75,8 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
     apCorrection = p.Results.apCorrection;
     splitLongStim = p.Results.splitLongStim;
     binWidth = p.Results.binWidth;
+    baseBinIDX = p.Results.baseBinIDX;
+    effectBinIDX = p.Results.effectBinIDX;
     PropName = p.Results.PropName;
     stimIDX = p.Results.stimIDX;
     AlignEventsToStim = p.Results.AlignEventsToStim;
@@ -136,7 +140,11 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		% Get the subplot number and create a title string for the figure
 	stim_type_num = numel(stim_names); % Get the number of stimulation types
 	stimShadeDataAll = empty_content_struct({'stimTypeName','shadeData','stimName','color'},stim_type_num);
-	titleStr = sprintf('%s event freq in %g s bins [%s]%s%s',subNucleiFilter,binWidth,PropName,normToBaseStr,apCorrectionStr);
+	if customizeEdges
+		titleStr = sprintf('%s event freq in customized bins [%s]%s%s',subNucleiFilter,PropName,normToBaseStr,apCorrectionStr);
+	else
+		titleStr = sprintf('%s event freq in %g s bins [%s]%s%s',subNucleiFilter,binWidth,PropName,normToBaseStr,apCorrectionStr);
+	end
 	titleStr = strrep(titleStr,'_',' ');
 
 		% Create a figure and start to plot 
@@ -145,9 +153,9 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 	[f,f_rowNum,f_colNum] = fig_canvas(stim_type_num,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
 		'fig_name',titleStr); % create a figure
 	tlo = tiledlayout(f,f_rowNum,f_colNum);
-	[fstat,fstat_rowNum,fstat_colNum] = fig_canvas(stim_type_num,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
-		'fig_name',titleStr); % create a figure
-	tloStat = tiledlayout(fstat,fstat_rowNum,fstat_colNum);
+	% [fstat,fstat_rowNum,fstat_colNum] = fig_canvas(stim_type_num,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
+	% 	'fig_name',titleStr); % create a figure
+	% tloStat = tiledlayout(fstat,fstat_rowNum,fstat_colNum);
 	for stn = 1:stim_type_num
 		PeriBaseRange = [baseBinEdgestart baseBinEdgeEnd];
 		[EventFreqInBins,binEdges,stimShadeData,stimShadeName,stimEventCatName,binNames] = get_EventFreqInBins_trials(alignedData,stim_names{stn},...
@@ -243,37 +251,58 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		% barInfo.data = barplot_with_stat(ef,'xdata',xdata,'plotWhere',gca);
 		barStat(stn).data = barPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', ax, 'xtickLabel', binNames);
 		barStat(stn).dataStruct = efStruct;
+		barStat(stn).stim = stim_names{stn};
+		barStat(stn).binEdges = binEdges;
+		barStat(stn).binX = xdata;
+		barStat(stn).binNames = binNames;
 
 
+		% Run bootstrap analysis and signTest to compare the stimulation affected group to the baseline group
+		if customizeEdges
+			diff2BaseData = barStat(stn).data(effectBinIDX).groupData-barStat(stn).data(baseBinIDX).groupData;
+			diff2BaseStr = sprintf('%s-%s', binNames{effectBinIDX}, binNames{baseBinIDX});
 
-		% Run Repeated measures ANOVA
-		% Convert matrix to table
-		efTable = array2table(ef, 'VariableNames', binNames);
+			% Bootstrap
+			[~,~,~,~,bootStrapTab]= bootstrapAnalysis(diff2BaseData, 'label', diff2BaseStr);
 
-		% Define the within-subjects design (time points)
-		time = table(binNames', 'VariableNames', {'Time'});
+			% SignTest
+			pValueSign = signtest(diff2BaseData);
+			signTestMethodStr = sprintf('Sign Test %s', diff2BaseStr);
+			signTestTab = table({signTestMethodStr}, pValueSign, 'VariableNames', {'Method', 'PValue'});
 
-		% Define repeated measures model
-		validVarNames = matlab.lang.makeValidName(time{:,:});
-		efTable.Properties.VariableNames = validVarNames;
-		model_formula = sprintf('%s-%s ~ 1', efTable.Properties.VariableNames{1}, efTable.Properties.VariableNames{end});
-		rm = fitrm(efTable, model_formula, 'WithinDesign', time);
-
-		% Perform repeated measures ANOVA
-		ranovaResults = ranova(rm);
-
-		% Perform post-hoc multiple comparisons
-		ranovaMultComp = multcompare(rm, 'Time');
-
-		barStat(stn).ranova = ranovaResults;
-		barStat(stn).ranovaMultComp = ranovaMultComp;
+			barStat(stn).bootStrapTab = bootStrapTab;
+			barStat(stn).signTestTab = signTestTab;
+		end
 
 
-		% Run GLMM to evaluate the difference of every freq in various time bins
-        barStat(stn).GLMMstat = twoPartMixedModelAnalysis(efStruct, 'val', 'xdata', mmlHierarchicalVars,...
-        	'groupVarType', 'categorical', 'dispStat', false);
-		% barInfo.stat = GLMManalysis(efStruct, 'val', 'xdata', mmlHierarchicalVars,...
-		% 	mmType, mmDistribution, mmLink);
+		% % Run Repeated measures ANOVA
+		% % Convert matrix to table
+		% efTable = array2table(ef, 'VariableNames', binNames);
+
+		% % Define the within-subjects design (time points)
+		% time = table(binNames', 'VariableNames', {'Time'});
+
+		% % Define repeated measures model
+		% validVarNames = matlab.lang.makeValidName(time{:,:});
+		% efTable.Properties.VariableNames = validVarNames;
+		% model_formula = sprintf('%s-%s ~ 1', efTable.Properties.VariableNames{1}, efTable.Properties.VariableNames{end});
+		% rm = fitrm(efTable, model_formula, 'WithinDesign', time);
+
+		% % Perform repeated measures ANOVA
+		% ranovaResults = ranova(rm);
+
+		% % Perform post-hoc multiple comparisons
+		% ranovaMultComp = multcompare(rm, 'Time');
+
+		% barStat(stn).ranova = ranovaResults;
+		% barStat(stn).ranovaMultComp = ranovaMultComp;
+
+
+		% % Run GLMM to evaluate the difference of every freq in various time bins
+        % barStat(stn).GLMMstat = twoPartMixedModelAnalysis(efStruct, 'val', 'xdata', mmlHierarchicalVars,...
+        % 	'groupVarType', 'categorical', 'dispStat', false);
+		% % barInfo.stat = GLMManalysis(efStruct, 'val', 'xdata', mmlHierarchicalVars,...
+		% % 	mmType, mmDistribution, mmLink);
 
 
 		% mark the bar with the customized binName
@@ -284,28 +313,21 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		ylabel(ylabelStr)
 		title(sub_titleStr,'FontSize',10)
 
-		barStat(stn).stim = stim_names{stn};
-		% barStat(stn).method = barInfo.stat.method;
-		% barStat(stn).multiComp = barInfo.stat.c;
-		% barStat(stn).data = barInfo.data;
-		barStat(stn).binEdges = binEdges;
-		barStat(stn).binX = xdata;
-		barStat(stn).binNames = binNames;
 
-		% combine baseline data and run anova to compare baseline and the rest bins
-		% xdataStr_combineBase = NumArray2StringCell(xdata);
-		% [xdataStr_combineBase{idxBaseData}] = deal(baseRangeStr);
-		efDataCell = num2cell(ef,1);
-		[efArray,xdataStr_combineBaseArray] = createDataAndGroupNameArray(efDataCell,binNames);
-		stat_combineBase = anova1_with_multiComp(efArray,xdataStr_combineBaseArray);
+		% % combine baseline data and run anova to compare baseline and the rest bins
+		% % xdataStr_combineBase = NumArray2StringCell(xdata);
+		% % [xdataStr_combineBase{idxBaseData}] = deal(baseRangeStr);
+		% efDataCell = num2cell(ef,1);
+		% [efArray,xdataStr_combineBaseArray] = createDataAndGroupNameArray(efDataCell,binNames);
+		% stat_combineBase = anova1_with_multiComp(efArray,xdataStr_combineBaseArray);
 
-		barStat(stn).anovaCombineBase = stat_combineBase;
-		% plot multiCompare stat on another figure
-		MultCom_stat = barStat(stn).anovaCombineBase.c(:,["g1","g2","p","h"]);
+		% barStat(stn).anovaCombineBase = stat_combineBase;
+		% % plot multiCompare stat on another figure
+		% MultCom_stat = barStat(stn).anovaCombineBase.c(:,["g1","g2","p","h"]);
 
-		axStat = nexttile(tloStat);
-		plotUItable(fstat,axStat,ranovaMultComp);
-		% plotUItable(fstat,axStat,MultCom_stat);
+		% axStat = nexttile(tloStat);
+		% plotUItable(fstat,axStat,ranovaMultComp);
+		% % plotUItable(fstat,axStat,MultCom_stat);
 	end
 	sgtitle(titleStr)
 	varargout{1} = barStat;
@@ -320,10 +342,22 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		msg = 'Choose a folder to save plots of event freq around stimulation and statistics';
 		save_dir = savePlot(f,'save_dir',save_dir,'guiSave',gui_save,...
 			'guiInfo',msg,'fname',titleStr);
-		save_dir = savePlot(fstat,'save_dir',save_dir,'guiSave','off',...
-			'guiInfo',msg,'fname',[titleStr,'_MultiComp']);
-		save(fullfile(save_dir, [titleStr, '_stat']),...
-		    'barStat');
+		% save_dir = savePlot(fstat,'save_dir',save_dir,'guiSave','off',...
+		% 	'guiInfo',msg,'fname',[titleStr,'_MultiComp']);
+		save(fullfile(save_dir, [titleStr, '_stat']),'barStat');
+
+		% Save stat tables
+		if customizeEdges
+			for i = 1:numel(barStat) 
+				latexTabNameBootstrap = sprintf('%s bootStrap [%s].tex', titleStr, barStat(i).stim);
+				tableToLatex(barStat(i).bootStrapTab, 'saveToFile',true,'filename',...
+				    fullfile(save_dir,latexTabNameBootstrap), 'caption', latexTabNameBootstrap,'columnAdjust', 'XXXXXXX');
+
+				latexTabSignTestName = sprintf('%s signTest [%s].tex', titleStr, barStat(i).stim);
+				tableToLatex(barStat(i).signTestTab, 'saveToFile',true,'filename',...
+				    fullfile(save_dir,latexTabSignTestName), 'caption', latexTabSignTestName,'columnAdjust', 'XXXXXXX');
+			end
+		end
 
 		if filter_roi_tf
 			filterInfoFile = fullfile(save_dir, [titleStr, '_filterInfo']);
