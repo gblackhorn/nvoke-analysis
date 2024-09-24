@@ -321,7 +321,7 @@ close all
 saveFig = true; % true/false
 props = {'FWHM','peak_delta_norm_hpstd','rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
-separateSpon = true; % true/false. Whether to seperated spon according to stimualtion
+separateSpon = false; % true/false. Whether to seperated spon according to stimualtion
 dataDist = 'posSkewed';
 debugMode = false;
 
@@ -373,7 +373,7 @@ close all
 saveFig = true; % true/false
 props = {'FWHM','peak_delta_norm_hpstd', 'rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta','sponNorm_peak_mag_delta','peak_delay'
-separateSpon = true; % true/false. Whether to seperated spon according to stimualtion
+separateSpon = false; % true/false. Whether to seperated spon according to stimualtion
 dataDist = 'posSkewed';
 
 % Use 'separateSpon' to decide which fields in eventStruct will be used to plot and analyze
@@ -385,7 +385,7 @@ else
 	structFieldALLsubN = 'SyncTagMergeSubNSponSep';
 end
 
-groupSettingsType = 'synctag subN';
+groupSettingsType = 'syncTag subN';
 [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
 	'dataDist', dataDist, 'separateSPONT', separateSpon);
 [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStruct.(structFieldSubN),props,organizeStruct,...
