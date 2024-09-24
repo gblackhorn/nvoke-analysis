@@ -230,15 +230,10 @@ end
 % 2.4 Extract properties of  events and group them according to ROIs' subnuclous location
 
 % Get and group (gg) Settings
-ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
-                % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 
-                % 'event': events are seperated (struct length = events_num). mean values were not calculated
 ggSetting.modify_stim_name = false; % true/false. Change the stimulation name, 
 ggSetting.sponOnly = false; % true/false. If eventType is 'roi', and ggSetting.sponOnly is true. Only keep spon entries
-ggSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
 ggSetting.dis_spon = false; % true/false. Discard spontaneous events
 ggSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
-ggSetting.groupField = {'peak_category','subNuclei'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
 ggSetting.mark_EXog = false; % true/false. if true, rename the og to EXog if the value of field 'stimTrig' is 1
 ggSetting.og_tag = {'og', 'og&ap'}; % find og events with these strings. 'og' to 'Exog', 'og&ap' to 'EXog&ap'
 ggSetting.sort_order = {'spon', 'trig', 'rebound', 'delay'}; % 'spon', 'trig', 'rebound', 'delay'
@@ -248,66 +243,76 @@ ogStimTags = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap
 ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 debug_mode = false; % true/false
 
-% a. Create grouped_event for plotting event properties
-[eventStructForPlot] = getAndGroup_eventsProp(alignedData_allTrials,...
-	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
-	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
-	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
-
-% b. Create grouped_event for plotting ROI properties
-ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventProp
-[roiStructForPlot] = getAndGroup_eventsProp(alignedData_allTrials,...
-	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
-	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
-	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
-
 % Discard those without sync tag in the eventProp (Due to single neuron)
 mustHaveField = 'type';
 [alignedData_withSynchInfo] = validateAlignedDataStructForEventAnalysis(alignedData_allTrials, mustHaveField);
 
-% Create grouped_event for plotting event properties with syncTag
-ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
-ggSetting.groupField = {'peak_category','subNuclei','type'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
-[eventStructForPlot_syncTag] = getAndGroup_eventsProp(alignedData_withSynchInfo,...
-	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+
+% a. Create grouped_event struct for plotting event properties
+ggSetting.entry = 'event';  % 'event': events are seperated (struct length = events_num). mean values were not calculated
+ggSetting.separateSpon = false; % true/false. Whether to seperated spon according to stimualtion
+
+% Grouped using peak_category and subN
+ggSetting.groupField = {'peak_category','subNuclei'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+[eventStruct.noSyncTag] = getAndGroup_eventsProp(alignedData_allTrials,'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
 	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
 
-% Create grouped_event for plotting OG-SPONT and OGOFF-TRIG from both PO and DAO
-ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
+% Grouped using peak_category. Merge events from subN
 ggSetting.groupField = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
-[eventStructForPlot_mergeSubN] = getAndGroup_eventsProp(alignedData_allTrials,...
-	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+[eventStruct.noSyncTagMergeSubN] = getAndGroup_eventsProp(alignedData_allTrials,'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
 	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
 
-% Create grouped_event for plotting OG-SPONT and OGOFF-TRIG from both PO and DAO
-ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
-ggSetting.groupField = {'peak_category','type'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
-[eventStructForPlot_mergeSubN_syncTag] = getAndGroup_eventsProp(alignedData_allTrials,...
-	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
-	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
-	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
-
-% Create grouped_event (Separate the spon using stimulation) for plotting event properties with syncTag
-ggSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
-ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
+% Grouped using peak_category, subN, and type (synch/asynch = cluster/single)
 ggSetting.groupField = {'peak_category','subNuclei','type'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
-[eventStructForPlot_syncTag_combineSync] = getAndGroup_eventsProp(alignedData_withSynchInfo,...
+[eventStruct.SyncTag] = getAndGroup_eventsProp(alignedData_withSynchInfo,'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
+	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
+
+% Grouped using peak_category and type (synch/asynch = cluster/single). Merge events from subN
+ggSetting.groupField = {'peak_category','type'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+[eventStruct.SyncTagMergeSubN] = getAndGroup_eventsProp(alignedData_withSynchInfo,'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
+	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
+
+
+
+ggSetting.separateSpon = true; % true/false. Separated spon using stimualtion
+% Grouped using peak_category and subN
+ggSetting.groupField = {'peak_category','subNuclei'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+[eventStruct.noSyncTagSponSep] = getAndGroup_eventsProp(alignedData_allTrials,'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
+	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
+
+% Grouped using peak_category. Merge events from subN
+ggSetting.groupField = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+[eventStruct.noSyncTagMergeSubNSponSep] = getAndGroup_eventsProp(alignedData_allTrials,'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
+	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
+
+% Grouped using peak_category, subN, and type (synch/asynch = cluster/single)
+ggSetting.groupField = {'peak_category','subNuclei','type'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+[eventStruct.SyncTagSponSep] = getAndGroup_eventsProp(alignedData_withSynchInfo,...
 	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
 	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
 
 % Create grouped_event (Separate the spon using stimulation) for plotting OG-SPONT and OGOFF-TRIG from both PO and DAO
-ggSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
-ggSetting.entry = 'event'; % options: 'roi' or 'event'. The entry type in eventProp
 ggSetting.groupField = {'peak_category','type'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
-[eventStructForPlot_mergeSubN_syncTag_combineSync] = getAndGroup_eventsProp(alignedData_allTrials,...
+[eventStruct.SyncTagMergeSubNSponSep] = getAndGroup_eventsProp(alignedData_withSynchInfo,...
 	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
 	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
 
-
+% b. Create grouped_event for plotting ROI properties
+ggSetting.entry = 'roi'; % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated.
+ggSetting.separateSpon = false; % true/false. Separated spon using stimualtion
+ggSetting.groupField = {'peak_category','subNuclei'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+[roiStructForPlot] = getAndGroup_eventsProp(alignedData_allTrials,...
+	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
+	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
 
 %% ==========
 % 2.5 Plot event properties
@@ -316,15 +321,23 @@ close all
 saveFig = true; % true/false
 props = {'FWHM','peak_delta_norm_hpstd','rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
-seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
-                        % Make sure this is consistent with the previous session
+separateSpon = true; % true/false. Whether to seperated spon according to stimualtion
 dataDist = 'posSkewed';
-debugMode = true;
+debugMode = false;
+
+% Use 'separateSpon' to decide which fields in eventStruct will be used to plot and analyze
+if ~separateSpon
+	structFieldSubN = 'noSyncTag';
+	structFieldALLsubN = 'noSyncTagMergeSubN';
+else
+	structFieldSubN = 'noSyncTagSponSep';
+	structFieldALLsubN = 'noSyncTagMergeSubNSponSep';
+end
 
 groupSettingsType = 'subN';
 [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-	'dataDist', dataDist, 'seperateSPONT', seperate_spon);
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructForPlot,props,organizeStruct,...
+	'dataDist', dataDist, 'separateSPONT', separateSpon);
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStruct.(structFieldSubN),props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig, 'debugMode', debugMode);
 
@@ -333,10 +346,10 @@ if saveDir~=0
 	FolderPathVA.fig = saveDir;
 end
 
-groupSettingsType = 'subN OG subNall';
+groupSettingsType = 'ALLsubN for OG';
 [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-	'dataDist', dataDist, 'seperateSPONT', seperate_spon);
-[~, ~] = plotEventPropMultiGroups(eventStructForPlot_mergeSubN,props,organizeStruct,...
+	'dataDist', dataDist, 'separateSPONT', separateSpon);
+[~, ~] = plotEventPropMultiGroups(eventStruct.(structFieldALLsubN),props,organizeStruct,...
 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig, 'debugMode', debugMode);
 
@@ -352,8 +365,163 @@ if saveFig
 		end
 	end
 end
+
 %% ==========
-% 2.6 Plot ROI properties. 
+% 2.7 Plot event properties with 'type' tags (synch/asynch = cluster/single)
+close all
+% General Settings
+saveFig = true; % true/false
+props = {'FWHM','peak_delta_norm_hpstd', 'rise_duration'}; 
+    % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta','sponNorm_peak_mag_delta','peak_delay'
+separateSpon = true; % true/false. Whether to seperated spon according to stimualtion
+dataDist = 'posSkewed';
+
+% Use 'separateSpon' to decide which fields in eventStruct will be used to plot and analyze
+if ~separateSpon
+	structFieldSubN = 'SyncTag';
+	structFieldALLsubN = 'SyncTagMergeSubN';
+else
+	structFieldSubN = 'SyncTagSponSep';
+	structFieldALLsubN = 'SyncTagMergeSubNSponSep';
+end
+
+groupSettingsType = 'synctag subN';
+[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+	'dataDist', dataDist, 'separateSPONT', separateSpon);
+[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStruct.(structFieldSubN),props,organizeStruct,...
+	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+	'saveFig', saveFig, 'saveDir', FolderPathVA.fig, 'debugMode', debugMode);
+
+% Update the folder path 
+if saveDir~=0
+	FolderPathVA.fig = saveDir;
+end
+
+groupSettingsType = 'syncTag ALLsubN for OG';
+[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+	'dataDist', dataDist, 'separateSPONT', separateSpon);
+[~, ~] = plotEventPropMultiGroups(eventStruct.(structFieldALLsubN),props,organizeStruct,...
+	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+	'saveFig', saveFig, 'saveDir', FolderPathVA.fig, 'debugMode', debugMode);
+
+% Choose a folder and combine the meanSemTab and nNumInfo Latex tables
+if saveFig
+	tab1Key = 'meanSemTab';
+	tab2Key = 'nNumInfo';
+	filePairs = findAllTexFilePairs(FolderPathVA.fig, tab1Key, tab2Key);
+	for n = 1:numel(filePairs)
+		if ~isempty(filePairs(n).outputFile)
+			combineLatexTables(filePairs(n).inputFile, filePairs(n).outputFile, 'saveToFile', true,...
+				'combinedFileName', filePairs(n).combinedFilename);
+		end
+	end
+end
+
+
+
+% % % Work on spon events (Include all SPONT, not influenced by the value of 'separateSpon')
+% % [eventStructSyncTagSpon] = filter_entries_in_structure(eventStruct_syncTag_combineSync,'group',...
+% % 	'tags_keep','spon');
+
+% groupSettingsType = 'subN';
+% [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+% 	'dataDist', dataDist, 'separateSPONT', false);
+% [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStruct_syncTag,props,organizeStruct,...
+% 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+% 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
+
+% % Update the folder path 
+% if saveDir~=0
+% 	FolderPathVA.fig = saveDir;
+% end
+
+
+% % Work on OG-SPONT (OG delay) events
+% [eventStructSyncTagOGdelay] = filter_entries_in_structure(eventStruct_syncTag_combineSync,'group',...
+% 	'tags_keep','opto-delay [og-5s]');
+
+% groupSettingsType = 'syncTag OG-SPONT';
+% [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+% 	'dataDist', dataDist, 'separateSPONT', false);
+% [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGdelay,props,organizeStruct,...
+% 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+% 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
+
+
+% % Work on postOG (OGOFF-TRIG) events
+% [eventStructSyncTagPostOG] = filter_entries_in_structure(eventStruct_syncTag_combineSync,'group',...
+% 	'tags_keep','rebound [og-5s]');
+
+% groupSettingsType = 'synctag OGOFF-TRIG';
+% [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+% 	'dataDist', dataDist, 'separateSPONT', false);
+% [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagPostOG,props,organizeStruct,...
+% 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+% 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
+
+
+% % Work on AP (airpuff-evoked) events
+% [eventStructSyncTagAP] = filter_entries_in_structure(eventStruct_syncTag_combineSync,'group',...
+% 	'tags_keep','trig [ap-0.1s]');
+
+% groupSettingsType = 'synctag AP-TRIG';
+% [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+% 	'dataDist', dataDist, 'separateSPONT', false);
+% [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagAP,props,organizeStruct,...
+% 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+% 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
+
+
+% % Work on OG delay (OG-SPONT) events. Merge PO and DAO
+% [eventStructSyncTagOGSPONTsubNMerge] = filter_entries_in_structure(eventStruct_mergeSubN_syncTag_combineSync,'group',...
+% 	'tags_keep','opto-delay [og-5s]');
+
+% groupSettingsType = 'syncTag OG-SPONT subNall';
+% [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+% 	'dataDist', dataDist, 'separateSPONT', false);
+% [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGSPONTsubNMerge,props,organizeStruct,...
+% 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+% 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
+
+
+% % Work on rebound (OGOFF-TRIG) events. Merge PO and DAO
+% [eventStructSyncTagOGOFFTRIGsubNMerge] = filter_entries_in_structure(eventStruct_mergeSubN_syncTag_combineSync,'group',...
+% 	'tags_keep','rebound [og-5s]');
+
+% groupSettingsType = 'syncTag OGOFF-TRIG subNall';
+% [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+% 	'dataDist', dataDist, 'separateSPONT', false);
+% [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGOFFTRIGsubNMerge,props,organizeStruct,...
+% 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+% 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
+
+
+% % Work on rebound (OGOFF-TRIG) events. Merge PO and DAO
+% [eventStructSyncTagOGAP] = filter_entries_in_structure(eventStruct_syncTag_combineSync,'group',...
+% 	'tags_keep','trig-ap [og-5s ap-0.1s]-PO');
+
+% groupSettingsType = 'synctag OGAP-TRIG';
+% [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
+% 	'dataDist', dataDist, 'separateSPONT', false);
+% [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGAP,props,organizeStruct,...
+% 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
+% 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
+
+% % Choose a folder and combine the meanSemTab and nNumInfo Latex tables
+% if saveFig
+% 	tab1Key = 'meanSemTab';
+% 	tab2Key = 'nNumInfo';
+% 	filePairs = findAllTexFilePairs(FolderPathVA.fig, tab1Key, tab2Key);
+% 	for n = 1:numel(filePairs)
+% 		if ~isempty(filePairs(n).outputFile)
+% 			combineLatexTables(filePairs(n).inputFile, filePairs(n).outputFile, 'saveToFile', true,...
+% 				'combinedFileName', filePairs(n).combinedFilename);
+% 		end
+% 	end
+% end
+
+%% ==========
+% 2.7 Plot ROI properties. 
 % Use data organized in section 2.3
 % close all
 % plot_combined_data = false;
@@ -389,117 +557,6 @@ if saveFig
 	save(fullfile(saveDir, 'ROI propDataAndStat'), 'roiPropStatInfo');
 end
 
-
-%% ==========
-% 2.7 Plot event properties. Compare the sync and async events in PO and DAO
-close all
-% General Settings
-saveFig = false; % true/false
-props = {'FWHM','peak_delta_norm_hpstd', 'rise_duration'}; 
-    % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta','sponNorm_peak_mag_delta','peak_delay'
-
-dataDist = 'posSkewed';
-
-% Work on spon events
-[eventStructSyncTagSpon] = filter_entries_in_structure(eventStructForPlot_syncTag_combineSync,'group',...
-	'tags_keep','spon');
-
-groupSettingsType = 'syncTag SPONT';
-[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-	'dataDist', dataDist, 'seperateSPONT', false);
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagSpon,props,organizeStruct,...
-	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
-
-% Update the folder path 
-if saveDir~=0
-	FolderPathVA.fig = saveDir;
-end
-
-
-% Work on OG-SPONT (OG delay) events
-[eventStructSyncTagOGdelay] = filter_entries_in_structure(eventStructForPlot_syncTag_combineSync,'group',...
-	'tags_keep','opto-delay [og-5s]');
-
-groupSettingsType = 'syncTag OG-SPONT';
-[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-	'dataDist', dataDist, 'seperateSPONT', false);
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGdelay,props,organizeStruct,...
-	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
-
-
-% Work on postOG (OGOFF-TRIG) events
-[eventStructSyncTagPostOG] = filter_entries_in_structure(eventStructForPlot_syncTag_combineSync,'group',...
-	'tags_keep','rebound [og-5s]');
-
-groupSettingsType = 'synctag OGOFF-TRIG';
-[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-	'dataDist', dataDist, 'seperateSPONT', false);
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagPostOG,props,organizeStruct,...
-	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
-
-
-% Work on AP (airpuff-evoked) events
-[eventStructSyncTagAP] = filter_entries_in_structure(eventStructForPlot_syncTag_combineSync,'group',...
-	'tags_keep','trig [ap-0.1s]');
-
-groupSettingsType = 'synctag AP-TRIG';
-[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-	'dataDist', dataDist, 'seperateSPONT', false);
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagAP,props,organizeStruct,...
-	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
-
-
-% Work on OG delay (OG-SPONT) events. Merge PO and DAO
-[eventStructSyncTagOGSPONTsubNMerge] = filter_entries_in_structure(eventStructForPlot_mergeSubN_syncTag_combineSync,'group',...
-	'tags_keep','opto-delay [og-5s]');
-
-groupSettingsType = 'syncTag OG-SPONT subNall';
-[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-	'dataDist', dataDist, 'seperateSPONT', false);
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGSPONTsubNMerge,props,organizeStruct,...
-	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
-
-
-% Work on rebound (OGOFF-TRIG) events. Merge PO and DAO
-[eventStructSyncTagOGOFFTRIGsubNMerge] = filter_entries_in_structure(eventStructForPlot_mergeSubN_syncTag_combineSync,'group',...
-	'tags_keep','rebound [og-5s]');
-
-groupSettingsType = 'syncTag OGOFF-TRIG subNall';
-[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-	'dataDist', dataDist, 'seperateSPONT', false);
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGOFFTRIGsubNMerge,props,organizeStruct,...
-	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
-
-
-% Work on rebound (OGOFF-TRIG) events. Merge PO and DAO
-[eventStructSyncTagOGAP] = filter_entries_in_structure(eventStructForPlot_syncTag_combineSync,'group',...
-	'tags_keep','trig-ap [og-5s ap-0.1s]-PO');
-
-groupSettingsType = 'synctag OGAP-TRIG';
-[mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-	'dataDist', dataDist, 'seperateSPONT', false);
-[saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGAP,props,organizeStruct,...
-	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
-
-% Choose a folder and combine the meanSemTab and nNumInfo Latex tables
-if saveFig
-	tab1Key = 'meanSemTab';
-	tab2Key = 'nNumInfo';
-	filePairs = findAllTexFilePairs(FolderPathVA.fig, tab1Key, tab2Key);
-	for n = 1:numel(filePairs)
-		if ~isempty(filePairs(n).outputFile)
-			combineLatexTables(filePairs(n).inputFile, filePairs(n).outputFile, 'saveToFile', true,...
-				'combinedFileName', filePairs(n).combinedFilename);
-		end
-	end
-end
 
 %% ==========
 % 2.8 (Temp) Compare EventProp using different settings
@@ -794,15 +851,15 @@ end
 % Check the correlation between caLevelDelta and peak amplitude
 % close all
 % figure
-% caMinDeltaReboundDAO = [eventStructForPlot(7).event_info.caLevelDeltaNorm]; 
-% peakHpstdReboundDAO = [eventStructForPlot(7).event_info.peak_delta_norm_hpstd]; 
+% caMinDeltaReboundDAO = [eventStruct(7).event_info.caLevelDeltaNorm]; 
+% peakHpstdReboundDAO = [eventStruct(7).event_info.peak_delta_norm_hpstd]; 
 
 % stylishScatter(caMinDeltaReboundDAO,peakHpstdReboundDAO, 'plotWhere', gca, 'MarkerEdgeColor', 'k');
 
 % hold on
 
-% caMinDeltaReboundPO = [eventStructForPlot(8).event_info.caLevelDeltaNorm]; 
-% peakHpstdReboundPO = [eventStructForPlot(8).event_info.peak_delta_norm_hpstd]; 
+% caMinDeltaReboundPO = [eventStruct(8).event_info.caLevelDeltaNorm]; 
+% peakHpstdReboundPO = [eventStruct(8).event_info.peak_delta_norm_hpstd]; 
 
 % stylishScatter(caMinDeltaReboundPO,peakHpstdReboundPO, 'plotWhere', gca);
 

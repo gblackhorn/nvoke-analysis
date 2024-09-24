@@ -8,7 +8,7 @@ function [event_info,varargout] = mod_cat_name(event_info,varargin)
 
 	% Defaults
 	stimType = true; % true/false. Whether consider stimulation type when modifying the categories
-	seperate_spon = false; % if stimType is true, whether add stim info to spon group
+	separateSpon = false; % if stimType is true, whether add stim info to spon group
 	dis_extra = true; % true/false. If old category name is not found in any catNameOld groups
 
 	% Settings for modifying the category. This can be input with varargin
@@ -43,8 +43,8 @@ function [event_info,varargout] = mod_cat_name(event_info,varargin)
 	        dis_extra = varargin{ii+1};
         elseif strcmpi('stimType', varargin{ii})
             stimType = varargin{ii+1};
-        elseif strcmpi('seperate_spon', varargin{ii})
-            seperate_spon = varargin{ii+1};
+        elseif strcmpi('separateSpon', varargin{ii})
+            separateSpon = varargin{ii+1};
 	    end
 	end
 
@@ -93,7 +93,7 @@ function [event_info,varargout] = mod_cat_name(event_info,varargin)
 		if stimType
 			addStim_tf = true;
 			if spon_tf
-				if ~seperate_spon
+				if ~separateSpon
 					addStim_tf = false;
 				end
 			end

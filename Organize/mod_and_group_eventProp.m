@@ -10,7 +10,7 @@ function [grouped_event,grouped_event_setting,varargout] = mod_and_group_eventPr
 
     
     % Defaults
-    mgSetting.seperate_spon = false; % true/false. Whether to seperated spon according to stimualtion
+    mgSetting.separateSpon = false; % true/false. Whether to seperated spon according to stimualtion
     mgSetting.dis_spon = false; % true/false. Discard spontaneous events
     mgSetting.modify_eventType_name = true; % Modify event type using function [mod_cat_name]
     mgSetting.groupField = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
@@ -67,7 +67,7 @@ function [grouped_event,grouped_event_setting,varargout] = mod_and_group_eventPr
     [eventProp_all_norm] = norm_eventProp_with_spon(eventProp_all,'entry',eventType,'dis_spon',mgSetting.dis_spon);
     % modify the peak category names
     if mgSetting.modify_eventType_name % Note: when style is 'roi', there will be more data number, if noStim and interval are categorized as spon
-        [eventProp_all_norm] = mod_cat_name(eventProp_all_norm,'dis_extra', true,'seperate_spon',mgSetting.seperate_spon);
+        [eventProp_all_norm] = mod_cat_name(eventProp_all_norm,'dis_extra', true,'separateSpon',mgSetting.separateSpon);
     end
 
     % mgSetting.groupField = {'peak_category'}; % options: 'fovID', 'stim_name', 'peak_category'
