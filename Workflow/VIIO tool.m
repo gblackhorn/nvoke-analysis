@@ -8,8 +8,8 @@ FolderPathVA = initProjFigPathVIIO(GUI_chooseFolder);
 
 %% ==========
 % Choose a folder and combine the meanSemTab and nNumInfo Latex tables
-tab1Key = 'meanSemTab';
-tab2Key = 'nNumInfo';
+tab1Key = 'nNumInfo';
+tab2Key = 'meanSemTab';
 FolderPathVA.fig = chooseFolderWithGUI(FolderPathVA.fig, 'Choose a folder containing Latex tables');
 filePairs = findAllTexFilePairs(FolderPathVA.fig, tab1Key, tab2Key);
 
@@ -20,6 +20,5 @@ for n = 1:numel(filePairs)
 			'combinedFileName', filePairs(n).combinedFilename);
 	end
 end
-
 
 

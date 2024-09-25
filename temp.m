@@ -386,8 +386,32 @@ baselineDataCombine = mean(baselineData);
 
 OGearlyDataCell = {barStat.PO(1).data(12).groupData}';
 OGearlyData = vertcat(OGearlyDataCell{:});
-OGearlyDataCombine = mean(OGearlyData);
+% OGearlyDataCombine = mean(OGearlyData);
 
-barplot_with_errBar({baselineDataCombine, OGearlyDataCombine}, 'barNames', {'baseline', 'OGearly'});
+barplot_with_errBar({baselineDataCombine, OGearlyData}, 'barNames', {'baseline', 'OGearly'});
+
+[h, p, ci, stats] = ttest(baselineDataCombine, OGearlyData);
 
 
+
+%% ====================
+% Example data vectors (replace these with your actual data)
+baseline = barStat.PO(1).data(1).groupData; % Data points for the first bar (e.g., 'baseline')
+lateFirstStim1 = barStat.PO(1).data(4).groupData; % Data points for the second bar (e.g., 'firstStim')
+
+% Perform the Sign Test
+[p, h] = signtest(baseline, lateFirstStim1);
+
+% Display results
+fprintf('p-value: %.4f\n', p);
+fprintf('Hypothesis Test Result (h): %d\n', h); % h = 1 indicates rejection of the null hypothesis
+
+
+%% ====================
+folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure\VIIO_eventProp\VIIO_eventProp_variousCat';
+inputFile = '[AP-TRIG]2[OGAP-TRIG] PO peak_delta_norm_hpstd meanSemTab nNumInfo.tex';
+outputFile = '[AP-TRIG]2[OGAP-TRIG] PO peak_delta_norm_hpstd meanSemTab nNumInfo reorder.tex';
+inputFile = fullfile(folder, inputFile);
+outputFile = fullfile(folder, outputFile);
+newHeaderOrder = {'Group', 'animalNum', 'recNum', 'roiNum', 'eventNum', 'Mean', 'Median', 'STD', 'SEM'};
+reorderLatexTable(inputFile, outputFile, newHeaderOrder);

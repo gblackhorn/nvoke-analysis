@@ -132,12 +132,12 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
 
                 organizeStruct(7).title = '[AP-TRIG]2[SPONT] cluster PO';
                 organizeStruct(7).keepGroups = {'trig [ap-0.1s]-PO-synch', 'spon-PO-synch'};
-                organizeStruct(7).mmFixCat = 'type';
+                organizeStruct(7).mmFixCat = 'peak_category';
                 organizeStruct(7).colorGroup = {'#8C0383', '#FF00CC'};
 
                 organizeStruct(8).title = '[AP-TRIG]2[SPONT] single PO';
                 organizeStruct(8).keepGroups = {'trig [ap-0.1s]-PO-asynch', 'spon-PO-asynch'};
-                organizeStruct(8).mmFixCat = 'type';
+                organizeStruct(8).mmFixCat = 'peak_category';
                 organizeStruct(8).colorGroup = {'#003264', '#00AAD4'};
 
                 % OGAP-TRIG 
@@ -269,7 +269,7 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
             % case 'syncTag OG-SPONT'
 
 
-            case 'synctag subN'
+            case 'syncTag subN'
                 % AP-TRIG
                 organizeStruct(1).title = '[AP-TRIG]2[SPONT] cluster PO';
                 organizeStruct(1).keepGroups = {'trig [ap-0.1s]-PO-synch', 'spon [ap-0.1s]-PO-synch'};
