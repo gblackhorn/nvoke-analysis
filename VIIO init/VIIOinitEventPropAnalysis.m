@@ -39,11 +39,11 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
         switch groupSettingsType
             case 'subN'
                 % Focus on the difference between subN; Compare between stimEvents and SPONT in the same subN
-                organizeStruct(1).title = '[SPONT] SubN';
+                organizeStruct(1).title = '[SPONT] PO2DAO';
                 organizeStruct(1).keepGroups = {'spon'};
                 organizeStruct(1).mmFixCat = 'subNuclei';
 
-                organizeStruct(2).title = '[OG-SPONT] subN';
+                organizeStruct(2).title = '[OG-SPONT] PO2DAO';
                 organizeStruct(2).keepGroups = {'opto-delay [og-5s]'};
                 organizeStruct(2).mmFixCat = 'subNuclei';
 
@@ -55,7 +55,7 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
                 organizeStruct(4).keepGroups = {'opto-delay [og-5s]-PO', 'spon-PO'};
                 organizeStruct(4).mmFixCat = 'peak_category';
 
-                organizeStruct(5).title = '[OGOFF-TRIG] subN';
+                organizeStruct(5).title = '[OGOFF-TRIG] PO2DAO';
                 organizeStruct(5).keepGroups = {'rebound [og-5s]'};
                 organizeStruct(5).mmFixCat = 'subNuclei';
 
@@ -67,7 +67,7 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
                 organizeStruct(7).keepGroups = {'rebound [og-5s]-PO', 'spon-PO'};
                 organizeStruct(7).mmFixCat = 'peak_category';
 
-                organizeStruct(8).title = '[AP-TRIG] subN';
+                organizeStruct(8).title = '[AP-TRIG] PO2DAO';
                 organizeStruct(8).keepGroups = {'trig [ap-0.1s]'};
                 organizeStruct(8).mmFixCat = 'subNuclei';
 
@@ -99,12 +99,12 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
 
             case 'syncTag subN'
                 % SPONT 
-                organizeStruct(1).title = '[SPONT] clusterVSsingle PO';
+                organizeStruct(1).title = '[SPONT] cluster2single PO';
                 organizeStruct(1).keepGroups = {'spon-PO'};
                 organizeStruct(1).mmFixCat = 'type'; % For sync vs async
                 organizeStruct(1).colorGroup = {'#8C0383', '#FF00CC'};
 
-                organizeStruct(2).title = '[SPONT] clusterVSsingle DAO';
+                organizeStruct(2).title = '[SPONT] cluster2single DAO';
                 organizeStruct(2).keepGroups = {'spon-DAO'};
                 organizeStruct(2).mmFixCat = 'type';
                 organizeStruct(2).colorGroup = {'#003264', '#00AAD4'};
@@ -120,12 +120,12 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
                 organizeStruct(4).colorGroup = {'#003264', '#8C0383'};
 
                 % AP-TRIG: sync vs async
-                organizeStruct(5).title = '[AP-TRIG] clusterVSsingle PO';
+                organizeStruct(5).title = '[AP-TRIG] cluster2single PO';
                 organizeStruct(5).keepGroups = {'trig [ap-0.1s]-PO'};
                 organizeStruct(5).mmFixCat = 'type';
                 organizeStruct(5).colorGroup = {'#8C0383', '#FF00CC'};
 
-                organizeStruct(6).title = '[AP-TRIG] clusterVSsingle DAO';
+                organizeStruct(6).title = '[AP-TRIG] cluster2single DAO';
                 organizeStruct(6).keepGroups = {'trig [ap-0.1s]-DAO'};
                 organizeStruct(6).mmFixCat = 'type';
                 organizeStruct(6).colorGroup = {'#003264', '#00AAD4'};
@@ -141,18 +141,29 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
                 organizeStruct(8).colorGroup = {'#003264', '#00AAD4'};
 
                 % OGAP-TRIG 
-                organizeStruct(9).title = '[OGAP-TRIG] clusterVSsingle PO';
+                organizeStruct(9).title = '[OGAP-TRIG] cluster2single PO';
                 organizeStruct(9).keepGroups = {'trig-ap [og-5s ap-0.1s]-PO'};
                 organizeStruct(9).mmFixCat = 'type';
                 organizeStruct(9).colorGroup = {'#8C0383', '#FF00CC'};
 
+                organizeStruct(10).title = '[OGAP-TRIG]2[AP-TRIG] cluster PO';
+                organizeStruct(10).keepGroups = {'trig-ap [og-5s ap-0.1s]-PO-synch', 'trig [ap-0.1s]-PO-synch'};
+                organizeStruct(10).mmFixCat = 'peak_category';
+                organizeStruct(10).colorGroup = {'#8C0383', '#FF00CC'};
+
+                organizeStruct(11).title = '[OGAP-TRIG]2[AP-TRIG] single PO';
+                organizeStruct(11).keepGroups = {'trig-ap [og-5s ap-0.1s]-PO-asynch', 'trig [ap-0.1s]-PO-asynch'};
+                organizeStruct(11).mmFixCat = 'peak_category';
+                organizeStruct(11).colorGroup = {'#8C0383', '#FF00CC'};
+
+
                 % % OG-SPONT: Compare sync vs async
-                % organizeStruct(10).title = '[OG-SPONT] clusterVSsingle PO';
+                % organizeStruct(10).title = '[OG-SPONT] cluster2single PO';
                 % organizeStruct(10).keepGroups = {'opto-delay [og-5s]-PO'};
                 % organizeStruct(10).mmFixCat = 'type';
                 % organizeStruct(10).colorGroup = {'#8C0383', '#FF00CC'};
 
-                % organizeStruct(11).title = '[OG-SPONT] clusterVSsingle DAO';
+                % organizeStruct(11).title = '[OG-SPONT] cluster2single DAO';
                 % organizeStruct(11).keepGroups = {'opto-delay [og-5s]-DAO'};
                 % organizeStruct(11).mmFixCat = 'type';
                 % organizeStruct(11).colorGroup = {'#003264', '#00AAD4'};
@@ -178,47 +189,47 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
                 % organizeStruct(15).colorGroup = {'#8C0383', '#FF00CC'};
 
                 % % OGOFF-TRIG: sync vs async
-                % organizeStruct(16).title = '[OGOFF-TRIG] clusterVSsingle PO';
+                % organizeStruct(16).title = '[OGOFF-TRIG] cluster2single PO';
                 % organizeStruct(16).keepGroups = {'rebound [og-5s]-PO'};
                 % organizeStruct(16).mmFixCat = 'type';
                 % organizeStruct(16).colorGroup = {'#8C0383', '#FF00CC'};
 
-                % organizeStruct(17).title = '[OGOFF-TRIG] clusterVSsingle DAO';
+                % organizeStruct(17).title = '[OGOFF-TRIG] cluster2single DAO';
                 % organizeStruct(17).keepGroups = {'rebound [og-5s]-DAO'};
                 % organizeStruct(17).mmFixCat = 'type';
                 % organizeStruct(17).colorGroup = {'#003264', '#00AAD4'};
 
             case 'syncTag ALLsubN for OG'
                 % OG-SPONT (Combine subN for bigger nNum)
-                organizeStruct(1).title = '[OG-SPONT] clusterVSsingle ALLsubN';
+                organizeStruct(1).title = '[OG-SPONT] cluster2single ALLsubN';
                 organizeStruct(1).keepGroups = {'opto-delay [og-5s]'};
                 organizeStruct(1).mmFixCat = 'type';
                 organizeStruct(1).colorGroup = {'#8C0383', '#FF00CC'};
 
                 organizeStruct(2).title = '[OG-SPONT]2[SPONT] cluster ALLsubN';
                 organizeStruct(2).keepGroups = {'opto-delay [og-5s]-synch', 'spon [og-5]-synch'};
-                organizeStruct(2).mmFixCat = 'type';
+                organizeStruct(2).mmFixCat = 'peak_category';
                 organizeStruct(2).colorGroup = {'#8C0383', '#FF00CC'};
 
                 organizeStruct(3).title = '[OG-SPONT]2[SPONT] single ALLsubN';
                 organizeStruct(3).keepGroups = {'opto-delay [og-5s]-asynch', 'spon [og-5]-asynch'};
-                organizeStruct(3).mmFixCat = 'type';
+                organizeStruct(3).mmFixCat = 'peak_category';
                 organizeStruct(3).colorGroup = {'#8C0383', '#FF00CC'};
 
                 % OGOFF-TRIG (Combine subN for bigger nNum)
-                organizeStruct(4).title = '[OGOFF-TRIG] clusterVSsingle ALL';
+                organizeStruct(4).title = '[OGOFF-TRIG] cluster2single ALL';
                 organizeStruct(4).keepGroups = {'rebound [og-5s]'};
                 organizeStruct(4).mmFixCat = 'type';
                 organizeStruct(3).colorGroup = {'#8C0383', '#FF00CC'};
 
                 organizeStruct(5).title = '[OGOFF-TRIG]2[SPONT] cluster ALLsubN';
                 organizeStruct(5).keepGroups = {'rebound [og-5s]-synch', 'spon [og-5s]-synch'};
-                organizeStruct(5).mmFixCat = 'type';
+                organizeStruct(5).mmFixCat = 'peak_category';
                 organizeStruct(5).colorGroup = {'#8C0383', '#FF00CC'};
 
                 organizeStruct(6).title = '[OGOFF-TRIG]2[SPONT] single ALLsubN';
                 organizeStruct(6).keepGroups = {'rebound [og-5s]-asynch', 'spon [og-5s]-asynch'};
-                organizeStruct(6).mmFixCat = 'type';
+                organizeStruct(6).mmFixCat = 'peak_category';
                 organizeStruct(6).colorGroup = {'#8C0383', '#FF00CC'};
         end
 
@@ -273,23 +284,23 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
                 % AP-TRIG
                 organizeStruct(1).title = '[AP-TRIG]2[SPONT] cluster PO';
                 organizeStruct(1).keepGroups = {'trig [ap-0.1s]-PO-synch', 'spon [ap-0.1s]-PO-synch'};
-                organizeStruct(1).mmFixCat = 'type';
+                organizeStruct(1).mmFixCat = 'peak_category';
                 organizeStruct(1).colorGroup = {'#8C0383', '#FF00CC'};
 
                 organizeStruct(2).title = '[AP-TRIG]2[SPONT] single PO';
                 organizeStruct(2).keepGroups = {'trig [ap-0.1s]-PO-asynch', 'spon [ap-0.1s]-PO-asynch'};
-                organizeStruct(2).mmFixCat = 'type';
+                organizeStruct(2).mmFixCat = 'peak_category';
                 organizeStruct(2).colorGroup = {'#003264', '#00AAD4'};
 
                 % OGAP-TRIG
                 organizeStruct(3).title = '[OGAP-TRIG]2[SPONT] cluster PO';
                 organizeStruct(3).keepGroups = {'trig-ap [og-5s ap-0.1s]-PO-synch', 'spon [og-5s ap-0.1s]-synch'};
-                organizeStruct(3).mmFixCat = 'type';
+                organizeStruct(3).mmFixCat = 'peak_category';
                 organizeStruct(3).colorGroup = {'#8C0383', '#FF00CC'};
 
                 organizeStruct(4).title = '[OGAP-TRIG]2[SPONT] single PO';
                 organizeStruct(4).keepGroups = {'trig-ap [og-5s ap-0.1s]-PO-asynch', 'spon [og-5s ap-0.1s]-asynch'};
-                organizeStruct(4).mmFixCat = 'type';
+                organizeStruct(4).mmFixCat = 'peak_category';
                 organizeStruct(4).colorGroup = {'#8C0383', '#FF00CC'};
 
                 % % OG-SPONT
@@ -318,23 +329,23 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
                 % OG-SPONT (Combine subN for bigger nNum)
                 organizeStruct(1).title = '[OG-SPONT]2[SPONT] cluster ALLsubN';
                 organizeStruct(1).keepGroups = {'opto-delay [og-5s]-synch', 'spon [og-5s]-synch'};
-                organizeStruct(1).mmFixCat = 'type';
+                organizeStruct(1).mmFixCat = 'peak_category';
                 organizeStruct(1).colorGroup = {'#8C0383', '#FF00CC'};
 
                 organizeStruct(2).title = '[OG-SPONT]2[SPONT] single ALLsubN';
                 organizeStruct(2).keepGroups = {'opto-delay [og-5s]-asynch', 'spon [og-5s]-asynch'};
-                organizeStruct(2).mmFixCat = 'type';
+                organizeStruct(2).mmFixCat = 'peak_category';
                 organizeStruct(2).colorGroup = {'#8C0383', '#FF00CC'};
 
                 % OGOFF-TRIG (Combine subN for bigger nNum)
                 organizeStruct(3).title = '[OGOFF-TRIG]2[SPONT] cluster ALLsubN';
                 organizeStruct(3).keepGroups = {'rebound [og-5s]-synch', 'spon [og-5s]-synch'};
-                organizeStruct(3).mmFixCat = 'type';
+                organizeStruct(3).mmFixCat = 'peak_category';
                 organizeStruct(3).colorGroup = {'#8C0383', '#FF00CC'};
 
                 organizeStruct(4).title = '[OGOFF-TRIG]2[SPONT] single ALLsubN';
                 organizeStruct(4).keepGroups = {'rebound [og-5s]-asynch', 'spon [og-5s]-asynch'};
-                organizeStruct(4).mmFixCat = 'type';
+                organizeStruct(4).mmFixCat = 'peak_category';
                 organizeStruct(4).colorGroup = {'#8C0383', '#FF00CC'};
         end
     end

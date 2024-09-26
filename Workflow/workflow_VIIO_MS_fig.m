@@ -321,8 +321,9 @@ close all
 saveFig = true; % true/false
 props = {'FWHM','peak_delta_norm_hpstd','rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
-separateSpon = false; % true/false. Whether to seperated spon according to stimualtion
+separateSpon = true; % true/false. Whether to seperated spon according to stimualtion
 dataDist = 'posSkewed';
+newHeaderOrder = {'Group', 'animalNum', 'recNum', 'roiNum', 'eventNum', 'Mean', 'Median', 'STD', 'SEM'};
 debugMode = false;
 
 % Use 'separateSpon' to decide which fields in eventStruct will be used to plot and analyze
@@ -361,7 +362,8 @@ if saveFig
 	for n = 1:numel(filePairs)
 		if ~isempty(filePairs(n).outputFile)
 			combineLatexTables(filePairs(n).inputFile, filePairs(n).outputFile, 'saveToFile', true,...
-				'combinedFileName', filePairs(n).combinedFilename);
+				'combinedFileName', filePairs(n).combinedFilename, 'deleteOriginalFiles', false);
+			reorderLatexTable(filePairs(n).combinedFilename, filePairs(n).combinedFilename, newHeaderOrder)
 		end
 	end
 end
@@ -373,7 +375,8 @@ close all
 saveFig = true; % true/false
 props = {'FWHM','peak_delta_norm_hpstd', 'rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta','sponNorm_peak_mag_delta','peak_delay'
-separateSpon = true; % true/false. Whether to seperated spon according to stimualtion
+separateSpon = false; % true/false. Whether to seperated spon according to stimualtion
+newHeaderOrder = {'Group', 'animalNum', 'recNum', 'roiNum', 'eventNum', 'Mean', 'Median', 'STD', 'SEM'};
 dataDist = 'posSkewed';
 
 % Use 'separateSpon' to decide which fields in eventStruct will be used to plot and analyze
@@ -412,113 +415,11 @@ if saveFig
 	for n = 1:numel(filePairs)
 		if ~isempty(filePairs(n).outputFile)
 			combineLatexTables(filePairs(n).inputFile, filePairs(n).outputFile, 'saveToFile', true,...
-				'combinedFileName', filePairs(n).combinedFilename);
+				'combinedFileName', filePairs(n).combinedFilename, 'deleteOriginalFiles', false);
+			reorderLatexTable(filePairs(n).combinedFilename, filePairs(n).combinedFilename, newHeaderOrder)
 		end
 	end
 end
-
-
-
-% % % Work on spon events (Include all SPONT, not influenced by the value of 'separateSpon')
-% % [eventStructSyncTagSpon] = filter_entries_in_structure(eventStruct_syncTag_combineSync,'group',...
-% % 	'tags_keep','spon');
-
-% groupSettingsType = 'subN';
-% [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-% 	'dataDist', dataDist, 'separateSPONT', false);
-% [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStruct_syncTag,props,organizeStruct,...
-% 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-% 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
-
-% % Update the folder path 
-% if saveDir~=0
-% 	FolderPathVA.fig = saveDir;
-% end
-
-
-% % Work on OG-SPONT (OG delay) events
-% [eventStructSyncTagOGdelay] = filter_entries_in_structure(eventStruct_syncTag_combineSync,'group',...
-% 	'tags_keep','opto-delay [og-5s]');
-
-% groupSettingsType = 'syncTag OG-SPONT';
-% [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-% 	'dataDist', dataDist, 'separateSPONT', false);
-% [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGdelay,props,organizeStruct,...
-% 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-% 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
-
-
-% % Work on postOG (OGOFF-TRIG) events
-% [eventStructSyncTagPostOG] = filter_entries_in_structure(eventStruct_syncTag_combineSync,'group',...
-% 	'tags_keep','rebound [og-5s]');
-
-% groupSettingsType = 'synctag OGOFF-TRIG';
-% [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-% 	'dataDist', dataDist, 'separateSPONT', false);
-% [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagPostOG,props,organizeStruct,...
-% 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-% 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
-
-
-% % Work on AP (airpuff-evoked) events
-% [eventStructSyncTagAP] = filter_entries_in_structure(eventStruct_syncTag_combineSync,'group',...
-% 	'tags_keep','trig [ap-0.1s]');
-
-% groupSettingsType = 'synctag AP-TRIG';
-% [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-% 	'dataDist', dataDist, 'separateSPONT', false);
-% [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagAP,props,organizeStruct,...
-% 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-% 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
-
-
-% % Work on OG delay (OG-SPONT) events. Merge PO and DAO
-% [eventStructSyncTagOGSPONTsubNMerge] = filter_entries_in_structure(eventStruct_mergeSubN_syncTag_combineSync,'group',...
-% 	'tags_keep','opto-delay [og-5s]');
-
-% groupSettingsType = 'syncTag OG-SPONT subNall';
-% [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-% 	'dataDist', dataDist, 'separateSPONT', false);
-% [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGSPONTsubNMerge,props,organizeStruct,...
-% 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-% 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
-
-
-% % Work on rebound (OGOFF-TRIG) events. Merge PO and DAO
-% [eventStructSyncTagOGOFFTRIGsubNMerge] = filter_entries_in_structure(eventStruct_mergeSubN_syncTag_combineSync,'group',...
-% 	'tags_keep','rebound [og-5s]');
-
-% groupSettingsType = 'syncTag OGOFF-TRIG subNall';
-% [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-% 	'dataDist', dataDist, 'separateSPONT', false);
-% [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGOFFTRIGsubNMerge,props,organizeStruct,...
-% 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-% 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
-
-
-% % Work on rebound (OGOFF-TRIG) events. Merge PO and DAO
-% [eventStructSyncTagOGAP] = filter_entries_in_structure(eventStruct_syncTag_combineSync,'group',...
-% 	'tags_keep','trig-ap [og-5s ap-0.1s]-PO');
-
-% groupSettingsType = 'synctag OGAP-TRIG';
-% [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] = VIIOinitEventPropAnalysis(groupSettingsType,...
-% 	'dataDist', dataDist, 'separateSPONT', false);
-% [saveDir, eventPropDataStat] = plotEventPropMultiGroups(eventStructSyncTagOGAP,props,organizeStruct,...
-% 	'mmModel', mmModel, 'mmHierarchicalVars', mmHierarchicalVars, 'mmDistribution', mmDistribution, 'mmLink', mmLink,...
-% 	'saveFig', saveFig, 'saveDir', FolderPathVA.fig);
-
-% % Choose a folder and combine the meanSemTab and nNumInfo Latex tables
-% if saveFig
-% 	tab1Key = 'meanSemTab';
-% 	tab2Key = 'nNumInfo';
-% 	filePairs = findAllTexFilePairs(FolderPathVA.fig, tab1Key, tab2Key);
-% 	for n = 1:numel(filePairs)
-% 		if ~isempty(filePairs(n).outputFile)
-% 			combineLatexTables(filePairs(n).inputFile, filePairs(n).outputFile, 'saveToFile', true,...
-% 				'combinedFileName', filePairs(n).combinedFilename);
-% 		end
-% 	end
-% end
 
 %% ==========
 % 2.7 Plot ROI properties. 
@@ -526,6 +427,7 @@ end
 % close all
 % plot_combined_data = false;
 % stat = true; % Set it to true to run anova when plotting bars
+saveFig = false;
 parNamesROI = {'sponfq','sponInterval','cv2'}; % 'sponfq', 'sponInterval'
 mmHierarchicalVarsROI = {'trialName'};
 
