@@ -21,4 +21,9 @@ for n = 1:numel(filePairs)
 	end
 end
 
+% Rename the 'peak_delta_norm_hpstd' files to 'normalizedAmp'
+originalChars = 'peak_delta_norm_hpstd';
+newChars = 'normalizedAmp';
+batchRenameFiles(FolderPathVA.fig, originalChars, newChars);
+
 

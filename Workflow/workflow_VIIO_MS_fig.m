@@ -375,7 +375,7 @@ close all
 saveFig = true; % true/false
 props = {'FWHM','peak_delta_norm_hpstd', 'rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta','sponNorm_peak_mag_delta','peak_delay'
-separateSpon = false; % true/false. Whether to seperated spon according to stimualtion
+separateSpon = true; % true/false. Whether to seperated spon according to stimualtion
 newHeaderOrder = {'Group', 'animalNum', 'recNum', 'roiNum', 'eventNum', 'Mean', 'Median', 'STD', 'SEM'};
 dataDist = 'posSkewed';
 

@@ -408,10 +408,40 @@ fprintf('Hypothesis Test Result (h): %d\n', h); % h = 1 indicates rejection of t
 
 
 %% ====================
-folder = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure\VIIO_eventProp\VIIO_eventProp_variousCat';
-inputFile = '[AP-TRIG]2[OGAP-TRIG] PO peak_delta_norm_hpstd meanSemTab nNumInfo.tex';
-outputFile = '[AP-TRIG]2[OGAP-TRIG] PO peak_delta_norm_hpstd meanSemTab nNumInfo reorder.tex';
-inputFile = fullfile(folder, inputFile);
-outputFile = fullfile(folder, outputFile);
-newHeaderOrder = {'Group', 'animalNum', 'recNum', 'roiNum', 'eventNum', 'Mean', 'Median', 'STD', 'SEM'};
-reorderLatexTable(inputFile, outputFile, newHeaderOrder);
+folderPath = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure\VIIO_eventProp\VIIO_eventProp_variousCat';
+function pairedFiles = findFilePairs(folderPath)
+    % List all files in the directory
+    files = dir(fullfile(folderPath, '*.tex'));  % Assuming the files are .tex
+    fileList = {files.name};
+
+    % Containers for results
+    meanSemTabFiles = {};
+    modelCompTabFiles = {};
+
+    % Search for specific files
+    for i = 1:length(fileList)
+        fileName = fileList{i};
+        if contains(fileName, 'peak_delta_norm_hpstd meanSemTab nNumInfo')
+            meanSemTabFiles{end+1} = fileName;
+        elseif contains(fileName, 'peak_delta_norm_hpstd modelCompTab')
+            modelCompTabFiles{end+1} = fileName;
+        end
+    end
+
+    % Find pairs
+    pairedFiles = {};
+    for i = 1:length(meanSemTabFiles)
+        prefix = extractBefore(meanSemTabFiles{i}, 'peak_delta_norm_hpstd');
+        % Find matching modelCompTab file
+        match = modelCompTabFiles(contains(modelCompTabFiles, [prefix 'peak_delta_norm_hpstd modelCompTab']));
+        if ~isempty(match)
+            pairedFiles{end+1} = {meanSemTabFiles{i}, match{1}};  % Store the pair
+        end
+    end
+end
+
+%% ====================
+folderPath = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure\VIIO_eventProp\test';
+file1Keyword = 'meanSemTab nNumInfo';
+file2Keyword = 'modelCompTab';
+addPval2StatSummaryLatexTab(folderPath, file1Keyword, file2Keyword, 'normalizedAmp ');
