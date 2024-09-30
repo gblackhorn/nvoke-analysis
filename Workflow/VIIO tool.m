@@ -21,9 +21,29 @@ for n = 1:numel(filePairs)
 	end
 end
 
+%% ==========
 % Rename the 'peak_delta_norm_hpstd' files to 'normalizedAmp'
+FolderPathVA.fig = chooseFolderWithGUI(FolderPathVA.fig, 'Choose a folder containing Latex tables');
 originalChars = 'peak_delta_norm_hpstd';
 newChars = 'normalizedAmp';
 batchRenameFiles(FolderPathVA.fig, originalChars, newChars);
 
 
+%% ==========
+% Add p and h value to the StatSummary Latex tables
+FolderPathVA.fig = chooseFolderWithGUI(FolderPathVA.fig, 'Choose a folder containing Latex tables');
+
+propName = 'normalizedAmp'; % normalizedAmp
+fileSuffix = '';
+file1Keyword = 'meanSemTab nNumInfo';
+file2Keyword = 'modelCompTab';
+addPval2StatSummaryLatexTab(FolderPathVA.fig, file1Keyword, file2Keyword,...
+	'optionalKeyword', propName, 'suffix', fileSuffix);
+
+
+%% ==========
+% Vertically combine the tables containing stat-summary and GLMM results 
+FolderPathVA.fig = chooseFolderWithGUI(FolderPathVA.fig, 'Choose a folder containing Latex tables');
+fileKeyword = 'normalizedAmp meanSemTab nNumInfo';
+tableCaption = 'NomalizedAmp statSummary GLMM-result';
+vertConcatLatexTab(FolderPathVA.fig, fileKeyword, tableCaption);
