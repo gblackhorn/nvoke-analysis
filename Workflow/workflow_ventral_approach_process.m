@@ -34,7 +34,7 @@ clearvars -except recdata_organized alignedData_allTrials seriesData_sync
 % This section is necessary for most sections in this workflow script. 
 % Even if you don't want to save the plots, FolderPathVA should exist to avoid bug
 
-GUI_chooseFolder = true; % true/false. Use GUI to locate the DataFolder and AnalysisFolder
+GUI_chooseFolder = false; % true/false. Use GUI to locate the DataFolder and AnalysisFolder
 FolderPathVA = initProjFigPathVIIO(GUI_chooseFolder);
 
 
@@ -117,7 +117,7 @@ end
 
 %% ==================== 
 % 3.1.1 Export nvoke movies to tiff files for further work using ImageJ, matlab, etc.
-movieKeyword = '2024-01*-MC.isxd'; % used to filter 
+movieKeyword = '*.isxd'; % used to filter 
 overwrite = false;
 
 input_isxd_folder = uigetdir(FolderPathVA.project,...

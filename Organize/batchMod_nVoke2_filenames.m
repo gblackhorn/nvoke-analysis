@@ -109,7 +109,7 @@ function [varargout] = batchMod_nVoke2_filenames(varargin)
     % Rename the nVoke files with the QTM filename and add -nVoke-video/gpio/imu to indicate what
     % recordings they are. Copy them to another folder.
     % Do not delete the original ones
-    fprintf('Save renamed copies of files in folder 1 to folder 2\n 1. %s\n 2. %s\n\n',...
+    fprintf('Save renamed copies of files from folder 1 to folder 2\n 1. %s\n 2. %s\n\n',...
         nVokeRawDataFolder,nVokeRenameDataFolder);
     batchDecision = false; % true/false. if true, overwrite (true/false) will be applied to all files
     for m = 1:numel(nVoke_fileInfo)

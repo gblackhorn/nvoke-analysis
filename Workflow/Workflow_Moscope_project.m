@@ -15,8 +15,8 @@
 % Default folder paths. GUI will use the following folder to start.
 % Modify them if necessary
 QTMmatFolderPath = 'S:\PROCESSED_DATA_BACKUPS\Moscope\MoScope_name_corrected_qtm_files\MATFILES';
-nVokeRawDataFolder = 'S:\RAW_BACKUPS\INSCOPIX\MoScope';
-nVokeRenameDataFolder = 'S:\PROCESSED_DATA_BACKUPS\Moscope\INSCOPIX_renamed';
+nVokeRawDataFolder = 'S:\PROCESSED_DATA_BACKUPS\Moscope\To_be_renamed_lps_gd_20240930';
+nVokeRenameDataFolder = 'S:\PROCESSED_DATA_BACKUPS\Moscope\Renamed_lps_gd_20240930';
 
 % Rename and save nVoke2 data files
 % nVoke_oldNew_filenames: a structure containing the original and new file names

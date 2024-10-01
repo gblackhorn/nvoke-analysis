@@ -44,6 +44,6 @@ addPval2StatSummaryLatexTab(FolderPathVA.fig, file1Keyword, file2Keyword,...
 %% ==========
 % Vertically combine the tables containing stat-summary and GLMM results 
 FolderPathVA.fig = chooseFolderWithGUI(FolderPathVA.fig, 'Choose a folder containing Latex tables');
-fileKeyword = 'normalizedAmp meanSemTab nNumInfo';
-tableCaption = 'NomalizedAmp statSummary GLMM-result';
+fileKeyword = 'rise_duration meanSemTab nNumInfo';
+tableCaption = 'rise_duration statSummary GLMM-result';
 vertConcatLatexTab(FolderPathVA.fig, fileKeyword, tableCaption);

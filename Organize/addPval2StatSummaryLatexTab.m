@@ -147,8 +147,7 @@ function addPval2StatSummaryLatexTab(folderPath, file1Keyword, file2Keyword, var
         fprintf(fid, '%s\n', newTableContent{:});
         % Write post-table content
         fprintf(fid, '%s\n', postTabContent);
-        fclose(fid);
-        
+        fclose(fid);        
         % Display the update status
         fprintf('Updated file saved as: %s\n', updatedFileName);
     end
