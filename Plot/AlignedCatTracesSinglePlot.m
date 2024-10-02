@@ -47,7 +47,7 @@ function [varargout] = AlignedCatTracesSinglePlot(alignedData, stimNames, eventC
     alignedData = filterData(alignedData, stimNames, args.subNucleiType);
 
     % Determine the figure name
-    fname = determineFigureName(args.fname, eventCat, args.subNucleiType, args.shadeType, args.showMedian);
+    fname = determineFigureName(args.fname, eventCat, stimNames, args.subNucleiType, args.shadeType, args.showMedian);
 
     % Decide where to plot the traces
     plotWhere = decidePlotLocation(args.plotWhere, fname);
@@ -83,18 +83,23 @@ function alignedData = filterData(alignedData, stimNames, subNucleiType)
     end
 end
 
-function fname = determineFigureName(fname, eventCat, subNucleiType, shadeType, showMedian)
+function fname = determineFigureName(fname, eventCat, stimNames, subNucleiType, shadeType, showMedian)
     % Determine the figure name based on input parameters
     if isempty(fname)
         fNameSubNucleiType = '';
         if ~isempty(subNucleiType)
             fNameSubNucleiType = ['-', subNucleiType];
         end
+        if ~isempty(stimNames)
+            stimNameTag = sprintf('[%s]', stimNames);
+        else
+            stimNameTag = '';
+        end
         showMedianStr = '';
         if showMedian
             showMedianStr = '_MedianTrace';
         end
-        fname = sprintf('alignedCalTraces-%s%s_shade-%s%s', eventCat, fNameSubNucleiType, shadeType, showMedianStr);
+        fname = sprintf('alignedCalTraces-%s%s%s_shade-%s%s', eventCat, stimNameTag, fNameSubNucleiType, shadeType, showMedianStr);
     end
 end
 

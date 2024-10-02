@@ -227,7 +227,7 @@ end
 
 
 %% ==========
-% 2.4 Extract properties of  events and group them according to ROIs' subnuclous location
+% 2.4 Extract properties of events and group them according to ROIs' subnuclous location
 
 % Get and group (gg) Settings
 ggSetting.modify_stim_name = false; % true/false. Change the stimulation name, 
@@ -899,8 +899,8 @@ end
 save_fig = true; % true/false
 save_dir = FolderPathVA.fig;
 at.normMethod = 'highpassStd'; % 'none', 'spon', 'highpassStd'. Indicate what value should be used to normalize the traces
-at.stimNames = {'ap-0.1s','og-5s ap-0.1s'}; % If empty, do not screen recordings with stimulation, instead use all of them
-at.eventCat = {'trig','trig-ap'}; % options: 'trig','trig-ap','rebound','spon', 'rebound'
+at.stimNames = {'ap-0.1s','ap-0.1s','og-5s ap-0.1s', 'og-5s ap-0.1s'}; % If empty, do not screen recordings with stimulation, instead use all of them
+at.eventCat = {'trig', 'spon', 'trig-ap', 'spon'}; % options: 'trig','trig-ap','rebound','spon', 'rebound'
 at.subNucleiTypes = 'PO'; % Separate ROIs using the subnuclei tag.
 at.plot_combined_data = true; % mean value and std of all traces
 at.showRawtraces = false; % true/false. true: plot every single trace
@@ -908,7 +908,7 @@ at.showMedian = false; % true/false. plot raw traces having a median value of th
 at.medianProp = 'FWHM'; % 
 at.shadeType = 'ste'; % plot the shade using std/ste
 at.y_range = [-10 20]; % [-10 5],[-3 5],[-2 1]
-disOgEx = false; % true/false. If true, screen ROIs
+disOgEx = true; % true/false. If true, screen ROIs
 ogStimTags = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
 ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 % screenWithPreOrPost = true; % Further screen event traces by checking if they have a specific pre/post event
