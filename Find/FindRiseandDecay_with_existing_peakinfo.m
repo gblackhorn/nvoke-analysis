@@ -14,8 +14,6 @@ function [rise_decay_loc] = FindRiseandDecay_with_existing_peakinfo(roi_trace,pe
     for ii = 1:2:(nargin-4)
         if strcmpi('eventWin_idx', varargin{ii})
             eventWin_idx = varargin{ii+1};
-        % elseif strcmpi('existing_riseInfo', varargin{ii})
-        %     eventWin_idx = varargin{ii+1};
         end
     end
 
@@ -42,14 +40,6 @@ function [rise_decay_loc] = FindRiseandDecay_with_existing_peakinfo(roi_trace,pe
                 % Find the locations of rise start (rise_loc) and decay end (decay_loc)
                 rise_loc = check_start(pn)+find(diff(roi_trace(check_start(pn):peakLoc(pn)))<=0, 1, 'last');
 
-                % % Find the closest existing peak
-                % [diffVal,existing_peak_idx]=min(abs(existing_peakInfo.peak_loc-peakLoc(pn)));
-                % if diffVal <= diffLoc_existing_peak
-                %     existingRiseVal = existing_peakInfo.rise_val(existing_peak_idx);
-                %     if roi_trace(rise_loc) < existingRiseVal
-                %         rise_loc = rise_loc+find(roi_trace(rise_loc:peakLoc(pn))>=existingRiseVal,1)-1;
-                %     end
-                % end
 
                 decay_diff_value = diff(roi_trace(peakLoc(pn):check_end(pn))); % diff value from peak to check_end
                 diff_turning_value = min(decay_diff_value); % when the diff of decay is smallest. Decay stop loc will be looked for from here
@@ -72,12 +62,6 @@ function [rise_decay_loc] = FindRiseandDecay_with_existing_peakinfo(roi_trace,pe
                 rise_decay_loc.decay_loc(pn) = decay_loc;
             end
         end
-
-    	% for pn = 1:peak_num
-     %        [existing_peak_loc, existing_peak_idx] = min(abs(existing_peakInfo.peak_loc-peakLoc(pn)));
-     %        rise_decay_loc.rise_loc(pn) = existing_peakInfo.rise_loc(existing_peak_idx);
-     %        rise_decay_loc.decay_loc(pn) = existing_peakInfo.decay_loc(existing_peak_idx);
-    	% end
 
     	rise_decay_loc.check_start = check_start;
     	rise_decay_loc.check_end = check_end;

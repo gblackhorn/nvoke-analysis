@@ -321,7 +321,7 @@ close all
 saveFig = true; % true/false
 props = {'FWHM','peak_delta_norm_hpstd','rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
-separateSpon = true; % true/false. Whether to seperated spon according to stimualtion
+separateSpon = false; % true/false. Whether to seperated spon according to stimualtion
 dataDist = 'posSkewed';
 newHeaderOrder = {'Group', 'animalNum', 'recNum', 'roiNum', 'eventNum', 'Mean', 'Median', 'STD', 'SEM'};
 debugMode = false;
@@ -375,7 +375,7 @@ close all
 saveFig = true; % true/false
 props = {'FWHM','peak_delta_norm_hpstd', 'rise_duration'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta','sponNorm_peak_mag_delta','peak_delay'
-separateSpon = true; % true/false. Whether to seperated spon according to stimualtion
+separateSpon = false; % true/false. Whether to seperated spon according to stimualtion
 newHeaderOrder = {'Group', 'animalNum', 'recNum', 'roiNum', 'eventNum', 'Mean', 'Median', 'STD', 'SEM'};
 dataDist = 'posSkewed';
 
@@ -430,6 +430,9 @@ end
 saveFig = false;
 parNamesROI = {'sponfq','sponInterval','cv2'}; % 'sponfq', 'sponInterval'
 mmHierarchicalVarsROI = {'trialName'};
+mmModel = 'GLMM';
+mmDistribution = 'gamma'; % For continuous, positively skewed data
+mmLink = 'log'; % For continuous, positively skewed data
 
 if saveFig
 	close all
@@ -651,40 +654,34 @@ summarizeExOgEffect(alignedData_allTrials, 'save_fig', save_fig, 'save_dir', Fol
 
 
 %% ==================== 
-% 3.4 Compare the delay of offStim events to spon interval
-close all
-save_fig = true; % true/false
-ogStimTags = {'og-5s', 'ap-0.1s', 'og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
-ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
-[alignedDataStimEffectFiltered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
-	'stim_names',ogStimTags,'filters',ogStimEffects);
-[stimEventJitter, f, fname] = stimEventJitterAnalysis(alignedDataStimEffectFiltered,{'og-5s'},'rebound');
-% 'titlePrefix', subNucleiTypes{sn}
+% % 3.4 Compare the delay of OGOFF-TRIG events to spon interval
+% close all
+% save_fig = true; % true/false
+% ogStimTags = {'og-5s', 'ap-0.1s', 'og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
+% ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
+% [alignedDataStimEffectFiltered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
+% 	'stim_names',ogStimTags,'filters',ogStimEffects);
+% [stimEventJitter, f, fname] = stimEventJitterAnalysis(alignedDataStimEffectFiltered,{'og-5s'},'rebound');
+% % 'titlePrefix', subNucleiTypes{sn}
 
-FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',true,'fname',fname);
-save(fullfile(FolderPathVA.fig, [fname,' data']),'stimEventJitter');
+% FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',true,'fname',fname);
+% save(fullfile(FolderPathVA.fig, [fname,' data']),'stimEventJitter');
 
-% Save nNum table in latex format
-tabNumName = sprintf('%s nNumInfo.tex', fname);
-tableToLatex(stimEventJitter.numTab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig,tabNumName),...
-    'caption', tabNumName, 'columnAdjust', 'XXXXX');
+% % Save nNum table in latex format
+% tabNumName = sprintf('%s nNumInfo.tex', fname);
+% tableToLatex(stimEventJitter.numTab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig,tabNumName),...
+%     'caption', tabNumName, 'columnAdjust', 'XXXXX');
 
-% Save GLMM Model comparison in latex format
-MMtabName = sprintf('%s modelComp.tex', fname);
-tableToLatex(stimEventJitter.GlmmReport.chiLRT, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, MMtabName),...
-    'caption', [stimEventJitter.GlmmReport.modelInfoStr, ' ', fname], 'columnAdjust', 'cXccccccc');
+% % Save GLMM Model comparison in latex format
+% MMtabName = sprintf('%s modelComp.tex', fname);
+% tableToLatex(stimEventJitter.GlmmReport.chiLRT, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, MMtabName),...
+%     'caption', [stimEventJitter.GlmmReport.modelInfoStr, ' ', fname], 'columnAdjust', 'cXccccccc');
 
-% Save K-S tab in latex format
-KStabName = sprintf('%s KStestTab.tex', fname);
-tableToLatex(stimEventJitter.KStest.tab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, KStabName),...
-    'caption', [KStabName,' ', fname], 'columnAdjust', 'ccc');
+% % Save K-S tab in latex format
+% KStabName = sprintf('%s KStestTab.tex', fname);
+% tableToLatex(stimEventJitter.KStest.tab, 'saveToFile',true,'filename', fullfile(FolderPathVA.fig, KStabName),...
+%     'caption', [KStabName,' ', fname], 'columnAdjust', 'ccc');
 
-
-% subNucleiTypes = {'DAO', 'PO'};
-% for sn = 1:numel(subNucleiTypes)
-% 	alignedDataSubN = screenSubNucleiROIs(alignedDataStimEffectFiltered,subNucleiTypes{sn});
-
-% end
 
 
 %% ==================== 
@@ -835,7 +832,7 @@ end
 
 
 %% ==========
-% 3.7 Create the mean traces of OGOGG-TRIG events after the end of OG activation of NO
+% 3.7 Create the mean traces of OGOFF-TRIG events after the end of OG activation of NO
 % Note: 'event_type' for alignedData must be 'detected_events'
 save_fig = true; % true/false
 save_dir = FolderPathVA.fig;

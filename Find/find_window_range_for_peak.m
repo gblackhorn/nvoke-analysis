@@ -18,8 +18,6 @@ function [check_start,check_end] = find_window_range_for_peak(roi_trace,peakLoc,
             freq = varargin{ii+1}; % unit: Hz. sampling frequency
         elseif strcmpi('max_RiseWin', varargin{ii})
             max_StartWin = varargin{ii+1}; % unit: s. Maximum duration from check_start to peak.
-        % elseif strcmpi('EventTime', varargin{ii})
-        %     EventTime = varargin{ii+1};
         end
     end
 

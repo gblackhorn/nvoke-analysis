@@ -27,8 +27,8 @@ pars_envs = struct('memory_size_to_use', 256, ...   % default=8, GB, memory spac
 % -   Average principal IO diameter is about 5-6, dorsal IO is slightly
 % bigger
 
-gSig = 8;           % default=3, pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
-gSiz = 16;          % default=13, pixel, neuron diameter
+gSig = 14;           % default=3, pixel, gaussian width of a gaussian kernel for filtering the data. 0 means no filtering
+gSiz = 28;          % default=13, pixel, neuron diameter
 ssub = 1;           % default=1, spatial downsampling factor
 with_dendrites = false;   % with dendrites or not
 if with_dendrites

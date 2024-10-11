@@ -90,11 +90,11 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
             case 'ALLsubN for OG'
                 % Focus on the difference between OG events and SPONT. Combine the subN to increase nNum
                 organizeStruct(1).title = '[OG-SPONT]2[SPONT] ALLsubN';
-                organizeStruct(1).keepGroups = {'opto-delay [og-5s]', 'spon [og-5]'};
+                organizeStruct(1).keepGroups = {'opto-delay [og-5s]', 'spon [og-5s]'};
                 organizeStruct(1).mmFixCat = 'peak_category';
 
-                organizeStruct(2).title = '[OGOFF]2[SPONT] ALLsubN';
-                organizeStruct(2).keepGroups = {'rebound [og-5s]', 'spon [og-5]'};
+                organizeStruct(2).title = '[OGOFF-TRIG]2[SPONT] ALLsubN';
+                organizeStruct(2).keepGroups = {'rebound [og-5s]', 'spon [og-5s]'};
                 organizeStruct(2).mmFixCat = 'peak_category';
 
             case 'syncTag subN'
@@ -207,12 +207,12 @@ function [mmModel, mmHierarchicalVars, mmDistribution, mmLink, organizeStruct] =
                 organizeStruct(1).colorGroup = {'#8C0383', '#FF00CC'};
 
                 organizeStruct(2).title = '[OG-SPONT]2[SPONT] cluster ALLsubN';
-                organizeStruct(2).keepGroups = {'opto-delay [og-5s]-synch', 'spon [og-5]-synch'};
+                organizeStruct(2).keepGroups = {'opto-delay [og-5s]-synch', 'spon [og-5s]-synch'};
                 organizeStruct(2).mmFixCat = 'peak_category';
                 organizeStruct(2).colorGroup = {'#8C0383', '#FF00CC'};
 
                 organizeStruct(3).title = '[OG-SPONT]2[SPONT] single ALLsubN';
-                organizeStruct(3).keepGroups = {'opto-delay [og-5s]-asynch', 'spon [og-5]-asynch'};
+                organizeStruct(3).keepGroups = {'opto-delay [og-5s]-asynch', 'spon [og-5s]-asynch'};
                 organizeStruct(3).mmFixCat = 'peak_category';
                 organizeStruct(3).colorGroup = {'#8C0383', '#FF00CC'};
 
