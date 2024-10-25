@@ -427,7 +427,7 @@ end
 % close all
 % plot_combined_data = false;
 % stat = true; % Set it to true to run anova when plotting bars
-saveFig = false;
+saveFig = true; % true/false
 parNamesROI = {'sponfq','sponInterval','cv2'}; % 'sponfq', 'sponInterval'
 mmHierarchicalVarsROI = {'trialName'};
 mmModel = 'GLMM';
@@ -453,9 +453,27 @@ tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','r
 
 % Save the statistics info
 if saveFig
-	% Save the fNumROI
-	% savePlot(fNumROI,'guiSave', 'off', 'save_dir', save_dir, 'fname', 'ROI nNumInfo');
+	% Create a n number tab
+	[~, tabNum] = nNumberTab(roiStructForPlotFiltered, 'roi');
+	tabNumName = 'ROI nNumInfo.tex';
+	tableToLatex(tabNum, 'saveToFile',true,'filename',...
+	    fullfile(saveDir,tabNumName), 'caption', tabNumName,...
+	    'columnAdjust', 'XXXX');
 
+	% Combine the meanSemTab and nNumInfo Latex tables
+	tab1Key = 'meanSemTab';
+	tab2Key = 'nNumInfo';
+	newHeaderOrder = {'Group', 'animalNum', 'recNum', 'roiNum', 'Mean', 'Median', 'STD', 'SEM'};
+	filePairs = findAllTexFilePairs(saveDir, tab1Key, tab2Key);
+	for n = 1:numel(filePairs)
+		if ~isempty(filePairs(n).outputFile)
+			combineLatexTables(filePairs(n).inputFile, filePairs(n).outputFile, 'saveToFile', true,...
+				'combinedFileName', filePairs(n).combinedFilename, 'deleteOriginalFiles', false);
+			reorderLatexTable(filePairs(n).combinedFilename, filePairs(n).combinedFilename, newHeaderOrder)
+		end
+	end
+
+	% Save data in a mat file
 	roiPropStatInfo.roiStructForPlotFiltered = roiStructForPlotFiltered;
 	roiPropStatInfo.plot_info = plot_info;
 	% dt = datestr(now, 'yyyymmdd');
@@ -688,7 +706,7 @@ summarizeExOgEffect(alignedData_allTrials, 'save_fig', save_fig, 'save_dir', Fol
 % 3.5 Compare the calcium level during OG
 close all
 
-SaveFig = true; % true/false
+SaveFig = false; % true/false
 binWidth = 1;
 shadeType = 'ste';
 tickInt_time = 1;

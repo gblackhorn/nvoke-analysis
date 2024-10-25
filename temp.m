@@ -445,3 +445,13 @@ folderPath = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_
 file1Keyword = 'meanSemTab nNumInfo';
 file2Keyword = 'modelCompTab';
 addPval2StatSummaryLatexTab(folderPath, file1Keyword, file2Keyword, 'normalizedAmp ');
+
+%% ==========
+close all
+select_with_UI = true;
+plot_contour = true;
+plot_roi_traces = true;
+creat_video = true;
+
+cnmfe_gen_plot_video_grey_cluster('select_with_UI', select_with_UI,...
+	'plot_contour', plot_contour, 'plot_roi_traces', plot_roi_traces, 'creat_video', creat_video);

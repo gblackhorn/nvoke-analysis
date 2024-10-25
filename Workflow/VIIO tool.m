@@ -33,7 +33,7 @@ batchRenameFiles(FolderPathVA.fig, originalChars, newChars);
 % Add p and h value to the StatSummary Latex tables
 FolderPathVA.fig = chooseFolderWithGUI(FolderPathVA.fig, 'Choose a folder containing Latex tables');
 
-propName = 'FWHM'; % normalizedAmp
+propName = 'sponInterval'; % normalizedAmp
 fileSuffix = '';
 file1Keyword = 'meanSemTab nNumInfo';
 file2Keyword = 'modelCompTab';
@@ -44,6 +44,6 @@ addPval2StatSummaryLatexTab(FolderPathVA.fig, file1Keyword, file2Keyword,...
 %% ==========
 % Vertically combine the tables containing stat-summary and GLMM results 
 FolderPathVA.fig = chooseFolderWithGUI(FolderPathVA.fig, 'Choose a folder containing Latex tables');
-fileKeyword = 'rise_duration meanSemTab nNumInfo'; % normalizedAmp, FWHM, rise_duration 
-tableCaption = 'rise_duration statSummary GLMM-result';
+fileKeyword = 'ROI sponfq meanSemTab nNumInfo'; % normalizedAmp, FWHM, rise_duration 
+tableCaption = 'ROI sponfq statSummary GLMM-result';
 vertConcatLatexTab(FolderPathVA.fig, fileKeyword, tableCaption);
