@@ -40,6 +40,7 @@ addOptional(p, 'range_Y', []);  % Optional: raw data intensity range (default: e
 addOptional(p, 'multi_factor', []);  % Optional: multiplicative factor (default: empty)
 addOptional(p, 'use_craw', false);  % Optional: use raw signal (default: false)
 addOptional(p, 'folderPath', '', @(x) ischar(x) || isstring(x));  % Optional: folder path (default: empty string)
+addOptional(p, 'avi_filename_prefix', 'Results', @(x) ischar(x) || isstring(x));  % Optional: folder path (default: empty string)
 
 % Parse inputs
 parse(p, obj, varargin{:});
@@ -54,6 +55,16 @@ range_Y = p.Results.range_Y;
 multi_factor = p.Results.multi_factor;
 use_craw = p.Results.use_craw;
 folderPath = p.Results.folderPath;
+avi_filename_prefix = p.Results.avi_filename_prefix;
+
+% Define the AVI filename based on the folder path
+avi_filename = fullfile(folderPath, [avi_filename_prefix, '_demixed_gray.avi']);
+
+% Early check for existing AVI file
+if exist(avi_filename, 'file')
+    warning('AVI file already exists: %s. The file will not be overwritten.', avi_filename);
+    return;  % Return the filename and exit the function early
+end
 
 if use_craw
     CC = obj.C_raw; 
@@ -77,8 +88,8 @@ tmp_range = [t_begin, min(t_begin+100*kt-1, t_end)];
 %     Ybg = reconstruct_background_local(obj, frame_range, folderPath);
 % end
 
-Y = load_local_patch_data(folderPath);
-Ybg = reconstruct_background_local(obj, frame_range, folderPath);
+Y = load_local_patch_data(folderPath, [], tmp_range);
+Ybg = reconstruct_background_local(obj, tmp_range, folderPath);
 % Ybg = obj.reconstruct_background(tmp_range);  % Reconstruct background data
 figure('position', [0, 0, 1800, 1200]);
 
@@ -87,7 +98,8 @@ if ~exist('amp_ac', 'var') || isempty(amp_ac)
     amp_ac = median(max(obj.A,[],1)'.*max(CC,[],2))*2;
 end
 if ~exist('range_ac', 'var') || isempty(range_ac)
-    range_ac = amp_ac * [0.01, 1.01];
+    range_ac = amp_ac * [0.001, 0.2];  % Narrow range to boost contrast for smaller signals
+    % range_ac = amp_ac * [0.01, 1.01];
 end
 range_res = range_ac - mean(range_ac);  % Calculate residual range
 
@@ -102,14 +114,7 @@ if ~exist('range_Y', 'var') || isempty(range_Y)
     range_Y = double(center_Y) + range_res * multi_factor;
 end
 
-if ~exist('multi_factor', 'var')
-    multi_factor = round(diff(range_Y) / diff(range_ac)); 
-    range_Y = (range_res - range_res(1)) * multi_factor + range_Y(1);
-end
-
-% Create AVI file if needed
 if save_avi
-    avi_filename = [folderPath, 'demixed_gray.avi'];
     avi_file = VideoWriter(avi_filename, 'Uncompressed AVI');
     if ~isnan(obj.Fs)
         avi_file.FrameRate = obj.Fs / kt;
@@ -118,6 +123,18 @@ if save_avi
 else
     avi_filename = [];
 end
+
+% % Create AVI file if needed
+% if save_avi
+%     avi_filename = [folderPath, 'demixed_gray.avi'];
+%     avi_file = VideoWriter(avi_filename, 'Uncompressed AVI');
+%     if ~isnan(obj.Fs)
+%         avi_file.FrameRate = obj.Fs / kt;
+%     end
+%     avi_file.open();
+% else
+%     avi_filename = [];
+% end
 
 % Add pseudo color to demixed signals for visualization
 [K, ~] = size(CC);  % K is the number of neurons/components
@@ -182,12 +199,12 @@ for tt = t_begin:kt:t_end
     title(sprintf('Residual X %d', multi_factor));
     axis equal off tight;
 
-    % --- Demixed Data (Colorful) ---
-    axes(ax_mix); cla;
-    imagesc(obj.reshape(Y_mixed(:, m, :), 2));  % Display demixed with color
-    title('Demixed (Colored ROIs)');
-    text(1, 10, sprintf('Time: %.2f second', (tt) / obj.Fs), 'color', 'w', 'fontweight', 'bold');
-    axis equal tight off;
+    % % --- Demixed Data (Colorful) ---
+    % axes(ax_mix); cla;
+    % imagesc(obj.reshape(Y_mixed(:, m, :), 2));  % Display demixed with color
+    % title('Demixed (Colored ROIs)');
+    % text(1, 10, sprintf('Time: %.2f second', (tt) / obj.Fs), 'color', 'w', 'fontweight', 'bold');
+    % axis equal tight off;
 
     % Capture and save frames to AVI if necessary
     drawnow();
@@ -206,26 +223,25 @@ for tt = t_begin:kt:t_end
             break;
         end
 
-        % Load next batch of raw data and background
-        Y = load_local_patch_data(folderPath);
-        Ybg = reconstruct_background_local(obj, frame_range, folderPath);
-        % Y = obj.load_patch_data([], tmp_range);
-        % Ybg = obj.reconstruct_background(tmp_range);
+        % % Load next batch of raw data and background
+        % Y = load_local_patch_data(folderPath, [], tmp_range);
+        % Ybg = reconstruct_background_local(obj, tmp_range, folderPath);
+        % % Y = obj.load_patch_data([], tmp_range);
+        % % Ybg = obj.reconstruct_background(tmp_range);
 
 
-        %% Add pseudo-color to denoised signals for the new frames
-        [d1, d2, Tp] = size(Y);  % Get dimensions of the new data
-        Y_mixed = zeros(d1 * d2, Tp, 3);  % Preallocate new Y_mixed for RGB image
+        % %% Add pseudo-color to denoised signals for the new frames
+        % [d1, d2, Tp] = size(Y);  % Get dimensions of the new data
+        % Y_mixed = zeros(d1 * d2, Tp, 3);  % Preallocate new Y_mixed for RGB image
 
-        % Recompute demixed signals with color
-        Y_mixed = zeros(obj.options.d1 * obj.options.d2, diff(tmp_range) + 1, 3);
-        tmp_C = CC(:, tt0 + (1:Tp));
-        col = temp(randi(64, K, 1), :);  % Reassign colors to neurons
-        for m = 1:3
-            Y_mixed(:, :, m) = obj.A * (diag(col(:, m)) * tmp_C);
-        end
+        % % Recompute demixed signals with color
+        % tmp_C = CC(:, tt0 + (1:Tp));  % Extract neuron activity for the new frame range
+        % col = temp(randi(64, K, 1), :);  % Reassign colors to neurons
+        % for m = 1:3
+        %     Y_mixed(:, :, m) = obj.A * (diag(double(col(:, m))) * double(tmp_C));
+        % end
+        % Y_mixed = uint16(Y_mixed * 2 / amp_ac * 65536);  % Scale demixed signals for 16-bit format
 
-        Y_mixed = uint16(Y_mixed * 2 / amp_ac * 65536);  % Scale demixed signals for 16-bit format
     end
 end
 

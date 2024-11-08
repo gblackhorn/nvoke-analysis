@@ -100,10 +100,10 @@ end
 
 saveFig = false; % true/false
 showYtickRight = true;
-save_dir = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\figures\VIIO_paper_figure\VIIO_Fig1_method_recExample';
-save_dir = fullfile(FolderPathVA.ventralApproach,'figures\VIIO_paper_figure\VIIO_Fig1_method_recExample');
+% save_dir = 'D:\guoda\Documents\Workspace\Analysis\nVoke_ventral_approach\VIIO_paper_figure\VIIO_Fig1_method_recExample';
+save_dir = fullfile(FolderPathVA.ventralApproach,'VIIO_paper_figure\VIIO_Fig1_method_recExample');
 % Load the example recording data
-exampleRecFile = fullfile(FolderPathVA.ventralApproach,'figures\VIIO_paper_figure\ProcessedData_VIIO_Fig1_example.mat');
+exampleRecFile = fullfile(FolderPathVA.ventralApproach,'VIIO_paper_figure\ProcessedData_VIIO_Fig1_example.mat');
 load(exampleRecFile); % Load data
 shortRecName = extractDateTimeFromFileName(alignedData_allTrials.trialName); % Get he yyyyddmm-hhmmss from recording file name
 imageMatrix = alignedData_allTrials.roi_map; % Get the 2D matrix for plotting the FOV

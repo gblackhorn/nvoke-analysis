@@ -49,6 +49,8 @@ function [varargout] = cnmfe_gen_plot_video_grey_cluster(varargin)
 	recfolders_num = numel(recfolders); 
 
 	for i = 1:recfolders_num % Ignore "." and ".." 
+		close all
+
 		recfolder = fullfile(folder, recfolders(i).name);
 		cnmfe_result_file = dir(fullfile(recfolder, '*results.mat'));
 		if ~isempty(cnmfe_result_file)
@@ -76,7 +78,7 @@ function [varargout] = cnmfe_gen_plot_video_grey_cluster(varargin)
 			range_Y = 1300+[0, amp_ac*multi_factor];
 
 			% avi_filename = neuron.show_demixed_video_gray(save_demixed, kt, [], amp_ac, range_ac);
-			avi_filename = show_demixed_video_gray(neuron, save_demixed, kt, [], amp_ac, range_ac, [], [], [], recfolder);
+			avi_filename = show_demixed_video_gray(neuron, save_demixed, kt, [], amp_ac, range_ac, [], [], [], recfolder, recfolders(i).name);
 			% avi_filename = neuron.show_demixed_video(save_demixed, kt, [], amp_ac, range_ac, range_Y, multi_factor);
 
 

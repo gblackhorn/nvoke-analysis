@@ -122,7 +122,7 @@ function [varargout] = plot_TemporalRaster(TemporalData, varargin)
     if colorful
         colormap(gca,colorMapType);
         clim([0 1])
-        cbar = colorbar('eastoutside')
+        cbar = colorbar('eastoutside');
         set(cbar, 'TickDirection', 'out');
     end
 
@@ -150,4 +150,28 @@ function [varargout] = plot_TemporalRaster(TemporalData, varargin)
     xlabel('time (s)') % Label the x axis
 
     varargout{1} = TemporalData_all; % Return the combined TemporalData as output
+end
+
+
+function normalizedArray = normalizeArrayWithLimits(array, minValue, maxValue)
+    % Normalize an array to a range between 0 and 1 based on provided limits.
+    %
+    % Parameters:
+    % array: The input numerical array to be normalized.
+    % minValue: The minimum value used for normalization.
+    % maxValue: The maximum value used for normalization.
+    %
+    % Returns:
+    % normalizedArray: The normalized array, with values scaled between 0 and 1.
+
+    % Ensure the minValue and maxValue are not the same to avoid division by zero
+    if minValue == maxValue
+        error('minValue and maxValue must be different to perform normalization.');
+    end
+    
+    % Normalize the array to the range [0, 1]
+    normalizedArray = (array - minValue) / (maxValue - minValue);
+    
+    % Ensure all values are within [0, 1]
+    normalizedArray = max(0, min(1, normalizedArray));
 end

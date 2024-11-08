@@ -67,7 +67,7 @@
             bg_ssub = obj.options.bg_ssub;
             % reconstruct the constant baseline
             if strcmpi(bg_model, 'ring')
-                b0_ = obj.reconstruct_b0_local(folderPath);
+                b0_ = reconstruct_b0_local(obj, folderPath);
                 b0_new_ = obj.reshape(obj.b0_new, 2);
             end
             
