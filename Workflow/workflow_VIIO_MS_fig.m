@@ -511,10 +511,10 @@ customizeEdges = true; % true/false. customize the bins using function 'setPeriS
 						% If false: Set the 'normToBase' to false
 if customizeEdges
 	disZeroBase = true; % true/false. Discard the roi/stimTrial if the baseline value is zero
-	normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge). Set the disZeroBase to true
+	normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge). Set the disZeroBase to true if this is tru
 else	
 	disZeroBase = false; % true/false. Discard the roi/stimTrial if the baseline value is zero
-	normToBase = false; % true/false. normalize the data to baseline (data before baseBinEdge). Set the disZeroBase to true
+	normToBase = false; % true/false. normalize the data to baseline (data before baseBinEdge). Set the disZeroBase to true if this is tru
 end
 plotDiff = false; % true/false. plot the difference of comparable bins from various stimulation recording groups
 
@@ -603,12 +603,12 @@ end
 % 3.3 Violin plot showing the difference of
 % stim-related-event_to_following_event_time and the spontaneous_event_interval
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 stimNameAll = {'og-5s','ap-0.1s','og-5s ap-0.1s'}; % 'og-5s' 'ap-0.1s'
 stimEventCatAll = {'rebound','trig','trig-ap','rebound'}; % 'rebound', 'trig'
 releventEventLoc = 'post'; % 'pre'/'post'. The location of relevent event. Pre or post to the ref event
 defReleventEventCat = false; % true/false. Use spon for the relevent event cat. If false, use the closest following/preceeding event
-maxDiff = 20; % the max difference between the stim-related and the following events
+maxDiff = 10; % the max difference between the stim-related and the following events
 % subNucleiTypes = {'DAO', 'PO'};
 ogStimTags = {'og-5s', 'ap-0.1s', 'og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
 ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG

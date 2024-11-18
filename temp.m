@@ -448,10 +448,29 @@ addPval2StatSummaryLatexTab(folderPath, file1Keyword, file2Keyword, 'normalizedA
 
 %% ==========
 close all
-select_with_UI = true;
+folder = '/flash/UusisaariU/GD/data_VIIO_example';
+select_with_UI = false;
 plot_contour = true;
 plot_roi_traces = true;
 creat_video = true;
 
-cnmfe_gen_plot_video_grey_cluster('select_with_UI', select_with_UI,...
+cnmfe_gen_plot_video_grey_cluster('folder', folder,'select_with_UI', select_with_UI,...
 	'plot_contour', plot_contour, 'plot_roi_traces', plot_roi_traces, 'creat_video', creat_video);
+
+
+%% ==========
+DAOogEX = eventStruct.noSyncTag(8);
+trialName = {DAOogEX.event_info.trialName};
+roiName = {DAOogEX.event_info.roiName};
+
+trialNameShort = cellfun(@(x) x(1:15), trialName, 'UniformOutput',false);
+trialRoiName = strcat(trialNameShort, {'-'}, roiName);
+DAOogEX_neuronNum = numel(unique(trialRoiName))
+
+POogEX = eventStruct.noSyncTag(9);
+trialName = {POogEX.event_info.trialName};
+roiName = {POogEX.event_info.roiName};
+
+trialNameShort = cellfun(@(x) x(1:15), trialName, 'UniformOutput',false);
+trialRoiName = strcat(trialNameShort, {'-'}, roiName);
+POogEX_neuronNum = numel(unique(trialRoiName))
