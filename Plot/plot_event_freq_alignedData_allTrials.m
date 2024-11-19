@@ -31,7 +31,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
     addParameter(p, 'splitLongStim', [1], @isnumeric); % Split long stimulations
     addParameter(p, 'binWidth', 1, @isnumeric); % Width of histogram bins (s)
     addParameter(p, 'baseBinIDX', 1, @isnumeric); % Width of histogram bins (s)
-    addParameter(p, 'effectBinIDX', 4, @isnumeric); % Width of histogram bins (s)
+    addParameter(p, 'effectBinIDX', 4, @isnumeric); % index of stimulation effect bin
     addParameter(p, 'PropName', 'rise_time', @ischar); % Property name ('rise_time', 'peak_time')
     addParameter(p, 'stimIDX', [], @isnumeric); % Indices of stimulation repeats
     addParameter(p, 'AlignEventsToStim', true, @islogical); % Align events to stimulation onsets
@@ -148,7 +148,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 	titleStr = strrep(titleStr,'_',' ');
 
 		% Create a figure and start to plot 
-	barStat = empty_content_struct({'stim','data','dataStruct','binEdges','binNames','baseRange','recNum','recDateNum','roiNum','stimRepeatNum','GLMMstat','anovaCombineBase'},...
+	barStat = empty_content_struct({'stim','data','dataStruct','binEdges','binNames','baseRange','recNum','recDateNum','roiNum','stimRepeatNum'},...
 		stim_type_num);
 	[f,f_rowNum,f_colNum] = fig_canvas(stim_type_num,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
 		'fig_name',titleStr); % create a figure
@@ -209,17 +209,11 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		% normalized all data to baseline level
 		if normToBase
 			ef = ef./ef(:,idxBaseData); % Normalize with the baseline of each row
-
-			% switch groupLevel
-			% 	case 'roi' % All roi data are kept. To avoid the inf value due to the low baseline freq, use mean val as the denorm
-			% 		ef = ef/mean(ef(:,idxBaseData),'all'); % Normalize with the mean val of baseline
-			% 	case 'stimTrial' % Stim trials with 0 freq baseline are discarded 
-			% 		ef = ef./ef(:,idxBaseData); % Normalize with the baseline of each row
-			% end
-			barStat(stn).baseRange = [baseStart baseEnd];
+			% barStat(stn).baseRange = [baseStart baseEnd];
 		else
-			barStat(stn).baseRange = [];
+			% barStat(stn).baseRange = [];
 		end
+		barStat(stn).baseRange = [baseStart baseEnd];
 		xdata = binEdges(1:end-1)+diff(binEdges)/2; % Use binEdges and binWidt to create xdata for bar plot
 		% xdata = binEdges(1:end-1)+binWidth/2; % Use binEdges and binWidt to create xdata for bar plot
 
@@ -259,20 +253,40 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 
 		% Run bootstrap analysis and signTest to compare the stimulation affected group to the baseline group
 		if customizeEdges
-			diff2BaseData = barStat(stn).data(effectBinIDX).groupData-barStat(stn).data(baseBinIDX).groupData;
-			diff2BaseStr = sprintf('%s-%s', binNames{effectBinIDX}, binNames{baseBinIDX});
+			baselineDataArray = barStat(stn).data(baseBinIDX).groupData;
+			% diff2BaseData = barStat(stn).data(effectBinIDX).groupData-barStat(stn).data(baseBinIDX).groupData;
+			% diff2BaseStr = sprintf('%s-%s', binNames{effectBinIDX}, binNames{baseBinIDX});
+
+			% % Bootstrap
+			% [~,~,~,~,bootStrapTab]= bootstrapAnalysis(diff2BaseData, 'label', diff2BaseStr);
+
+			% % SignTest
+			% pValueSign = signtest(diff2BaseData);
+			% signTestMethodStr = sprintf('Sign Test %s', diff2BaseStr);
+			% signTestTab = table({signTestMethodStr}, pValueSign, 'VariableNames', {'Method', 'PValue'});
+
+			% barStat(stn).bootStrapTab = bootStrapTab;
+			% barStat(stn).signTestTab = signTestTab;
+		else
+			% Get the baseline data from the baseline bins using the 'idxBaseData'. Stored in cells 	
+			baseDataCells = {barStat(stn).data(idxBaseData).groupData};
+
+			% Combine the cells and calculate the mean
+			baselineDataArray = mean(vertcat(baseDataCells{:}));
+		end
+
+		% Calculate the difference between every bin after the baseline to baseline
+		binIdxAfterBase = [idxBaseBinEdgeEnd:length(binEdges)-1]; % index of bins from the first one after baseline to the end
+		bootStrapTabCell = cell(numel(binIdxAfterBase), 1); % Create an empty cell to store the bootstrap results
+		for bn = 1:numel(binIdxAfterBase)
+			diff2BaseData = barStat(stn).data(binIdxAfterBase(bn)).groupData-baselineDataArray;
+			diff2BaseStr = sprintf('bin-%d vs. baseline', binIdxAfterBase(bn));
 
 			% Bootstrap
-			[~,~,~,~,bootStrapTab]= bootstrapAnalysis(diff2BaseData, 'label', diff2BaseStr);
-
-			% SignTest
-			pValueSign = signtest(diff2BaseData);
-			signTestMethodStr = sprintf('Sign Test %s', diff2BaseStr);
-			signTestTab = table({signTestMethodStr}, pValueSign, 'VariableNames', {'Method', 'PValue'});
-
-			barStat(stn).bootStrapTab = bootStrapTab;
-			barStat(stn).signTestTab = signTestTab;
+			[~,~,~,~,bootStrapTabCell{bn}]= bootstrapAnalysis(diff2BaseData, 'label', diff2BaseStr);
 		end
+		% Concatenate all the bootstrap results
+		barStat(stn).bootStrapTab = vertcat(bootStrapTabCell{:});
 
 
 		% % Run Repeated measures ANOVA
@@ -347,17 +361,23 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		save(fullfile(save_dir, [titleStr, '_stat']),'barStat');
 
 		% Save stat tables
-		if customizeEdges
-			for i = 1:numel(barStat) 
-				latexTabNameBootstrap = sprintf('%s bootStrap [%s].tex', titleStr, barStat(i).stim);
-				tableToLatex(barStat(i).bootStrapTab, 'saveToFile',true,'filename',...
-				    fullfile(save_dir,latexTabNameBootstrap), 'caption', latexTabNameBootstrap,'columnAdjust', 'XXXXXXX');
-
-				latexTabSignTestName = sprintf('%s signTest [%s].tex', titleStr, barStat(i).stim);
-				tableToLatex(barStat(i).signTestTab, 'saveToFile',true,'filename',...
-				    fullfile(save_dir,latexTabSignTestName), 'caption', latexTabSignTestName,'columnAdjust', 'XXXXXXX');
-			end
+		for i = 1:numel(barStat) 
+			latexTabNameBootstrap = sprintf('%s bootStrap [%s].tex', titleStr, barStat(i).stim);
+			tableToLatex(barStat(i).bootStrapTab, 'saveToFile',true,'filename',...
+			    fullfile(save_dir,latexTabNameBootstrap), 'caption', latexTabNameBootstrap,'columnAdjust', 'XXXXXXX');
 		end
+
+		% if customizeEdges
+		% 	for i = 1:numel(barStat) 
+		% 		latexTabNameBootstrap = sprintf('%s bootStrap [%s].tex', titleStr, barStat(i).stim);
+		% 		tableToLatex(barStat(i).bootStrapTab, 'saveToFile',true,'filename',...
+		% 		    fullfile(save_dir,latexTabNameBootstrap), 'caption', latexTabNameBootstrap,'columnAdjust', 'XXXXXXX');
+
+		% 		% latexTabSignTestName = sprintf('%s signTest [%s].tex', titleStr, barStat(i).stim);
+		% 		% tableToLatex(barStat(i).signTestTab, 'saveToFile',true,'filename',...
+		% 		%     fullfile(save_dir,latexTabSignTestName), 'caption', latexTabSignTestName,'columnAdjust', 'XXXXXXX');
+		% 	end
+		% end
 
 		if filter_roi_tf
 			filterInfoFile = fullfile(save_dir, [titleStr, '_filterInfo']);

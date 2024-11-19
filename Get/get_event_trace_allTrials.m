@@ -448,6 +448,7 @@ function [alignedData_allTrials,varargout] = get_event_trace_allTrials(allTrials
 		alignedData_allTrials(disIDX) = [];
 	end
 
+	% Discard ROI if recordings applied with disROI_setting.stims do not have events belonging to the categories, disROI_setting.eventCats
 	if disROI
 		alignedData_allTrials = discard_alignedData_roi(alignedData_allTrials,...
 			'stims',disROI_setting.stims,'eventCats',disROI_setting.eventCats);

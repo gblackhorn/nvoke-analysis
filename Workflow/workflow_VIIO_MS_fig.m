@@ -28,7 +28,7 @@ adata.mod_pcn = true; % true/false modify the peak category names with func [mod
 adata.caDeclineOnly = false; % true/false. Only keep the calcium decline trials (og group)
 adata.disROI = true; % true/false. If true, Keep ROIs using the setting below, and delete the rest
 adata.disROI_setting.stims = {'AP_GPIO-1-1s', 'OG-LED-5s', 'OG-LED-5s AP_GPIO-1-1s'};
-adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}};
+adata.disROI_setting.eventCats = {{'spon'}, {'spon'}, {'spon'}}; % Discard ROIs without these events. Categories paired with stims above
 adata.sponfreqFilter.status = true; % true/false. If true, use the following settings to filter ROIs
 adata.sponfreqFilter.field = 'sponfq'; % 
 adata.sponfreqFilter.thresh = 0.05; % Hz. default 0.05
@@ -305,6 +305,7 @@ ggSetting.groupField = {'peak_category','type'}; % options: 'fovID', 'stim_name'
 	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
 
+
 % b. Create grouped_event for plotting ROI properties
 ggSetting.entry = 'roi'; % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated.
 ggSetting.separateSpon = false; % true/false. Separated spon using stimualtion
@@ -313,6 +314,15 @@ ggSetting.groupField = {'peak_category','subNuclei'}; % options: 'fovID', 'stim_
 	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
 	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
 	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
+
+% Group using stim_name: This will be used to calculate the event probability
+ggSetting.groupField = {'stim_name'}; % options: 'fovID', 'stim_name', 'peak_category'; Field of eventProp_all used to group events 
+ggSetting.dis_spon = true; % true/false. Discard spontaneous events
+[roiStructForEventProb] = getAndGroup_eventsProp(alignedData_allTrials,...
+	'entry',ggSetting.entry,'modify_stim_name',ggSetting.modify_stim_name,...
+	'filterROIs',disOgEx,'filterROIsStimTags',ogStimTags,'filterROIsStimEffects',ogStimEffects,...
+	'ggSetting',ggSetting,'adata',adata,'debug_mode',debug_mode);
+
 
 %% ==========
 % 2.5 Plot event properties
@@ -443,12 +453,27 @@ tags_keep = {'spon'}; % Keep groups containing these words. {'trig','trig-ap','r
 [roiStructForPlotFiltered] = filter_entries_in_structure(roiStructForPlot,'group',...
 	'tags_keep',tags_keep);
 
-
+% Plot and calculate the spont event frequencies and intervals 
 [saveDir, plot_info] = plot_event_info(roiStructForPlotFiltered,'entryType','roi',...
 	'plot_combined_data', false, 'parNames', parNamesROI,...
 	'mmModel', mmModel, 'mmGroup', 'subNuclei', 'mmHierarchicalVars', mmHierarchicalVarsROI,...
 	'mmDistribution', mmDistribution, 'mmLink', mmLink,...
 	'fname_preffix','ROI','save_fig', saveFig, 'save_dir', FolderPathVA.fig);
+
+% Plot and calculate the event probability: eventNum/stimNum
+% All recordings are used. Subnuclei are not separated
+fieldnameGroup = 'peak_category';
+fieldnameVal = 'stimEvent_possi';
+eventPb_box = fig_canvas(1,'fig_name','event probability','unit_width',0.6,'unit_height',0.3);
+eventPb_plot_info = empty_content_struct({'group','plotInfo'},numel(roiStructForEventProb));
+[eventPb_plot_info.group] = roiStructForEventProb.group;
+tlo_eventPb_box = tiledlayout(eventPb_box,ceil(numel(roiStructForEventProb)/4),4);
+for gn = 1:numel(roiStructForEventProb)
+	ax_eventPb_box = nexttile(tlo_eventPb_box);
+	[eventPb_plot_info(gn).plotInfo] = boxPlotOfStructData(roiStructForEventProb(gn).event_info,...
+	 fieldnameVal, fieldnameGroup,'plotWhere', gca, 'titleStr', fieldnameVal, 'TickAngle', 45, 'FaceColor', '#FF5733');
+end
+savePlot(eventPb_box,'guiSave', 'off', 'save_dir', saveDir,'fname', 'stimEventProb');
 
 
 % Save the statistics info
@@ -478,6 +503,7 @@ if saveFig
 	roiPropStatInfo.plot_info = plot_info;
 	% dt = datestr(now, 'yyyymmdd');
 	save(fullfile(saveDir, 'ROI propDataAndStat'), 'roiPropStatInfo');
+	save(fullfile(saveDir, 'stimEventProb'), 'eventPb_plot_info');
 end
 
 
@@ -503,10 +529,10 @@ compareAnalysisUsingdiffSetting(figFolder, saveFolder,...
 %% ==========
 % 3.1 Peri-stimulus event frequency analysis
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 gui_save = true;
 groupLevel = 'roi'; % Collect event freq on 'roi'/'stimTrial' level
-customizeEdges = true; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
+customizeEdges = false; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
 						% If true: Set the 'disZeroBase' to true, 'normToBase' to true
 						% If false: Set the 'normToBase' to false
 if customizeEdges
@@ -788,7 +814,7 @@ end
 %% ==========
 % 3.6 Show the distribution of various categories of events in the FOVs
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 % Get and group (gg) Settings
 ggSetting.entry = 'roi'; % options: 'roi' or 'event'. The entry type in eventProp
                 % 'roi': events from a ROI are stored in a length-1 struct. mean values were calculated. 

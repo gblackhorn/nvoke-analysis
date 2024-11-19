@@ -10,7 +10,7 @@ function [eventProp_all_norm,varargout] = norm_eventProp_with_spon(eventProp_all
 		'peak_slope', 'peak_slope_norm_hpstd',};
 	norm_prefix = 'sponNorm';
 	entry = 'event'; % 'event'/'roi'. Each entry contains event properties of an event or a ROI
-	dis_spon = true; % true/false. discard peakCat_denorm events 
+	discardSpon = true; % true/false. discard peakCat_denorm events 
 
 	% Optionals
 	for ii = 1:2:(nargin-1)
@@ -20,8 +20,8 @@ function [eventProp_all_norm,varargout] = norm_eventProp_with_spon(eventProp_all
 	        norm_prefix = varargin{ii+1};
         elseif strcmpi('entry', varargin{ii})
             entry = varargin{ii+1};
-        elseif strcmpi('dis_spon', varargin{ii})
-            dis_spon = varargin{ii+1};
+        elseif strcmpi('discardSpon', varargin{ii})
+            discardSpon = varargin{ii+1};
 	    elseif strcmpi('propNames', varargin{ii})
             propNames = varargin{ii+1};
 	    end
@@ -61,7 +61,7 @@ function [eventProp_all_norm,varargout] = norm_eventProp_with_spon(eventProp_all
 				peakCat_denorm_idx = find(ic_peakCat == peakCat_denorm_uniqueIdx);
 				eventProp_denorm = eventProp_roi(peakCat_denorm_idx); % peakCat_denorm entries
 				eventProp_other = eventProp_roi;
-				if dis_spon
+				if discardSpon
 					eventProp_other(peakCat_denorm_idx) = []; % discard peakCat_denorm entries
 				end
 				for pn = 1:props_num

@@ -474,3 +474,27 @@ roiName = {POogEX.event_info.roiName};
 trialNameShort = cellfun(@(x) x(1:15), trialName, 'UniformOutput',false);
 trialRoiName = strcat(trialNameShort, {'-'}, roiName);
 POogEX_neuronNum = numel(unique(trialRoiName))
+
+
+%% ====================
+% 9.5.4.1 Plot the event probability
+% Create grouped_event_info with the following settings and filter it
+% [9.3] eventProp_all: entry is 'roi'. mgSetting.groupField = {'stim_name'};
+% If save, save to the existing save_dir
+close all
+save_fig = false; % true/false
+fieldnameGroup = 'peak_category';
+fieldnameVal = 'stimEvent_possi';
+eventPb_bar = fig_canvas(1,'fig_name','event probability','unit_width',0.6,'unit_height',0.3);
+eventPb_plot_info = empty_content_struct({'group','plotInfo'},numel(roiStructForEventProb));
+[eventPb_plot_info.group] = roiStructForEventProb.group;
+tlo_eventPb_bar = tiledlayout(eventPb_bar,ceil(numel(roiStructForEventProb)/4),4);
+for gn = 1:numel(roiStructForEventProb)
+	ax_eventPb_bar = nexttile(tlo_eventPb_bar);
+	[eventPb_plot_info(gn).plotInfo] = boxPlotOfStructData(roiStructForEventProb(gn).event_info,...
+	 fieldnameVal, fieldnameGroup,'plotWhere', gca, 'titleStr', fieldnameVal, 'TickAngle', 45, 'FaceColor', '#FF5733');
+end
+
+
+
+%% ====================

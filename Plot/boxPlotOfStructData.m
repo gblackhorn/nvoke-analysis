@@ -1,4 +1,4 @@
-function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupField, varargin)
+function [barInfo, varargout] = boxPlotOfStructData(structData, valField, groupField, varargin)
     % barPlotOfStructData Creates a bar plot from structured data.
     %
     % This function generates a bar plot using data from a structure array.
@@ -114,13 +114,14 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
 
     % x = [1:1:group_num];
     x = [barInfo.groupIDX];
-    y = [barInfo.meanVal];
-    yError = [barInfo.seVal];
+    % y = [barInfo.meanVal];
+    % yError = [barInfo.seVal];
+    group = [barInfo.group];
 
-    if isnumeric(x)
+    if isnumeric(group)
     	groupNames = arrayfun(@num2str, x, 'UniformOutput', false);
     else
-    	groupNames = x;
+    	groupNames = group;
     end
 
 

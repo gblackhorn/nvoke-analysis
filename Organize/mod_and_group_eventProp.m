@@ -54,10 +54,10 @@ function [grouped_event, grouped_event_setting, varargout] = mod_and_group_event
     debugMode = p.Results.debugMode;
 
     %% Main Processing
-    % Filter spontaneous events for 'roi' type if 'sponOnly' is true
-    if strcmp(eventType, 'roi') && discardSpon
-        eventProp_all = filter_structData(eventProp_all, 'peak_category', 'spon', 1);
-    end
+    % % Filter spontaneous events for 'roi' type if 'sponOnly' is true
+    % if strcmp(eventType, 'roi') && discardSpon
+    %     eventProp_all = filter_structData(eventProp_all, 'peak_category', 'spon', 0);
+    % end
 
     % Rename OG-triggered events if markEXog is enabled
     if markEXog
@@ -77,6 +77,28 @@ function [grouped_event, grouped_event_setting, varargout] = mod_and_group_event
     % Group events based on specified fields
     [grouped_event, grouped_event_setting] = group_event_info_multi_category(eventProp_all_norm, ...
         'category_names', groupField, 'debugMode', debugMode);
+
+    % Add n numbers
+    for gn = 1:numel(grouped_event)
+        group_name = grouped_event(gn).group;
+        if debugMode
+            fprintf('[mod_and_group_eventProp] group (%d/%d): %s\n',gn,numel(grouped_event),group_name);
+            if gn == 3
+                pause
+            end
+        end
+        % [grouped_event(gn).numTrial,grouped_event(gn).numRoi,grouped_event(gn).numRoiVec] = get_num_fieldUniqueContent(grouped_event(gn).event_info,...
+        %     'fn_1', 'trialName', 'fn_2', 'roiName');
+        [TrialRoiList,recNum,animalNum,roiNum] = get_roiNum_from_eventProp(grouped_event(gn).event_info);
+        grouped_event(gn).animalNum = animalNum;
+        grouped_event(gn).recNum = recNum;
+        grouped_event(gn).roiNum = roiNum;
+        grouped_event(gn).TrialRoiList = TrialRoiList;
+
+        if strcmp(eventType,'roi') && ~contains(group_name,'spon') && ~contains(group_name,'varied')
+            [grouped_event(gn).eventPb,grouped_event(gn).eventPbList] = analyze_roi_event_possibility(grouped_event(gn).event_info,'debug_mode',debugMode);
+        end
+    end
 
     % Sort groups based on sortOrder and sortOrderPlus
     grouped_event = sort_struct_with_str(grouped_event, 'group', sortOrder, ...

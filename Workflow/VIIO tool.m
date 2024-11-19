@@ -46,6 +46,6 @@ addPval2StatSummaryLatexTab(FolderPathVA.fig, file1Keyword, file2Keyword,...
 %% ==========
 % Vertically combine the tables containing stat-summary and GLMM results 
 FolderPathVA.fig = chooseFolderWithGUI(FolderPathVA.fig, 'Choose a folder containing Latex tables');
-fileKeyword = 'PO periStimFreq summaryStats nNum'; % normalizedAmp, FWHM, rise_duration 
-tableCaption = 'PO periStimFreq summaryStats nNum longTab';
+fileKeyword = 'DAO event freq in 1 s bins [peak time] bootStrap [og-5s]'; % normalizedAmp, FWHM, rise_duration 
+tableCaption = 'Fig4 C1 DAO periStimFreq bootstrap';
 vertConcatLatexTab(FolderPathVA.fig, fileKeyword, tableCaption);
