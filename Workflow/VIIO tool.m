@@ -5,6 +5,21 @@
 GUI_chooseFolder = false; % true/false. Use GUI to locate the DataFolder and AnalysisFolder
 FolderPathVA = initProjFigPathVIIO(GUI_chooseFolder);
 
+%% ==========
+% Create Latex table by inputing values and column names
+LatexFolderPath = 'D:\guoda\Documents\Workspace\manuscript\Paper\VIIO\DATA\LatexTab';
+columnAdjust = 'XXXXXXXX';
+
+% tabDiscript = "Fig3 C1. spon vs AP. Mann-Whitney U test (ranksum)";
+% statData = STATS_clustering_AP_PO.clusterFractions;
+
+statTab = VIIOclusteringStat2Tab(statData, 'tabDiscript', tabDiscript);
+statFileName = sprintf('%s.tex', statTab.Properties.Description);
+tableToLatex(statTab, 'saveToFile',true,'filename', fullfile(LatexFolderPath,statFileName),...
+		    'caption', statTab.Properties.Description, 'columnAdjust', columnAdjust);
+
+
+
 
 %% ==========
 % Combine the meanSemTab and nNumInfo Latex tables (Recognize pair with filename stemb) in a single folder
@@ -47,5 +62,5 @@ addPval2StatSummaryLatexTab(FolderPathVA.fig, file1Keyword, file2Keyword,...
 % Vertically combine the tables containing stat-summary and GLMM results 
 FolderPathVA.fig = chooseFolderWithGUI(FolderPathVA.fig, 'Choose a folder containing Latex tables');
 fileKeyword = 'DAO event freq in 1 s bins [peak time] bootStrap [og-5s]'; % normalizedAmp, FWHM, rise_duration 
-tableCaption = 'Fig4 C1 DAO periStimFreq bootstrap';
-vertConcatLatexTab(FolderPathVA.fig, fileKeyword, tableCaption);
+% tableCaption = 'Fig4 C1 DAO periStimFreq bootstrap';
+vertConcatLatexTab(FolderPathVA.fig, fileKeyword, fileKeyword);

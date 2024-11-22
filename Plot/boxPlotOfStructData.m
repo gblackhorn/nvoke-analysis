@@ -49,7 +49,7 @@ function [barInfo, varargout] = boxPlotOfStructData(structData, valField, groupF
 
     % Add optional parameters to the parser
     addParameter(p, 'plotWhere', []);
-    addParameter(p, 'titleStr', 'Bar plot', @ischar);
+    addParameter(p, 'titleStr', 'Box plot', @ischar);
     addParameter(p, 'xtickLabel', {}, @iscell);
     addParameter(p, 'TickAngle', 0, @isnumeric);
     addParameter(p, 'EdgeColor', 'none', @ischar);
