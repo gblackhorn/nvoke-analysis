@@ -106,12 +106,12 @@ function plotScatterWithJitter(barData, barX, barNum, jitterAmount)
     if isnumeric(barData) && ismatrix(barData)
         for cn = 1:barNum
             jitterX = barX(cn) + (rand(size(barData(:, cn))) - 0.5) * jitterAmount;
-            scatter(jitterX, barData(:, cn), 18, 'k');
+            scatter(jitterX, barData(:, cn), 18, 'k', 'filled');
         end
     elseif iscell(barData)
         for cn = 1:barNum
             jitterX = barX(cn) + (rand(length(barData{cn}), 1) - 0.5) * jitterAmount;
-            scatter(jitterX, barData{cn}, 18, 'k');
+            scatter(jitterX, barData{cn}, 18, 'k', 'filled');
         end
     end
 end

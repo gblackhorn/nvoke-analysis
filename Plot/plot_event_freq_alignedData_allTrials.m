@@ -153,9 +153,12 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 	[f,f_rowNum,f_colNum] = fig_canvas(stim_type_num,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
 		'fig_name',titleStr); % create a figure
 	tlo = tiledlayout(f,f_rowNum,f_colNum);
+
+	% % Create figure to print ANOVA result as UI table
 	% [fstat,fstat_rowNum,fstat_colNum] = fig_canvas(stim_type_num,'unit_width',plot_unit_width,'unit_height',plot_unit_height,'column_lim',2,...
 	% 	'fig_name',titleStr); % create a figure
 	% tloStat = tiledlayout(fstat,fstat_rowNum,fstat_colNum);
+
 	for stn = 1:stim_type_num
 		PeriBaseRange = [baseBinEdgestart baseBinEdgeEnd];
 		[EventFreqInBins,binEdges,stimShadeData,stimShadeName,stimEventCatName,binNames] = get_EventFreqInBins_trials(alignedData,stim_names{stn},...
@@ -244,6 +247,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		% Bar plot of the event freq in various time 
 		% barInfo.data = barplot_with_stat(ef,'xdata',xdata,'plotWhere',gca);
 		barStat(stn).data = barPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', ax, 'xtickLabel', binNames);
+		% barStat(stn).data = boxPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', ax, 'xtickLabel', binNames);
 		barStat(stn).dataStruct = efStruct;
 		barStat(stn).stim = stim_names{stn};
 		barStat(stn).binEdges = binEdges;
@@ -254,18 +258,12 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		% Run bootstrap analysis and signTest to compare the stimulation affected group to the baseline group
 		if customizeEdges
 			baselineDataArray = barStat(stn).data(baseBinIDX).groupData;
-			% diff2BaseData = barStat(stn).data(effectBinIDX).groupData-barStat(stn).data(baseBinIDX).groupData;
-			% diff2BaseStr = sprintf('%s-%s', binNames{effectBinIDX}, binNames{baseBinIDX});
-
-			% % Bootstrap
-			% [~,~,~,~,bootStrapTab]= bootstrapAnalysis(diff2BaseData, 'label', diff2BaseStr);
 
 			% % SignTest
 			% pValueSign = signtest(diff2BaseData);
 			% signTestMethodStr = sprintf('Sign Test %s', diff2BaseStr);
 			% signTestTab = table({signTestMethodStr}, pValueSign, 'VariableNames', {'Method', 'PValue'});
 
-			% barStat(stn).bootStrapTab = bootStrapTab;
 			% barStat(stn).signTestTab = signTestTab;
 		else
 			% Get the baseline data from the baseline bins using the 'idxBaseData'. Stored in cells 	
@@ -289,6 +287,16 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		barStat(stn).bootStrapTab = vertcat(bootStrapTabCell{:});
 
 
+		% mark the bar with the customized binName
+		% xticklabels(binNames)
+		xlabel(xlabelStr)
+		xtickangle(xTickAngle)
+
+		ylabel(ylabelStr)
+		title(sub_titleStr,'FontSize',10)
+
+
+
 		% % Run Repeated measures ANOVA
 		% % Convert matrix to table
 		% efTable = array2table(ef, 'VariableNames', binNames);
@@ -310,22 +318,6 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 
 		% barStat(stn).ranova = ranovaResults;
 		% barStat(stn).ranovaMultComp = ranovaMultComp;
-
-
-		% % Run GLMM to evaluate the difference of every freq in various time bins
-        % barStat(stn).GLMMstat = twoPartMixedModelAnalysis(efStruct, 'val', 'xdata', mmlHierarchicalVars,...
-        % 	'groupVarType', 'categorical', 'dispStat', false);
-		% % barInfo.stat = GLMManalysis(efStruct, 'val', 'xdata', mmlHierarchicalVars,...
-		% % 	mmType, mmDistribution, mmLink);
-
-
-		% mark the bar with the customized binName
-		% xticklabels(binNames)
-		xlabel(xlabelStr)
-		xtickangle(xTickAngle)
-
-		ylabel(ylabelStr)
-		title(sub_titleStr,'FontSize',10)
 
 
 		% % combine baseline data and run anova to compare baseline and the rest bins

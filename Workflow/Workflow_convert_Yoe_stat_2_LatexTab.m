@@ -95,6 +95,10 @@ statData = STATS_CLUST_SPONT_OGDELAY_FIG4D.clusterFoldValues;
 tabDiscript = "Fig3 E. pre and post intervals of AP";
 statData = statsResults_PrePostIntervals;
 
+%% ==========
+tabDiscript = "Fig3 E. pre and post ratios of AP. Cluster vs Single";
+statData = statsResultsClustSingPrePost;
+
 
 
 % Stim efficacy

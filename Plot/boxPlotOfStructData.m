@@ -125,14 +125,10 @@ function [barInfo, varargout] = boxPlotOfStructData(structData, valField, groupF
     end
 
 
-    % Plot bars
+    % Plot boxes
     barPlotInfo = boxPlotScatter({barInfo.groupData},'barX',x,'plotWhere',plotWhere,...
             'barNames',groupNames,'TickAngle', TickAngle, 'FontSize', FontSize, 'FontWeight', FontWeight);
-    % barPlotInfo = barplot_with_errBar({barInfo.groupData},'barX',x,'plotWhere',plotWhere,...
-    %         'barNames',groupNames,'TickAngle', TickAngle, 'FontSize', FontSize, 'FontWeight', FontWeight);
-    % barPlotInfo = barplot_with_errBar(y(:)','barX',x,'plotWhere',plotWhere,...
-    %     'errBarVal',yError(:)','barNames',groupNames,'dataNumVal',[barInfo.nNum],...
-    %     'TickAngle', TickAngle, 'FontSize', FontSize, 'FontWeight', FontWeight);
+
     if ~isempty(xtickLabel)
         xticklabels(xtickLabel)
     end
