@@ -14,6 +14,7 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
 
     plot_unit_width = 0.4; % normalized size of a single plot to the display
     plot_unit_height = 0.4; % nomralized size of a single plot to the display
+    yTickInterval = 2; % Default interval for y-axis ticks
     titleStr = sprintf('periStim eventFreq');
     save_fig = false;
     save_dir = [];
@@ -27,6 +28,8 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
             titleStr = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
         elseif strcmpi('normToFirst', varargin{ii})
             normToFirst = varargin{ii+1};
+        elseif strcmpi('yTickInterval', varargin{ii})
+            yTickInterval = varargin{ii+1};
         elseif strcmpi('mmlHierarchicalVars', varargin{ii})
             mmlHierarchicalVars = varargin{ii+1};
         elseif strcmpi('save_fig', varargin{ii})
@@ -145,6 +148,9 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
         'groupNames',groupNames,'extraUItable',nNumTab,...
         'titleStr',titleStr,'save_fig',save_fig,'save_dir',save_dir,'gui_save',gui_save);
 
+    % % Add customizable y-axis ticks
+    % customizeYAxis(gca, yTickInterval);
+
     % Add GLMM stat info to the statInfo struct var
     statInfo.GLMMstat = GLMMstat;
 
@@ -180,3 +186,11 @@ function [violinDataNew,varargout] = addFieldCompatibleStimName(violinData)
     % output a cell containing the modified stim names compatible with field name
     varargout{1} = {violinDataNew.stimMod};
 end
+
+% function customizeYAxis(gcaHandle, yTickInterval)
+%     % Customize y-axis ticks and labels based on the provided interval
+%     yLimits = ylim(gcaHandle);
+%     yTicks = floor(yLimits(1)/yTickInterval)*yTickInterval : yTickInterval : ceil(yLimits(2)/yTickInterval)*yTickInterval;
+%     set(gcaHandle, 'YTick', yTicks);
+%     set(gcaHandle, 'YTickLabel', arrayfun(@num2str, yTicks, 'UniformOutput', false));
+% end

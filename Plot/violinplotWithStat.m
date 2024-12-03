@@ -2,28 +2,23 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
     % Create a violin plot, its descriptive info (mean, median, ste, etc.) as a table, and
     % statistics also as a table
 
-    % violinData: m*n cell array. m is the number of plots, n is the violin number in a single plot
-
-    % groupNames: m*n cell array. size of groupNames must be the same as violinData. One name for one 
-
-    % default
-
+    % Defaults
     plot_unit_width = 0.4; % normalized size of a single plot to the display
-    plot_unit_height = 0.4; % nomralized size of a single plot to the display
-    columnLim = 1; % number of plot column. 1 column includes violine and tables
+    plot_unit_height = 0.4; % normalized size of a single plot to the display
+    columnLim = 1; % number of plot column
     titleStr = sprintf('violin plot');
     save_fig = false;
     save_dir = [];
     gui_save = 'off';
-
     debug_mode = false;
+    yTickInterval = 2; % Default interval for y-axis ticks
 
-    % Optionals
+    % Parse Optionals
     for ii = 1:2:(nargin-1)
         if strcmpi('groupNames', varargin{ii})
-            groupNames = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
+            groupNames = varargin{ii+1};
         elseif strcmpi('titleStr', varargin{ii})
-            titleStr = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
+            titleStr = varargin{ii+1};
         elseif strcmpi('extraUItable', varargin{ii})
             extraUItable = varargin{ii+1};
         elseif strcmpi('save_fig', varargin{ii})
@@ -32,6 +27,8 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
             save_dir = varargin{ii+1};
         elseif strcmpi('gui_save', varargin{ii})
             gui_save = varargin{ii+1};
+        elseif strcmpi('yTickInterval', varargin{ii})
+            yTickInterval = varargin{ii+1};
         end
     end 
 
@@ -126,6 +123,9 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
         axViolin = nexttile(tlo,[3 1]); 
         violinplot(violinInfo(rn).(violinInfoFields{2}),groupNames(rn,:));
 
+        % Customize y-axis ticks
+        customizeYAxis(axViolin, yTickInterval);
+
         % plot dataInfo 
         axDataInfo = nexttile(tlo,[1 1]);
         dataInfoTab = struct2table(violinInfo(rn).(violinInfoFields{3}));
@@ -162,3 +162,10 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
     varargout{1} = save_dir;
 end
 
+function customizeYAxis(gcaHandle, yTickInterval)
+    % Customize y-axis ticks and labels based on the provided interval
+    yLimits = ylim(gcaHandle);
+    yTicks = floor(yLimits(1)/yTickInterval)*yTickInterval : yTickInterval : ceil(yLimits(2)/yTickInterval)*yTickInterval;
+    set(gcaHandle, 'YTick', yTicks);
+    set(gcaHandle, 'YTickLabel', arrayfun(@num2str, yTicks, 'UniformOutput', false));
+end

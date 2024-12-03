@@ -245,9 +245,11 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		barInfo = empty_content_struct({'data', 'stat'}, 1);
 
 		% Bar plot of the event freq in various time 
-		% barInfo.data = barplot_with_stat(ef,'xdata',xdata,'plotWhere',gca);
-		barStat(stn).data = barPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', ax, 'xtickLabel', binNames);
-		% barStat(stn).data = boxPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', ax, 'xtickLabel', binNames);
+		% barStat(stn).data = barPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', ax, 'xtickLabel', binNames);
+
+		% Box plot of event freq in various time
+		barStat(stn).data = boxPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', ax, 'xtickLabel', binNames);
+		
 		barStat(stn).dataStruct = efStruct;
 		barStat(stn).stim = stim_names{stn};
 		barStat(stn).binEdges = binEdges;

@@ -125,6 +125,7 @@ function addDataNumber(barX, dataNumVal)
 end
 
 function stylePlot(gcaHandle, TickAngle, FontSize, FontWeight, barNames, barX)
+    % Modify x-axis
     set(gcaHandle, 'box', 'off');
     set(gcaHandle, 'TickDir', 'out');
     set(gcaHandle, 'FontSize', FontSize);
@@ -132,4 +133,13 @@ function stylePlot(gcaHandle, TickAngle, FontSize, FontWeight, barNames, barX)
     xtickangle(TickAngle);
     set(gcaHandle, 'XTick', barX);
     set(gcaHandle, 'xticklabel', barNames);
+
+    % Customize y-axis ticks for even numbers only
+    yLimits = ylim(gcaHandle);
+    evenYTicks = floor(yLimits(1)/2)*2:2:ceil(yLimits(2)/2)*2; % Generate ticks at intervals of 2
+    set(gcaHandle, 'YTick', evenYTicks);
+    set(gcaHandle, 'YTickLabel', arrayfun(@num2str, evenYTicks, 'UniformOutput', false));
 end
+
+
+
