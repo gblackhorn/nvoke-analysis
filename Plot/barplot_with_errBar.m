@@ -124,7 +124,13 @@ function addDataNumber(barX, dataNumVal)
     text(barX, nNumY, nNumStr, 'vert', 'bottom', 'horiz', 'center', 'Color', 'white');
 end
 
-function stylePlot(gcaHandle, TickAngle, FontSize, FontWeight, barNames, barX)
+function stylePlot(gcaHandle, TickAngle, FontSize, FontWeight, barNames, barX, varargin)
+    % Parse optional interval parameter
+    p = inputParser;
+    addOptional(p, 'yTickInterval', 2, @isnumeric); % Default interval is 2
+    parse(p, varargin{:});
+    yTickInterval = p.Results.yTickInterval;
+
     % Modify x-axis
     set(gcaHandle, 'box', 'off');
     set(gcaHandle, 'TickDir', 'out');
@@ -134,12 +140,13 @@ function stylePlot(gcaHandle, TickAngle, FontSize, FontWeight, barNames, barX)
     set(gcaHandle, 'XTick', barX);
     set(gcaHandle, 'xticklabel', barNames);
 
-    % Customize y-axis ticks for even numbers only
+    % Customize y-axis ticks with user-defined or default interval
     yLimits = ylim(gcaHandle);
-    evenYTicks = floor(yLimits(1)/2)*2:2:ceil(yLimits(2)/2)*2; % Generate ticks at intervals of 2
-    set(gcaHandle, 'YTick', evenYTicks);
-    set(gcaHandle, 'YTickLabel', arrayfun(@num2str, evenYTicks, 'UniformOutput', false));
+    yTicks = floor(yLimits(1)/yTickInterval)*yTickInterval:yTickInterval:ceil(yLimits(2)/yTickInterval)*yTickInterval;
+    set(gcaHandle, 'YTick', yTicks);
+    set(gcaHandle, 'YTickLabel', arrayfun(@num2str, yTicks, 'UniformOutput', false));
 end
+
 
 
 

@@ -244,12 +244,12 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 
 		barInfo = empty_content_struct({'data', 'stat'}, 1);
 
-		% Bar plot of the event freq in various time 
+		% % Bar plot of the event freq in various time 
 		% barStat(stn).data = barPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', ax, 'xtickLabel', binNames);
 
 		% Box plot of event freq in various time
 		barStat(stn).data = boxPlotOfStructData(efStruct, 'val', 'xdata', 'plotWhere', ax, 'xtickLabel', binNames);
-		
+
 		barStat(stn).dataStruct = efStruct;
 		barStat(stn).stim = stim_names{stn};
 		barStat(stn).binEdges = binEdges;
@@ -278,15 +278,20 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		% Calculate the difference between every bin after the baseline to baseline
 		binIdxAfterBase = [idxBaseBinEdgeEnd:length(binEdges)-1]; % index of bins from the first one after baseline to the end
 		bootStrapTabCell = cell(numel(binIdxAfterBase), 1); % Create an empty cell to store the bootstrap results
+		signRankTabCell = cell(numel(binIdxAfterBase), 1); % Create an empty cell to store the bootstrap results
 		for bn = 1:numel(binIdxAfterBase)
 			diff2BaseData = barStat(stn).data(binIdxAfterBase(bn)).groupData-baselineDataArray;
 			diff2BaseStr = sprintf('bin-%d vs. baseline', binIdxAfterBase(bn));
 
 			% Bootstrap
 			[~,~,~,~,bootStrapTabCell{bn}]= bootstrapAnalysis(diff2BaseData, 'label', diff2BaseStr);
+
+			% SignRank
+			[~, ~, signRankTabCell{bn}] = signedRankAnalysis(diff2BaseData, 'label', diff2BaseStr);
 		end
-		% Concatenate all the bootstrap results
+		% Concatenate all the bootstrap and signRank results
 		barStat(stn).bootStrapTab = vertcat(bootStrapTabCell{:});
+		barStat(stn).signRankTab = vertcat(signRankTabCell{:});
 
 
 		% mark the bar with the customized binName
@@ -359,6 +364,10 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 			latexTabNameBootstrap = sprintf('%s bootStrap [%s].tex', titleStr, barStat(i).stim);
 			tableToLatex(barStat(i).bootStrapTab, 'saveToFile',true,'filename',...
 			    fullfile(save_dir,latexTabNameBootstrap), 'caption', latexTabNameBootstrap,'columnAdjust', 'XXXXXXX');
+
+			latexTabNameSignRank = sprintf('%s SignRank [%s].tex', titleStr, barStat(i).stim);
+			tableToLatex(barStat(i).signRankTab, 'saveToFile',true,'filename',...
+			    fullfile(save_dir,latexTabNameSignRank), 'caption', latexTabNameSignRank,'columnAdjust', 'XXXXX');
 		end
 
 		% if customizeEdges
