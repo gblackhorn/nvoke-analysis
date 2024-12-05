@@ -302,6 +302,7 @@ function [varargout] = plot_event_freq_alignedData_allTrials(alignedData, vararg
 		ylabel(ylabelStr)
 		title(sub_titleStr,'FontSize',10)
 
+		ylim([-1 10]); % Manually set limits
 
 
 		% % Run Repeated measures ANOVA

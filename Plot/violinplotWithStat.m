@@ -3,6 +3,7 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
     % statistics also as a table
 
     % Defaults
+    bootstrap = false; % Use bootstrap or conventional method
     plot_unit_width = 0.4; % normalized size of a single plot to the display
     plot_unit_height = 0.4; % normalized size of a single plot to the display
     columnLim = 1; % number of plot column
@@ -19,6 +20,8 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
             groupNames = varargin{ii+1};
         elseif strcmpi('titleStr', varargin{ii})
             titleStr = varargin{ii+1};
+        elseif strcmpi('bootstrap', varargin{ii})
+            bootstrap = varargin{ii+1};
         elseif strcmpi('extraUItable', varargin{ii})
             extraUItable = varargin{ii+1};
         elseif strcmpi('save_fig', varargin{ii})
@@ -116,7 +119,19 @@ function [violinInfo,varargout] = violinplotWithStat(violinData,varargin)
         end
 
         % statistics
-        [violinInfo(rn).(violinInfoFields{4}),violinInfo(rn).(violinInfoFields{5})] = ttestOrANOVA(violinData(rn,:),'groupNames',groupNames(rn,:));
+        if bootstrap
+            % Bootstrap
+            bootstrapLabel = sprintf('%s vs. %s', groupNames{rn, 1}, groupNames{rn,2});
+            [~, ~, bootstrapPval, ~, violinInfo(rn).(violinInfoFields{5})] = bootstrapAnalysis(violinData{rn, 1}, violinData{rn,2}, 'label', bootstrapLabel);
+            violinInfo(rn).(violinInfoFields{4}).Method = 'Bootstrap';
+            violinInfo(rn).(violinInfoFields{4}).Group1 = groupNames{rn, 1};
+            violinInfo(rn).(violinInfoFields{4}).Group2 = groupNames{rn, 2};
+            violinInfo(rn).(violinInfoFields{4}).p = bootstrapPval;
+        else
+            % Non-bootstrap
+            [violinInfo(rn).(violinInfoFields{4}),violinInfo(rn).(violinInfoFields{5})] = ttestOrANOVA(violinData(rn,:),'groupNames',groupNames(rn,:));
+        end
+
 
 
         % plot violin

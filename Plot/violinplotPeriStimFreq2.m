@@ -11,6 +11,7 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
 
     normToFirst = true; % normalize all the data to the mean of the first group (first stimNames)
     mmlHierarchicalVars = {'trialNames','roiNames'};
+    bootstrap = false; % Use bootstrap or conventional method
 
     plot_unit_width = 0.4; % normalized size of a single plot to the display
     plot_unit_height = 0.4; % nomralized size of a single plot to the display
@@ -28,6 +29,8 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
             titleStr = varargin{ii+1}; % struct var including fields 'cat_type', 'cat_names' and 'cat_merge'
         elseif strcmpi('normToFirst', varargin{ii})
             normToFirst = varargin{ii+1};
+        elseif strcmpi('bootstrap', varargin{ii})
+            bootstrap = varargin{ii+1};
         elseif strcmpi('yTickInterval', varargin{ii})
             yTickInterval = varargin{ii+1};
         elseif strcmpi('mmlHierarchicalVars', varargin{ii})
@@ -144,7 +147,7 @@ function [violinData,statInfo,varargout] = violinplotPeriStimFreq2(periStimFreqB
 
 
     % Violin plot + statistics analysis
-    [statInfo,save_dir] = violinplotWithStat(violinDataCell,...
+    [statInfo,save_dir] = violinplotWithStat(violinDataCell,'bootstrap',bootstrap,...
         'groupNames',groupNames,'extraUItable',nNumTab,...
         'titleStr',titleStr,'save_fig',save_fig,'save_dir',save_dir,'gui_save',gui_save);
 

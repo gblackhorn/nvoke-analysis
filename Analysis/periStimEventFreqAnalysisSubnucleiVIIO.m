@@ -34,6 +34,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 	                                      % part after the stimEffectDuration will be splitted. If it is [1 1], the
 	                                      % time during stimulation will be splitted using edges below
 	                                      % [stimStart, stimEffectDuration, stimEffectDuration+splitLongStim, stimEnd]
+	addParameter(p, 'bootstrap', true); % true/false. If true, use bootstrap for comparison between the groups applied with different stimulations
 	addParameter(p, 'stimEventsPos', false); % true/false. If true, only use the peri-stim ranges with stimulation related events
 	addParameter(p, 'stimEvents', struct('stimName', {'og-5s', 'ap-0.1s', 'og-5s ap-0.1s'}, 'eventCat', {'rebound', 'trig', 'rebound'}, 'eventCatFollow', {'spon', 'spon', 'spon'}));
 	addParameter(p, 'normToBase', true); % true/false. normalize the data to baseline (data before baseBinEdge)
@@ -74,6 +75,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 	disZeroBase = p.Results.disZeroBase;
 	customizeEdges = p.Results.customizeEdges;
 	stimEffectDuration = p.Results.stimEffectDuration;
+	bootstrap = p.Results.bootstrap;
 	splitLongStim = p.Results.splitLongStim;
 	stimEventsPos = p.Results.stimEventsPos;
 	stimEvents = p.Results.stimEvents;
@@ -141,7 +143,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 			violinTitleStr1 = sprintf('%s periStimFreq [%s] violin %s',subNucleiFilter, strjoin(violinStimNames1(:), ' vs '), normStr);
 			% violinTitleStr1 = sprintf('%s violinPlot of a single bin from periStim freq%s',subNucleiFilter, normStr);
 			[violinData1,statInfo1,nNumTab1] = violinplotPeriStimFreq2(barStat.(subNucleiFilter),violinStimNames1,violinBinIDX1,...
-				'normToFirst',normToFirst,'titleStr',violinTitleStr1,...
+				'normToFirst',normToFirst,'titleStr',violinTitleStr1,'bootstrap', bootstrap,...
 				'save_fig',save_fig,'save_dir',saveDir,'gui_save','off');
 			summaryStatsTab1 = struct2table(statInfo1.dataInfo);
 
@@ -151,7 +153,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 			violinTitleStr2 = sprintf('%s periStimFreq [%s] violin %s',subNucleiFilter, strjoin(violinStimNames2(:), ' vs '), normStr);
 			% violinTitleStr2 = sprintf('%s violinPlot of a single bin from periStim freq%s',subNucleiFilter, normStr);
 			[violinData2,statInfo2,nNumTab2] = violinplotPeriStimFreq2(barStat.(subNucleiFilter),violinStimNames2,violinBinIDX2,...
-				'normToFirst',normToFirst,'titleStr',violinTitleStr2,...
+				'normToFirst',normToFirst,'titleStr',violinTitleStr2,'bootstrap', bootstrap,...
 				'save_fig',save_fig,'save_dir',saveDir,'gui_save','off');
 			summaryStatsTab2 = struct2table(statInfo2.dataInfo);
 
@@ -178,7 +180,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 
 
 			statInfoFoldChange = violinplotWithStat({foldDataAP,foldDataOGAP},'groupNames',{'AP without OG','AP with OG'},...
-			    'titleStr',[foldChangeTitleStr,' violin'],'save_fig',save_fig,'save_dir',saveDir);
+			    'bootstrap',bootstrap,'titleStr',[foldChangeTitleStr,' violin'],'save_fig',save_fig,'save_dir',saveDir);
 			summaryStatsTabFoldChange = struct2table(statInfoFoldChange.dataInfo);
 
 
@@ -188,7 +190,7 @@ function [barStat, diffStat, varargout] = periStimEventFreqAnalysisSubnucleiVIIO
 				% Combine the nNum and stat tabs of violin plots
 				nNumTabCombine = [nNumTab1; nNumTab2];
 				summaryStatsTabCombine = [summaryStatsTab1; summaryStatsTab2];
-				summaryStatsANDnNumcombinedTable = combineTabsWithSameRowTitle(summaryStatsTabCombine, nNumTabCombine)
+				summaryStatsANDnNumcombinedTable = combineTabsWithSameRowTitle(summaryStatsTabCombine, nNumTabCombine);
 				statTabCombine = [statInfo1.statTab; statInfo2.statTab; statInfoFoldChange.statTab];
 
 				% Save the table: Combined summary stats and nNum from two within group comparisons
