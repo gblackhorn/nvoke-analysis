@@ -3,7 +3,7 @@ function filePairs = findAllTexFilePairs(folderPath, varargin)
     % and pairs them with corresponding outputContentTag files (default: 'nNumInfo').
 
     % Define propertyTags
-    propertyTags = {'FWHM', 'rise_duration', 'peak_delta_norm_hpstd', 'cv2', 'sponInterval', 'sponfq'};
+    propertyTags = {'FWHM', 'rise_duration', 'peak_delta_norm_hpstd', 'cv2', 'sponInterval', 'sponfq', 'peak_delay'};
     
     % Default contentTags
     inputContentTag = 'meanSemTab';

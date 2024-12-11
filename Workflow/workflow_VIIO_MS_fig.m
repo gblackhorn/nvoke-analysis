@@ -329,7 +329,7 @@ ggSetting.dis_spon = true; % true/false. Discard spontaneous events
 close all
 % General Settings
 saveFig = true; % true/false
-props = {'FWHM','peak_delta_norm_hpstd','rise_duration'}; 
+props = {'FWHM','peak_delta_norm_hpstd','rise_duration', 'peak_delay'}; 
     % 'rise_duration','FWHM','sponNorm_peak_mag_delta','peak_mag_delta'
 separateSpon = false; % true/false. Whether to seperated spon according to stimualtion
 dataDist = 'posSkewed';
@@ -529,7 +529,7 @@ compareAnalysisUsingdiffSetting(figFolder, saveFolder,...
 %% ==========
 % 3.1 Peri-stimulus event frequency analysis
 close all
-save_fig = true; % true/false
+save_fig = false; % true/false
 gui_save = true;
 groupLevel = 'roi'; % Collect event freq on 'roi'/'stimTrial' level
 customizeEdges = true; % true/false. customize the bins using function 'setPeriStimSectionForEventFreqCalc'
@@ -537,7 +537,7 @@ customizeEdges = true; % true/false. customize the bins using function 'setPeriS
 						% If false: Set the 'normToBase' to false
 if customizeEdges
 	disZeroBase = true; % true/false. Discard the roi/stimTrial if the baseline value is zero
-	normToBase = true; % true/false. normalize the data to baseline (data before baseBinEdge). Set the disZeroBase to true if this is tru
+	normToBase = false; % true/false. normalize the data to baseline (data before baseBinEdge). Set the disZeroBase to true if this is tru
 else	
 	disZeroBase = false; % true/false. Discard the roi/stimTrial if the baseline value is zero
 	normToBase = false; % true/false. normalize the data to baseline (data before baseBinEdge). Set the disZeroBase to true if this is tru
@@ -700,12 +700,12 @@ summarizeExOgEffect(alignedData_allTrials, 'save_fig', save_fig, 'save_dir', Fol
 %% ==================== 
 % % 3.4 Compare the delay of OGOFF-TRIG events to spon interval
 % close all
-% save_fig = true; % true/false
+% save_fig = false; % true/false
 % ogStimTags = {'og-5s', 'ap-0.1s', 'og-5s ap-0.1s'}; % {'og-5s','ap-0.1s','og-5s ap-0.1s'}. compare the alignedData.stim_name with these strings and decide what filter to use
 % ogStimEffects = {[0 nan nan nan], [nan nan nan nan], [0 nan nan nan]}; % [ex in rb exApOg]. ex: excitation. in: inhibition. rb: rebound. exApOg: exitatory effect of AP during OG
 % [alignedDataStimEffectFiltered] = Filter_AlignedDataTraces_withStimEffect_multiTrial(alignedData_allTrials,...
 % 	'stim_names',ogStimTags,'filters',ogStimEffects);
-% [stimEventJitter, f, fname] = stimEventJitterAnalysis(alignedDataStimEffectFiltered,{'og-5s'},'rebound');
+% [stimEventJitter, f, fname] = stimEventJitterAnalysis(alignedDataStimEffectFiltered,{'ap-0.1s'},'trig');
 % % 'titlePrefix', subNucleiTypes{sn}
 
 % FolderPathVA.fig = savePlot(f,'save_dir',FolderPathVA.fig,'guiSave',true,'fname',fname);

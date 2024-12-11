@@ -23,8 +23,8 @@ tableToLatex(statTab, 'saveToFile',true,'filename', fullfile(LatexFolderPath,sta
 
 %% ==========
 % Combine the meanSemTab and nNumInfo Latex tables (Recognize pair with filename stemb) in a single folder
-tab1Key = 'nNumInfo'; % eventProp: nNumInfo. 
-tab2Key = 'meanSemTab'; % eventProp: meanSemTab
+tab1Key = 'meanSemTab'; % eventProp: nNumInfo. 
+tab2Key = 'nNumInfo'; % eventProp: meanSemTab
 FolderPathVA.fig = chooseFolderWithGUI(FolderPathVA.fig, 'Choose a folder containing Latex tables');
 filePairs = findAllTexFilePairs(FolderPathVA.fig, tab1Key, tab2Key);
 
@@ -52,8 +52,8 @@ FolderPathVA.fig = chooseFolderWithGUI(FolderPathVA.fig, 'Choose a folder contai
 
 propName = ''; % normalizedAmp, sponInterval
 fileSuffix = '';
-file1Keyword = 'summaryStats nNum'; % descriptive files. eventProp: meanSemTab nNumInfo. periStim: summaryStats nNum
-file2Keyword = 'stat'; % p value files. eventProp: modelCompTab. periStim: stat
+file1Keyword = 'meanSemTab nNumInfo'; % descriptive files. eventProp: meanSemTab nNumInfo. periStim: summaryStats nNum
+file2Keyword = 'modelCompTab'; % p value files. eventProp: modelCompTab. periStim: stat
 addPval2StatSummaryLatexTab(FolderPathVA.fig, file1Keyword, file2Keyword,...
 	'optionalKeyword', propName, 'suffix', fileSuffix);
 
@@ -61,6 +61,6 @@ addPval2StatSummaryLatexTab(FolderPathVA.fig, file1Keyword, file2Keyword,...
 %% ==========
 % Vertically combine the tables containing stat-summary and GLMM results 
 FolderPathVA.fig = chooseFolderWithGUI(FolderPathVA.fig, 'Choose a folder containing Latex tables');
-fileKeyword = 'DAO event freq in 1 s bins [peak time] bootStrap [og-5s]'; % normalizedAmp, FWHM, rise_duration 
+fileKeyword = '[AP-TRIG]2[OGAP-TRIG] PO peak_delay meanSemTab nNumInfo'; % normalizedAmp, FWHM, rise_duration 
 % tableCaption = 'Fig4 C1 DAO periStimFreq bootstrap';
 vertConcatLatexTab(FolderPathVA.fig, fileKeyword, fileKeyword);
