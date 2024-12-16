@@ -498,3 +498,43 @@ end
 
 
 %% ====================
+rmFieldNames = {'stim_tags', 'baseDiff', 'baseDiffRise', 'baseDiff_stimWin', 'val_rise', 'baseInfo',...
+	'stimTrig', 'rise_delay', 'peak_delay', 'sponnorm_rise_duration', 'sponnorm_peak_mag_delta',...
+	'decayTau', 'caLevelDelta'};
+roiNum = numel(VIIOdataNoStimExample.traces);
+for rn = 1:roiNum
+
+	VIIOdataNoStimExample.traces(rn).eventProp = rmfield(VIIOdataNoStimExample.traces(rn).eventProp, rmFieldNames);
+
+	eventProp = VIIOdataNoStimExample.traces(rn).eventProp;
+
+	eventNum = numel(eventProp);
+
+	for en = 1:eventNum
+		eventProp(en).peak_category = 'spon';
+	end  
+
+	VIIOdataNoStimExample.traces(rn).eventProp = eventProp;
+end
+
+VIIOdataNoStimExample = rmfield(VIIOdataNoStimExample, {'CaDecline', 'num_exROI', 'num_inROI', 'timeCaLevel', 'CaLevel_cal_range'});
+
+%% ====================
+rmFieldNames = {'stimEvent_possi', 'stimEffect', 'stimTrig', 'sponfq', 'sponInterval', 'stimfq',...
+	'stimfqNorm', 'stimfqDeltaNorm', 'sponEventNum', 'stimEventNum', 'exepEventNum',...
+	'sponAmp', 'CaLevelDelta', 'CaLevelmeanBase', 'CaLevelmeanStim', 'CaLevelDeltaData',...
+	'CaLevelMinDelta', 'CaLevelMinDeltaData', 'CaLevelDecline', 'CaLevelTrace', 'StimCurveFit',...
+	'StimCurveFit_TauMean', 'StimCurveFit_TauNum'};
+
+VIIOdataNoStimExample.traces = rmfield(VIIOdataNoStimExample.traces, rmFieldNames);
+
+
+%% ====================
+close all
+saveFig = false; % true/false
+saveDir = fullfile(projectSettings.projectFolder,'CaImgExample_noStim');
+csvTraceFilePath = fullfile(projectSettings.dataFolder  , '2021-03-29-14-19-43_VIIOdataFig1Example.csv');
+[figHandles, processedData] = createCaImgExampleFig(projectSettings.VIIOdataNoStimExample,...
+	csvTraceFilePath, saveDir, saveFig);
+
+
