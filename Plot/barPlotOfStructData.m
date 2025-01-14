@@ -83,6 +83,10 @@ function [barInfo, varargout] = barPlotOfStructData(structData, valField, groupF
     	groups = {structData.(groupField)};
     end
 
+    % Find the empty entries in structData.(valField) and remove the structData.(groupField) at the same locations
+    emptyValPositions = find(cellfun(@isempty, {structData.(valField)})); % Find positions of []
+    groups(emptyValPositions) = [];
+
     % Get unique groups and their indices
     [uniqueGroups, ~, groupIdx] = unique(groups, 'stable');
     nGroups = numel(uniqueGroups);
