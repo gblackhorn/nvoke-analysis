@@ -163,4 +163,4 @@ srun -p compute -t 1-0 --nodes=1 --ntasks=1 --cpus-per-task=32 --mem-per-cpu=8G 
 # Open the scripts below 
 # - command_for_cnmfe_with_manual_intervention.m
 # - cnmfe_large_data_script_cluster.m
-# viewNeurons.m
+# - viewNeurons.m
