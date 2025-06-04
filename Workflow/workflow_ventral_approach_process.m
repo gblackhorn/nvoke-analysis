@@ -90,8 +90,21 @@ if chosenStatus
 end
 
 %% ==================== 
-% 2.1.2 Spatial filter and motion correct the movies
-movieKeyword = '*sched_0.isxd'; % Code will search for files with names like this and motion-correct them
+% 2.1.2 Downsampling the movies
+temporal_factor = 1; % int ≥1  (default 1 = no temporal DS)
+spatial_factor = 2; % int ≥1  (default 1 = no spatial DS)
+movieKeyword = '*.tiff'; % Code will search for files with names like this and motion-correct them
+[movieFolder,saveFolder,chosenStatus] = getInputOutputFolders('inputFolder',FolderPathVA.project,...
+	'outputFolder',FolderPathVA.project,'inputMSG','Chose a folder containing cropped files');
+
+if chosenStatus
+	downsample_nVokeRec(movieFolder,saveFolder,'keyword',movieKeyword,...
+		'temporal_factor',temporal_factor,'spatial_factor',spatial_factor);
+end
+
+%% ==================== 
+% 2.1.3 Spatial filter and motion correct the movies
+movieKeyword = '*-PP.isxd'; % Code will search for files with names like this and motion-correct them
 rmBPfile = true; % true/false. Remove the spatial filtered file ('bp_file') after creating the motion-corrected video
 [movieFolder,~,chosenStatus] = getInputOutputFolders('inputFolder',FolderPathVA.project,...
 	'outputFolder',FolderPathVA.project,'inputMSG','Chose a folder containing cropped files');
@@ -104,7 +117,7 @@ end
 % 2.2 (Optional) Create DFF files from motion corrected files in a specified folder
 % DFF files can be examined in IDPS
 % Use keyword to filter MC files
-movieKeyword = '2021-03-29-13-48-34_video_sched_0-crop-BP-MC.isxd'; % Use file name like this to look for motion corrected files
+movieKeyword = '*-MC.isxd'; % Use file name like this to look for motion corrected files
 overwrite = false; % true/false. Create new DFF files if this is true.
 
 MC_fileFolder = uigetdir(FolderPathVA.project,...
@@ -117,7 +130,7 @@ end
 
 %% ==================== 
 % 3.1.1 Export nvoke movies to tiff files for further work using ImageJ, matlab, etc.
-movieKeyword = '*.isxd'; % used to filter 
+movieKeyword = '*-PP.isxd'; % used to filter 
 overwrite = false;
 
 input_isxd_folder = uigetdir(FolderPathVA.project,...
@@ -134,7 +147,31 @@ if input_isxd_folder ~= 0
 end
 
 %% ==================== 
-% 3.1.2 Delete some .isxd files to release the space in the hard disk
+% 3.1.2 Batch rename tiff files to keep only the date and time information
+% This is used to rename the tiff files exported from IDPS
+movieKeyword = '*.tiff'; % used to filter tiff files
+prefixStr = 'VIIO_caImg_'; % prefix to add to the tiff files
+dryRun = true; % true/false. If true, only show the planned renaming actions
+[tiffFolder,~,chosenStatus] = getInputOutputFolders('inputFolder',FolderPathVA.ExportTiff,...
+	'outputFolder',FolderPathVA.ExportTiff,'inputMSG','Chose a folder containing cropped files');
+
+if dryRun
+	disp('Dry run mode: Only showing planned renaming actions');
+	renameBatch(tiffFolder, ...
+            'keyword', movieKeyword, ...
+            'prefix',  prefixStr, ...
+            'dryRun',  true);   % remove 'dryRun' for the real run
+else
+	renameBatch(tiffFolder, ...
+            'keyword', movieKeyword, ...
+            'prefix',  prefixStr, ...
+            'dryRun',  false);   % remove 'dryRun' for the real run
+end
+
+
+
+%% ==================== 
+% 3.1.3 Delete some .isxd files to release the space in the hard disk
 movieKeyword = '*BP.isxd';
 showFileList = true;
 FolderPathVA.project = rmFilesWithKeywords(FolderPathVA.project,movieKeyword,...
