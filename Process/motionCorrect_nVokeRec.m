@@ -1,22 +1,20 @@
-function [varargout] = motionCorrect_nVokeRec(movieFolder,varargin)
-    % Use spatial bandpass filter and motion correction algorithm to stablize the movies (isxd files) 
-
+function [varargout] = motionCorrect_nVokeRec(movieFolder, outputFolder, varargin)
+    % Use spatial bandpass filter and motion correction algorithm to stabilize the movies (isxd files)
+    % Modified to allow separate input and output folders.
 
     % Defaults
-    keyword = ''; % filter won't be applied if keyword is empty
-    overwrite = false;
+    keyword = '';           % Filter for selecting specific input files
+    overwrite = false;      % If true, existing output files will be overwritten
+    low_cutoff = 0.005;     % Low spatial frequency cutoff for bandpass filtering
+    high_cutoff = 0.5;      % High spatial frequency cutoff
+    mc_reference_frame = 1; % Frame to use as reference during motion correction
+    global_registration_weight = 1; % Weight for global registration
+    max_translation = 20;   % Maximum pixel shift allowed during registration
+    reference_segment_index = 0;    % Reference segment index for correction
+    rmBPfile = false;       % If true, delete bandpass filtered file after correction
 
-    low_cutoff = 0.005; % spatial filter
-    high_cutoff = 0.5; % spatial filter
-    mc_reference_frame = 1; % the frame used as an reference in motion correction
-    global_registration_weight = 1;
-    max_translation = 20; 
-    reference_segment_index = 0;
-    rmBPfile = false; % true/false. Remove the spatial filtered file ('bp_file') after creating the motion-corrected video
-    % useGUI = false; % true/false. If to use a GUI interface to choose where to load the 
-% 
-    % Optionals for inputs
-    for ii = 1:2:(nargin-1)
+    % Parse optional inputs
+    for ii = 1:2:(nargin-2)
         if strcmpi('keyword', varargin{ii})
             keyword = varargin{ii+1};
         elseif strcmpi('overwrite', varargin{ii})
@@ -32,50 +30,51 @@ function [varargout] = motionCorrect_nVokeRec(movieFolder,varargin)
         end
     end
 
-
-    input_fileInfo = dir(fullfile(movieFolder,keyword));
+    % Locate files matching the keyword in the input folder
+    input_fileInfo = dir(fullfile(movieFolder, keyword));
     movie_num = numel(input_fileInfo);
-    corrected_num = 0;
 
     startMSG = sprintf('\nMotion correcting %g movies (isxd files)\n - input folder: %s\n - output folder: %s',...
-        movie_num,movieFolder,movieFolder);
+        movie_num, movieFolder, outputFolder);
     disp(startMSG)
     disp('Motion-corrected movie list:')
 
-    for mn=1:movie_num
+    % Process each matching file
+    for mn = 1:movie_num
         input_file_fullpath = fullfile(movieFolder, input_fileInfo(mn).name);
-
         [~, file_name_stem, ~] = fileparts(input_file_fullpath);
-        bp_filename = [file_name_stem,'-BP.isxd'];
-        mc_filename = [file_name_stem,'-BP-MC.isxd'];
-        % output_filename = [file_name_stem, '-.isxd'];
-        bp_file_fullpath = fullfile(movieFolder, bp_filename);
-        mc_file_fullpath = fullfile(movieFolder, mc_filename);
 
+        bp_filename = [file_name_stem, '-BP.isxd'];
+        mc_filename = [file_name_stem, '-BP-MC.isxd'];
+
+        bp_file_fullpath = fullfile(outputFolder, bp_filename);
+        mc_file_fullpath = fullfile(outputFolder, mc_filename);
+
+        % Check if output already exists
         existFileInfo = dir(bp_file_fullpath);
 
         if isempty(existFileInfo) || overwrite
-            % reportProcess = sprintf(' - movie (%d/%d): %s',mn,movie_num,input_fileInfo(mn).name);
-            isx.spatial_filter(input_file_fullpath, bp_file_fullpath,...
+            % Apply spatial bandpass filter
+            isx.spatial_filter(input_file_fullpath, bp_file_fullpath, ...
                 'low_cutoff', low_cutoff, 'high_cutoff', high_cutoff);
-            isx.motion_correct(bp_file_fullpath, mc_file_fullpath,...
-                'max_translation', max_translation,...
-                'reference_segment_index', reference_segment_index,...
-                'reference_frame_index', mc_reference_frame,...
+
+            % Perform motion correction
+            isx.motion_correct(bp_file_fullpath, mc_file_fullpath, ...
+                'max_translation', max_translation, ...
+                'reference_segment_index', reference_segment_index, ...
+                'reference_frame_index', mc_reference_frame, ...
                 'global_registration_weight', global_registration_weight);
-            % exported_num = exported_num+1;
-            reportProcess = sprintf(' - movie (%d/%d): %s\n  - BP: %s\n  - MC: %s',...
-                mn,movie_num,input_fileInfo(mn).name,bp_filename,mc_filename);
-            % reportCrop = sprintf('file: %s\n - output file: %s\n - cropRectangle: [%s] [top left bottom right]',...
-            %     input_fileinfo(mn).name,output_filename,num2str(cropRectangle));
+
+            % Log output
+            reportProcess = sprintf(' - movie (%d/%d): %s\n  - BP: %s\n  - MC: %s', ...
+                mn, movie_num, input_fileInfo(mn).name, bp_filename, mc_filename);
             disp(reportProcess)
 
+            % Optionally delete intermediate bandpass file
             if rmBPfile
                 delete(bp_file_fullpath);
-                rmBPfileMsg = sprintf(' - delete BP file to release disk space');
-                disp(rmBPfileMsg)
+                disp(' - delete BP file to release disk space');
             end
         end
     end
-    % fprintf('\n%d movies were cropped and saved to\n %s\n',exported_num,output_folder);
 end
