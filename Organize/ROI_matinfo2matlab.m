@@ -12,6 +12,8 @@ function [recdata, varargout] = ROI_matinfo2matlab(varargin)
 	end
 	debug_mode = false;
 	default_frame_rate = 20; % Hz. Used when no matching ROI CSV is available.
+	use_gui = true;
+	output_file = '';
 
 	% Optionals for inputs
 	for ii = 1:2:(nargin)
@@ -23,10 +25,21 @@ function [recdata, varargout] = ROI_matinfo2matlab(varargin)
 			debug_mode = varargin{ii+1};
 		elseif strcmpi('default_frame_rate', varargin{ii})
 			default_frame_rate = varargin{ii+1};
+		elseif strcmpi('use_gui', varargin{ii})
+			use_gui = varargin{ii+1};
+		elseif strcmpi('output_file', varargin{ii})
+			output_file = varargin{ii+1};
 		end
 	end
 
-	roi_readout_file_folder = uigetdir(input_dir, 'Select a folder containing CNMF-E processed results');
+	if use_gui
+		roi_readout_file_folder = uigetdir(input_dir, 'Select a folder containing CNMF-E processed results');
+	else
+		roi_readout_file_folder = input_dir;
+	end
+	if isequal(roi_readout_file_folder, 0) || ~isfolder(roi_readout_file_folder)
+		error('CNMF-E results folder was not selected or does not exist.');
+	end
 
 	% roi_readout_file_info = dir([roi_readout_file_folder, '\', '*-ROI.csv']);
 	% if ispc
@@ -131,17 +144,25 @@ function [recdata, varargout] = ROI_matinfo2matlab(varargin)
 			recdata{n, 3} = stimulation;
 			recdata{n, 4} = channel;
 		else
+			recdata{n, 3} = 'noStim';
+			recdata{n, 4} = [];
 		end
 	end
 	varargout{1} = numel(roi_readout_file_info_processed); % recording numbers
 	varargout{2} = cell_num; % total cell numbers
-	[recdata_file, recdata_path] = uiputfile([output_dir, '/*.mat'], 'Save recdata into a .matfile');
-	if isequal(recdata_file,0) || isequal(recdata_path,0)
-	   disp('User clicked Cancel.')
+	if ~isempty(output_file)
+	   save(output_file, 'recdata');
+	elseif use_gui
+	   [recdata_file, recdata_path] = uiputfile([output_dir, '/*.mat'], 'Save recdata into a .matfile');
+	   if isequal(recdata_file,0) || isequal(recdata_path,0)
+	      disp('User clicked Cancel.')
+	   else
+	      disp(['User selected ',fullfile(recdata_path,recdata_file),...
+	            ' and then clicked Save.'])
+	      save(fullfile(recdata_path,recdata_file),'recdata');
+	   end
 	else
-	   disp(['User selected ',fullfile(recdata_path,recdata_file),...
-	         ' and then clicked Save.'])
-	   save(fullfile(recdata_path,recdata_file),'recdata');
+	   warning('No output_file supplied; recdata was returned but not saved.');
 	end
 end
 
