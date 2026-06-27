@@ -9,6 +9,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     smooth_method = 'loess';
     smooth_span = 0.1;
     prominence_factor = 4; % prominence_factor doesn't influence peak finding in decon data
+    peakErrTime = 0.4; % unit: second. Max difference between a CNMF-E candidate peak and the matched trace peak
     merge_time_interval = 0.5; % default: 0.5s. peak to peak interval.
     existing_peak_duration_extension_time_pre  = 0.3; % duration in second, before existing peak rise 
     existing_peak_duration_extension_time_post = 0; % duration in second, after decay
@@ -46,6 +47,8 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
     		smooth_span = varargin{ii+1};
     	elseif strcmpi('prominence_factor', varargin{ii})
     		prominence_factor = varargin{ii+1};
+        elseif strcmpi('peakErrTime', varargin{ii})
+            peakErrTime = varargin{ii+1};
 		elseif strcmpi('merge_peaks', varargin{ii})
             merge_peaks = varargin{ii+1};
         elseif strcmpi('merge_time_interval', varargin{ii})
@@ -164,6 +167,7 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 			'prom_par', prominence_factor,...
             'use_existing_peakInfo', true, 'existing_peakInfo', peak_properties_decon,...
 			'peakProperties_names', peak_properties_variable_names,...
+            'peakErrTime', peakErrTime,...
             'merge_peaks', merge_peaks, 'merge_time_interval', merge_time_interval,'debug_mode',debug_mode); % ,'debug_mode',debug_mode
         recdata_organized{rn, col_trace}.lowpass = rec_data_lowpass.processed_data;
 
@@ -172,7 +176,8 @@ function [recdata_organized,varargout] = organize_add_peak_gpio_to_recdata(recda
 			'decon', 0, 'filter', 'smooth', 'filter_par', smooth_span, 'smooth_method', smooth_method,...
 			'prom_par', prominence_factor,...
             'use_existing_peakInfo', true, 'existing_peakInfo', peak_properties_decon,...
-			'peakProperties_names', peak_properties_variable_names);
+			'peakProperties_names', peak_properties_variable_names,...
+            'peakErrTime', peakErrTime);
         recdata_organized{rn, col_trace}.smoothed = rec_data_smooth.processed_data;
 
 		% Get std of highpassed data. std is used to normalized peak amplitude

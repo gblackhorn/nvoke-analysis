@@ -11,6 +11,9 @@ function [recdata, varargout] = ROI_matinfo2matlab(varargin)
 		output_dir = '/home/guoda/Documents/Workspace/Analysis/nVoke/Ventral_approach/processed mat files/';
 	end
 	debug_mode = false;
+	default_frame_rate = 20; % Hz. Used when no matching ROI CSV is available.
+	use_gui = true;
+	output_file = '';
 
 	% Optionals for inputs
 	for ii = 1:2:(nargin)
@@ -20,10 +23,23 @@ function [recdata, varargout] = ROI_matinfo2matlab(varargin)
 			output_dir = varargin{ii+1};
 		elseif strcmpi('debug_mode', varargin{ii})
 			debug_mode = varargin{ii+1};
+		elseif strcmpi('default_frame_rate', varargin{ii})
+			default_frame_rate = varargin{ii+1};
+		elseif strcmpi('use_gui', varargin{ii})
+			use_gui = varargin{ii+1};
+		elseif strcmpi('output_file', varargin{ii})
+			output_file = varargin{ii+1};
 		end
 	end
 
-	roi_readout_file_folder = uigetdir(input_dir, 'Select a folder containing CNMF-E processed results');
+	if use_gui
+		roi_readout_file_folder = uigetdir(input_dir, 'Select a folder containing CNMF-E processed results');
+	else
+		roi_readout_file_folder = input_dir;
+	end
+	if isequal(roi_readout_file_folder, 0) || ~isfolder(roi_readout_file_folder)
+		error('CNMF-E results folder was not selected or does not exist.');
+	end
 
 	% roi_readout_file_info = dir([roi_readout_file_folder, '\', '*-ROI.csv']);
 	% if ispc
@@ -64,21 +80,38 @@ function [recdata, varargout] = ROI_matinfo2matlab(varargin)
 		CalSig_decon = array2table(CalSig_decon, 'VariableNames', neuron_name); % convert CalSig_decon to table. Use neuron name as column names
 		CalSig_raw = array2table(CalSig_raw, 'VariableNames', neuron_name); 
 
-		roi_readout_file = fullfile(roi_readout_file_info(n).folder, roi_readout_file_info(n).name);
-		opts = detectImportOptions(roi_readout_file); % create import options based on file content
-		opts.DataLine = 3; % set data line from the third row of csv file. First 2 rows are 'char'
-		opts.VariableDescriptionsLine = 2; % set 2nd row as variable description
-		ROI_table = readtable(roi_readout_file, opts); % import file using modified opts, so data will be number arrays
+		result_file_name = roi_readout_file_info_processed(n).name;
+		recording_key = result_file_name(1:min(25, length(result_file_name)));
+		matching_roi_idx = find(startsWith({roi_readout_file_info.name}, recording_key, 'IgnoreCase', true));
 
-		trim_frames = find(isnan(ROI_table{:, :}(:, 2))); % find frames trimmed off. Look for nan rows in 1st ROI (table from .csv file)
-		ROI_table(trim_frames, :) = []; % delete trimmed frames
+		if numel(matching_roi_idx) > 1
+			error('Multiple ROI CSV files match CNMF-E result file "%s".', result_file_name);
+		elseif numel(matching_roi_idx) == 1
+			roi_file_info = roi_readout_file_info(matching_roi_idx);
+			roi_readout_file = fullfile(roi_file_info.folder, roi_file_info.name);
+			opts = detectImportOptions(roi_readout_file); % create import options based on file content
+			opts.DataLine = 3; % set data line from the third row of csv file. First 2 rows are 'char'
+			opts.VariableDescriptionsLine = 2; % set 2nd row as variable description
+			ROI_table = readtable(roi_readout_file, opts); % import file using modified opts, so data will be number arrays
 
-	    [ROI_table, recording_time, ROI_num] = ROI_calc_plot(ROI_table);
+			trim_frames = find(isnan(ROI_table{:, :}(:, 2))); % find frames trimmed off. Look for nan rows in 1st ROI (table from .csv file)
+			ROI_table(trim_frames, :) = []; % delete trimmed frames
+
+			[ROI_table, recording_time, ROI_num] = ROI_calc_plot(ROI_table);
+			recording_name = roi_file_info.name;
+			time_info_table = ROI_table(:, 'Time'); % time info in table form
+		else
+			frame_num = height(CalSig_decon);
+			Time = (0:(frame_num-1))' / default_frame_rate;
+			time_info_table = table(Time);
+			recording_name = result_file_name;
+			warning('No ROI CSV matched "%s". Generated timestamps at %.g Hz.', ...
+				result_file_name, default_frame_rate);
+		end
 		% cell_num = cell_num + size(ROI_table, 2);
-		recdata{n, 1} = roi_readout_file_info(n).name;
+		recdata{n, 1} = recording_name;
 		% recdata_raw{n, 1} = roi_readout_file_info(n).name;
 
-		time_info_table = ROI_table(:, 'Time'); % time info in table form
 		CalSig_decon = [time_info_table CalSig_decon]; % concatanate time and roi info into the same table
 		CalSig_raw = [time_info_table CalSig_raw];
 
@@ -87,7 +120,7 @@ function [recdata, varargout] = ROI_matinfo2matlab(varargin)
 		recdata{n, 2}.cnmfe_results = organize_extract_CNMFspacialInfo(results);
 
 		% decide whether there is a gpio file for this roi file. If yes, get GPIO info
-		filename_stem = roi_readout_file_info(n).name(1:25); % filename like recording_20190910_130653 (25 letters+numbers) or 2020-04-16-15-37-11_video (from nvoke2)
+		filename_stem = recording_name(1:min(25, length(recording_name))); % filename like recording_20190910_130653 (25 letters+numbers) or 2020-04-16-15-37-11_video (from nvoke2)
 		if ispc
 			gpio_file_info = dir([roi_readout_file_folder, '\', filename_stem, '*gpio*.csv']); % looking for accompnied gpio file
 			if isempty(gpio_file_info)
@@ -111,17 +144,25 @@ function [recdata, varargout] = ROI_matinfo2matlab(varargin)
 			recdata{n, 3} = stimulation;
 			recdata{n, 4} = channel;
 		else
+			recdata{n, 3} = 'noStim';
+			recdata{n, 4} = [];
 		end
 	end
-	varargout{1} = numel(roi_readout_file_info); % recording numbers
+	varargout{1} = numel(roi_readout_file_info_processed); % recording numbers
 	varargout{2} = cell_num; % total cell numbers
-	[recdata_file, recdata_path] = uiputfile([output_dir, '/*.mat'], 'Save recdata into a .matfile');
-	if isequal(recdata_file,0) || isequal(recdata_path,0)
-	   disp('User clicked Cancel.')
+	if ~isempty(output_file)
+	   save(output_file, 'recdata');
+	elseif use_gui
+	   [recdata_file, recdata_path] = uiputfile([output_dir, '/*.mat'], 'Save recdata into a .matfile');
+	   if isequal(recdata_file,0) || isequal(recdata_path,0)
+	      disp('User clicked Cancel.')
+	   else
+	      disp(['User selected ',fullfile(recdata_path,recdata_file),...
+	            ' and then clicked Save.'])
+	      save(fullfile(recdata_path,recdata_file),'recdata');
+	   end
 	else
-	   disp(['User selected ',fullfile(recdata_path,recdata_file),...
-	         ' and then clicked Save.'])
-	   save(fullfile(recdata_path,recdata_file),'recdata');
+	   warning('No output_file supplied; recdata was returned but not saved.');
 	end
 end
 
